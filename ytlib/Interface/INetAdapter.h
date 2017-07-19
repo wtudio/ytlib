@@ -6,7 +6,7 @@
 #include <map>
 #include <functional>
 
-namespace wtlib {
+namespace ytlib {
 
 	struct RecvData {
 		tstring hostID;//发送方主机id

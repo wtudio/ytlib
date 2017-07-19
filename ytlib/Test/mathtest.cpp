@@ -1,7 +1,7 @@
 #include "mathtest.h"
 
 
-namespace wtlib
+namespace ytlib
 {
 	bool test_Complex() {
 		Complex c;

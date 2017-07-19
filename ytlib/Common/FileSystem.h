@@ -8,7 +8,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/xpressive/xpressive_dynamic.hpp>
 
-namespace wtlib
+namespace ytlib
 {
 	//封装了一些boost库不直接提供的。boost库有的直接调用boost库的
 #if defined(UNICODE)

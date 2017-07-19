@@ -28,7 +28,7 @@
 #include <string>
 #include <memory>
 
-namespace wtlib
+namespace ytlib
 {
 	enum SerializeType
 	{
@@ -36,7 +36,7 @@ namespace wtlib
 		BinaryType
 	};
 //侵入式序列化类头
-#define WT_CLASS_SERIALIZE(Members) \
+#define T_CLASS_SERIALIZE(Members) \
 	friend class boost::serialization::access; \
 	template<class Archive> \
 	void serialize(Archive & ar, const uint32_t version) \

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0 FATAL_ERROR)#最低版本要求
+cmake_minimum_required(VERSION 3.1)#最低版本要求
 
 #cmake_policy设置（如果有）
 
@@ -39,7 +39,7 @@ set_property( GLOBAL PROPERTY USE_FOLDERS ${CMAKE_USE_FOLDERS} )
 if( NOT CMAKE_BUILD_TYPE )
   set( CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE )
   # Set the possible values of build type for cmake-gui
-  set_property( CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" )
+  set_property( CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo" )
 endif()
 
 #设置库类型

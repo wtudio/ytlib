@@ -8,7 +8,7 @@
 #include <functional>
 #include <mutex>
 
-namespace wtlib {
+namespace ytlib {
 
 	//网络适配器模板，异步发送
 	template<class _HostInfo,//主机信息格式
@@ -87,6 +87,7 @@ namespace wtlib {
 
 		const tstring m_myid;//自身id，构造之后无法修改
 
+		
 		std::mutex m_hostInfoMutex;
 		std::map<tstring, _HostInfo> m_mapHostInfo;//主机列表：id-info
 

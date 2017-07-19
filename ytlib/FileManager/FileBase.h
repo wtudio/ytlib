@@ -6,7 +6,7 @@
 #include <ytlib/SupportTools/Serialize.h>
 #include <memory>
 
-namespace wtlib
+namespace ytlib
 {
 	//默认为txt后缀
 	template <class T>
@@ -23,7 +23,7 @@ namespace wtlib
 		virtual bool CheckFileName(const tstring& filename) const {
 			//一般就是检查后缀名
 			/*
-			tstring Suffix = WT_TEXT("txt");
+			tstring Suffix = T_TEXT("txt");
 			if (ToLower(filename.substr(filename.length() - Suffix.length(), Suffix.length())) != Suffix) {
 				return false;
 			}
@@ -132,17 +132,17 @@ namespace wtlib
 		}
 		//去掉后缀
 		tstring GetFileName() const {
-			if (m_filepath.empty())	return WT_TEXT("");
+			if (m_filepath.empty())	return T_TEXT("");
 			tpath filepath = tGetAbsolutePath(m_filepath);
 			tstring fname = filepath.filename().string<tstring>();
-			size_t pos = fname.find(WT_TEXT('.'));
+			size_t pos = fname.find(T_TEXT('.'));
 			if (pos < fname.length()) {
 				fname = fname.substr(0, pos);
 			}
 			return fname;
 		}
 		tstring GetFileParentPath() const {
-			if (m_filepath.empty()) return WT_TEXT("");
+			if (m_filepath.empty()) return T_TEXT("");
 			tpath filepath = tGetAbsolutePath(m_filepath);
 			return filepath.parent_path().string<tstring>();
 		}

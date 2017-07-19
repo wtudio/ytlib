@@ -3,7 +3,7 @@
 #include <ytlib/SupportTools/QueueBase.h>
 #include <vector>
 
-namespace wtlib {
+namespace ytlib {
 	//单队列，异步添加，可以多线程处理数据的通道
 	//从进入通道到取出通道数据会经过复制操作。因此建议始终传递share_ptr一类的指针
 	//使用阻塞取出，无法暂停，一旦开启将一直取出数据进行处理，直到无数据可取时阻塞

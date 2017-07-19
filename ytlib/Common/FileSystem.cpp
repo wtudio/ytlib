@@ -1,7 +1,7 @@
 #include <ytlib/Common/FileSystem.h>
 
 
-namespace wtlib 
+namespace ytlib 
 {
 
 	//获得当前路径（可执行文件所在目录）

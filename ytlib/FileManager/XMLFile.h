@@ -2,7 +2,7 @@
 #include <ytlib/FileManager/FileBase.h>
 #include <ytlib/SupportTools/XMLTools.h>
 
-namespace wtlib
+namespace ytlib
 {
 	//使用XML的文件类
 	class XMLFile :public FileBase<tptree> {

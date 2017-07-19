@@ -4,7 +4,7 @@
 #include <atomic>
 #include <mutex>
 
-namespace wtlib {
+namespace ytlib {
 
 	//简单的多线程环境下线程安全的队列
 	template <class T>

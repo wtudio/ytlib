@@ -5,7 +5,7 @@
 #include <map>
 #include <memory>
 
-namespace wtlib
+namespace ytlib
 {
 	/*
 	动态库运行时链接有两种方式：
@@ -37,9 +37,9 @@ namespace wtlib
 			assert(NULL != m_hnd);
 
 #if defined(_WIN32) 
-			SYMBOL_TYPE symbol = ::GetProcAddress(m_hnd, WT_TSTRING_TO_STRING(name).c_str());
+			SYMBOL_TYPE symbol = ::GetProcAddress(m_hnd, T_TSTRING_TO_STRING(name).c_str());
 #else
-			SYMBOL_TYPE symbol = dlsym(m_hnd, WT_TSTRING_TO_STRING(name).c_str());
+			SYMBOL_TYPE symbol = dlsym(m_hnd, T_TSTRING_TO_STRING(name).c_str());
 #endif
 			return symbol;
 		}
@@ -51,21 +51,21 @@ namespace wtlib
 			m_libname = libname;
 			Free();
 #if defined(_WIN32)
-			if ((m_libname.length()>4) && (m_libname.substr(m_libname.length() - 4, 4) != WT_TEXT(".dll"))) {
-				m_libname = m_libname + WT_TEXT(".dll");
+			if ((m_libname.length()>4) && (m_libname.substr(m_libname.length() - 4, 4) != T_TEXT(".dll"))) {
+				m_libname = m_libname + T_TEXT(".dll");
 			}
 			m_hnd = ::LoadLibrary(m_libname.c_str());
 #else
-			if (m_libname.substr(0, 3) != WT_TEXT("lib")) {
-				m_libname = WT_TEXT("lib") + m_libname;
+			if (m_libname.substr(0, 3) != T_TEXT("lib")) {
+				m_libname = T_TEXT("lib") + m_libname;
 			}
 
-			if (m_libname.substr(m_libname.length() - 3, 3) != WT_TEXT(".so")) {
-				m_libname = m_libname + WT_TEXT(".so");
+			if (m_libname.substr(m_libname.length() - 3, 3) != T_TEXT(".so")) {
+				m_libname = m_libname + T_TEXT(".so");
 			}
 
 			int32_t flags = RTLD_NOW | RTLD_GLOBAL;
-			m_hnd = dlopen(WT_TSTRING_TO_STRING(m_libname).c_str(), flags);
+			m_hnd = dlopen(T_TSTRING_TO_STRING(m_libname).c_str(), flags);
 			if (NULL == m_hnd) {
 				fprintf(stderr, "%s\n", dlerror());
 			}

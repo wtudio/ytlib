@@ -1,9 +1,8 @@
 #pragma once
 #include <ytlib/Common/TString.h>
 #include <functional>  
-//#include <mutex>
 
-namespace wtlib
+namespace ytlib
 {
 	//日志回调
 	typedef std::function<void(const tstring &)> LogCallback;
@@ -21,41 +20,41 @@ namespace wtlib
 		virtual bool init() {
 			is_running = false;
 			is_init = true;
-			fLogCallback(WT_TEXT("Init Successfully"));
+			fLogCallback(T_TEXT("Init Successfully"));
 			return true;
 		}
 		virtual bool start() {
 			if (!is_init) { 
-				fLogCallback(WT_TEXT("Start failed : uninitialized"));
+				fLogCallback(T_TEXT("Start failed : uninitialized"));
 				return false; 
 			}
 			if (is_running) {
-				fLogCallback(WT_TEXT("Start failed : process is running"));
+				fLogCallback(T_TEXT("Start failed : process is running"));
 				return false;
 			}
 			is_running = true;
-			fLogCallback(WT_TEXT("Start"));
+			fLogCallback(T_TEXT("Start"));
 			return true;
 		}
 		//pause表示暂停，可以再接着start。stop表示停止，就算重新start也是从头开始
 		//此处的pause和stop表现是一样的。交给子类重载
 		virtual bool pause() {
 			if (!is_running) {
-				fLogCallback(WT_TEXT("Pause failed : process is not running"));
+				fLogCallback(T_TEXT("Pause failed : process is not running"));
 				return false;
 			}
 			is_running = false;
-			fLogCallback(WT_TEXT("Pause"));
+			fLogCallback(T_TEXT("Pause"));
 			return true;
 		}
 
 		virtual bool stop() {
 			if (!is_running) {
-				fLogCallback(WT_TEXT("Stop failed : process is not running"));
+				fLogCallback(T_TEXT("Stop failed : process is not running"));
 				return false;
 			}
 			is_running = false;
-			fLogCallback(WT_TEXT("Stop"));
+			fLogCallback(T_TEXT("Stop"));
 			return true;
 		}
 

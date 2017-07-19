@@ -3,7 +3,7 @@
 #include <ytlib/Common/Util.h>
 #include <ytlib/Common/TString.h>
 
-namespace wtlib
+namespace ytlib
 {
 	enum Error
 	{

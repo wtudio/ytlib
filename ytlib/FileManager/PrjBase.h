@@ -2,7 +2,7 @@
 #include <ytlib/FileManager/FileBase.h>
 #include <ytlib/SupportTools/XMLTools.h>
 
-namespace wtlib
+namespace ytlib
 {
 
 	//root节点：工程名称、版本、settings节点，item节点（多个）
@@ -50,7 +50,7 @@ namespace wtlib
 	class PrjFile :public FileBase<PrjObj>
 	{
 	public:
-		PrjFile() :FileBase() , m_version(WT_TEXT("0.0.1")){}
+		PrjFile() :FileBase() , m_version(T_TEXT("0.0.1")){}
 		virtual ~PrjFile() {}
 
 		inline tstring getPrjName()const { return m_fileobj->m_PrjName; }
@@ -106,8 +106,8 @@ namespace wtlib
 			return FileBase::GetFileObjPtr();
 		}
 		virtual bool CheckFileName(const tstring& filename) const {
-			tstring Suffix1 = WT_TEXT("xml");
-			tstring Suffix2 = WT_TEXT("prj");
+			tstring Suffix1 = T_TEXT("xml");
+			tstring Suffix2 = T_TEXT("prj");
 			if ((ToLower(filename.substr(filename.length() - Suffix1.length(), Suffix1.length())) != Suffix1)
 				&& (ToLower(filename.substr(filename.length() - Suffix2.length(), Suffix2.length())) != Suffix2)) {
 				return false;
@@ -117,7 +117,7 @@ namespace wtlib
 		virtual bool CreateFileObj() {
 			m_fileobj = std::shared_ptr<PrjObj>(new PrjObj());
 			if (m_filepath.empty()) {
-				m_fileobj->m_PrjName = WT_TEXT("NewProject");
+				m_fileobj->m_PrjName = T_TEXT("NewProject");
 			}
 			else {
 				m_fileobj->m_PrjName = GetFileName();
@@ -135,32 +135,32 @@ namespace wtlib
 			//解析,同时还要检查
 
 			try {
-				tptree ptprj = ptRoot.get_child(WT_TEXT("Project"));
+				tptree ptprj = ptRoot.get_child(T_TEXT("Project"));
 				//判断version是否符合
-				if (m_version != ptprj.get<tstring>(WT_TEXT("<xmlattr>.Version"))) {
-					tcout << WT_TEXT("Version not matched : ") << m_version << WT_TEXT(" VS ") << ptprj.get<tstring>(WT_TEXT("<xmlattr>.Version")) << std::endl;
+				if (m_version != ptprj.get<tstring>(T_TEXT("<xmlattr>.Version"))) {
+					tcout << T_TEXT("Version not matched : ") << m_version << T_TEXT(" VS ") << ptprj.get<tstring>(T_TEXT("<xmlattr>.Version")) << std::endl;
 					return false;
 				}
-				m_fileobj->m_PrjName = ptprj.get<tstring>(WT_TEXT("<xmlattr>.Name"));
+				m_fileobj->m_PrjName = ptprj.get<tstring>(T_TEXT("<xmlattr>.Name"));
 				if (m_fileobj->m_PrjName.empty()) {
-					tcout << WT_TEXT("Invalid Project Name!") << std::endl;
+					tcout << T_TEXT("Invalid Project Name!") << std::endl;
 					return false;
 				}
 				m_fileobj->m_PrjVersion = m_version;
 				//settings 可选
 				if (!readSettings(ptprj, m_fileobj->m_PrjSettings)) return false;
 				//ItemGroup 可选
-				boost::optional<tptree&> ptItemGroup = ptprj.get_child_optional(WT_TEXT("ItemGroup"));
+				boost::optional<tptree&> ptItemGroup = ptprj.get_child_optional(T_TEXT("ItemGroup"));
 				if (ptItemGroup) {
 					for (tptree::iterator itrptig = ptItemGroup->begin(); itrptig != ptItemGroup->end(); ++itrptig) {
 						tptree &Itempt = itrptig->second;
-						tstring itemname(Itempt.get<tstring>(WT_TEXT("<xmlattr>.itemname")));
+						tstring itemname(Itempt.get<tstring>(T_TEXT("<xmlattr>.itemname")));
 						if (itemname.empty()) {
-							tcout << WT_TEXT("Invalid Item Name!") << std::endl;
+							tcout << T_TEXT("Invalid Item Name!") << std::endl;
 							return false;
 						}
 						ItemInfo tmpiteminfo;
-						tmpiteminfo.type = Itempt.get<tstring>(WT_TEXT("<xmlattr>.type"));
+						tmpiteminfo.type = Itempt.get<tstring>(T_TEXT("<xmlattr>.type"));
 						if (!readSettings(Itempt, tmpiteminfo.settings)) return false;
 						m_fileobj->m_PrjItems[itemname] = tmpiteminfo;
 					}
@@ -177,8 +177,8 @@ namespace wtlib
 			tptree ptroot;
 			//默认之前检查有效。不检查直接写入
 			tptree ptprj;
-			ptprj.put(WT_TEXT("<xmlattr>.Name"), m_fileobj->m_PrjName);
-			ptprj.put(WT_TEXT("<xmlattr>.Version"), m_fileobj->m_PrjVersion);
+			ptprj.put(T_TEXT("<xmlattr>.Name"), m_fileobj->m_PrjName);
+			ptprj.put(T_TEXT("<xmlattr>.Version"), m_fileobj->m_PrjVersion);
 			if (!writeSettings(m_fileobj->m_PrjSettings, ptprj)) return false;
 			std::map<tstring, ItemInfo> &tmpiteminfo = m_fileobj->m_PrjItems;
 			if (tmpiteminfo.size() > 0) {
@@ -186,14 +186,14 @@ namespace wtlib
 				for (std::map<tstring, ItemInfo>::const_iterator itr = tmpiteminfo.begin();
 					itr != tmpiteminfo.end(); ++itr) {
 					tptree ptitem;
-					ptitem.put(WT_TEXT("<xmlattr>.itemname"), itr->first);
-					ptitem.put(WT_TEXT("<xmlattr>.type"), itr->second.type);
+					ptitem.put(T_TEXT("<xmlattr>.itemname"), itr->first);
+					ptitem.put(T_TEXT("<xmlattr>.type"), itr->second.type);
 					if(!writeSettings(itr->second.settings, ptitem))  return false;
-					ptItemGroup.add_child(WT_TEXT("Item"), ptitem);
+					ptItemGroup.add_child(T_TEXT("Item"), ptitem);
 				}
-				ptprj.put_child(WT_TEXT("ItemGroup"), ptItemGroup);
+				ptprj.put_child(T_TEXT("ItemGroup"), ptItemGroup);
 			}
-			ptroot.add_child(WT_TEXT("Project"), ptprj);
+			ptroot.add_child(T_TEXT("Project"), ptprj);
 			return writeXml(m_filepath, ptroot);
 		}
 	};

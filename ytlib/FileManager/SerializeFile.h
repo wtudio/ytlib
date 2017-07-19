@@ -3,7 +3,7 @@
 #include <ytlib/FileManager/FileBase.h>
 #include <ytlib/SupportTools/Serialize.h>
 
-namespace wtlib
+namespace ytlib
 {
 	//使用boost序列化的文件类
 	//T需要支持序列化

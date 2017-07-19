@@ -2,7 +2,7 @@
 #include <ytlib/ProcessManager/ProcessBase.h>
 #include <ytlib/SupportTools/QueueBase.h>
 
-namespace wtlib
+namespace ytlib
 {
 	//流水线类Process
 	

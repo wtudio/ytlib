@@ -6,7 +6,7 @@
 #include <ytlib/FileManager/XMLFile.h>
 #include <ytlib/FileManager/PrjBase.h>
 
-namespace wtlib
+namespace ytlib
 {
 	bool test_KeyValueFile();
 	bool test_SerializeFile();

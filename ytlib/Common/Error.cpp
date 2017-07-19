@@ -1,22 +1,22 @@
 #include <ytlib/Common/Error.h>
 
-namespace wtlib
+namespace ytlib
 {
 	static const tchar* gErrorMessages[ER_ERROR_COUNT] =
 	{
-		WT_TEXT("操作successful"),
-		WT_TEXT("未知异常"),
+		T_TEXT("操作successful"),
+		T_TEXT("未知异常"),
 
-		WT_TEXT("序列化错误"),
-		WT_TEXT("反序列化错误"),
+		T_TEXT("序列化错误"),
+		T_TEXT("反序列化错误"),
 
-		WT_TEXT("文件不存在"),
-		WT_TEXT("非法保存"),
-		WT_TEXT("非法文件名称"),
-		WT_TEXT("非法文件"),
-		WT_TEXT("初始化文件失败"),
-		WT_TEXT("解析文件失败"),
-		WT_TEXT("保存文件失败")
+		T_TEXT("文件不存在"),
+		T_TEXT("非法保存"),
+		T_TEXT("非法文件名称"),
+		T_TEXT("非法文件"),
+		T_TEXT("初始化文件失败"),
+		T_TEXT("解析文件失败"),
+		T_TEXT("保存文件失败")
 	};
 
 	const tchar* GetErrorMessage(Error err0) {
@@ -46,10 +46,10 @@ namespace wtlib
 
 	const char* Exception::what() const throw() {
 		if (m_message.empty()) {
-			return WT_TSTRING_TO_STRING(std::string(GetErrorMessage(m_errorcode))).c_str();
+			return T_TSTRING_TO_STRING(std::string(GetErrorMessage(m_errorcode))).c_str();
 		}
 		else {
-			return WT_TSTRING_TO_STRING(m_message).c_str();
+			return T_TSTRING_TO_STRING(m_message).c_str();
 		}
 	}
 

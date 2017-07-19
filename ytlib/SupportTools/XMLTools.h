@@ -6,7 +6,7 @@
 #include <ytlib/Common/TString.h>
 #include <ytlib/Common/FileSystem.h>
 
-namespace wtlib
+namespace ytlib
 {
 #if defined(UNICODE)
 	typedef boost::property_tree::wptree tptree;
@@ -43,7 +43,7 @@ namespace wtlib
 #endif
 		try {
 			boost::property_tree::write_xml(path.string(), ptProfile, xml_locale,
-				boost::property_tree::xml_writer_settings<tstring>(WT_TEXT('\t'), 1));
+				boost::property_tree::xml_writer_settings<tstring>(T_TEXT('\t'), 1));
 		}
 		catch (const std::exception& e) {
 			std::cout << ("write XML file failed : ") << e.what() << std::endl;
@@ -62,10 +62,10 @@ namespace wtlib
 	*/
 	static bool readSettings(const tptree& pt, std::map<tstring, tstring>& inputmap_) {
 		try {
-			boost::optional<const tptree&> ptSettings = pt.get_child_optional(WT_TEXT("Settings"));
+			boost::optional<const tptree&> ptSettings = pt.get_child_optional(T_TEXT("Settings"));
 			if (ptSettings) {
 				for (tptree::const_iterator itrptsetting = ptSettings->begin(); itrptsetting != ptSettings->end(); ++itrptsetting) {
-					inputmap_[itrptsetting->second.get<tstring>(WT_TEXT("<xmlattr>.key"))] = itrptsetting->second.get<tstring>(WT_TEXT("<xmlattr>.value"));
+					inputmap_[itrptsetting->second.get<tstring>(T_TEXT("<xmlattr>.key"))] = itrptsetting->second.get<tstring>(T_TEXT("<xmlattr>.value"));
 				}
 			}
 		}
@@ -82,11 +82,11 @@ namespace wtlib
 			tptree ptSettings;
 			for (std::map<tstring, tstring>::const_iterator itr = inputmap_.begin(); itr != inputmap_.end(); ++itr) {
 				tptree ptsetting;
-				ptsetting.put(WT_TEXT("<xmlattr>.key"), itr->first);
-				ptsetting.put(WT_TEXT("<xmlattr>.value"), itr->second);
-				ptSettings.add_child(WT_TEXT("setting"), ptsetting);
+				ptsetting.put(T_TEXT("<xmlattr>.key"), itr->first);
+				ptsetting.put(T_TEXT("<xmlattr>.value"), itr->second);
+				ptSettings.add_child(T_TEXT("setting"), ptsetting);
 			}
-			pt.put_child(WT_TEXT("Settings"), ptSettings);
+			pt.put_child(T_TEXT("Settings"), ptSettings);
 		}
 		catch (const std::exception& e) {
 			std::cout << "write settings failed : " << e.what() << std::endl;

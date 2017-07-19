@@ -1,6 +1,6 @@
 #include "processtest.h"
 
-namespace wtlib
+namespace ytlib
 {
 
 	bool test_ProcessBase() {

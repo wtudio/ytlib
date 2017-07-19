@@ -3,12 +3,12 @@
 #include <ytlib/Common/Util.h>
 #include <string>
 
-namespace wtlib
+namespace ytlib
 {
 #if defined(UNICODE)
-#	define WT_TEXT(STRING) L##STRING
+#	define T_TEXT(STRING) L##STRING
 #else
-#	define WT_TEXT(STRING) STRING
+#	define T_TEXT(STRING) STRING
 #endif
 
 
@@ -39,11 +39,11 @@ namespace wtlib
 	std::wstring ToWString(char const* str);
 
 
-#	define WT_STRING_TO_TSTRING(STRING) wtlib::ToWString(STRING)
-#	define WT_TSTRING_TO_STRING(STRING) wtlib::ToString(STRING)
+#	define T_STRING_TO_TSTRING(STRING) ytlib::ToWString(STRING)
+#	define T_TSTRING_TO_STRING(STRING) ytlib::ToString(STRING)
 #else
-#	define WT_STRING_TO_TSTRING
-#	define WT_TSTRING_TO_STRING
+#	define T_STRING_TO_TSTRING
+#	define T_TSTRING_TO_STRING
 #endif
 
 	//´óÐ¡Ð´×ª»»

@@ -6,7 +6,7 @@
 #include <sstream>
 
 
-namespace wtlib
+namespace ytlib
 {
 	class  Complex {
 	public:

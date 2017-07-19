@@ -4,7 +4,7 @@
 #include <ytlib/ProcessManager/AlgProcess.h>
 #include <ytlib/ProcessManager/QueueProcess.h>
 
-namespace wtlib
+namespace ytlib
 {
 	bool test_ProcessBase();
 	bool test_AlgProcess();

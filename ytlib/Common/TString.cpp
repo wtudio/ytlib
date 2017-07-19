@@ -7,7 +7,7 @@
 #include <algorithm>
 #include <iterator>
 
-namespace wtlib
+namespace ytlib
 {
 #if defined(UNICODE) 
 	tostream & tcout = std::wcout;

@@ -2,7 +2,7 @@
 #include <ytlib/SupportTools/DynamicLibrary.h>
 #include <boost/serialization/singleton.hpp>
 
-namespace wtlib
+namespace ytlib
 {
 	//¶¯Ì¬Á´½Ó¿âÈÝÆ÷
 	class DynamicLibraryContainer

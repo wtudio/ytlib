@@ -3,7 +3,7 @@
 #include <ytlib/LightMath/matrix.h>
 
 
-namespace wtlib
+namespace ytlib
 {
 	bool test_Complex();
 	bool test_Matrix();

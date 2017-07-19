@@ -1,12 +1,12 @@
 #include "filetest.h"
 
-namespace wtlib
+namespace ytlib
 {
 
 	bool test_KeyValueFile() {
 
 		KeyValueFile f1;
-		f1.NewFile(WT_TEXT("filetest/testfile3.txt"));
+		f1.NewFile(T_TEXT("filetest/testfile3.txt"));
 		std::shared_ptr<std::map<std::string, std::string>> o1 = f1.GetFileObjPtr();
 		(*o1)["aaa"] = "bbb";
 		(*o1)["ccc"] = "ddd";
@@ -15,7 +15,7 @@ namespace wtlib
 
 
 		KeyValueFile f2;
-		f2.OpenFile(WT_TEXT("filetest/testfile3.txt"));
+		f2.OpenFile(T_TEXT("filetest/testfile3.txt"));
 		std::shared_ptr<std::map<std::string, std::string>> o2 = f2.GetFileObjPtr();
 		
 		for (std::map<std::string, std::string>::const_iterator itr = o2->begin();
@@ -23,14 +23,14 @@ namespace wtlib
 			std::cout << itr->first << " = " << itr->second << std::endl;
 		}
 		(*o2)["≤‚ ‘1"] = "≤‚ ‘3";
-		f2.SaveFile(WT_TEXT("filetest/testfile4.txt"));
+		f2.SaveFile(T_TEXT("filetest/testfile4.txt"));
 		
 
 		return true;
 	}
 
 	class SFTestObj {
-		WT_CLASS_SERIALIZE(&s1&s2&i1&i2)
+		T_CLASS_SERIALIZE(&s1&s2&i1&i2)
 	public:
 		std::string s1;
 		std::string s2;
@@ -41,7 +41,7 @@ namespace wtlib
 
 	bool test_SerializeFile() {
 		SFTestFile f1;
-		f1.NewFile(WT_TEXT("filetest/testfile.txt"));
+		f1.NewFile(T_TEXT("filetest/testfile.txt"));
 		std::shared_ptr<SFTestObj> o = f1.GetFileObjPtr();
 		o->s1 = "sssadafasf";
 		o->s2 = "≤‚ ‘";
@@ -52,8 +52,8 @@ namespace wtlib
 		tcout << f1.GetFileParentPath() << std::endl;
 
 		SFTestFile f2;
-		f2.OpenFile(WT_TEXT("filetest/testfile.txt"));
-		f2.SaveFile(WT_TEXT("filetest/testfile2.txt"));
+		f2.OpenFile(T_TEXT("filetest/testfile.txt"));
+		f2.SaveFile(T_TEXT("filetest/testfile2.txt"));
 		
 		return true;
 	}
@@ -61,15 +61,15 @@ namespace wtlib
 		XMLFile f1;
 		f1.NewFile();
 
-		f1.SaveFile(WT_TEXT("filetest/TrunkCenter2.xml"));
+		f1.SaveFile(T_TEXT("filetest/TrunkCenter2.xml"));
 		return true;
 	}
 	bool test_PrjBase() {
 
 		PrjFile f1;
 		f1.NewFile();
-		f1.setPrjName(WT_TEXT("testprj2"));
-		f1.SaveFile(WT_TEXT("filetest/testprj2.prj"));
+		f1.setPrjName(T_TEXT("testprj2"));
+		f1.SaveFile(T_TEXT("filetest/testprj2.prj"));
 
 		return true;
 	}

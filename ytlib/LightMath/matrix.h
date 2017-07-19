@@ -10,7 +10,7 @@
 #define MAXSIZE 100000
 
 
-namespace wtlib
+namespace ytlib
 {
 
 	//改造成模板形式，可以放复数、int、float、double等等
