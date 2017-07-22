@@ -51,7 +51,7 @@ namespace ytlib {
 		}
 
 	protected:
-		std::mutex m_mutex;//同步锁
+		std::mutex m_mutex;//同步锁。此处不能用读写锁，因为condition_variable还不支持
 		std::condition_variable m_cond;//条件锁
 		std::queue<T> m_queue;// 队列
 		

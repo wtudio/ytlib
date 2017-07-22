@@ -48,3 +48,20 @@
 
 组件：
 网络适配器，boost.log，简易数据库
+
+
+17、坚持使用最新技术。库尽量都用最新的，工具版本都用最新的，不必考虑对旧版本兼容（但在发布时需要说明：xx版本开始使用新的xxx，将不保证对旧版本的支持）。工具都尽量用64位的
+用cmake建工程，减少vs的耦合性。vs里不需要添加插件也能进行编译
+
+18、网络适配器的一些想法：
+因为boost序列化能够支持智能指针
+理想的是做一个模板类，数据是一个shared_ptr<const T>，指向一个可以被序列化的类，然后在发送时序列化并发送
+shared_ptr<const T> 可以用如下方式生成：
+test* p = new test();
+std::shared_ptr<const test> testptr(p);
+不要delete p 即可
+一个shared_ptr<const T>大小为16个字节。因此比这个大小还要小的数据不适合用此方法
+
+如果要去耦合的话就传入shared_ptr<const string>，提前序列化好
+
+

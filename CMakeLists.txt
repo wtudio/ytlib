@@ -10,8 +10,13 @@ mark_as_advanced(YTLIB_BUILD_TEST)
 
 #依赖库
 find_package( Boost REQUIRED )
-include_directories( ${Boost_INCLUDE_DIRS} )
-link_directories( ${Boost_LIBRARY_DIRS} )
+IF (Boost_FOUND)
+	include_directories( ${Boost_INCLUDE_DIRS} )
+	link_directories( ${Boost_LIBRARY_DIRS} )
+ELSE ()
+	message(FATAL_ERROR "Cannot find Boost library.")
+ENDIF()
+
 
 #设置cmake目录（让cmake能够找到自定义cmake函数。如findpackage等）
 list( APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/ytlib/CMake )
