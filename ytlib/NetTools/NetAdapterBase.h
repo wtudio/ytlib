@@ -41,6 +41,7 @@ namespace ytlib {
 
 		//提供给发送方的发送接口
 		virtual bool Send(const _TransData & Tdata_, uint32_t dst_) {
+			if (dst_ == m_myid) return false;
 			std::vector<_HostInfo> vec_hostinfo;
 			m_hostInfoMutex.lock_shared();
 			std::map<uint32_t, _HostInfo>::const_iterator itr = m_mapHostInfo.find(dst_);
@@ -56,6 +57,7 @@ namespace ytlib {
 			if (size == 0) return false;
 			m_hostInfoMutex.lock_shared();
 			for (size_t ii = 0; ii < size; ++ii) {
+				if (dst_[ii] == m_myid) return false;
 				std::map<uint32_t, _HostInfo>::const_iterator itr = m_mapHostInfo.find(dst_[ii]);
 				if (itr == m_mapHostInfo.end()) return false;
 				vec_hostinfo.push_back(itr->second);

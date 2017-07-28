@@ -18,16 +18,13 @@ namespace ytlib {
 			m_bRunning(true),
 			m_queue(queueSize_) {
 			for (size_t ii = 0; ii < m_threadCount; ii++) {
-				m_threadVec.push_back(new std::thread(&ChannelBase::Run, this));
+				m_Threads.create_thread(std::bind(&ChannelBase::Run, this));
 			}
 		}
 		virtual ~ChannelBase(void) {
 			//结束线程，禁止添加
 			m_bRunning = false;
-			for (size_t ii = 0; ii < m_threadCount; ii++) {
-				m_threadVec[ii]->join();//等待所有线程结束
-				delete m_threadVec[ii];
-			}
+			m_Threads.join_all();
 		}
 		inline bool Add(const T &item_) {
 			return m_queue.Enqueue(item_);
@@ -47,7 +44,7 @@ namespace ytlib {
 	protected:
 	
 		std::atomic_bool m_bRunning;
-		std::vector<std::thread*> m_threadVec;
+		boost::thread_group m_Threads;
 		_Queue m_queue;
 		std::function<void(const T&)> m_processFun;//处理内容函数。参数推荐使用（智能）指针
 		const size_t m_threadCount;

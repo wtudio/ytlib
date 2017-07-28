@@ -11,50 +11,21 @@ namespace ytlib {
 	/*
 	使用boost.asio的一个简易网络适配器
 
-	使用boost序列化的方式直接将类序列化到发送流
-	直接将接收流反序列化到类
-
-
+	使用boost序列化的方式直接将类序列化到发送流、直接将接收流反序列化到类
 	除了类成员外，还支持：
-	1、将数据拷贝进vec_datas中
-	2、一些创建在堆中、确保生存期并且只读的数据，可以取其智能指针放于vec_datasPtr中
+	1、将数据拷贝进map_datas中
+	2、一些创建在堆中、确保生存期并且只读的数据，可以取其智能指针放于map_datas中
 	3、文件发送。需要确立发送、接收目录，否则直接放到可执行文件目录下
 
 	考虑跨平台性，牵涉到网络传输的数据一律使用:
 	char
 	标准int（不能用int、long、size_t这些）
-
-
-	实际使用时对DataPackage再加一层模板（不要用继承）
 	-------------------------------------------------------
-	
 	所有数据都使用shared_buf的形式存储。提供一些重载的函数将一些常见数据形式转变成shared_buf。（还可以拓展自行添加）
 	提供两种存入待发送数据的方式：
 	1、safe方式：将数据实际内容拷贝到一个shared_buf
-
 	2、unsafe方式：只支持传入shared_buf。用户需要保证数据不被其主动删除或修改
-	
 	(实际上这里只是做一个示例，仅一些改动不大的情况会直接使用这样的方式。具体情况还是得具体写数据结构来达到最高效率)
-
-	----------------------------------------------------
-	传输使用以下格式：
-	先传一个报头：（8 byte）
-	head: 2 byte
-
-	tag: 2 byte
-	c+0:对象
-	d+255:所有数据的tip，以\n分割
-	d+i:第i个数据
-	f+255:所有文件的tip+文件名（只有文件名，没有路径），格式：tip1=filename1\ntip2=filename2\n...
-	f+i:第i个文件的数据
-	o+v:结束符
-
-	size: 4 byte ：默认windows，即小端
-	num = byte1+byte2*256+byte3*65536+byte4*2^24
-	byte1=num%256,byte2=(num/256) ...
-
-	然后传输size个byte的数据
-
 	*/
 
 	struct shared_buf {
@@ -62,7 +33,7 @@ namespace ytlib {
 		uint32_t buf_size;
 	};
 
-	//T需要能boost序列化
+	//T需要能boost序列化。不要继承它
 	template<class T>
 	class DataPackage {
 	public:
@@ -70,11 +41,28 @@ namespace ytlib {
 		//tip-data形式
 		std::map<std::string, shared_buf> map_datas;//数据,最大支持255个
 		std::map<std::string, std::string> map_files;//文件,最大支持255个
+		bool complete_flag;//接收完成flag
 	};
 
 	template<class T>
 	class TcpNetAdapter : public NetAdapterBase<TcpEp, std::shared_ptr<DataPackage<T>>> {
 	protected:
+		/*
+		传输使用以下格式：
+		step1：先传一个报头：（8 byte）
+			head: 2 byte
+			tag: 2 byte
+				c+0:对象
+				d+255:所有数据的tip，以\n分割
+				d+i:第i个数据
+				f+255:所有文件的tip+文件名（只有文件名，没有路径），格式：tip1=filename1\ntip2=filename2\n...
+				f+i:第i个文件的数据
+				o+v:结束符
+			size: 4 byte ：默认windows，即小端
+				num = byte1+byte2*256+byte3*65536+byte4*2^24
+				byte1=num%256,byte2=(num/256) ...
+		step2：传输size个byte的数据
+		*/
 #define TCPHEAD1 'Y'
 #define TCPHEAD2 'T'
 #define CLASSHEAD 'C'
@@ -82,8 +70,8 @@ namespace ytlib {
 #define FILEHEAD 'F'
 #define TCPEND1 'O'
 #define TCPEND2 'V'
-
 #define HEAD_SIZE 8
+		//默认vs
 		static void set_buf_from_num(char* p, uint32_t n) {
 #ifdef _MSC_VER
 			memcpy(p, &n, 4);
@@ -125,19 +113,21 @@ namespace ytlib {
 				sock.write_some(*data_, err);
 				write_mutex.unlock();
 				if (err) {
+					if (stopflag) return false;
 					printf_s("write failed : %s\n", err.message().c_str());
 					err_CallBack(remote_ep);
 					return false;
 				}
+				//printf_s("write to %s:%d successful\n", remote_ep.address().to_string().c_str(), remote_ep.port());
 				return true;
 			}
 			
-			void start() {
-				boost::asio::async_read(sock, boost::asio::buffer(header), boost::asio::transfer_exactly(HEAD_SIZE),
-					std::bind(&TcpConnection::on_read_head, this, std::placeholders::_1, std::placeholders::_2));
+			inline void start() {
+				do_read_head();
 			}
 
 			bool read_get_err(const boost::system::error_code & err) {
+				if (stopflag) return true;
 				if (err) {
 					printf_s("read failed : %s\n", err.message().c_str());
 					err_CallBack(remote_ep);
@@ -145,76 +135,107 @@ namespace ytlib {
 				}
 				return false;
 			}
-			//接收完成后先开启下一个异步接收再最后调用回调
-			void on_read_head(const boost::system::error_code & err, size_t read_bytes) {
+			inline void do_read_head(dataPtr& d_= dataPtr()) {
+				boost::asio::async_read(sock, boost::asio::buffer(header, HEAD_SIZE), boost::asio::transfer_exactly(HEAD_SIZE),
+					std::bind(&TcpConnection::on_read_head, this, d_, std::placeholders::_1, std::placeholders::_2));
+			}
+			//使用智能指针的删除器来判断数据是否准备好并进行回调
+			void on_data_ready(DataPackage<T> * p) {
+				if (p->complete_flag) {
+					m_recv_callback(std::move(dataPtr(p)));
+					return;
+				}
+				delete p;
+			}
+			//缓存跟着回调走
+			void on_read_head(dataPtr& RData_,const boost::system::error_code & err, size_t read_bytes) {
 				if (read_get_err(err)) return;
 				//解析报头
 				if (header[0] == TCPHEAD1 && header[1] == TCPHEAD2 && read_bytes == HEAD_SIZE) {
 					uint32_t pack_size = get_num_from_buf(&header[4]);
-					if (header[2] == CLASSHEAD) {
-						if (RDataPtr) {
-							printf_s("read failed : incomplete package\n");
-							err_CallBack(remote_ep);
+					if (!RData_) {
+						if (header[2] == CLASSHEAD) {
+							//新建一个数据包
+							RData_ = dataPtr((new DataPackage<T>()), std::bind(&TcpConnection::on_data_ready, this, std::placeholders::_1));
+							RData_->complete_flag = false;
+							buff_Ptr pBuff = buff_Ptr(new boost::asio::streambuf());
+							boost::asio::async_read(sock, *pBuff, boost::asio::transfer_exactly(pack_size),
+								std::bind(&TcpConnection::on_read_obj, this, RData_, pBuff, std::placeholders::_1, std::placeholders::_2));
 							return;
 						}
-						RDataPtr = dataPtr(new DataPackage<T>());
-						buff_Ptr buff_ = buff_Ptr(new boost::asio::streambuf());
-						boost::asio::async_read(sock, *buff_, boost::asio::transfer_exactly(pack_size),
-							std::bind(&TcpConnection::on_read_obj, this, buff_, std::placeholders::_1, std::placeholders::_2));
-						return;
 					}
-					if (header[2] == DATAHEAD) {
-						if (header[3] == static_cast<char>(uint8_t(255))) {
-
+					else {
+						if (header[2] == DATAHEAD) {
+							boost::shared_array<char> pDataBuff = boost::shared_array<char>(new char[pack_size]);
+							if (header[3] == static_cast<char>(uint8_t(255))) {
+								boost::asio::async_read(sock, boost::asio::buffer(pDataBuff.get(), pack_size), boost::asio::transfer_exactly(pack_size),
+									std::bind(&TcpConnection::on_read_data_tips, this, RData_, pDataBuff, std::placeholders::_1, std::placeholders::_2));
+							}
+							else {
+								boost::asio::async_read(sock, boost::asio::buffer(pDataBuff.get(), pack_size), boost::asio::transfer_exactly(pack_size),
+									std::bind(&TcpConnection::on_read_data, this, RData_, pDataBuff, std::placeholders::_1, std::placeholders::_2));
+							}
+							return;
 						}
-						else {
+						if (header[2] == FILEHEAD) {
+							if (header[3] == static_cast<char>(uint8_t(255))) {
 
-						}
-						return;
-					}
-					if (header[2] == FILEHEAD) {
-						if (header[3] == static_cast<char>(uint8_t(255))) {
+							}
+							else {
 
+							}
+							return;
 						}
-						else {
-
+						if (header[2] == TCPEND1 && header[3] == TCPEND2) {
+							do_read_head();
+							RData_->complete_flag = true;
+							return;
 						}
-						return;
-					}
-					if (header[2] == TCPEND1 && header[3] == TCPEND2) {
-						dataPtr re = RDataPtr;
-						RDataPtr.reset();
-						boost::asio::async_read(sock, boost::asio::buffer(header), boost::asio::transfer_exactly(HEAD_SIZE),
-							std::bind(&TcpConnection::on_read_head, this, std::placeholders::_1, std::placeholders::_2));
-						//需要等待所有操作完成
-						while (!re.unique());
-						m_recv_callback(std::move(re));
-						return;
 					}
 				}
 
-				printf_s("read failed : recv an invalid header\n");
+				printf_s("read failed : recv an invalid header : %c %c %c %d %d\n",
+					header[0], header[1], header[2], header[3], get_num_from_buf(&header[4]));
 				err_CallBack(remote_ep);
 				return;
 			}
 
-			void on_read_obj(buff_Ptr& buff_,const boost::system::error_code & err, size_t read_bytes) {
+			void on_read_obj(dataPtr& RData_, buff_Ptr& buff_,const boost::system::error_code & err, size_t read_bytes) {
 				if (read_get_err(err)) return;
-				boost::asio::async_read(sock, boost::asio::buffer(header), boost::asio::transfer_exactly(HEAD_SIZE),
-					std::bind(&TcpConnection::on_read_head, this, std::placeholders::_1, std::placeholders::_2));
+				do_read_head(RData_);
 				boost::archive::binary_iarchive iar(*buff_);
-				iar >> RDataPtr->obj;
+				iar >> RData_->obj;
 			}
-			void on_read_data_tips(const boost::system::error_code & err, size_t read_bytes) {
+			void on_read_data_tips(dataPtr& RData_, boost::shared_array<char>& buff_, const boost::system::error_code & err, size_t read_bytes) {
+				if (read_get_err(err)) return;
+				//一定要先建立好map再do_read_head
+				uint32_t pos = 0;
+				for (uint32_t ii = 0; ii < read_bytes; ++ii) {
+					if (buff_[ii] == '\n') {
+						RData_->map_datas.insert(std::pair<std::string, shared_buf>(string(&buff_[pos], ii - pos), shared_buf()));
+						pos = ii + 1;
+					}
+				}
+				do_read_head(RData_);
+			}
+			void on_read_data(dataPtr& RData_, boost::shared_array<char>& buff_, const boost::system::error_code & err, size_t read_bytes) {
+				if (read_get_err(err)) return;
+				uint8_t pos = header[3];
+				if (pos > RData_->map_datas.size()) {
+					printf_s("read failed : recv an invalid data");
+					err_CallBack(remote_ep);
+					return;
+				}
+				do_read_head(RData_);
+				std::map<std::string, shared_buf>::iterator itr = RData_->map_datas.begin();
+				for (; 0 == pos; --pos) ++itr;
+				itr->second.buf = buff_;
+				itr->second.buf_size = static_cast<uint32_t>(read_bytes);
+			}
+			void on_read_file_tips(dataPtr& RData_, const boost::system::error_code & err, size_t read_bytes) {
 
 			}
-			void on_read_data(const boost::system::error_code & err, size_t read_bytes) {
-
-			}
-			void on_read_file_tips(const boost::system::error_code & err, size_t read_bytes) {
-
-			}
-			void on_read_file(const boost::system::error_code & err, size_t read_bytes) {
+			void on_read_file(dataPtr& RData_, const boost::system::error_code & err, size_t read_bytes) {
 
 			}
 
@@ -225,7 +246,6 @@ namespace ytlib {
 			tpath* p_RecvPath;//接收文件路径
 
 			//接收缓存
-			dataPtr RDataPtr;
 			char header[HEAD_SIZE];
 
 		};
@@ -265,13 +285,18 @@ namespace ytlib {
 			m_TcpConnectionPool(hostInfo_.port(),&m_RecvPath, m_receiveCallBack){
 			boost::filesystem::create_directories(m_RecvPath);
 			boost::filesystem::create_directories(m_SendPath);
-			m_TcpConnectionPool.start();
+			
 		}
 		virtual ~TcpNetAdapter(){}
 
+		inline bool startListener() {
+			return m_TcpConnectionPool.start();
+		}
 
 	protected:
 		virtual bool _sendfun(const dataPtr & Tdata_, const std::vector<TcpEp>& dst_) {
+			if (Tdata_->map_datas.size() > 255 || Tdata_->map_files.size() > 255) return false;//最大支持255个数据包/文件
+
 			//将Tdata_先转换为std::vector<boost::asio::const_buffer>再一次性发送
 			std::shared_ptr<std::vector<boost::asio::const_buffer>> buffersPtr = 
 				std::shared_ptr<std::vector<boost::asio::const_buffer>>(new std::vector<boost::asio::const_buffer>());
