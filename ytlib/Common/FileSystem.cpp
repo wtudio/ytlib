@@ -27,9 +27,5 @@ namespace ytlib
 			return (tGetCurrentPath() / p);
 	}
 
-	//ºÏ²¢Â·¾¶
-	tpath tCombinePath(const tpath& p1, const tpath& p2) {
-		return (p1 / p2);
-	}
 
 }

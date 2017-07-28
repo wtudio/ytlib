@@ -176,6 +176,7 @@ namespace ytlib
 		mystreambuf _mybuf;
 	};
 
+	//用户也可以参考这些宏来定制自己的序列化反序列化操作
 #define SERIALIZE_INIT \
 	myostringstream myostringstream_tmp(std::ios_base::binary); \
 	std::shared_ptr<boost::archive::binary_oarchive> oar_tmp;
@@ -193,7 +194,7 @@ namespace ytlib
 #define DESERIALIZE(obj,p,len) \
 	myistringstream_tmp.setPoint(p,len); \
 	iar_tmp=std::shared_ptr<boost::archive::binary_iarchive>(new boost::archive::binary_iarchive(myistringstream_tmp)); \
-	*iar_tmp >> obj; \
+	*iar_tmp >> obj; 
 
 
 }

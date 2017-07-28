@@ -21,7 +21,7 @@ namespace ytlib
 			if (infile) {
 				std::string buf;
 				for (; getline(infile, buf);) {
-					int pos = buf.find_first_of('=');
+					size_t pos = buf.find_first_of('=');
 					if (pos != std::string::npos) {
 						std::string key(buf.substr(0, pos)); boost::trim(key);
 						std::string value(buf.substr(pos + 1)); boost::trim(value);

@@ -46,7 +46,7 @@ namespace ytlib
 
 	const char* Exception::what() const throw() {
 		if (m_message.empty()) {
-			return T_TSTRING_TO_STRING(std::string(GetErrorMessage(m_errorcode))).c_str();
+			return T_TSTRING_TO_STRING(tstring(GetErrorMessage(m_errorcode))).c_str();
 		}
 		else {
 			return T_TSTRING_TO_STRING(m_message).c_str();

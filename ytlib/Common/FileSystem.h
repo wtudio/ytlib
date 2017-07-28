@@ -28,8 +28,7 @@ namespace ytlib
 	//获得绝对路径
 	tpath tGetAbsolutePath(const tpath& p);
 
-	//合并路径
-	tpath tCombinePath(const tpath& p1, const tpath& p2);
+
 
 }
 

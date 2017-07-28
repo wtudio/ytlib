@@ -98,7 +98,7 @@ namespace ytlib
 		inline tstring getPrjPath() const { return GetFileParentPath();}
 		//获取绝对路径
 		inline tstring getItemAbsolutePath(const tstring& path_) {
-			return tCombinePath(GetFileParentPath(), path_).string<tstring>();
+			return (tpath(GetFileParentPath())/ tpath(path_)).string<tstring>();
 		}
 	protected:
 		const tstring m_version;
