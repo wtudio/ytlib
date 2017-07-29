@@ -178,11 +178,14 @@ namespace ytlib {
 							return;
 						}
 						if (header[2] == FILEHEAD) {
+							boost::shared_array<char> pDataBuff = boost::shared_array<char>(new char[pack_size]);
 							if (header[3] == static_cast<char>(uint8_t(255))) {
-
+								boost::asio::async_read(sock, boost::asio::buffer(pDataBuff.get(), pack_size), boost::asio::transfer_exactly(pack_size),
+									std::bind(&TcpConnection::on_read_file_tips, this, RData_, pDataBuff, std::placeholders::_1, std::placeholders::_2));
 							}
 							else {
-
+								boost::asio::async_read(sock, boost::asio::buffer(pDataBuff.get(), pack_size), boost::asio::transfer_exactly(pack_size),
+									std::bind(&TcpConnection::on_read_file, this, RData_, pDataBuff, std::placeholders::_1, std::placeholders::_2));
 							}
 							return;
 						}
@@ -228,15 +231,46 @@ namespace ytlib {
 				}
 				do_read_head(RData_);
 				std::map<std::string, shared_buf>::iterator itr = RData_->map_datas.begin();
-				for (; 0 == pos; --pos) ++itr;
+				for (; pos > 0; --pos) ++itr;
 				itr->second.buf = buff_;
 				itr->second.buf_size = static_cast<uint32_t>(read_bytes);
 			}
-			void on_read_file_tips(dataPtr& RData_, const boost::system::error_code & err, size_t read_bytes) {
-
+			void on_read_file_tips(dataPtr& RData_, boost::shared_array<char>& buff_, const boost::system::error_code & err, size_t read_bytes) {
+				if (read_get_err(err)) return;
+				//一定要先建立好map再do_read_head
+				uint32_t pos = 0, pos1 = 0;
+				for (uint32_t ii = 0; ii < read_bytes; ++ii) {
+					if (buff_[ii] == '=') {
+						pos1 = ii + 1;
+					}
+					if (buff_[ii] == '\n') {
+						RData_->map_files.insert(std::pair<std::string, std::string>(
+							string(&buff_[pos], pos1 - 1 - pos), string(&buff_[pos1], ii - pos1)));
+						pos = ii + 1;
+					}
+				}
+				do_read_head(RData_);
 			}
-			void on_read_file(dataPtr& RData_, const boost::system::error_code & err, size_t read_bytes) {
-
+			void on_read_file(dataPtr& RData_, boost::shared_array<char>& buff_, const boost::system::error_code & err, size_t read_bytes) {
+				if (read_get_err(err)) return;
+				uint8_t pos = header[3];
+				if (pos > RData_->map_files.size()) {
+					printf_s("read failed : recv an invalid file");
+					err_CallBack(remote_ep);
+					return;
+				}
+				do_read_head(RData_);
+				std::map<std::string, std::string>::iterator itr = RData_->map_files.begin();
+				for (; pos > 0 ; --pos) ++itr;
+				std::ofstream f(((*p_RecvPath) / tpath(T_STRING_TO_TSTRING(itr->second))).string<tstring>(), ios::out | ios::trunc | ios::binary);
+				if(f){
+					f.write(buff_.get(), read_bytes);
+					f.close();
+				}
+				else {
+					printf_s("can not write file : %s", ((*p_RecvPath) / tpath(T_STRING_TO_TSTRING(itr->second))).string<std::string>().c_str());
+				}
+				
 			}
 
 

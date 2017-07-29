@@ -98,6 +98,7 @@ namespace ytlib {
 		virtual ~TcpConnectionPoolBase(){ 
 			stopflag = true;
 			service.stop();
+			acceptorPtr.reset();
 			m_mapTcpConnection.swap(std::map<TcpEp, TcpConnectionPtr>());
 			m_RunThreads.join_all();
 		}
