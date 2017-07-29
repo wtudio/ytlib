@@ -1,31 +1,33 @@
 #pragma once
-#include <ytlib/NetTools/NetAdapterBase.h>
 #include <ytlib/SupportTools/Serialize.h>
-#include <ytlib/NetTools/TcpConnectionPool.h>
 #include <ytlib/Common/FileSystem.h>
 #include <boost/asio.hpp>
+#include <boost/thread.hpp>
 #include <future>
+#include <memory>
+#include <shared_mutex>
+#include <atomic>
 
 namespace ytlib {
-
 	/*
 	使用boost.asio的一个简易网络适配器
+	使用时需要建立一个主机id与其网络信息的map，然后发送时只需传递数据和目的地id即可
 
-	使用boost序列化的方式直接将类序列化到发送流、直接将接收流反序列化到类
-	除了类成员外，还支持：
+	使用boost序列化的方式直接将类序列化到发送流、直接将接收流反序列化到类。	除了类成员外，还支持：
 	1、将数据拷贝进map_datas中
 	2、一些创建在堆中、确保生存期并且只读的数据，可以取其智能指针放于map_datas中
 	3、文件发送。需要确立发送、接收目录，否则直接放到可执行文件目录下
 
-	考虑跨平台性，牵涉到网络传输的数据一律使用:
-	char
-	标准int（不能用int、long、size_t这些）
+	考虑跨平台性，牵涉到网络传输的数据一律使用 char、标准int这种（不能用wchar、int、long、size_t这些不明确的）
 	-------------------------------------------------------
 	所有数据都使用shared_buf的形式存储。提供一些重载的函数将一些常见数据形式转变成shared_buf。（还可以拓展自行添加）
 	提供两种存入待发送数据的方式：
 	1、safe方式：将数据实际内容拷贝到一个shared_buf
 	2、unsafe方式：只支持传入shared_buf。用户需要保证数据不被其主动删除或修改
 	(实际上这里只是做一个示例，仅一些改动不大的情况会直接使用这样的方式。具体情况还是得具体写数据结构来达到最高效率)
+	----------------------------------------------------
+	sock连接池,	两种方式建立连接：1、accep到的	2、主动连接的
+	本地的连接都绑定到一个port上
 	*/
 
 	struct shared_buf {
@@ -33,7 +35,7 @@ namespace ytlib {
 		uint32_t buf_size;
 	};
 
-	//T需要能boost序列化。不要继承它
+	//T需要能boost序列化
 	template<class T>
 	class DataPackage {
 	public:
@@ -42,11 +44,13 @@ namespace ytlib {
 		std::map<std::string, shared_buf> map_datas;//数据,最大支持255个
 		std::map<std::string, std::string> map_files;//文件,最大支持255个
 		bool complete_flag;//接收完成flag
+		uint32_t packIndex;
 	};
-
+	typedef boost::asio::ip::tcp::endpoint TcpEp;//28个字节
 	template<class T>
-	class TcpNetAdapter : public NetAdapterBase<TcpEp, std::shared_ptr<DataPackage<T>>> {
-	protected:
+	class TcpNetAdapter {
+		typedef std::shared_ptr<DataPackage<T>> dataPtr;
+	private:
 		/*
 		传输使用以下格式：
 		step1：先传一个报头：（8 byte）
@@ -87,25 +91,52 @@ namespace ytlib {
 			return (p[0] + p[1] * 256 + p[2] * 65536 + p[3] * 256 * 65536);
 #endif // _MSC_VER
 		}
-	
+		static bool checkPort(uint16_t port_) {
+			boost::asio::io_service io;
+			boost::asio::ip::tcp::socket sk(io);
+			sk.open(boost::asio::ip::tcp::v4());
+			boost::system::error_code err;
+			sk.connect(TcpEp(boost::asio::ip::tcp::v4(), port_), err);
+			if (err) return true;//连接不上，说明没有程序在监听
+			sk.close();//否则说明已经被占用了
+			return false;
+		}
 
-		typedef std::shared_ptr<DataPackage<T>> dataPtr;
-
-		//子类：连接------------------------------------------------------------------------
-		class TcpConnection :public TcpConnectionBase {
+		//子类：sock连接，为网络适配器定制准备，只能主动发起同步写，读取是异步自动的
+		class TcpConnection :boost::noncopyable {
 			typedef std::shared_ptr<boost::asio::streambuf> buff_Ptr;
 		public:
 			TcpConnection(boost::asio::io_service& io_, 
 				std::function<void(const TcpEp &)> errcb_,
 				tpath* p_RecvPath_,
 				std::function<void(dataPtr &)> cb_):
-				TcpConnectionBase(io_, errcb_), 
+				sock(io_),
+				err_CallBack(errcb_), 
+				stopflag(false),
 				m_recv_callback(cb_), 
-				p_RecvPath(p_RecvPath_){
+				p_RecvPath(p_RecvPath_),
+				curPackageIndex(0),
+				curPackageCount(0){
 
 			}
-			virtual ~TcpConnection() {}
+			virtual ~TcpConnection() { stopflag = true; }
 
+			//用于主动连接
+			bool connect(const TcpEp& ep_, uint16_t port_ = 0) {
+				sock.open(boost::asio::ip::tcp::v4());
+				if (port_) {
+					sock.set_option(boost::asio::ip::tcp::socket::reuse_address(true));
+					sock.bind(TcpEp(boost::asio::ip::tcp::v4(), port_));//如果指定端口了，则绑定到指定端口
+				}
+				boost::system::error_code err;
+				sock.connect(ep_, err);
+				if (err) {
+					YT_DEBUG_PRINTF("connect failed : %s\n", err.message().c_str());
+					return false;
+				}
+				remote_ep = ep_;
+				return true;
+			}
 			//同步发送，加锁
 			bool write(const std::shared_ptr<std::vector<boost::asio::const_buffer>> & data_) {
 				boost::system::error_code err;
@@ -114,22 +145,22 @@ namespace ytlib {
 				write_mutex.unlock();
 				if (err) {
 					if (stopflag) return false;
-					printf_s("write failed : %s\n", err.message().c_str());
+					YT_DEBUG_PRINTF("write failed : %s\n", err.message().c_str());
 					err_CallBack(remote_ep);
 					return false;
 				}
-				//printf_s("write to %s:%d successful\n", remote_ep.address().to_string().c_str(), remote_ep.port());
 				return true;
 			}
 			
-			inline void start() {
-				do_read_head();
-			}
+			inline void start() {do_read_head();}
 
+			boost::asio::ip::tcp::socket sock;
+			TcpEp remote_ep;
+		private:
 			bool read_get_err(const boost::system::error_code & err) {
 				if (stopflag) return true;
 				if (err) {
-					printf_s("read failed : %s\n", err.message().c_str());
+					YT_DEBUG_PRINTF("read failed : %s\n", err.message().c_str());
 					err_CallBack(remote_ep);
 					return true;
 				}
@@ -142,7 +173,14 @@ namespace ytlib {
 			//使用智能指针的删除器来判断数据是否准备好并进行回调
 			void on_data_ready(DataPackage<T> * p) {
 				if (p->complete_flag) {
+					while (curPackageCount != p->packIndex) {
+						if (stopflag) {
+							delete p;
+							return;
+						}
+					}
 					m_recv_callback(std::move(dataPtr(p)));
+					++curPackageCount;
 					return;
 				}
 				delete p;
@@ -158,6 +196,8 @@ namespace ytlib {
 							//新建一个数据包
 							RData_ = dataPtr((new DataPackage<T>()), std::bind(&TcpConnection::on_data_ready, this, std::placeholders::_1));
 							RData_->complete_flag = false;
+							RData_->packIndex = curPackageIndex;
+							++curPackageIndex;
 							buff_Ptr pBuff = buff_Ptr(new boost::asio::streambuf());
 							boost::asio::async_read(sock, *pBuff, boost::asio::transfer_exactly(pack_size),
 								std::bind(&TcpConnection::on_read_obj, this, RData_, pBuff, std::placeholders::_1, std::placeholders::_2));
@@ -197,12 +237,11 @@ namespace ytlib {
 					}
 				}
 
-				printf_s("read failed : recv an invalid header : %c %c %c %d %d\n",
+				YT_DEBUG_PRINTF("read failed : recv an invalid header : %c %c %c %d %d\n",
 					header[0], header[1], header[2], header[3], get_num_from_buf(&header[4]));
 				err_CallBack(remote_ep);
 				return;
 			}
-
 			void on_read_obj(dataPtr& RData_, buff_Ptr& buff_,const boost::system::error_code & err, size_t read_bytes) {
 				if (read_get_err(err)) return;
 				do_read_head(RData_);
@@ -225,7 +264,7 @@ namespace ytlib {
 				if (read_get_err(err)) return;
 				uint8_t pos = header[3];
 				if (pos > RData_->map_datas.size()) {
-					printf_s("read failed : recv an invalid data");
+					YT_DEBUG_PRINTF("read failed : recv an invalid data");
 					err_CallBack(remote_ep);
 					return;
 				}
@@ -255,7 +294,7 @@ namespace ytlib {
 				if (read_get_err(err)) return;
 				uint8_t pos = header[3];
 				if (pos > RData_->map_files.size()) {
-					printf_s("read failed : recv an invalid file");
+					YT_DEBUG_PRINTF("read failed : recv an invalid file");
 					err_CallBack(remote_ep);
 					return;
 				}
@@ -268,71 +307,80 @@ namespace ytlib {
 					f.close();
 				}
 				else {
-					printf_s("can not write file : %s", ((*p_RecvPath) / tpath(T_STRING_TO_TSTRING(itr->second))).string<std::string>().c_str());
+					YT_DEBUG_PRINTF("can not write file : %s", ((*p_RecvPath) / tpath(T_STRING_TO_TSTRING(itr->second))).string<std::string>().c_str());
 				}
 				
 			}
 
-
-		protected:
+			std::atomic_bool stopflag;
+			uint32_t curPackageIndex, curPackageCount;
+			std::function<void(const TcpEp &)> err_CallBack;//发生错误时的回调。一旦读/写出错，就关闭连接并调用回调告知上层
 			std::mutex write_mutex;
 			std::function<void(dataPtr &)> m_recv_callback;
 			tpath* p_RecvPath;//接收文件路径
-
-			//接收缓存
-			char header[HEAD_SIZE];
-
+			char header[HEAD_SIZE];//接收缓存
+	
 		};
-		//子类：连接池---------------------------------------------------------------------
-		class TcpConnectionPool : public TcpConnectionPoolBase<TcpConnection> {
-		public:
-			TcpConnectionPool(uint16_t port_, 
-				tpath* p_RecvPath_,
-				std::function<void(dataPtr &)> cb_) :
-				TcpConnectionPoolBase(port_), 
-				p_RecvPath(p_RecvPath_),
-				m_recv_callback(cb_){
-
-			}
-			virtual ~TcpConnectionPool() {}
-
-		protected:
-			//工厂函数
-			TcpConnectionPtr getNewTcpConnectionPtr() {
-				return TcpConnectionPtr(new TcpConnection(service, 
-					std::bind(&TcpConnectionPoolBase<TcpConnection>::on_err, this, std::placeholders::_1),
-					p_RecvPath,
-					m_recv_callback
-					));
-			}
-			std::function<void(dataPtr &)> m_recv_callback;
-			tpath* p_RecvPath;//接收文件路径
-		};
-		//类本体-------------------------------------------------------------------------
+		typedef std::shared_ptr<TcpConnection> TcpConnectionPtr;
+		
 	public:
 		TcpNetAdapter(uint32_t myid_,
 			const TcpEp & hostInfo_,
-			std::function<void(std::shared_ptr<DataPackage<T>> &)> recvcb_,
-			const tstring& rp = T_TEXT(""),	const tstring& sp = T_TEXT("")) :
-			NetAdapterBase(myid_, hostInfo_, recvcb_) ,
-			m_RecvPath(tGetAbsolutePath(rp)), m_SendPath(tGetAbsolutePath(sp)),
-			m_TcpConnectionPool(hostInfo_.port(),&m_RecvPath, m_receiveCallBack){
+			std::function<void(dataPtr &)> recvcb_,
+			const tstring& rp = T_TEXT(""),
+			const tstring& sp = T_TEXT(""),
+			uint32_t threadSize_ = 10) :
+			m_myid(myid_), 
+			m_receiveCallBack(recvcb_),
+			m_RecvPath(tGetAbsolutePath(rp)), 
+			m_SendPath(tGetAbsolutePath(sp)),
+			myport(hostInfo_.port()),
+			stopflag(true),
+			m_threadSize(threadSize_){
+			m_mapHostInfo[myid_] = hostInfo_;
 			boost::filesystem::create_directories(m_RecvPath);
 			boost::filesystem::create_directories(m_SendPath);
-			
 		}
-		virtual ~TcpNetAdapter(){}
-
-		inline bool startListener() {
-			return m_TcpConnectionPool.start();
+		virtual ~TcpNetAdapter(){
+			stopflag = true;
+			service.stop();
+			acceptorPtr.reset();
+			m_mapTcpConnection.swap(std::map<TcpEp, TcpConnectionPtr>());
+			m_RunThreads.join_all();
 		}
 
-	protected:
-		virtual bool _sendfun(const dataPtr & Tdata_, const std::vector<TcpEp>& dst_) {
+		inline bool start() {
+			if (!checkPort(myport)) return false;
+			service.reset();
+			stopflag = false;
+			acceptorPtr = std::shared_ptr<boost::asio::ip::tcp::acceptor>(new boost::asio::ip::tcp::acceptor(service, TcpEp(boost::asio::ip::tcp::v4(), myport), true));
+			TcpConnectionPtr pConnection = getNewTcpConnectionPtr();
+			acceptorPtr->async_accept(pConnection->sock, std::bind(&TcpNetAdapter::on_accept, this, pConnection, std::placeholders::_1));
+			//使用最多10个线程
+			for (uint32_t i = 0; i < m_threadSize; ++i) {
+				m_RunThreads.create_thread(boost::bind(&boost::asio::io_service::run, &service));
+			}
+			return true;
+		}
+
+		bool Send(const dataPtr & Tdata_, const std::vector<uint32_t>& dst_) {
+			//做一些检查
+			if (stopflag) return false;
+			size_t size = dst_.size();
+			if (size == 0) return false;
 			if (Tdata_->map_datas.size() > 255 || Tdata_->map_files.size() > 255) return false;//最大支持255个数据包/文件
+			std::vector<TcpEp> vec_hosts;
+			std::shared_lock<std::shared_mutex> lck(m_hostInfoMutex);
+			for (size_t ii = 0; ii < size; ++ii) {
+				if (dst_[ii] == m_myid) return false;
+				std::map<uint32_t, TcpEp>::const_iterator itr = m_mapHostInfo.find(dst_[ii]);
+				if (itr == m_mapHostInfo.end()) return false;
+				vec_hosts.push_back(itr->second);
+			}
+			lck.unlock();
 
 			//将Tdata_先转换为std::vector<boost::asio::const_buffer>再一次性发送
-			std::shared_ptr<std::vector<boost::asio::const_buffer>> buffersPtr = 
+			std::shared_ptr<std::vector<boost::asio::const_buffer>> buffersPtr =
 				std::shared_ptr<std::vector<boost::asio::const_buffer>>(new std::vector<boost::asio::const_buffer>());
 			//第一步：发送对象
 			char c_head_buff[HEAD_SIZE]{ TCPHEAD1 ,TCPHEAD2,CLASSHEAD,0 };
@@ -342,14 +390,14 @@ namespace ytlib {
 			set_buf_from_num(&c_head_buff[4], static_cast<uint32_t>(objbuff.size()));
 			buffersPtr->push_back(std::move(boost::asio::const_buffer(c_head_buff, HEAD_SIZE)));
 			buffersPtr->push_back(std::move(objbuff.data()));
-			//第二步，发送数据
-			//先发送tips数据包
+			//第二步，发送数据,先发送tips数据包
 			std::map<std::string, shared_buf>& map_datas = Tdata_->map_datas;
 			//缓冲区不能放在内层scope里
 			std::string data_tips;
 			char d0_head_buff[HEAD_SIZE]{ TCPHEAD1 ,TCPHEAD2,DATAHEAD,static_cast<char>(uint8_t(255)) };
-			boost::shared_array<char> d_head_buff = boost::shared_array<char>(new char[map_datas.size() * HEAD_SIZE]);
+			boost::shared_array<char> d_head_buff;
 			if (map_datas.size() > 0) {
+				d_head_buff = boost::shared_array<char>(new char[map_datas.size() * HEAD_SIZE]);
 				for (std::map<std::string, shared_buf>::const_iterator itr = map_datas.begin(); itr != map_datas.end(); ++itr) {
 					data_tips += itr->first;
 					data_tips += '\n';
@@ -371,15 +419,14 @@ namespace ytlib {
 					++ii;
 				}
 			}
-			
-			//第三步，发送文件
-			//先发送文件名信息
+			//第三步，发送文件,先发送文件名信息
 			std::map<std::string, std::string>& map_files = Tdata_->map_files;
 			std::string file_tips;
 			char f0_head_buff[HEAD_SIZE]{ TCPHEAD1 ,TCPHEAD2,FILEHEAD,static_cast<char>(uint8_t(255)) };
-			boost::shared_array<char> f_head_buff = boost::shared_array<char>(new char[map_files.size() * HEAD_SIZE]);
+			boost::shared_array<char> f_head_buff;
 			std::vector<boost::shared_array<char>> vec_file_buf;
 			if (map_files.size() > 0) {
+				f_head_buff = boost::shared_array<char>(new char[map_files.size() * HEAD_SIZE]);
 				for (std::map<std::string, std::string>::const_iterator itr = map_files.begin(); itr != map_files.end(); ++itr) {
 					file_tips += itr->first; file_tips += '=';//tip
 					file_tips += boost::filesystem::path(itr->second).filename().string(); file_tips += '\n';
@@ -418,36 +465,133 @@ namespace ytlib {
 			buffersPtr->push_back(std::move(boost::asio::const_buffer(end_head_buff, HEAD_SIZE)));
 
 			//单地址优化
-			if (dst_.size() == 1) {
-				return _send_one(buffersPtr, dst_[0]);
+			if (vec_hosts.size() == 1) {
+				return _send_one(buffersPtr, vec_hosts[0]);
 			}
 			//否则使用多线程并行群发
 			std::vector<std::future<bool>> v;
-			size_t len = dst_.size();
+			size_t len = vec_hosts.size();
 			for (size_t ii = 0; ii < len; ii++) {
-				v.push_back(std::async(std::launch::async, &TcpNetAdapter::_send_one, this, buffersPtr, dst_[ii]));
+				v.push_back(std::async(std::launch::async, &TcpNetAdapter::_send_one, this, buffersPtr, vec_hosts[ii]));
 			}
 			bool result = true;
 			for (size_t ii = 0; ii < len; ii++) {
-				result = result&&(v[ii].get());
+				result = result && (v[ii].get());
 			}
 			return result;
 		}
 
-		virtual bool _send_one(const std::shared_ptr<std::vector<boost::asio::const_buffer>> & Tdata_, const TcpEp & ep) {
-			std::shared_ptr<TcpConnection> pc = m_TcpConnectionPool.getTcpConnectionPtr(ep);
+		//hostinfo操作，主要是对外提供。只可添加或修改，不可移除
+		inline TcpEp GetMyHostInfo() {
+			std::shared_lock<std::shared_mutex> lck(m_hostInfoMutex);
+			return m_mapHostInfo[m_myid];
+		}
+		inline std::map<uint32_t, TcpEp> GetHostInfoMap() {
+			std::shared_lock<std::shared_mutex> lck(m_hostInfoMutex);
+			return m_mapHostInfo;
+		}
+		//设置主机info，有则覆盖，无责添加
+		bool SetHost(uint32_t hostid_, const TcpEp & hostInfo_) {
+			std::unique_lock<std::shared_mutex> lck(m_hostInfoMutex);
+			m_mapHostInfo[hostid_] = hostInfo_;
+			return true;
+		}
+		bool SetHost(const std::map<uint32_t, TcpEp>& hosts_) {
+			std::unique_lock<std::shared_mutex> lck(m_hostInfoMutex);
+			for (std::map<uint32_t, TcpEp>::iterator itr = hosts_.begin(); itr != hosts_.end(); ++itr) {
+				m_mapHostInfo[itr->first] = itr->second;
+			}
+			return true;
+		}
+
+	private:
+
+		//工厂函数
+		inline TcpConnectionPtr getNewTcpConnectionPtr() {
+			return TcpConnectionPtr(new TcpConnection(service, std::bind(&TcpNetAdapter::on_err, this, std::placeholders::_1), &m_RecvPath, m_receiveCallBack));
+		}
+		void on_accept(TcpConnectionPtr& p, const boost::system::error_code & err) {
+			if (stopflag) return;
+			if (err) {
+				YT_DEBUG_PRINTF("listerner get err, please restart : %s\n", err.message().c_str());
+				return;
+			}
+			p->remote_ep = p->sock.remote_endpoint();
+			YT_DEBUG_PRINTF("get a new connection from %s:%d\n", p->remote_ep.address().to_string().c_str(), p->remote_ep.port());
+			m_TcpConnectionMutex.lock();
+			m_mapTcpConnection[p->remote_ep] = p;
+			m_TcpConnectionMutex.unlock();
+			p->start();
+			TcpConnectionPtr pConnection = getNewTcpConnectionPtr();
+			acceptorPtr->async_accept(pConnection->sock, std::bind(&TcpNetAdapter::on_accept, this, pConnection, std::placeholders::_1));
+
+		}
+		bool _send_one(const std::shared_ptr<std::vector<boost::asio::const_buffer>> & Tdata_, const TcpEp & ep) {
+			std::shared_ptr<TcpConnection> pc = getTcpConnectionPtr(ep);
 			if (!pc) return false;
 			return pc->write(Tdata_);
 		}
 
-		//接收数据
+		//获取连接
+		TcpConnectionPtr getTcpConnectionPtr(const TcpEp& ep) {
+			//先在map里找，没有就直接去连接一个
+			{
+				std::shared_lock<std::shared_mutex> lck(m_TcpConnectionMutex);
+				std::map<TcpEp, TcpConnectionPtr>::iterator itr = m_mapTcpConnection.find(ep);
+				if (itr != m_mapTcpConnection.end()) {
+					return itr->second;
+				}
+			}
+			//同步连接
+			TcpConnectionPtr pConnection = getNewTcpConnectionPtr();
+			if (pConnection->connect(ep, myport)) {
+				YT_DEBUG_PRINTF("connect to %s:%d successful\n", ep.address().to_string().c_str(), ep.port());
+				m_TcpConnectionMutex.lock();
+				m_mapTcpConnection[ep] = pConnection;
+				m_TcpConnectionMutex.unlock();
+				pConnection->start();
+				return pConnection;
+			}
+			else {
+				//如果同步连接失败了，也有可能对方已经连接过来了。可以再在表中找一下
+				std::shared_lock<std::shared_mutex> lck(m_TcpConnectionMutex);
+				std::map<TcpEp, TcpConnectionPtr>::iterator itr = m_mapTcpConnection.find(ep);
+				if (itr != m_mapTcpConnection.end()) {
+					return itr->second;
+				}
+			}
+			YT_DEBUG_PRINTF("connect to %s:%d failed\n", ep.address().to_string().c_str(), ep.port());
+			return TcpConnectionPtr();
+		}
 
-		TcpConnectionPool m_TcpConnectionPool;
-		tpath m_RecvPath;//接收、发送文件路径
-		tpath m_SendPath;
+		void on_err(const TcpEp& ep) {
+			YT_DEBUG_PRINTF("connection to %s:%d get an err and is closed\n", ep.address().to_string().c_str(), ep.port());
+			std::unique_lock<std::shared_mutex> lck(m_TcpConnectionMutex);
+			std::map<TcpEp, TcpConnectionPtr>::iterator itr = m_mapTcpConnection.find(ep);
+			if (itr != m_mapTcpConnection.end()) {
+				m_mapTcpConnection.erase(itr);
+			}
+		}
 
+		std::atomic_bool stopflag;//停止标志
+		std::function<void(dataPtr &)> m_receiveCallBack;//接收回调
+		tpath m_RecvPath;//接收文件路径
+		tpath m_SendPath;//发送文件路径
+
+		boost::thread_group m_RunThreads;
+
+		std::map<TcpEp, TcpConnectionPtr> m_mapTcpConnection;//目标ep-TcpConnection的map
+		std::shared_mutex m_TcpConnectionMutex;
+
+		std::shared_ptr<boost::asio::ip::tcp::acceptor> acceptorPtr;//监听器
+		boost::asio::io_service service;
+
+		std::map<uint32_t, TcpEp> m_mapHostInfo;//主机列表：id-info
+		std::shared_mutex m_hostInfoMutex;//主机列表的读写锁
+
+		const uint32_t m_threadSize;//使用的异步线程数量
+		const uint32_t m_myid;//自身id，构造之后无法修改
+		const uint16_t myport;//监听端口，并且所有主动进行的连接都绑定到这个端口上
 	};
-
-
 
 }

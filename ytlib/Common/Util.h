@@ -60,3 +60,13 @@
 
 //////////////////////////////////////////////////////////////////////////
 #define endll std::endl << std::endl // double end line definition
+
+//////////////////////////////////////////////////////////////////////////
+//debug µ÷ÊÔ
+
+#ifdef DEBUG
+#define YT_DEBUG_PRINTF(_arg_,...) printf_s(_arg_, ##__VA_ARGS__);
+#else  
+#define YT_DEBUG_PRINTF(_arg_,...) ;
+#endif // DEBUG
+
