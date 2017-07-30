@@ -107,7 +107,7 @@ namespace ytlib
 			ticTime_global = boost::posix_time::microsec_clock::universal_time();
 
 
-			myTcpNetAdapter* a = new myTcpNetAdapter(1000, TcpEp(boost::asio::ip::tcp::v4(), 60001),
+			myTcpNetAdapter* a = new myTcpNetAdapter(1000, 60001,
 				std::bind(&handel_recv, std::placeholders::_1), T_TEXT("a/recv"), T_TEXT("a/send"));
 			iserr &= (a->start());
 			a->SetHost(1000, TcpEp(boost::asio::ip::address::from_string("127.0.0.1"), 60001));
@@ -115,14 +115,14 @@ namespace ytlib
 			a->SetHost(3000, TcpEp(boost::asio::ip::address::from_string("127.0.0.1"), 60003));
 
 
-			myTcpNetAdapter* b = new myTcpNetAdapter(2000, TcpEp(boost::asio::ip::tcp::v4(), 60002),
+			myTcpNetAdapter* b = new myTcpNetAdapter(2000,  60002,
 				std::bind(&handel_recv2, std::placeholders::_1), T_TEXT("b/recv"), T_TEXT("b/send"));
 			iserr &= (b->start());
 			b->SetHost(1000, TcpEp(boost::asio::ip::address::from_string("127.0.0.1"), 60001));
 			b->SetHost(2000, TcpEp(boost::asio::ip::address::from_string("127.0.0.1"), 60002));
 			b->SetHost(3000, TcpEp(boost::asio::ip::address::from_string("127.0.0.1"), 60003));
 
-			myTcpNetAdapter* c = new myTcpNetAdapter(3000, TcpEp(boost::asio::ip::tcp::v4(), 60003),
+			myTcpNetAdapter* c = new myTcpNetAdapter(3000, 60003,
 				std::bind(&handel_recv3, std::placeholders::_1), T_TEXT("c/recv"), T_TEXT("c/send"));
 			iserr &= (c->start());
 			c->SetHost(1000, TcpEp(boost::asio::ip::address::from_string("127.0.0.1"), 60001));

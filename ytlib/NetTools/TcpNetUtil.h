@@ -15,12 +15,10 @@ namespace ytlib
 	step2：传输size个byte的数据
 	如果使用结束符的话，需要在发送完成一个包后发送一个结束head：tag = TCPEND1 + TCPEND2
 	*/
-	enum {
-		TCPHEAD1 = 'Y',
-		TCPHEAD2 = 'T',
-		TCPEND1 = 'O',
-		TCPEND2 = 'V'
-	};
+
+	typedef boost::asio::ip::tcp::endpoint TcpEp;//28个字节
+	typedef boost::asio::ip::tcp::socket TcpSocket;
+
 
 	//默认vs
 	static void set_buf_from_num(char* p, uint32_t n) {
@@ -43,14 +41,20 @@ namespace ytlib
 	//检查端口是否可用。true说明可用
 	static bool checkPort(uint16_t port_) {
 		boost::asio::io_service io;
-		boost::asio::ip::tcp::socket sk(io);
+		TcpSocket sk(io);
 		sk.open(boost::asio::ip::tcp::v4());
 		boost::system::error_code err;
-		sk.connect(boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port_), err);
+		sk.connect(TcpEp(boost::asio::ip::tcp::v4(), port_), err);
 		if (err) return true;//连接不上，说明没有程序在监听
 		sk.close();//否则说明已经被占用了
 		return false;
 	}
 
-
+	static uint16_t getUsablePort(uint16_t start_=60000) {
+		for (uint16_t ii = start_; ii < 65535; ii++) {
+			if (checkPort(ii)) return ii;
+		}
+		//如果没有找到则返回0
+		return 0;
+	}
 }

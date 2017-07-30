@@ -2,6 +2,7 @@
 #include <ytlib/SupportTools/Serialize.h>
 #include <ytlib/SupportTools/UUID.h>
 #include <ytlib/NetTools/TcpNetAdapter.h>
+#include <ytlib/LogService/LoggerServer.h>
 
 #include "mathtest.h"
 #include "filetest.h"
@@ -28,11 +29,17 @@ int32_t main(int32_t argc, char** argv) {
 	//std::cout << (tocTime_global - ticTime_global).ticks() << "us" << std::endl;
 
 	
+	
+
 
 
 
 	test_TcpNetAdapter();
 	
+	LoggerServer l(55555);
+	l.start();
+
+
 	test_Complex();
 	test_Matrix();
 	test_Matrix_c();
