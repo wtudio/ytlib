@@ -1,5 +1,6 @@
 #include "nettest.h"
 #include <boost/lexical_cast.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>  
 
 using namespace boost::asio;
 using namespace std;
@@ -25,31 +26,31 @@ namespace ytlib
 		printf_s("a_R: %d - %f - %s - %s\n", data->obj.a, data->obj.b, data->obj.c.c_str(),
 			string(data->map_datas["data1"].buf.get(), 10).c_str());
 		iserr &= (data->map_datas["data1"].buf_size == 1000);
-		iserr &= (data->map_datas["data2"].buf_size == 1000);
+		//iserr &= (data->map_datas["data2"].buf_size == 1000);
 
-		iserr &= (data->map_files["file1"] == "testprj2.prj");
-		iserr &= (data->map_files["file2"] == "TrunkCenter2.xml");
-		iserr &= (data->map_files["file3"] == "testfile.txt");
+		//iserr &= (data->map_files["file1"] == "testprj2.prj");
+		//iserr &= (data->map_files["file2"] == "TrunkCenter2.xml");
+		//iserr &= (data->map_files["file3"] == "testfile.txt");
 	}
 	void handel_recv2(std::shared_ptr<myDataPackage>& data) {
 		printf_s("b_R: %d - %f - %s - %s\n", data->obj.a, data->obj.b, data->obj.c.c_str(),
 			string(data->map_datas["data1"].buf.get(), 10).c_str());
 		iserr &= (data->map_datas["data1"].buf_size == 1000);
-		iserr &= (data->map_datas["data2"].buf_size == 1000);
+		//iserr &= (data->map_datas["data2"].buf_size == 1000);
 
-		iserr &= (data->map_files["file1"] == "testprj2.prj");
-		iserr &= (data->map_files["file2"] == "TrunkCenter2.xml");
-		iserr &= (data->map_files["file3"] == "testfile.txt");
+		//iserr &= (data->map_files["file1"] == "testprj2.prj");
+		//iserr &= (data->map_files["file2"] == "TrunkCenter2.xml");
+		//iserr &= (data->map_files["file3"] == "testfile.txt");
 	}
 	void handel_recv3(std::shared_ptr<myDataPackage>& data) {
 		printf_s("c_R: %d - %f - %s - %s\n", data->obj.a, data->obj.b, data->obj.c.c_str(),
 			string(data->map_datas["data1"].buf.get(), 10).c_str());
 		iserr &= (data->map_datas["data1"].buf_size == 1000);
-		iserr &= (data->map_datas["data2"].buf_size == 1000);
+		//iserr &= (data->map_datas["data2"].buf_size == 1000);
 
-		iserr &= (data->map_files["file1"] == "testprj2.prj");
-		iserr &= (data->map_files["file2"] == "TrunkCenter2.xml");
-		iserr &= (data->map_files["file3"] == "testfile.txt");
+		//iserr &= (data->map_files["file1"] == "testprj2.prj");
+		//iserr &= (data->map_files["file2"] == "TrunkCenter2.xml");
+		//iserr &= (data->map_files["file3"] == "testfile.txt");
 	}
 
 	void send_fun(myTcpNetAdapter* p, std::vector<uint32_t> id) {
@@ -74,15 +75,21 @@ namespace ytlib
 			packptr->obj.b = ii / 3.256;
 			packptr->obj.c = boost::lexical_cast<std::string>(ii * 5);
 			packptr->obj.d = s;
+
 			shared_buf mybuf;
 			mybuf.buf = data;
 			mybuf.buf_size = 1000;
 			packptr->map_datas["data1"] = mybuf;
-			packptr->map_datas["data2"] = mybuf;
 
-			packptr->map_files["file1"] = file1;
-			packptr->map_files["file2"] = file2;
-			packptr->map_files["file3"] = file3;
+			if (ii % 5 == 0) {
+				
+				packptr->map_datas["data2"] = mybuf;
+
+				packptr->map_files["file1"] = file1;
+				packptr->map_files["file2"] = file2;
+				packptr->map_files["file3"] = file3;
+			}
+			
 			if (!(p->Send(packptr, id))) {
 				++count;
 			}
@@ -95,6 +102,11 @@ namespace ytlib
 
 	bool test_TcpNetAdapter() {
 		if (true) {
+
+			boost::posix_time::ptime ticTime_global, tocTime_global;
+			ticTime_global = boost::posix_time::microsec_clock::universal_time();
+
+
 			myTcpNetAdapter* a = new myTcpNetAdapter(1000, TcpEp(boost::asio::ip::tcp::v4(), 60001),
 				std::bind(&handel_recv, std::placeholders::_1), T_TEXT("a/recv"), T_TEXT("a/send"));
 			iserr &= (a->start());
@@ -135,6 +147,10 @@ namespace ytlib
 				//m_RunThreads.create_thread(std::bind(&send_fun, c, 2000));
 			}
 			m_RunThreads.join_all();
+
+			tocTime_global = boost::posix_time::microsec_clock::universal_time(); 
+			printf_s("-----------------count : %d us----------------------\n", (tocTime_global - ticTime_global).ticks());
+			//std::cout << (tocTime_global - ticTime_global).ticks() << "us" << std::endl;
 
 
 			getchar();

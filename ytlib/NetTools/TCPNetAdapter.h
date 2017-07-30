@@ -1,7 +1,8 @@
 #pragma once
 #include <ytlib/SupportTools/Serialize.h>
 #include <ytlib/Common/FileSystem.h>
-#include <boost/asio.hpp>
+#include <ytlib/NetTools/TcpNetUtil.h>
+#include <ytlib/SupportTools/QueueBase.h>
 #include <boost/thread.hpp>
 #include <future>
 #include <memory>
@@ -35,6 +36,26 @@ namespace ytlib {
 		uint32_t buf_size;
 	};
 
+	class LightSignal {
+	public:
+		LightSignal() :flag(false) {}
+		~LightSignal() {}
+		void notify_one() {
+			std::lock_guard<std::mutex> lck(m_mutex);
+			flag = true;
+			m_cond.notify_one();
+		}
+		void wait() {
+			std::unique_lock<std::mutex> lck(m_mutex);
+			if (flag) return;
+			m_cond.wait(lck);
+		}
+	private:
+		std::mutex m_mutex;
+		std::condition_variable m_cond;
+		bool flag;
+	};
+
 	//T需要能boost序列化
 	template<class T>
 	class DataPackage {
@@ -44,63 +65,29 @@ namespace ytlib {
 		std::map<std::string, shared_buf> map_datas;//数据,最大支持255个
 		std::map<std::string, std::string> map_files;//文件,最大支持255个
 		bool complete_flag;//接收完成flag
-		uint32_t packIndex;
+		LightSignal* p_s;
 	};
+
 	typedef boost::asio::ip::tcp::endpoint TcpEp;//28个字节
 	template<class T>
 	class TcpNetAdapter {
 		typedef std::shared_ptr<DataPackage<T>> dataPtr;
 	private:
 		/*
-		传输使用以下格式：
-		step1：先传一个报头：（8 byte）
-			head: 2 byte
-			tag: 2 byte
-				c+0:对象
-				d+255:所有数据的tip，以\n分割
-				d+i:第i个数据
-				f+255:所有文件的tip+文件名（只有文件名，没有路径），格式：tip1=filename1\ntip2=filename2\n...
-				f+i:第i个文件的数据
-				o+v:结束符
-			size: 4 byte ：默认windows，即小端
-				num = byte1+byte2*256+byte3*65536+byte4*2^24
-				byte1=num%256,byte2=(num/256) ...
-		step2：传输size个byte的数据
+		tag: 2 byte
+			c+0:对象
+			d+255:所有数据的tip，以\n分割
+			d+i:第i个数据
+			f+255:所有文件的tip+文件名（只有文件名，没有路径），格式：tip1=filename1\ntip2=filename2\n...
+			f+i:第i个文件的数据
+			o+v:结束符
 		*/
-#define TCPHEAD1 'Y'
-#define TCPHEAD2 'T'
-#define CLASSHEAD 'C'
-#define DATAHEAD 'D'
-#define FILEHEAD 'F'
-#define TCPEND1 'O'
-#define TCPEND2 'V'
-#define HEAD_SIZE 8
-		//默认vs
-		static void set_buf_from_num(char* p, uint32_t n) {
-#ifdef _MSC_VER
-			memcpy(p, &n, 4);
-#else
-			p[0] = char(n % 256); n /= 256;	p[1] = char(n % 256); n /= 256;
-			p[2] = char(n % 256); n /= 256;	p[3] = char(n % 256);
-#endif // _MSC_VER
-		}
-		static uint32_t get_num_from_buf(char* p) {
-#ifdef _MSC_VER
-			uint32_t n;	memcpy(&n, p, 4); return n;
-#else
-			return (p[0] + p[1] * 256 + p[2] * 65536 + p[3] * 256 * 65536);
-#endif // _MSC_VER
-		}
-		static bool checkPort(uint16_t port_) {
-			boost::asio::io_service io;
-			boost::asio::ip::tcp::socket sk(io);
-			sk.open(boost::asio::ip::tcp::v4());
-			boost::system::error_code err;
-			sk.connect(TcpEp(boost::asio::ip::tcp::v4(), port_), err);
-			if (err) return true;//连接不上，说明没有程序在监听
-			sk.close();//否则说明已经被占用了
-			return false;
-		}
+		enum {
+			CLASSHEAD = 'C',
+			DATAHEAD = 'D',
+			FILEHEAD = 'F',
+		};
+		static const uint8_t HEAD_SIZE = 8;
 
 		//子类：sock连接，为网络适配器定制准备，只能主动发起同步写，读取是异步自动的
 		class TcpConnection :boost::noncopyable {
@@ -115,11 +102,15 @@ namespace ytlib {
 				stopflag(false),
 				m_recv_callback(cb_), 
 				p_RecvPath(p_RecvPath_),
-				curPackageIndex(0),
-				curPackageCount(0){
-
+				m_DataQueue(2000),
+				m_queueThread(std::bind(&TcpConnection::run_queue,this)){
+				
 			}
-			virtual ~TcpConnection() { stopflag = true; }
+			virtual ~TcpConnection() { 
+				stopflag = true; 
+				m_DataQueue.Stop();
+				m_queueThread.join();
+			}
 
 			//用于主动连接
 			bool connect(const TcpEp& ep_, uint16_t port_ = 0) {
@@ -170,19 +161,26 @@ namespace ytlib {
 				boost::asio::async_read(sock, boost::asio::buffer(header, HEAD_SIZE), boost::asio::transfer_exactly(HEAD_SIZE),
 					std::bind(&TcpConnection::on_read_head, this, d_, std::placeholders::_1, std::placeholders::_2));
 			}
+
+			void run_queue() {
+				dataPtr p;
+				while (!stopflag) {
+					if (!m_DataQueue.BlockDequeue(p)) return;
+					LightSignal* p_s = p->p_s;
+					p.reset();
+					p_s->wait();
+					delete p_s;
+				}
+			}
 			//使用智能指针的删除器来判断数据是否准备好并进行回调
 			void on_data_ready(DataPackage<T> * p) {
+				LightSignal* p_s = p->p_s;
 				if (p->complete_flag) {
-					while (curPackageCount != p->packIndex) {
-						if (stopflag) {
-							delete p;
-							return;
-						}
-					}
-					m_recv_callback(std::move(dataPtr(p)));
-					++curPackageCount;
+					m_recv_callback(std::move(dataPtr(p)));//先执行完回调再准备下一个
+					p_s->notify_one();
 					return;
 				}
+				p_s->notify_one();
 				delete p;
 			}
 			//缓存跟着回调走
@@ -196,8 +194,8 @@ namespace ytlib {
 							//新建一个数据包
 							RData_ = dataPtr((new DataPackage<T>()), std::bind(&TcpConnection::on_data_ready, this, std::placeholders::_1));
 							RData_->complete_flag = false;
-							RData_->packIndex = curPackageIndex;
-							++curPackageIndex;
+							RData_->p_s = new LightSignal();
+							m_DataQueue.Enqueue(RData_);
 							buff_Ptr pBuff = buff_Ptr(new boost::asio::streambuf());
 							boost::asio::async_read(sock, *pBuff, boost::asio::transfer_exactly(pack_size),
 								std::bind(&TcpConnection::on_read_obj, this, RData_, pBuff, std::placeholders::_1, std::placeholders::_2));
@@ -313,13 +311,14 @@ namespace ytlib {
 			}
 
 			std::atomic_bool stopflag;
-			uint32_t curPackageIndex, curPackageCount;
 			std::function<void(const TcpEp &)> err_CallBack;//发生错误时的回调。一旦读/写出错，就关闭连接并调用回调告知上层
 			std::mutex write_mutex;
 			std::function<void(dataPtr &)> m_recv_callback;
 			tpath* p_RecvPath;//接收文件路径
 			char header[HEAD_SIZE];//接收缓存
-	
+
+			QueueBase<dataPtr> m_DataQueue;
+			std::thread m_queueThread;
 		};
 		typedef std::shared_ptr<TcpConnection> TcpConnectionPtr;
 		
@@ -390,36 +389,8 @@ namespace ytlib {
 			set_buf_from_num(&c_head_buff[4], static_cast<uint32_t>(objbuff.size()));
 			buffersPtr->push_back(std::move(boost::asio::const_buffer(c_head_buff, HEAD_SIZE)));
 			buffersPtr->push_back(std::move(objbuff.data()));
-			//第二步，发送数据,先发送tips数据包
-			std::map<std::string, shared_buf>& map_datas = Tdata_->map_datas;
-			//缓冲区不能放在内层scope里
-			std::string data_tips;
-			char d0_head_buff[HEAD_SIZE]{ TCPHEAD1 ,TCPHEAD2,DATAHEAD,static_cast<char>(uint8_t(255)) };
-			boost::shared_array<char> d_head_buff;
-			if (map_datas.size() > 0) {
-				d_head_buff = boost::shared_array<char>(new char[map_datas.size() * HEAD_SIZE]);
-				for (std::map<std::string, shared_buf>::const_iterator itr = map_datas.begin(); itr != map_datas.end(); ++itr) {
-					data_tips += itr->first;
-					data_tips += '\n';
-				}
-				set_buf_from_num(&d0_head_buff[4], static_cast<uint32_t>(data_tips.size()));
-				buffersPtr->push_back(std::move(boost::asio::const_buffer(d0_head_buff, HEAD_SIZE)));
-				buffersPtr->push_back(std::move(boost::asio::buffer(data_tips)));
-				//再发送每个数据包。size为0则不发送
-				uint8_t ii = 0;
-				for (std::map<std::string, shared_buf>::const_iterator itr = map_datas.begin(); itr != map_datas.end(); ++itr) {
-					if (itr->second.buf_size > 0) {
-						size_t cur_offerset = ii * HEAD_SIZE;
-						memcpy(&d_head_buff[cur_offerset], d0_head_buff, 3);
-						d_head_buff[cur_offerset + 3] = static_cast<char>(ii);
-						set_buf_from_num(&d_head_buff[cur_offerset + 4], itr->second.buf_size);
-						buffersPtr->push_back(std::move(boost::asio::const_buffer(&d_head_buff[cur_offerset], HEAD_SIZE)));
-						buffersPtr->push_back(std::move(boost::asio::const_buffer(itr->second.buf.get(), itr->second.buf_size)));
-					}
-					++ii;
-				}
-			}
-			//第三步，发送文件,先发送文件名信息
+			
+			//第2步，发送文件,先发送文件名信息
 			std::map<std::string, std::string>& map_files = Tdata_->map_files;
 			std::string file_tips;
 			char f0_head_buff[HEAD_SIZE]{ TCPHEAD1 ,TCPHEAD2,FILEHEAD,static_cast<char>(uint8_t(255)) };
@@ -460,6 +431,37 @@ namespace ytlib {
 					++ii;
 				}
 			}
+
+			//第3步，发送数据,先发送tips数据包
+			std::map<std::string, shared_buf>& map_datas = Tdata_->map_datas;
+			//缓冲区不能放在内层scope里
+			std::string data_tips;
+			char d0_head_buff[HEAD_SIZE]{ TCPHEAD1 ,TCPHEAD2,DATAHEAD,static_cast<char>(uint8_t(255)) };
+			boost::shared_array<char> d_head_buff;
+			if (map_datas.size() > 0) {
+				d_head_buff = boost::shared_array<char>(new char[map_datas.size() * HEAD_SIZE]);
+				for (std::map<std::string, shared_buf>::const_iterator itr = map_datas.begin(); itr != map_datas.end(); ++itr) {
+					data_tips += itr->first;
+					data_tips += '\n';
+				}
+				set_buf_from_num(&d0_head_buff[4], static_cast<uint32_t>(data_tips.size()));
+				buffersPtr->push_back(std::move(boost::asio::const_buffer(d0_head_buff, HEAD_SIZE)));
+				buffersPtr->push_back(std::move(boost::asio::buffer(data_tips)));
+				//再发送每个数据包。size为0则不发送
+				uint8_t ii = 0;
+				for (std::map<std::string, shared_buf>::const_iterator itr = map_datas.begin(); itr != map_datas.end(); ++itr) {
+					if (itr->second.buf_size > 0) {
+						size_t cur_offerset = ii * HEAD_SIZE;
+						memcpy(&d_head_buff[cur_offerset], d0_head_buff, 3);
+						d_head_buff[cur_offerset + 3] = static_cast<char>(ii);
+						set_buf_from_num(&d_head_buff[cur_offerset + 4], itr->second.buf_size);
+						buffersPtr->push_back(std::move(boost::asio::const_buffer(&d_head_buff[cur_offerset], HEAD_SIZE)));
+						buffersPtr->push_back(std::move(boost::asio::const_buffer(itr->second.buf.get(), itr->second.buf_size)));
+					}
+					++ii;
+				}
+			}
+
 			//第四步：发送结束符
 			char end_head_buff[HEAD_SIZE]{ TCPHEAD1 ,TCPHEAD2,TCPEND1,TCPEND2 };
 			buffersPtr->push_back(std::move(boost::asio::const_buffer(end_head_buff, HEAD_SIZE)));

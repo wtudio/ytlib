@@ -66,6 +66,7 @@ include_directories( ${ytlib_SOURCE_DIR} )
 
 #设置下一级目录
 add_subdirectory( ytlib/Common )
+add_subdirectory( sqlite )
 
 #TEST:测试项目
 if(YTLIB_BUILD_TEST)

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <queue>
-#include <atomic>
 #include <mutex>
 
 namespace ytlib {
@@ -10,8 +9,8 @@ namespace ytlib {
 	template <class T>
 	class QueueBase{
 	public:
-		explicit QueueBase(size_t n_):m_maxcount(n_){}
-		virtual ~QueueBase(){}
+		explicit QueueBase(size_t n_):m_maxcount(n_), stopflag(false){}
+		virtual ~QueueBase() { Stop(); }
 		inline size_t GetMaxCount(){ return m_maxcount; }
 		inline size_t Count() {
 			std::lock_guard<std::mutex> lck(m_mutex);
@@ -20,6 +19,11 @@ namespace ytlib {
 		inline void Clear() {
 			std::lock_guard<std::mutex> lck(m_mutex);
 			m_queue.swap(std::queue<T>());
+		}
+		inline void Stop() {
+			stopflag = true;
+			Clear();
+			m_cond.notify_all();
 		}
 		//添加元素
 		bool Enqueue(const T &item) {
@@ -44,7 +48,10 @@ namespace ytlib {
 		//阻塞式取出。如果空了就一直等待到可以取出。（没有做阻塞式添加，因为一般不可能用到）
 		bool BlockDequeue(T &item) {
 			std::unique_lock<std::mutex> lck(m_mutex);
-			m_cond.wait(lck, [this] {return !(this->m_queue.empty()); });
+			while (m_queue.empty()) {
+				m_cond.wait(lck);
+				if (stopflag) return false;
+			}
 			item = std::move(m_queue.front());
 			m_queue.pop();
 			return true;
@@ -56,5 +63,6 @@ namespace ytlib {
 		std::queue<T> m_queue;// 队列
 		
 		const size_t m_maxcount;//队列可支持最大个数
+		std::atomic_bool stopflag;
 	};
 }

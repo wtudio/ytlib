@@ -45,5 +45,5 @@ add_executable( ytTest
   ${Test_Files}
 )
 
-target_link_libraries(ytTest ytCommon )
+target_link_libraries(ytTest ytCommon sqlite)
 
