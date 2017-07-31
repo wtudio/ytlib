@@ -6,7 +6,7 @@
 namespace ytlib
 {
 	//使用map格式。涉及到存储的都弄成string
-	class KeyValueFile :public FileBase<std::map<std::string, std::string>>
+	class KeyValueFile :public FileBase<std::map<std::string, std::string> >
 	{
 	public:
 		KeyValueFile() :FileBase() {}

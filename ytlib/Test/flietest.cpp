@@ -7,7 +7,7 @@ namespace ytlib
 
 		KeyValueFile f1;
 		f1.NewFile(T_TEXT("filetest/testfile3.txt"));
-		std::shared_ptr<std::map<std::string, std::string>> o1 = f1.GetFileObjPtr();
+		std::shared_ptr<std::map<std::string, std::string> > o1 = f1.GetFileObjPtr();
 		(*o1)["aaa"] = "bbb";
 		(*o1)["ccc"] = "ddd";
 		(*o1)["≤‚ ‘1"] = "≤‚ ‘2";
@@ -16,7 +16,7 @@ namespace ytlib
 
 		KeyValueFile f2;
 		f2.OpenFile(T_TEXT("filetest/testfile3.txt"));
-		std::shared_ptr<std::map<std::string, std::string>> o2 = f2.GetFileObjPtr();
+		std::shared_ptr<std::map<std::string, std::string> > o2 = f2.GetFileObjPtr();
 		
 		for (std::map<std::string, std::string>::const_iterator itr = o2->begin();
 		itr != o2->end(); ++itr) {

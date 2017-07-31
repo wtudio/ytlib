@@ -15,7 +15,7 @@ namespace ytlib
 	//但是还是感觉通道比较好用。这个类很有可能没有什么用
 
 	template<class T,
-	class _Queue = QueueBase<T>>
+	class _Queue = QueueBase<T> >
 	class QueueProcess : public ProcessBase{
 	public:
 		

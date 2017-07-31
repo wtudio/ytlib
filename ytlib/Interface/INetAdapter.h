@@ -10,12 +10,12 @@ namespace ytlib {
 
 	struct RecvData {
 		tstring hostID;//发送方主机id
-		std::vector<std::shared_ptr<std::string>> dataVec;//数据
+		std::vector<std::shared_ptr<std::string> > dataVec;//数据
 		std::vector<tstring> files;	//接收到的所有文件的文件名
 	};
 
 	struct TransData {
-		std::vector<std::shared_ptr<std::string>> dataVec;//数据
+		std::vector<std::shared_ptr<std::string> > dataVec;//数据
 		std::vector<tstring> files;	//接收到的所有文件的文件名
 		bool delFileFlag;// 发送完成,是否删除数据文件
 	};

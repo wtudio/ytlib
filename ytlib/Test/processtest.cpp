@@ -20,7 +20,7 @@ namespace ytlib
 		int index;
 	};
 
-	class testQueueProcess : public QueueProcess<std::shared_ptr<testmsg>> {
+	class testQueueProcess : public QueueProcess<std::shared_ptr<testmsg> > {
 	public:
 		testQueueProcess(size_t thCount_ = 1, size_t queueSize_ = 1000):QueueProcess(thCount_, queueSize_){}
 		virtual ~testQueueProcess(){ stop(); }

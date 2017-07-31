@@ -78,7 +78,7 @@ namespace ytlib {
 	template<class T>
 	class TcpConnection :public ConnectionBase {
 		typedef std::shared_ptr<boost::asio::streambuf> buff_Ptr;
-		typedef std::shared_ptr<DataPackage<T>> dataPtr;
+		typedef std::shared_ptr<DataPackage<T> > dataPtr;
 	public:
 		enum {
 			CLASSHEAD = 'C',
@@ -119,7 +119,7 @@ namespace ytlib {
 			return true;
 		}
 		//同步发送，加锁
-		bool write(const std::shared_ptr<std::vector<boost::asio::const_buffer>> & data_) {
+		bool write(const std::shared_ptr<std::vector<boost::asio::const_buffer> > & data_) {
 			boost::system::error_code err;
 			write_mutex.lock();
 			sock.write_some(*data_, err);
@@ -296,9 +296,9 @@ namespace ytlib {
 
 	//默认使用uint32_t作为id形式。也可以改为string之类的可以作为map容器的key的类型
 	template<class T,class ID_Type = uint32_t>
-	class TcpNetAdapter : public TcpConnectionPool<TcpConnection<T>> {
+	class TcpNetAdapter : public TcpConnectionPool<TcpConnection<T> > {
 	private:
-		typedef std::shared_ptr<DataPackage<T>> dataPtr;
+		typedef std::shared_ptr<DataPackage<T> > dataPtr;
 		static const uint8_t HEAD_SIZE = TcpConnection<T>::HEAD_SIZE;
 	public:
 		TcpNetAdapter(ID_Type myid_,
@@ -335,8 +335,8 @@ namespace ytlib {
 			lck.unlock();
 
 			//将Tdata_先转换为std::vector<boost::asio::const_buffer>再一次性发送
-			std::shared_ptr<std::vector<boost::asio::const_buffer>> buffersPtr =
-				std::shared_ptr<std::vector<boost::asio::const_buffer>>(new std::vector<boost::asio::const_buffer>());
+			std::shared_ptr<std::vector<boost::asio::const_buffer> > buffersPtr =
+				std::shared_ptr<std::vector<boost::asio::const_buffer> >(new std::vector<boost::asio::const_buffer>());
 			//第一步：发送对象
 			char c_head_buff[HEAD_SIZE]{ TcpConnection<T>::TCPHEAD1 ,TcpConnection<T>::TCPHEAD2,TcpConnection<T>::CLASSHEAD,0 };
 			boost::asio::streambuf objbuff;
@@ -351,7 +351,7 @@ namespace ytlib {
 			std::string file_tips;
 			char f0_head_buff[HEAD_SIZE]{ TcpConnection<T>::TCPHEAD1 ,TcpConnection<T>::TCPHEAD2,TcpConnection<T>::FILEHEAD,static_cast<char>(uint8_t(255)) };
 			boost::shared_array<char> f_head_buff;
-			std::vector<boost::shared_array<char>> vec_file_buf;
+			std::vector<boost::shared_array<char> > vec_file_buf;
 			if (map_files.size() > 0) {
 				f_head_buff = boost::shared_array<char>(new char[map_files.size() * HEAD_SIZE]);
 				for (std::map<std::string, std::string>::const_iterator itr = map_files.begin(); itr != map_files.end(); ++itr) {
@@ -427,7 +427,7 @@ namespace ytlib {
 				return _send_one(buffersPtr, vec_hosts[0]);
 			}
 			//否则使用多线程并行群发
-			std::vector<std::future<bool>> v;
+			std::vector<std::future<bool> > v;
 			size_t len = vec_hosts.size();
 			for (size_t ii = 0; ii < len; ii++) {
 				v.push_back(std::async(std::launch::async, &TcpNetAdapter::_send_one, this, buffersPtr, vec_hosts[ii]));
@@ -469,8 +469,8 @@ namespace ytlib {
 		}
 		void on_err(const TcpEp& ep) {	TcpConnectionPool::on_err(ep);	}
 		
-		bool _send_one(const std::shared_ptr<std::vector<boost::asio::const_buffer>> & Tdata_, const TcpEp & ep) {
-			std::shared_ptr<TcpConnection<T>> pc = getTcpConnectionPtr(ep);
+		bool _send_one(const std::shared_ptr<std::vector<boost::asio::const_buffer> > & Tdata_, const TcpEp & ep) {
+			std::shared_ptr<TcpConnection<T> > pc = getTcpConnectionPtr(ep);
 			if (!pc) return false;
 			return pc->write(Tdata_);
 		}
