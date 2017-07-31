@@ -1,7 +1,7 @@
 #pragma once
 #include <ytlib/FileManager/FileBase.h>
 #include <ytlib/SupportTools/XMLTools.h>
-
+#include <boost/algorithm/string.hpp>
 namespace ytlib
 {
 
@@ -108,8 +108,8 @@ namespace ytlib
 		virtual bool CheckFileName(const tstring& filename) const {
 			tstring Suffix1 = T_TEXT("xml");
 			tstring Suffix2 = T_TEXT("prj");
-			if ((ToLower(filename.substr(filename.length() - Suffix1.length(), Suffix1.length())) != Suffix1)
-				&& (ToLower(filename.substr(filename.length() - Suffix2.length(), Suffix2.length())) != Suffix2)) {
+			if ((boost::to_lower_copy(filename.substr(filename.length() - Suffix1.length(), Suffix1.length())) != Suffix1)
+				&& (boost::to_lower_copy(filename.substr(filename.length() - Suffix2.length(), Suffix2.length())) != Suffix2)) {
 				return false;
 			}
 			return true;

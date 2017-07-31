@@ -1,10 +1,15 @@
 #---------------------------------------------------------------------
 project( ytTest )
+#使用所有的库进行测试、示例
+
 #aux_source_directory( . SourceFiles)
 
 
 #---------------------------------------------------------------------
 # Construct source groups for nice visualisation in Visual Studio.
+File(GLOB Common_Files ../Common/*.h )
+source_group( "Common" FILES ${Common_Files} )
+
 File(GLOB FileManager_Files ../FileManager/*.h )
 source_group( "FileManager" FILES ${FileManager_Files} )
 
@@ -35,6 +40,7 @@ source_group( "Test" FILES ${Test_Files} )
 # Create the elxCommon library.
 
 add_executable( ytTest
+  ${Common_Files}
   ${FileManager_Files}
   ${Interface_Files}
   ${LightMath_Files}
@@ -45,5 +51,5 @@ add_executable( ytTest
   ${Test_Files}
 )
 
-target_link_libraries(ytTest ytCommon sqlite sigar)
+target_link_libraries(ytTest sqlite sigar)
 

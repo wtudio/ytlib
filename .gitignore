@@ -1,4 +1,5 @@
 
 build/
-x64/
-Win32/
+
+debug/
+release/

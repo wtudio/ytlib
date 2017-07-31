@@ -1,5 +1,13 @@
 #pragma once
 
+
+
+// 默认使用unicode
+#ifndef UNICODE
+#define UNICODE
+#endif
+
+
 //////////////////////////////////////////////////////////////////////////
 // 包含常用头文件
 #include <iostream>
@@ -70,3 +78,12 @@
 #define YT_DEBUG_PRINTF(_arg_,...) ;
 #endif // DEBUG
 
+//////////////////////////////////////////////////////////////////////////
+// 导出定义
+#if defined(_WIN32)
+#	define YT_DECLSPEC_EXPORT __declspec(dllexport)
+#	define YT_DECLSPEC_IMPORT __declspec(dllimport)
+#else
+#	define YT_DECLSPEC_EXPORT
+#	define YT_DECLSPEC_IMPORT
+#endif

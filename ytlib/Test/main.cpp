@@ -10,10 +10,10 @@
 #include "nettest.h"
 
 #include <boost/date_time/posix_time/posix_time.hpp>  
-#include <sigar/include/sigar.h>
+#include <sigar/sigar.h>
 extern "C"
 {
-#include  <sigar/include/sigar_format.h>
+#include  <sigar/sigar_format.h>
 }
 
 

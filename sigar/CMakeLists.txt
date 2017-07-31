@@ -1,39 +1,108 @@
-PROJECT(sigar C)
+PROJECT(sigar)
 
-cmake_minimum_required(VERSION 2.6)
+INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 
+INCLUDE(CheckCSourceCompiles)
+MACRO (CHECK_STRUCT_MEMBER _STRUCT _MEMBER _HEADER _RESULT)
+   SET(_INCLUDE_FILES)
+   FOREACH (it ${_HEADER})
+      SET(_INCLUDE_FILES "${_INCLUDE_FILES}#include <${it}>\n")
+   ENDFOREACH (it)
 
-#INCLUDE(CheckIncludeFiles)
-#INCLUDE(CheckFunctionExists)
-#INCLUDE(CheckTypeSize)
-#INCLUDE(CTest)
-#INCLUDE(InstallRequiredSystemLibraries)
+   SET(_CHECK_STRUCT_MEMBER_SOURCE_CODE "
+${_INCLUDE_FILES}
+int main()
+{
+   static ${_STRUCT} tmp;
+   if (sizeof(tmp.${_MEMBER}))
+      return 0;
+  return 0;
+}
+")
+   CHECK_C_SOURCE_COMPILES("${_CHECK_STRUCT_MEMBER_SOURCE_CODE}" ${_RESULT})
+ENDMACRO (CHECK_STRUCT_MEMBER)
 
-#ENABLE_TESTING()
+File(GLOB sigar_SourceFiles *.c )
+File(GLOB sigar_HeaderFiles *.h )
 
-#SET(CPACK_PACKAGE_VERSION_MAJOR "1")
-#SET(CPACK_PACKAGE_VERSION_MINOR "6")
-#SET(CPACK_PACKAGE_VERSION_PATCH "2")
-#SET(CPACK_PACKAGE_VENDOR "Hyperic")
-## SET(CPACK_*) before the INCLUDE(CPack)
-#INCLUDE(CPack)
+## linux
+IF(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+  SET(SIGAR_SRC os/linux/linux_sigar.c)
+  File(GLOB sigar_OS_HeaderFiles os/linux/*.h )
+  INCLUDE_DIRECTORIES(os/linux/)
+ENDIF(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+
+## macosx, freebsd
+IF(CMAKE_SYSTEM_NAME MATCHES "(Darwin|FreeBSD)")
+  SET(SIGAR_SRC os/darwin/darwin_sigar.c)
+  File(GLOB sigar_OS_HeaderFiles os/darwin/*.h )
+  INCLUDE_DIRECTORIES(os/darwin/)
+  IF(CMAKE_SYSTEM_NAME MATCHES "(Darwin)")
+    ADD_DEFINITIONS(-DDARWIN)
+    SET(SIGAR_LINK_FLAGS "-framework CoreServices -framework IOKit")
+  ELSE(CMAKE_SYSTEM_NAME MATCHES "(Darwin)")
+    ## freebsd needs libkvm
+    SET(SIGAR_LINK_FLAGS "-lkvm")
+  ENDIF(CMAKE_SYSTEM_NAME MATCHES "(Darwin)")
+ENDIF(CMAKE_SYSTEM_NAME MATCHES "(Darwin|FreeBSD)")
+
+## solaris
+IF (CMAKE_SYSTEM_NAME MATCHES "(Solaris|SunOS)" )
+  SET(SIGAR_SRC
+	os/solaris/solaris_sigar.c
+	os/solaris/get_mib2.c
+	os/solaris/kstats.c
+	os/solaris/procfs.c
+  )
+  File(GLOB sigar_OS_HeaderFiles os/solaris/*.h )
+  INCLUDE_DIRECTORIES(os/solaris/)
+  ADD_DEFINITIONS(-DSOLARIS)
+  SET(SIGAR_LINK_FLAGS -lkstat -ldl -lnsl -lsocket -lresolv)
+ENDIF(CMAKE_SYSTEM_NAME MATCHES "(Solaris|SunOS)" )
+
+## solaris
+IF (CMAKE_SYSTEM_NAME MATCHES "(HP-UX)" )
+  SET(SIGAR_SRC os/hpux/hpux_sigar.c)
+  File(GLOB sigar_OS_HeaderFiles os/hpux/*.h )
+  INCLUDE_DIRECTORIES(os/hpux/)
+  ADD_DEFINITIONS(-DSIGAR_HPUX)
+  SET(SIGAR_LINK_FLAGS -lnm)
+ENDIF(CMAKE_SYSTEM_NAME MATCHES "(HP-UX)" )
+
+## aix
+IF (CMAKE_SYSTEM_NAME MATCHES "(AIX)" )
+  SET(SIGAR_SRC os/aix/aix_sigar.c)
+  File(GLOB sigar_OS_HeaderFiles os/aix/*.h )
+  INCLUDE_DIRECTORIES(os/aix/)
+  SET(SIGAR_LINK_FLAGS -lodm -lcfg)
+ENDIF(CMAKE_SYSTEM_NAME MATCHES "(AIX)" )
+
+IF(WIN32)
+  ADD_DEFINITIONS(-DSIGAR_SHARED)
+  SET(SIGAR_SRC os/win32/peb.c os/win32/win32_sigar.c os/win32/wmi.cpp) 
+  File(GLOB sigar_OS_HeaderFiles os/win32/*.h )
+  INCLUDE_DIRECTORIES(os/win32)
+  CHECK_STRUCT_MEMBER(MIB_IPADDRROW wType "windows.h;iphlpapi.h" wType_in_MIB_IPADDRROW)
+  add_definitions(-DHAVE_MIB_IPADDRROW_WTYPE=${wType_in_MIB_IPADDRROW})
+ENDIF(WIN32)
+
 
 IF(WIN32) 
 	## make sure we only use the smallest set of 
 	## headers on win32. Otherwise we get clashes 
 	## between winsock2.h and winsock.h
 	ADD_DEFINITIONS(-DWIN32_LEAN_AND_MEAN)
-
 	# force the correct version for the redist manifest
 	ADD_DEFINITIONS(-D_BIND_TO_CURRENT_MFC_VERSION=1 -D_BIND_TO_CURRENT_CRT_VERSION=1)
 	# turn off security warnings for system calls
 	ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS)
 ENDIF(WIN32)
 
-option(BUILD_SHARED_LIBS "Build with shared libraries." OFF)
-mark_as_advanced( BUILD_SHARED_LIBS )
 
-ADD_SUBDIRECTORY(src build-src)
-#ADD_SUBDIRECTORY(tests build-tests)
-#ADD_SUBDIRECTORY(include build-include)
-
+ADD_LIBRARY(sigar ${SIGAR_SRC} ${sigar_SourceFiles} ${sigar_OS_HeaderFiles} ${sigar_HeaderFiles})
+IF(WIN32)
+	TARGET_LINK_LIBRARIES(sigar ws2_32 netapi32 version)
+ENDIF(WIN32)
+IF(SIGAR_LINK_FLAGS)
+  SET_TARGET_PROPERTIES(sigar PROPERTIES LINK_FLAGS "${SIGAR_LINK_FLAGS}")
+ENDIF(SIGAR_LINK_FLAGS)

@@ -51,21 +51,12 @@ endif()
 option(BUILD_SHARED_LIBS "Build with shared libraries." OFF)
 mark_as_advanced( BUILD_SHARED_LIBS )
 
-#设置字符集类型。如果使用unicode则使用宽字符
-option(BUILD_UNICODE_VERSION "Build with UNICODE." OFF)
-if( BUILD_UNICODE_VERSION )
-  add_definitions(-DUNICODE -D_UNICODE)
-endif()
-mark_as_advanced( BUILD_UNICODE_VERSION )
-
-
 
 # Include directories
 include_directories( ${ytlib_SOURCE_DIR} )
 
 
 #设置下一级目录
-add_subdirectory( ytlib/Common )
 add_subdirectory( sqlite )
 add_subdirectory( sigar )
 #TEST:测试项目
