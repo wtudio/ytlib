@@ -10,6 +10,13 @@
 #include "nettest.h"
 
 #include <boost/date_time/posix_time/posix_time.hpp>  
+#include <sigar/include/sigar.h>
+extern "C"
+{
+#include  <sigar/include/sigar_format.h>
+}
+
+
 
 using namespace std;
 using namespace ytlib;
@@ -28,11 +35,35 @@ int32_t main(int32_t argc, char** argv) {
 	//tocTime_global = boost::posix_time::microsec_clock::universal_time(); 
 	//std::cout << (tocTime_global - ticTime_global).ticks() << "us" << std::endl;
 
+	sigar_t *sigar_cpu;
+	sigar_cpu_t old;
+	sigar_cpu_t current;
+	sigar_cpu_perc_t perc;
+
+	sigar_t *sigar_mem;
+	sigar_mem_t currentmem;
+
+	sigar_open(&sigar_cpu);
+	sigar_cpu_get(sigar_cpu, &old);
+
+	sigar_open(&sigar_mem);
+
 	
-	
+
+	for (int ii = 0; ii < 10000; ++ii) {
+
+		sigar_cpu_get(sigar_cpu, &current);
+		sigar_cpu_perc_calculate(&old, &current, &perc);
+
+		sigar_mem_get(sigar_mem, &currentmem);
+		old = current;
+
+		printf_s("cpu : %f \t mem : %f\n", perc.combined, (double)currentmem.used / (double)currentmem.total);
+		Sleep(100);
+	}
 
 
-
+	getchar();
 
 	test_TcpNetAdapter();
 	

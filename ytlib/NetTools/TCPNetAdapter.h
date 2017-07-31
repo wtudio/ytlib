@@ -284,10 +284,8 @@ namespace ytlib {
 			else {
 				YT_DEBUG_PRINTF("can not write file : %s", ((*p_RecvPath) / tpath(T_STRING_TO_TSTRING(itr->second))).string<std::string>().c_str());
 			}
-
 		}
 
-	
 		std::mutex write_mutex;
 		std::function<void(dataPtr &)> m_recv_callback;
 		tpath* p_RecvPath;//接收文件路径
@@ -296,13 +294,14 @@ namespace ytlib {
 		std::thread m_queueThread;
 	};
 
-	template<class T>
+	//默认使用uint32_t作为id形式。也可以改为string之类的可以作为map容器的key的类型
+	template<class T,class ID_Type = uint32_t>
 	class TcpNetAdapter : public TcpConnectionPool<TcpConnection<T>> {
 	private:
 		typedef std::shared_ptr<DataPackage<T>> dataPtr;
 		static const uint8_t HEAD_SIZE = TcpConnection<T>::HEAD_SIZE;
 	public:
-		TcpNetAdapter(uint32_t myid_,
+		TcpNetAdapter(ID_Type myid_,
 			uint16_t port_,
 			std::function<void(dataPtr &)> recvcb_,
 			const tstring& rp = T_TEXT(""),
@@ -319,7 +318,7 @@ namespace ytlib {
 		}
 		virtual ~TcpNetAdapter() { stop(); }
 
-		bool Send(const dataPtr & Tdata_, const std::vector<uint32_t>& dst_) {
+		bool Send(const dataPtr & Tdata_, const std::vector<ID_Type>& dst_) {
 			//做一些检查
 			if (stopflag) return false;
 			size_t size = dst_.size();
@@ -329,7 +328,7 @@ namespace ytlib {
 			std::shared_lock<std::shared_mutex> lck(m_hostInfoMutex);
 			for (size_t ii = 0; ii < size; ++ii) {
 				if (dst_[ii] == m_myid) return false;
-				std::map<uint32_t, TcpEp>::const_iterator itr = m_mapHostInfo.find(dst_[ii]);
+				std::map<ID_Type, TcpEp>::const_iterator itr = m_mapHostInfo.find(dst_[ii]);
 				if (itr == m_mapHostInfo.end()) return false;
 				vec_hosts.push_back(itr->second);
 			}
@@ -445,19 +444,19 @@ namespace ytlib {
 			std::shared_lock<std::shared_mutex> lck(m_hostInfoMutex);
 			return m_mapHostInfo[m_myid];
 		}
-		inline std::map<uint32_t, TcpEp> GetHostInfoMap() {
+		inline std::map<ID_Type, TcpEp> GetHostInfoMap() {
 			std::shared_lock<std::shared_mutex> lck(m_hostInfoMutex);
 			return m_mapHostInfo;
 		}
 		//设置主机info，有则覆盖，无责添加
-		bool SetHost(uint32_t hostid_, const TcpEp & hostInfo_) {
+		bool SetHost(ID_Type hostid_, const TcpEp & hostInfo_) {
 			std::unique_lock<std::shared_mutex> lck(m_hostInfoMutex);
 			m_mapHostInfo[hostid_] = hostInfo_;
 			return true;
 		}
-		bool SetHost(const std::map<uint32_t, TcpEp>& hosts_) {
+		bool SetHost(const std::map<ID_Type, TcpEp>& hosts_) {
 			std::unique_lock<std::shared_mutex> lck(m_hostInfoMutex);
-			for (std::map<uint32_t, TcpEp>::iterator itr = hosts_.begin(); itr != hosts_.end(); ++itr) {
+			for (std::map<ID_Type, TcpEp>::iterator itr = hosts_.begin(); itr != hosts_.end(); ++itr) {
 				m_mapHostInfo[itr->first] = itr->second;
 			}
 			return true;
@@ -513,10 +512,10 @@ namespace ytlib {
 		tpath m_RecvPath;//接收文件路径
 		tpath m_SendPath;//发送文件路径
 
-		std::map<uint32_t, TcpEp> m_mapHostInfo;//主机列表：id-info
+		std::map<ID_Type, TcpEp> m_mapHostInfo;//主机列表：id-info
 		std::shared_mutex m_hostInfoMutex;//主机列表的读写锁
 
-		const uint32_t m_myid;//自身id，构造之后无法修改
+		const ID_Type m_myid;//自身id，构造之后无法修改
 	};
 
 }
