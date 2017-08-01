@@ -15,12 +15,12 @@ namespace ytlib
 	protected:
 		
 		virtual bool GetFileObj() {
-			if (!CreateFileObj()) return false;
-			tpath path = tGetAbsolutePath(m_filepath);
-			return Deserialize_f(*m_fileobj, path.string<tstring>());
+			if (!FileBase<T>::CreateFileObj()) return false;
+			tpath path = tGetAbsolutePath(FileBase<T>::m_filepath);
+			return Deserialize_f(*FileBase<T>::m_fileobj, path.string<tstring>());
 		}
 		virtual bool SaveFileObj() {
-			return Serialize_f(*m_fileobj, m_filepath);
+			return Serialize_f(*FileBase<T>::m_fileobj, FileBase<T>::m_filepath);
 		}
 		
 	};
