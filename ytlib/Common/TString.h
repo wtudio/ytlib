@@ -48,16 +48,14 @@ namespace ytlib
 		std::memset(&mbs, 0, sizeof(std::mbstate_t));
 	}
 
-	typedef std::codecvt<wchar_t, char, std::mbstate_t> CodeCvt;
-
 	static void tostring_internal(std::string & outstr, const wchar_t * src, std::size_t size, std::locale const & loc) {
 		if (size == 0) {
 			outstr.clear();
 			return;
 		}
 
-		
-		const CodeCvt & cdcvt = std::use_facet<CodeCvt>(loc);
+		//typedef std::codecvt<wchar_t, char, std::mbstate_t> std::codecvt<wchar_t, char, std::mbstate_t>;
+		const std::codecvt<wchar_t, char, std::mbstate_t> & cdcvt = std::use_facet<std::codecvt<wchar_t, char, std::mbstate_t>>(loc);
 		std::mbstate_t state;
 		clear_mbstate(state);
 
@@ -73,7 +71,7 @@ namespace ytlib
 		char * to_last = to_first + to_size;
 		char * to_next = to_first;
 
-		CodeCvt::result ret;
+		std::codecvt<wchar_t, char, std::mbstate_t>::result ret;
 		std::size_t converted = 0;
 		while (from_next != from_last) {
 			ret = cdcvt.out(
@@ -81,9 +79,9 @@ namespace ytlib
 				from_next, to_first, to_last,
 				to_next);
 			// XXX: Even if only half of the input has been converted the
-			// in() method returns CodeCvt::ok with VC8. I think it should
-			// return CodeCvt::partial.
-			if ((ret == CodeCvt::partial || ret == CodeCvt::ok) && from_next != from_last) {
+			// in() method returns std::codecvt<wchar_t, char, std::mbstate_t>::ok with VC8. I think it should
+			// return std::codecvt<wchar_t, char, std::mbstate_t>::partial.
+			if ((ret == std::codecvt<wchar_t, char, std::mbstate_t>::partial || ret == std::codecvt<wchar_t, char, std::mbstate_t>::ok) && from_next != from_last) {
 				to_size = dest.size() * 2;
 				dest.resize(to_size);
 				converted = to_next - to_first;
@@ -91,10 +89,10 @@ namespace ytlib
 				to_last = to_first + to_size;
 				to_next = to_first + converted;
 			}
-			else if (ret == CodeCvt::ok && from_next == from_last) {
+			else if (ret == std::codecvt<wchar_t, char, std::mbstate_t>::ok && from_next == from_last) {
 				break;
 			}
-			else if (ret == CodeCvt::error	&& to_next != to_last && from_next != from_last) {
+			else if (ret == std::codecvt<wchar_t, char, std::mbstate_t>::error	&& to_next != to_last && from_next != from_last) {
 				clear_mbstate(state);
 				++from_next;
 				from_first = from_next;
@@ -116,8 +114,8 @@ namespace ytlib
 			return;
 		}
 
-		//typedef std::codecvt<wchar_t, char, std::mbstate_t> CodeCvt;
-		const CodeCvt & cdcvt = std::use_facet<CodeCvt>(loc);
+		//typedef std::codecvt<wchar_t, char, std::mbstate_t> std::codecvt<wchar_t, char, std::mbstate_t>;
+		const std::codecvt<wchar_t, char, std::mbstate_t> & cdcvt = std::use_facet<std::codecvt<wchar_t, char, std::mbstate_t>>(loc);
 		std::mbstate_t state;
 		clear_mbstate(state);
 
@@ -133,7 +131,7 @@ namespace ytlib
 		wchar_t * to_last = to_first + to_size;
 		wchar_t * to_next = to_first;
 
-		CodeCvt::result ret;
+		std::codecvt<wchar_t, char, std::mbstate_t>::result ret;
 		std::size_t converted = 0;
 		while (true) {
 			ret = cdcvt.in(
@@ -141,9 +139,9 @@ namespace ytlib
 				from_next, to_first, to_last,
 				to_next);
 			// XXX: Even if only half of the input has been converted the
-			// in() method returns CodeCvt::ok. I think it should return
-			// CodeCvt::partial.
-			if ((ret == CodeCvt::partial || ret == CodeCvt::ok) && from_next != from_last) {
+			// in() method returns std::codecvt<wchar_t, char, std::mbstate_t>::ok. I think it should return
+			// std::codecvt<wchar_t, char, std::mbstate_t>::partial.
+			if ((ret == std::codecvt<wchar_t, char, std::mbstate_t>::partial || ret == std::codecvt<wchar_t, char, std::mbstate_t>::ok) && from_next != from_last) {
 				to_size = dest.size() * 2;
 				dest.resize(to_size);
 				converted = to_next - to_first;
@@ -152,10 +150,10 @@ namespace ytlib
 				to_next = to_first + converted;
 				continue;
 			}
-			else if (ret == CodeCvt::ok && from_next == from_last) {
+			else if (ret == std::codecvt<wchar_t, char, std::mbstate_t>::ok && from_next == from_last) {
 				break;
 			}
-			else if (ret == CodeCvt::error && to_next != to_last && from_next != from_last) {
+			else if (ret == std::codecvt<wchar_t, char, std::mbstate_t>::error && to_next != to_last && from_next != from_last) {
 				clear_mbstate(state);
 				++from_next;
 				from_first = from_next;
