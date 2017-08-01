@@ -10,7 +10,7 @@ namespace ytlib
 	template <class T>
 	class SerializeFile :public FileBase<T> {
 	public:
-		SerializeFile():FileBase(){}
+		SerializeFile():FileBase<T>(){}
 		virtual ~SerializeFile() {}
 	protected:
 		
