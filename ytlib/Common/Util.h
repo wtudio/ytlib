@@ -2,11 +2,12 @@
 
 
 
-// 默认使用unicode
-#ifndef UNICODE
-#define UNICODE
+// 默认windows下使用unicode，其他平台不使用。在这里添加要使用unicode的平台宏定义
+#if defined(_WIN32)
+#	ifndef UNICODE
+#		define UNICODE
+#	endif
 #endif
-
 
 //////////////////////////////////////////////////////////////////////////
 // 包含常用头文件

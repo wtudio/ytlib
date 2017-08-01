@@ -9,8 +9,7 @@
 #include <cctype>
 #include <algorithm>
 #include <iterator>
-#include <locale>
-#include <codecvt>
+
 
 namespace ytlib
 {
@@ -45,6 +44,9 @@ namespace ytlib
 #endif // UNICODE
 
 #if defined(UNICODE)
+
+#include <locale>
+#include <codecvt>
 
 	static void clear_mbstate(std::mbstate_t& mbs) {
 		std::memset(&mbs, 0, sizeof(std::mbstate_t));
