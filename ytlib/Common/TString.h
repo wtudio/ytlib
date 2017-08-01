@@ -48,13 +48,15 @@ namespace ytlib
 		std::memset(&mbs, 0, sizeof(std::mbstate_t));
 	}
 
+	typedef std::codecvt<wchar_t, char, std::mbstate_t> CodeCvt;
+
 	static void tostring_internal(std::string & outstr, const wchar_t * src, std::size_t size, std::locale const & loc) {
 		if (size == 0) {
 			outstr.clear();
 			return;
 		}
 
-		typedef std::codecvt<wchar_t, char, std::mbstate_t> CodeCvt;
+		
 		const CodeCvt & cdcvt = std::use_facet<CodeCvt>(loc);
 		std::mbstate_t state;
 		clear_mbstate(state);
@@ -114,7 +116,7 @@ namespace ytlib
 			return;
 		}
 
-		typedef std::codecvt<wchar_t, char, std::mbstate_t> CodeCvt;
+		//typedef std::codecvt<wchar_t, char, std::mbstate_t> CodeCvt;
 		const CodeCvt & cdcvt = std::use_facet<CodeCvt>(loc);
 		std::mbstate_t state;
 		clear_mbstate(state);
