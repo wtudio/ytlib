@@ -229,7 +229,7 @@ namespace ytlib {
 			uint32_t pos = 0;
 			for (uint32_t ii = 0; ii < read_bytes; ++ii) {
 				if (buff_[ii] == '\n') {
-					RData_->map_datas.insert(std::pair<std::string, shared_buf>(string(&buff_[pos], ii - pos), shared_buf()));
+					RData_->map_datas.insert(std::pair<std::string, shared_buf>(std::string(&buff_[pos], ii - pos), shared_buf()));
 					pos = ii + 1;
 				}
 			}
@@ -259,7 +259,7 @@ namespace ytlib {
 				}
 				if (buff_[ii] == '\n') {
 					RData_->map_files.insert(std::pair<std::string, std::string>(
-						string(&buff_[pos], pos1 - 1 - pos), string(&buff_[pos1], ii - pos1)));
+						std::string(&buff_[pos], pos1 - 1 - pos), std::string(&buff_[pos1], ii - pos1)));
 					pos = ii + 1;
 				}
 			}
@@ -276,13 +276,13 @@ namespace ytlib {
 			do_read_head(RData_);
 			std::map<std::string, std::string>::iterator itr = RData_->map_files.begin();
 			for (; pos > 0; --pos) ++itr;
-			std::ofstream f(((*p_RecvPath) / tpath(T_STRING_TO_TSTRING(itr->second))).string<tstring>(), ios::out | ios::trunc | ios::binary);
+			std::ofstream f(((*p_RecvPath) / tpath(T_STRING_TO_TSTRING(itr->second))).std::string<tstring>(), std::ios::out | std::ios::trunc | std::ios::binary);
 			if (f) {
 				f.write(buff_.get(), read_bytes);
 				f.close();
 			}
 			else {
-				YT_DEBUG_PRINTF("can not write file : %s", ((*p_RecvPath) / tpath(T_STRING_TO_TSTRING(itr->second))).string<std::string>().c_str());
+				YT_DEBUG_PRINTF("can not write file : %s", ((*p_RecvPath) / tpath(T_STRING_TO_TSTRING(itr->second))).std::string<std::string>().c_str());
 			}
 		}
 
@@ -294,10 +294,11 @@ namespace ytlib {
 		std::thread m_queueThread;
 	};
 
-	//默认使用uint32_t作为id形式。也可以改为string之类的可以作为map容器的key的类型
+	//默认使用uint32_t作为id形式。也可以改为std::string之类的可以作为map容器的key的类型
 	template<class T,class ID_Type = uint32_t>
 	class TcpNetAdapter : public TcpConnectionPool<TcpConnection<T> > {
 	private:
+		typedef std::shared_ptr<TcpConnection<T>> TcpConnectionPtr;
 		typedef std::shared_ptr<DataPackage<T> > dataPtr;
 		static const uint8_t HEAD_SIZE = TcpConnection<T>::HEAD_SIZE;
 	public:
@@ -307,7 +308,7 @@ namespace ytlib {
 			const tstring& rp = T_TEXT(""),
 			const tstring& sp = T_TEXT(""),
 			uint32_t threadSize_ = 10) :
-			TcpConnectionPool(port_, threadSize_),
+			TcpConnectionPool<TcpConnection<T>(port_, threadSize_),
 			m_myid(myid_), 
 			m_receiveCallBack(recvcb_),
 			m_RecvPath(tGetAbsolutePath(rp)), 
@@ -356,7 +357,7 @@ namespace ytlib {
 				f_head_buff = boost::shared_array<char>(new char[map_files.size() * HEAD_SIZE]);
 				for (std::map<std::string, std::string>::const_iterator itr = map_files.begin(); itr != map_files.end(); ++itr) {
 					file_tips += itr->first; file_tips += '=';//tip
-					file_tips += boost::filesystem::path(itr->second).filename().string(); file_tips += '\n';
+					file_tips += boost::filesystem::path(itr->second).filename().std::string(); file_tips += '\n';
 				}
 				set_buf_from_num(&f0_head_buff[4], static_cast<uint32_t>(file_tips.size()));
 				buffersPtr->push_back(std::move(boost::asio::const_buffer(f0_head_buff, HEAD_SIZE)));
@@ -368,7 +369,7 @@ namespace ytlib {
 					if (!file_path.is_absolute()) {
 						file_path = m_SendPath / file_path;
 					}
-					std::ifstream f(file_path.string<tstring>(), ios::in | ios::binary);
+					std::ifstream f(file_path.std::string<tstring>(), std::ios::in | std::ios::binary);
 					if (f) {
 						size_t cur_offerset = ii * HEAD_SIZE;
 						memcpy(&f_head_buff[cur_offerset], f0_head_buff, 3);
@@ -467,7 +468,7 @@ namespace ytlib {
 		TcpConnectionPtr getNewTcpConnectionPtr() {
 			return TcpConnectionPtr(new TcpConnection<T>(service, std::bind(&TcpNetAdapter::on_err, this, std::placeholders::_1), &m_RecvPath, m_receiveCallBack));
 		}
-		void on_err(const TcpEp& ep) {	TcpConnectionPool::on_err(ep);	}
+		void on_err(const TcpEp& ep) {	TcpConnectionPool<TcpConnection<T>::on_err(ep);	}
 		
 		bool _send_one(const std::shared_ptr<std::vector<boost::asio::const_buffer> > & Tdata_, const TcpEp & ep) {
 			std::shared_ptr<TcpConnection<T> > pc = getTcpConnectionPtr(ep);
