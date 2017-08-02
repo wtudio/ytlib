@@ -5,22 +5,22 @@
 namespace ytlib
 {
 	/*
-	±ê×¼Êı¾İ°ü·¢ËÍ¹æ·¶£º
-	step1£ºÏÈ´«Ò»¸ö±¨Í·£º£¨8 byte£©
+	æ ‡å‡†æ•°æ®åŒ…å‘é€è§„èŒƒï¼š
+	step1ï¼šå…ˆä¼ ä¸€ä¸ªæŠ¥å¤´ï¼šï¼ˆ8 byteï¼‰
 		head: 2 byte
 		tag: 2 byte
-		size: 4 byte £ºÄ¬ÈÏwindows£¬¼´Ğ¡¶Ë
+		size: 4 byte ï¼šé»˜è®¤windowsï¼Œå³å°ç«¯
 			num = byte1+byte2*256+byte3*65536+byte4*2^24
 			byte1=num%256,byte2=(num/256) ...
-	step2£º´«Êäsize¸öbyteµÄÊı¾İ
-	Èç¹ûÊ¹ÓÃ½áÊø·ûµÄ»°£¬ĞèÒªÔÚ·¢ËÍÍê³ÉÒ»¸ö°üºó·¢ËÍÒ»¸ö½áÊøhead£ºtag = TCPEND1 + TCPEND2
+	step2ï¼šä¼ è¾“sizeä¸ªbyteçš„æ•°æ®
+	å¦‚æœä½¿ç”¨ç»“æŸç¬¦çš„è¯ï¼Œéœ€è¦åœ¨å‘é€å®Œæˆä¸€ä¸ªåŒ…åå‘é€ä¸€ä¸ªç»“æŸheadï¼štag = TCPEND1 + TCPEND2
 	*/
 
-	typedef boost::asio::ip::tcp::endpoint TcpEp;//28¸ö×Ö½Ú
+	typedef boost::asio::ip::tcp::endpoint TcpEp;//28ä¸ªå­—èŠ‚
 	typedef boost::asio::ip::tcp::socket TcpSocket;
 
 
-	//Ä¬ÈÏvs
+	//é»˜è®¤vs
 	static void set_buf_from_num(char* p, uint32_t n) {
 #ifdef _MSC_VER
 		memcpy(p, &n, 4);
@@ -38,15 +38,15 @@ namespace ytlib
 #endif // _MSC_VER
 	}
 
-	//¼ì²é¶Ë¿ÚÊÇ·ñ¿ÉÓÃ¡£trueËµÃ÷¿ÉÓÃ
+	//æ£€æŸ¥ç«¯å£æ˜¯å¦å¯ç”¨ã€‚trueè¯´æ˜å¯ç”¨
 	static bool checkPort(uint16_t port_) {
 		boost::asio::io_service io;
 		TcpSocket sk(io);
 		sk.open(boost::asio::ip::tcp::v4());
 		boost::system::error_code err;
 		sk.connect(TcpEp(boost::asio::ip::tcp::v4(), port_), err);
-		if (err) return true;//Á¬½Ó²»ÉÏ£¬ËµÃ÷Ã»ÓĞ³ÌĞòÔÚ¼àÌı
-		sk.close();//·ñÔòËµÃ÷ÒÑ¾­±»Õ¼ÓÃÁË
+		if (err) return true;//è¿æ¥ä¸ä¸Šï¼Œè¯´æ˜æ²¡æœ‰ç¨‹åºåœ¨ç›‘å¬
+		sk.close();//å¦åˆ™è¯´æ˜å·²ç»è¢«å ç”¨äº†
 		return false;
 	}
 
@@ -54,7 +54,7 @@ namespace ytlib
 		for (uint16_t ii = start_; ii < 65535; ii++) {
 			if (checkPort(ii)) return ii;
 		}
-		//Èç¹ûÃ»ÓĞÕÒµ½Ôò·µ»Ø0
+		//å¦‚æœæ²¡æœ‰æ‰¾åˆ°åˆ™è¿”å›0
 		return 0;
 	}
 }

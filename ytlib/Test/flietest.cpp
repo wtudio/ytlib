@@ -10,7 +10,7 @@ namespace ytlib
 		std::shared_ptr<std::map<std::string, std::string> > o1 = f1.GetFileObjPtr();
 		(*o1)["aaa"] = "bbb";
 		(*o1)["ccc"] = "ddd";
-		(*o1)["²âÊÔ1"] = "²âÊÔ2";
+		(*o1)["æµ‹è¯•1"] = "æµ‹è¯•2";
 		f1.SaveFile();
 
 
@@ -22,7 +22,7 @@ namespace ytlib
 		itr != o2->end(); ++itr) {
 			std::cout << itr->first << " = " << itr->second << std::endl;
 		}
-		(*o2)["²âÊÔ1"] = "²âÊÔ3";
+		(*o2)["æµ‹è¯•1"] = "æµ‹è¯•3";
 		f2.SaveFile(T_TEXT("filetest/testfile4.txt"));
 		
 
@@ -44,7 +44,7 @@ namespace ytlib
 		f1.NewFile(T_TEXT("filetest/testfile.txt"));
 		std::shared_ptr<SFTestObj> o = f1.GetFileObjPtr();
 		o->s1 = "sssadafasf";
-		o->s2 = "²âÊÔ";
+		o->s2 = "æµ‹è¯•";
 		o->i1 = 1067;
 		o->i2 = 164;
 		f1.SaveFile();

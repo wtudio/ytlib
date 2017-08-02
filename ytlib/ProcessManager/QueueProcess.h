@@ -4,15 +4,15 @@
 
 namespace ytlib
 {
-	//Á÷Ë®ÏßÀàProcess
+	//æµæ°´çº¿ç±»Process
 	
-	//ÔİÍ£ºÍÍ£Ö¹Ö»ÊÇÔİÍ£Ìí¼ÓÊı¾İ£¬´¦ÀíÊı¾İµÄÏß³Ì²»ÊÜÓ°Ïì
-	//µÈµ½¶ÓÁĞÖĞµÄÊı¾İ´¦ÀíÍêÁË×ÔÈ»¾ÍÔİÍ£ÏÂÀ´ÁË
+	//æš‚åœå’Œåœæ­¢åªæ˜¯æš‚åœæ·»åŠ æ•°æ®ï¼Œå¤„ç†æ•°æ®çš„çº¿ç¨‹ä¸å—å½±å“
+	//ç­‰åˆ°é˜Ÿåˆ—ä¸­çš„æ•°æ®å¤„ç†å®Œäº†è‡ªç„¶å°±æš‚åœä¸‹æ¥äº†
 
-	//±í²ã·ÇÏß³Ì°²È«£¬²»Òª²¢·¢²Ù×÷
+	//è¡¨å±‚éçº¿ç¨‹å®‰å…¨ï¼Œä¸è¦å¹¶å‘æ“ä½œ
 
-	//ÓëÍ¨µÀÀàºÜÏñ¡£Çø±ğ¾ÍÊÇ´Ë´¦µÄ´¦Àíº¯ÊıÊÇ×ÓÀàÖØÔØµÄ£¬´Ë´¦µÄÌí¼Ó²Ù×÷ÓĞÔİÍ£¹¦ÄÜ
-	//µ«ÊÇ»¹ÊÇ¸Ğ¾õÍ¨µÀ±È½ÏºÃÓÃ¡£Õâ¸öÀàºÜÓĞ¿ÉÄÜÃ»ÓĞÊ²Ã´ÓÃ
+	//ä¸é€šé“ç±»å¾ˆåƒã€‚åŒºåˆ«å°±æ˜¯æ­¤å¤„çš„å¤„ç†å‡½æ•°æ˜¯å­ç±»é‡è½½çš„ï¼Œæ­¤å¤„çš„æ·»åŠ æ“ä½œæœ‰æš‚åœåŠŸèƒ½
+	//ä½†æ˜¯è¿˜æ˜¯æ„Ÿè§‰é€šé“æ¯”è¾ƒå¥½ç”¨ã€‚è¿™ä¸ªç±»å¾ˆæœ‰å¯èƒ½æ²¡æœ‰ä»€ä¹ˆç”¨
 
 	template<class T,
 	class _Queue = QueueBase<T> >
@@ -38,36 +38,36 @@ namespace ytlib
 			return ProcessBase::init();
 		}
 
-		//×ÓÀàÎö¹¹Ê±Ò»¶¨Òªµ÷ÓÃËü
+		//å­ç±»ææ„æ—¶ä¸€å®šè¦è°ƒç”¨å®ƒ
 		virtual bool stop() {
 			if (m_bStopFlag || !ProcessBase::stop()) return false;
-			//stopÖ®ºóĞèÒªÖØĞÂ³õÊ¼»¯
+			//stopä¹‹åéœ€è¦é‡æ–°åˆå§‹åŒ–
 			is_init = false;
 			m_bStopFlag = true;
 			for (size_t ii = 0; ii < m_threadCount; ii++) {
-				m_threadVec[ii]->join();//µÈ´ıËùÓĞÏß³Ì½áÊø
+				m_threadVec[ii]->join();//ç­‰å¾…æ‰€æœ‰çº¿ç¨‹ç»“æŸ
 				delete m_threadVec[ii];
 			}
 			m_threadVec.clear();
 			return true;
 		}
 
-		//startÖ®ºó²ÅÄÜadd
+		//startä¹‹åæ‰èƒ½add
 		virtual bool Add(const T& item_) {
 			return is_running && m_queue.Enqueue(item_);
 		}
 	private:
-		//Ïß³ÌÔËĞĞº¯Êı
+		//çº¿ç¨‹è¿è¡Œå‡½æ•°
 		void Run() {
 			while (!m_bStopFlag) {
 				T item_;
 				if (m_queue.BlockDequeue(item_))
-					ProcFun(item_);//´¦ÀíÊı¾İ£¬´Ë´¦µÄ´¦Àí²»Ö§³ÖÒì²½
+					ProcFun(item_);//å¤„ç†æ•°æ®ï¼Œæ­¤å¤„çš„å¤„ç†ä¸æ”¯æŒå¼‚æ­¥
 			}
 		}
 	protected:
 		
-		//´¦Àíº¯Êı£¬×ÓÀàÖØÔØ
+		//å¤„ç†å‡½æ•°ï¼Œå­ç±»é‡è½½
 		virtual void ProcFun(const T&) = 0;
 
 		std::atomic_bool m_bStopFlag;

@@ -12,9 +12,9 @@ namespace ytlib
 		ALG_ASYNC
 	};
 
-	//½ø¶È»Øµ÷
+	//è¿›åº¦å›è°ƒ
 	typedef std::function<void(int32_t)> ScheCallback;
-	//Ëã·¨ÀàProcess£º¿ªÆôÒ»¸öÏß³ÌÀ´½øĞĞËã·¨¼ÆËã
+	//ç®—æ³•ç±»Processï¼šå¼€å¯ä¸€ä¸ªçº¿ç¨‹æ¥è¿›è¡Œç®—æ³•è®¡ç®—
 	class AlgProcess : public ProcessBase
 	{
 	public:
@@ -32,7 +32,7 @@ namespace ytlib
 			return ProcessBase::init();
 		}
 
-		//Ö÷ÒªÆğÊ¾Àı×÷ÓÃ£¬Ä¬ÈÏÒì²½ÔËĞĞ
+		//ä¸»è¦èµ·ç¤ºä¾‹ä½œç”¨ï¼Œé»˜è®¤å¼‚æ­¥è¿è¡Œ
 		bool start(AlgRunType type_= AlgRunType::ALG_ASYNC) {
 			if (!ProcessBase::start()) return false;
 			if (type_ == AlgRunType::ALG_ASYNC) {
@@ -43,12 +43,12 @@ namespace ytlib
 			}
 			return true;
 		}
-		//½öÔÚÒì²½Ä£Ê½ÏÂÓĞÓÃ
+		//ä»…åœ¨å¼‚æ­¥æ¨¡å¼ä¸‹æœ‰ç”¨
 		bool stop(int32_t waittime=1000) {
 			if (!ProcessBase::stop()) return false;
-			//µÈ´ı waittime ms£¬Èç¹û»¹²»ĞĞ¾Í·µ»Øfalse
+			//ç­‰å¾… waittime msï¼Œå¦‚æœè¿˜ä¸è¡Œå°±è¿”å›false
 			if (!mainAlgThread.timed_join(boost::posix_time::millisec(waittime))){
-				fLogCallback(T_TEXT("Ëã·¨Á÷³ÌÎŞ·¨Í£Ö¹£¡"));
+				fLogCallback(T_TEXT("ç®—æ³•æµç¨‹æ— æ³•åœæ­¢ï¼"));
 				return false;
 			}
 			return true;
@@ -71,7 +71,7 @@ namespace ytlib
 		}
 		bool setFiles(const tstring& filename, const tstring&  filepath){
 			if (is_running) {
-				fLogCallback(T_TEXT("Ëã·¨ÕıÔÚÔËĞĞ£¬ÎŞ·¨ÉèÖÃÎÄ¼ş"));
+				fLogCallback(T_TEXT("ç®—æ³•æ­£åœ¨è¿è¡Œï¼Œæ— æ³•è®¾ç½®æ–‡ä»¶"));
 				return false;
 			}
 			m_mapFiles[filename] = filepath;
@@ -82,44 +82,44 @@ namespace ytlib
 		}
 
 	protected:
-		//ÔİÊ±²»Ìá¹©ÔİÍ£¹¦ÄÜ
+		//æš‚æ—¶ä¸æä¾›æš‚åœåŠŸèƒ½
 		bool pause(){}
 
 		void defScheCallback(int32_t s) {
 			tostringstream ss;
-			ss << T_TEXT("µ±Ç°½ø¶È£º") << s;
+			ss << T_TEXT("å½“å‰è¿›åº¦ï¼š") << s;
 			fLogCallback(ss.str());
 		}
 		ScheCallback fScheCallback;
 
-		//×´Ì¬Öµ
+		//çŠ¶æ€å€¼
 		int32_t m_state;
-		//ËùĞèÎÄ¼ş£ºÃû³Æ+Ä¿Â¼
-		std::map<tstring, tstring> m_mapFiles;//ÊäÈëµÄ²ÎÊıÎÄ¼şÂ·¾¶ºÍÊä³öÎÄ¼şÂ·¾¶Ò»¿é
-		//Ïß³Ì
+		//æ‰€éœ€æ–‡ä»¶ï¼šåç§°+ç›®å½•
+		std::map<tstring, tstring> m_mapFiles;//è¾“å…¥çš„å‚æ•°æ–‡ä»¶è·¯å¾„å’Œè¾“å‡ºæ–‡ä»¶è·¯å¾„ä¸€å—
+		//çº¿ç¨‹
 		boost::thread mainAlgThread;
 		
-		//Ö»ĞèÒª¼Ì³Ğ´Ë·½·¨¾ÍĞĞÁË
-		//ÒòÎªÒªÌá¹©ÀàÄÚ½Ó¿ÚÖ§³Ö£¬ËùÒÔ²»ÄÜ¸Ä³Éº¯Êı×¢²áĞÎÊ½
-		//Ê¾Àı£º
-		//Ò»¶¨ÒªÔÚ½áÊøÊ±½«is_runningÉèÖÃÎªfalse
-		//×îºÃÌá¹©¼ì²âµ½is_running±äÎªfalseÔòÍ£Ö¹µÄ¹¦ÄÜ
-		//·µ»ØÖµ»á±»getCurStateº¯Êı·µ»Ø¸øÉÏ²ãµ÷ÓÃÕß
+		//åªéœ€è¦ç»§æ‰¿æ­¤æ–¹æ³•å°±è¡Œäº†
+		//å› ä¸ºè¦æä¾›ç±»å†…æ¥å£æ”¯æŒï¼Œæ‰€ä»¥ä¸èƒ½æ”¹æˆå‡½æ•°æ³¨å†Œå½¢å¼
+		//ç¤ºä¾‹ï¼š
+		//ä¸€å®šè¦åœ¨ç»“æŸæ—¶å°†is_runningè®¾ç½®ä¸ºfalse
+		//æœ€å¥½æä¾›æ£€æµ‹åˆ°is_runningå˜ä¸ºfalseåˆ™åœæ­¢çš„åŠŸèƒ½
+		//è¿”å›å€¼ä¼šè¢«getCurStateå‡½æ•°è¿”å›ç»™ä¸Šå±‚è°ƒç”¨è€…
 		virtual void mainAlg() {
-			fLogCallback(T_TEXT("²âÊÔ"));
+			fLogCallback(T_TEXT("æµ‹è¯•"));
 			int32_t ii = 0;
 			while (is_running&&(ii++<100)) {
 				fScheCallback(ii);
-				boost::this_thread::sleep(boost::posix_time::millisec(10));//µÈ´ı
+				boost::this_thread::sleep(boost::posix_time::millisec(10));//ç­‰å¾…
 			}
 			if (is_running) {
 				is_running = false;
 				m_state = 0;
-				return;//Õı³£ÍË³ö
+				return;//æ­£å¸¸é€€å‡º
 			}
 			else {
 				m_state = 1;
-				return;//·ÇÕı³£ÍË³ö¡£is_runningÊÇÍâ²¿¸Ä±äµÄ
+				return;//éæ­£å¸¸é€€å‡ºã€‚is_runningæ˜¯å¤–éƒ¨æ”¹å˜çš„
 			}
 			
 		}

@@ -8,7 +8,7 @@
 
 namespace ytlib
 {
-	//Ä¬ÈÏÎªtxtºó×º
+	//é»˜è®¤ä¸ºtxtåç¼€
 	template <class T>
 	class FileBase
 	{
@@ -16,12 +16,12 @@ namespace ytlib
 		tstring m_filepath;
 		bool m_bInitialized;
 
-		//ÎÄ¼şÄÚÈİ½âÎöºóµÄ½á¹¹Ìå
+		//æ–‡ä»¶å†…å®¹è§£æåçš„ç»“æ„ä½“
 		std::shared_ptr<T> m_fileobj;
 
-		//¼ì²éÎÄ¼şÃû³ÆÕıÈ·ĞÔ
+		//æ£€æŸ¥æ–‡ä»¶åç§°æ­£ç¡®æ€§
 		virtual bool CheckFileName(const tstring& filename) const {
-			//Ò»°ã¾ÍÊÇ¼ì²éºó×ºÃû
+			//ä¸€èˆ¬å°±æ˜¯æ£€æŸ¥åç¼€å
 			/*
 			tstring Suffix = T_TEXT("txt");
 			if (ToLower(filename.substr(filename.length() - Suffix.length(), Suffix.length())) != Suffix) {
@@ -30,14 +30,14 @@ namespace ytlib
 			*/
 			return true;
 		}
-		//ĞÂ½¨Ò»¸öÎÄ¼şÄÚÈİ½á¹¹Ìå¡£×öÒ»Ğ©³õÊ¼»¯µÄ¹¤×÷
+		//æ–°å»ºä¸€ä¸ªæ–‡ä»¶å†…å®¹ç»“æ„ä½“ã€‚åšä¸€äº›åˆå§‹åŒ–çš„å·¥ä½œ
 		virtual bool CreateFileObj() {
 			m_fileobj = std::shared_ptr<T>(new T());
 			return true;
 		}
-		//´Ó´ò¿ªµÄÎÄ¼şÖĞ½âÎö»ñÈ¡ÎÄ¼şÄÚÈİ½á¹¹Ìå
+		//ä»æ‰“å¼€çš„æ–‡ä»¶ä¸­è§£æè·å–æ–‡ä»¶å†…å®¹ç»“æ„ä½“
 		virtual bool GetFileObj() = 0;
-		//½«µ±Ç°µÄÎÄ¼şÄÚÈİ½á¹¹Ìå±£´æÎªÎÄ¼ş
+		//å°†å½“å‰çš„æ–‡ä»¶å†…å®¹ç»“æ„ä½“ä¿å­˜ä¸ºæ–‡ä»¶
 		virtual bool SaveFileObj() = 0;
 	public:
 		FileBase(): m_bInitialized(false), m_fileobj(std::shared_ptr<T>(new T())){}
@@ -47,9 +47,9 @@ namespace ytlib
 			return m_fileobj;
 		}
 
-		//×ÓÀàÔÚopen³É¹¦ºó½âÎöÎÄ¼ş»ñµÃ½á¹¹Ìå£¬×îÖÕ³É¹¦²Å·µ»Øsuccess
+		//å­ç±»åœ¨openæˆåŠŸåè§£ææ–‡ä»¶è·å¾—ç»“æ„ä½“ï¼Œæœ€ç»ˆæˆåŠŸæ‰è¿”å›success
 		void OpenFile(const tstring& path) {
-			//¼ì²éÎÄ¼şÃû³ÆÓëÂ·¾¶
+			//æ£€æŸ¥æ–‡ä»¶åç§°ä¸è·¯å¾„
 			if (!CheckFileName(path)) {
 				throw Exception(Error::ER_ERROR_INVALID_FILENAME);
 			}
@@ -67,7 +67,7 @@ namespace ytlib
 			m_bInitialized = true;
 		}
 
-		//×ÓÀàÔÚĞÂ½¨½á¹¹Ìå³É¹¦ºó²Å·µ»Øsuccess
+		//å­ç±»åœ¨æ–°å»ºç»“æ„ä½“æˆåŠŸåæ‰è¿”å›success
 		void NewFile() {
 			m_filepath.clear();
 			if (!CreateFileObj()) {
@@ -75,9 +75,9 @@ namespace ytlib
 			}
 			m_bInitialized = true;
 		}
-		//ĞÂ½¨½á¹¹Ìå²¢±£´æµ½pathÏÂ
+		//æ–°å»ºç»“æ„ä½“å¹¶ä¿å­˜åˆ°pathä¸‹
 		void NewFile(const tstring& path) {
-			//¼ì²éÎÄ¼şÃû³ÆÓëÂ·¾¶
+			//æ£€æŸ¥æ–‡ä»¶åç§°ä¸è·¯å¾„
 			if (!CheckFileName(path)) {
 				throw Exception(Error::ER_ERROR_INVALID_FILENAME);
 			}
@@ -89,7 +89,7 @@ namespace ytlib
 			m_bInitialized = true;
 			return(SaveFile());
 		}
-		//×ÓÀàÔÚ±£´æ³É¹¦£¬½«½á¹¹ÌåĞ´³ÉÎÄ¼şºó²Å·µ»Øsuccess
+		//å­ç±»åœ¨ä¿å­˜æˆåŠŸï¼Œå°†ç»“æ„ä½“å†™æˆæ–‡ä»¶åæ‰è¿”å›success
 		void SaveFile() {
 			if ((m_filepath.empty()) || (!m_bInitialized)) {
 				throw Exception(Error::ER_ERROR_INVALID_SAVE);
@@ -103,12 +103,12 @@ namespace ytlib
 			}
 		}
 
-		//×ÓÀàÔÚÁí´æÎª³É¹¦£¬½«½á¹¹ÌåĞ´³ÉÎÄ¼şºó²Å·µ»Øsuccess
+		//å­ç±»åœ¨å¦å­˜ä¸ºæˆåŠŸï¼Œå°†ç»“æ„ä½“å†™æˆæ–‡ä»¶åæ‰è¿”å›success
 		void SaveFile(const tstring& path) {
 			if (!m_bInitialized) {
 				throw Exception(Error::ER_ERROR_INVALID_SAVE);
 			}
-			//¼ì²éÎÄ¼şÃû³ÆÓëÂ·¾¶
+			//æ£€æŸ¥æ–‡ä»¶åç§°ä¸è·¯å¾„
 			if (!CheckFileName(path)) {
 				throw Exception(Error::ER_ERROR_INVALID_FILENAME);
 			}
@@ -130,7 +130,7 @@ namespace ytlib
 		inline tstring GetFilePath() const {
 			return m_filepath;
 		}
-		//È¥µôºó×º
+		//å»æ‰åç¼€
 		tstring GetFileName() const {
 			if (m_filepath.empty())	return T_TEXT("");
 			tpath filepath = tGetAbsolutePath(m_filepath);

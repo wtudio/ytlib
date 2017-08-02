@@ -5,14 +5,14 @@
 
 namespace ytlib
 {
-	//Ê¹ÓÃmap¸ñÊ½¡£Éæ¼°µ½´æ´¢µÄ¶¼Åª³Éstring
+	//ä½¿ç”¨mapæ ¼å¼ã€‚æ¶‰åŠåˆ°å­˜å‚¨çš„éƒ½å¼„æˆstring
 	class KeyValueFile :public FileBase<std::map<std::string, std::string> >
 	{
 	public:
 		KeyValueFile() :FileBase() {}
 		virtual ~KeyValueFile() {}
 	protected:
-		//´Ó´ò¿ªµÄÎÄ¼şÖĞ½âÎö»ñÈ¡ÎÄ¼şÄÚÈİ½á¹¹Ìå
+		//ä»æ‰“å¼€çš„æ–‡ä»¶ä¸­è§£æè·å–æ–‡ä»¶å†…å®¹ç»“æ„ä½“
 		virtual bool GetFileObj() {
 			if (!CreateFileObj()) return false;
 			tpath path = tGetAbsolutePath(m_filepath);
@@ -33,7 +33,7 @@ namespace ytlib
 			}
 			return false;
 		}
-		//½«µ±Ç°µÄÎÄ¼şÄÚÈİ½á¹¹Ìå±£´æÎªÎÄ¼ş
+		//å°†å½“å‰çš„æ–‡ä»¶å†…å®¹ç»“æ„ä½“ä¿å­˜ä¸ºæ–‡ä»¶
 		virtual bool SaveFileObj() {
 			std::ofstream ofile(m_filepath.c_str(), std::ios::trunc);
 			if (ofile) {

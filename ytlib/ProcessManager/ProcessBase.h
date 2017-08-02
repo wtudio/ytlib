@@ -4,9 +4,9 @@
 
 namespace ytlib
 {
-	//ÈÕÖ¾»Øµ÷
+	//æ—¥å¿—å›è°ƒ
 	typedef std::function<void(const tstring &)> LogCallback;
-	//·ÇÏß³Ì°²È«£¬²»Òª²¢·¢²Ù×÷
+	//éçº¿ç¨‹å®‰å…¨ï¼Œä¸è¦å¹¶å‘æ“ä½œ
 	class ProcessBase
 	{
 	public:
@@ -36,8 +36,8 @@ namespace ytlib
 			fLogCallback(T_TEXT("Start"));
 			return true;
 		}
-		//pause±íÊ¾ÔİÍ££¬¿ÉÒÔÔÙ½Ó×Åstart¡£stop±íÊ¾Í£Ö¹£¬¾ÍËãÖØĞÂstartÒ²ÊÇ´ÓÍ·¿ªÊ¼
-		//´Ë´¦µÄpauseºÍstop±íÏÖÊÇÒ»ÑùµÄ¡£½»¸ø×ÓÀàÖØÔØ
+		//pauseè¡¨ç¤ºæš‚åœï¼Œå¯ä»¥å†æ¥ç€startã€‚stopè¡¨ç¤ºåœæ­¢ï¼Œå°±ç®—é‡æ–°startä¹Ÿæ˜¯ä»å¤´å¼€å§‹
+		//æ­¤å¤„çš„pauseå’Œstopè¡¨ç°æ˜¯ä¸€æ ·çš„ã€‚äº¤ç»™å­ç±»é‡è½½
 		virtual bool pause() {
 			if (!is_running) {
 				fLogCallback(T_TEXT("Pause failed : process is not running"));
@@ -64,7 +64,7 @@ namespace ytlib
 		virtual bool isRunning() {
 			return is_running;
 		}
-		//ÓÉÅÉÉúÀà¾ö¶¨ÔõÑù·µ»Øµ±Ç°×´Ì¬
+		//ç”±æ´¾ç”Ÿç±»å†³å®šæ€æ ·è¿”å›å½“å‰çŠ¶æ€
 		virtual int32_t getCurState() {
 			return 0;
 		}
@@ -74,7 +74,7 @@ namespace ytlib
 		}
 
 	protected:
-		//¼òµ¥ÈÕÖ¾¹¦ÄÜ
+		//ç®€å•æ—¥å¿—åŠŸèƒ½
 		void defLogCallback(const tstring & s) {
 			tcout << s << std::endl;
 		}

@@ -8,7 +8,7 @@
 
 namespace ytlib
 {
-	//Éú³ÉUUID
+	//ç”ŸæˆUUID
 	tstring GenerateUUID(void) {
 		boost::uuids::random_generator rgen;
 #ifdef UNICODE

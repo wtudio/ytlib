@@ -4,14 +4,14 @@
 #include <vector>
 
 namespace ytlib {
-	//µ¥¶ÓÁĞ£¬Òì²½Ìí¼Ó£¬¿ÉÒÔ¶àÏß³Ì´¦ÀíÊı¾İµÄÍ¨µÀ
-	//´Ó½øÈëÍ¨µÀµ½È¡³öÍ¨µÀÊı¾İ»á¾­¹ı¸´ÖÆ²Ù×÷¡£Òò´Ë½¨ÒéÊ¼ÖÕ´«µİshare_ptrÒ»ÀàµÄÖ¸Õë
-	//Ê¹ÓÃ×èÈûÈ¡³ö£¬ÎŞ·¨ÔİÍ££¬Ò»µ©¿ªÆô½«Ò»Ö±È¡³öÊı¾İ½øĞĞ´¦Àí£¬Ö±µ½ÎŞÊı¾İ¿ÉÈ¡Ê±×èÈû
+	//å•é˜Ÿåˆ—ï¼Œå¼‚æ­¥æ·»åŠ ï¼Œå¯ä»¥å¤šçº¿ç¨‹å¤„ç†æ•°æ®çš„é€šé“
+	//ä»è¿›å…¥é€šé“åˆ°å–å‡ºé€šé“æ•°æ®ä¼šç»è¿‡å¤åˆ¶æ“ä½œã€‚å› æ­¤å»ºè®®å§‹ç»ˆä¼ é€’share_pträ¸€ç±»çš„æŒ‡é’ˆ
+	//ä½¿ç”¨é˜»å¡å–å‡ºï¼Œæ— æ³•æš‚åœï¼Œä¸€æ—¦å¼€å¯å°†ä¸€ç›´å–å‡ºæ•°æ®è¿›è¡Œå¤„ç†ï¼Œç›´åˆ°æ— æ•°æ®å¯å–æ—¶é˜»å¡
 	template<class T,
 	class _Queue = QueueBase<T> >
 	class ChannelBase {
 	public:
-		//µ¥´¦ÀíÏß³ÌµÄÍ¨µÀÊÊÓÃÓÚË³ĞòÊı¾İ´¦Àí£¬¶à´¦ÀíÏß³ÌµÄÍ¨µÀÊÊÓÃÓÚ²¢ĞĞ´¦Àí
+		//å•å¤„ç†çº¿ç¨‹çš„é€šé“é€‚ç”¨äºé¡ºåºæ•°æ®å¤„ç†ï¼Œå¤šå¤„ç†çº¿ç¨‹çš„é€šé“é€‚ç”¨äºå¹¶è¡Œå¤„ç†
 		ChannelBase(std::function<void(const T&)> f_, size_t thCount_ = 1, size_t queueSize_ = 1000) :
 			m_processFun(f_),
 			m_threadCount(thCount_), 
@@ -22,7 +22,7 @@ namespace ytlib {
 			}
 		}
 		virtual ~ChannelBase(void) {
-			//½áÊøÏß³Ì£¬½ûÖ¹Ìí¼Ó
+			//ç»“æŸçº¿ç¨‹ï¼Œç¦æ­¢æ·»åŠ 
 			m_bRunning = false;
 			m_Threads.join_all();
 		}
@@ -32,12 +32,12 @@ namespace ytlib {
 		inline void Clear() {m_queue.Clear();}
 		inline double GetUsagePercentage() {return (double)(m_queue.Count()) / (double)(m_queue.GetMaxCount());	}
 	private:
-		//Ïß³ÌÔËĞĞº¯Êı
+		//çº¿ç¨‹è¿è¡Œå‡½æ•°
 		void Run() {
 			while (m_bRunning) {
 				T item_;
 				if (m_queue.BlockDequeue(item_)) 
-					m_processFun(item_);//´¦ÀíÊı¾İ£¬´Ë´¦µÄ´¦Àí²»Ö§³ÖÒì²½
+					m_processFun(item_);//å¤„ç†æ•°æ®ï¼Œæ­¤å¤„çš„å¤„ç†ä¸æ”¯æŒå¼‚æ­¥
 			}
 		}
 
@@ -46,7 +46,7 @@ namespace ytlib {
 		std::atomic_bool m_bRunning;
 		boost::thread_group m_Threads;
 		_Queue m_queue;
-		std::function<void(const T&)> m_processFun;//´¦ÀíÄÚÈİº¯Êı¡£²ÎÊıÍÆ¼öÊ¹ÓÃ£¨ÖÇÄÜ£©Ö¸Õë
+		std::function<void(const T&)> m_processFun;//å¤„ç†å†…å®¹å‡½æ•°ã€‚å‚æ•°æ¨èä½¿ç”¨ï¼ˆæ™ºèƒ½ï¼‰æŒ‡é’ˆ
 		const size_t m_threadCount;
 		
 	};

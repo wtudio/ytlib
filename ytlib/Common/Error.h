@@ -11,11 +11,11 @@ namespace ytlib
 		ER_NO_ERROR = 0,
 		ER_ERROR_UNKNOWN_EXCEPTION,
 
-		//ÐòÁÐ»¯²Ù×÷
+		//åºåˆ—åŒ–æ“ä½œ
 		ER_ERROR_SERIALIZE_ERROR,
 		ER_ERROR_DESERIALIZE_ERROR,
 
-		//ÎÄ¼þ²Ù×÷
+		//æ–‡ä»¶æ“ä½œ
 		ER_ERROR_FILE_NOT_EXIST,
 		ER_ERROR_INVALID_SAVE,
 		ER_ERROR_INVALID_FILENAME,
@@ -31,19 +31,19 @@ namespace ytlib
 	static const tchar* GetErrorMessage(Error err0) {
 		static const tchar* gErrorMessages[ER_ERROR_COUNT] =
 		{
-			T_TEXT("²Ù×÷successful"),
-			T_TEXT("Î´ÖªÒì³£"),
+			T_TEXT("æ“ä½œsuccessful"),
+			T_TEXT("æœªçŸ¥å¼‚å¸¸"),
 
-			T_TEXT("ÐòÁÐ»¯´íÎó"),
-			T_TEXT("·´ÐòÁÐ»¯´íÎó"),
+			T_TEXT("åºåˆ—åŒ–é”™è¯¯"),
+			T_TEXT("ååºåˆ—åŒ–é”™è¯¯"),
 
-			T_TEXT("ÎÄ¼þ²»´æÔÚ"),
-			T_TEXT("·Ç·¨±£´æ"),
-			T_TEXT("·Ç·¨ÎÄ¼þÃû³Æ"),
-			T_TEXT("·Ç·¨ÎÄ¼þ"),
-			T_TEXT("³õÊ¼»¯ÎÄ¼þÊ§°Ü"),
-			T_TEXT("½âÎöÎÄ¼þÊ§°Ü"),
-			T_TEXT("±£´æÎÄ¼þÊ§°Ü")
+			T_TEXT("æ–‡ä»¶ä¸å­˜åœ¨"),
+			T_TEXT("éžæ³•ä¿å­˜"),
+			T_TEXT("éžæ³•æ–‡ä»¶åç§°"),
+			T_TEXT("éžæ³•æ–‡ä»¶"),
+			T_TEXT("åˆå§‹åŒ–æ–‡ä»¶å¤±è´¥"),
+			T_TEXT("è§£æžæ–‡ä»¶å¤±è´¥"),
+			T_TEXT("ä¿å­˜æ–‡ä»¶å¤±è´¥")
 		};
 
 		int32_t err = static_cast<int32_t>(err0);

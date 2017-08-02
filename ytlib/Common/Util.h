@@ -2,7 +2,7 @@
 
 
 
-// Ä¬ÈÏwindowsÏÂÊ¹ÓÃunicode£¬ÆäËûÆ½Ì¨²»Ê¹ÓÃ¡£ÔÚÕâÀïÌí¼ÓÒªÊ¹ÓÃunicodeµÄÆ½Ì¨ºê¶¨Òå
+// é»˜è®¤windowsä¸‹ä½¿ç”¨unicodeï¼Œå…¶ä»–å¹³å°ä¸ä½¿ç”¨ã€‚åœ¨è¿™é‡Œæ·»åŠ è¦ä½¿ç”¨unicodeçš„å¹³å°å®å®šä¹‰
 #if defined(_WIN32)
 #	ifndef UNICODE
 #		define UNICODE
@@ -10,11 +10,11 @@
 #endif
 
 //////////////////////////////////////////////////////////////////////////
-// °üº¬³£ÓÃÍ·ÎÄ¼ş
+// åŒ…å«å¸¸ç”¨å¤´æ–‡ä»¶
 #include <iostream>
 #include <assert.h>
 
-// °üº¬ÌØ¶¨Í·ÎÄ¼ş
+// åŒ…å«ç‰¹å®šå¤´æ–‡ä»¶
 #if defined(_WIN32)
 #	include <WinSock2.h>
 #	include <Windows.h>
@@ -28,7 +28,7 @@
 
 
 //////////////////////////////////////////////////////////////////////////
-// ¶¨ÒåDEBUG
+// å®šä¹‰DEBUG
 #if defined( _DEBUG ) || defined( DEBUG ) || defined (__DEBUG__)
 #	ifndef DEBUG
 #       define DEBUG
@@ -36,7 +36,7 @@
 #endif
 
 //////////////////////////////////////////////////////////////////////////
-// ¹Ø±Õ¾¯¸æ
+// å…³é—­è­¦å‘Š
 #if defined(_MSC_VER)
 #	pragma warning(disable : 4068)
 #	pragma warning(disable : 4251)
@@ -47,7 +47,7 @@
 #endif
 
 //////////////////////////////////////////////////////////////////////////
-// ¶¨ÒåNULL
+// å®šä¹‰NULL
 #if ! defined(NULL)
 #	if defined(__cplusplus) 
 #		define NULL 0
@@ -58,7 +58,7 @@
 
 
 //////////////////////////////////////////////////////////////////////////
-// °²È«ÊÍ·ÅÖ¸Õë
+// å®‰å…¨é‡Šæ”¾æŒ‡é’ˆ
 #if ! defined(SAFE_DELETE)
 #	define SAFE_DELETE(p) do{if(p!=NULL){delete p;p=NULL;}}while(0)
 #endif
@@ -71,7 +71,7 @@
 #define endll std::endl << std::endl // double end line definition
 
 //////////////////////////////////////////////////////////////////////////
-//debug µ÷ÊÔ
+//debug è°ƒè¯•
 
 #ifdef DEBUG
 #define YT_DEBUG_PRINTF(_arg_,...) printf_s(_arg_, ##__VA_ARGS__);
@@ -80,7 +80,7 @@
 #endif // DEBUG
 
 //////////////////////////////////////////////////////////////////////////
-// µ¼³ö¶¨Òå
+// å¯¼å‡ºå®šä¹‰
 #if defined(_WIN32)
 #	define YT_DECLSPEC_EXPORT __declspec(dllexport)
 #	define YT_DECLSPEC_IMPORT __declspec(dllimport)

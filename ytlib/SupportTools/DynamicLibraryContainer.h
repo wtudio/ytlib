@@ -4,7 +4,7 @@
 
 namespace ytlib
 {
-	//动态链接库容器
+	//鍔ㄦ�侀摼鎺ュ簱瀹瑰櫒
 	class DynamicLibraryContainer
 	{
 	public:
@@ -13,7 +13,7 @@ namespace ytlib
 			m_mapLibraries.clear();
 		}
 
-		//根据名称获取动态链接库对象
+		//鏍规嵁鍚嶇О鑾峰彇鍔ㄦ�侀摼鎺ュ簱瀵硅薄
 		std::shared_ptr<DynamicLibrary> GetLibrary(const tstring& libname) {
 			std::map<tstring, std::shared_ptr<DynamicLibrary> >::iterator iter = m_mapLibraries.find(libname);
 			if (iter == m_mapLibraries.end()) {

@@ -35,7 +35,7 @@ namespace ytlib
 		TextType,
 		BinaryType
 	};
-//����ʽ���л���ͷ
+//侵入式序列化类头
 #define T_CLASS_SERIALIZE(Members) \
 	friend class boost::serialization::access; \
 	template<class Archive> \
@@ -43,7 +43,7 @@ namespace ytlib
 	{ ar Members; }
 	
 
-	//�ṩ�ĺ��������������л���ģ��С����Ҫֱ��ת��Ϊstring��洢���ļ�����̫�������ܵĳ���
+	//提供的函数仅适用于序列化规模较小，需要直接转化为string或存储成文件，不太考虑性能的场合
 	template<class T>
 	bool Serialize(const T& obj, std::string &data, SerializeType Type = TextType) {
 		try {
@@ -129,14 +129,14 @@ namespace ytlib
 		}
 	}
 
-	//���������л��궨�壬�̲߳���ȫ�����뵱ǰ������p��len�ͻ�ʧЧ
-	//��SERIALIZE_INIT����SERIALIZE_INIT������������SERIALIZE���������p��len��Ч
-	//��һ��SERIALIZEʱ�����ǰһ��SERIALIZE�Ľ��
+	//高性能序列化宏定义，线程不安全，脱离当前作用域p和len就会失效
+	//先SERIALIZE_INIT，在SERIALIZE_INIT所在作用域内SERIALIZE和其产生的p和len有效
+	//后一次SERIALIZE时将清空前一次SERIALIZE的结果
 
-	//�����ܷ����л��궨��
-	//��DESERIALIZE_INIT����DESERIALIZE_INIT������������DESERIALIZE��Ч
-	//��ȫ�Դ��ɣ����ܻᷢ������ʱ�ڴ���󣨴����ԣ�
-	//Ĭ��ʹ�ö����Ʒ�ʽ���л�
+	//高性能反序列化宏定义
+	//先DESERIALIZE_INIT，在DESERIALIZE_INIT所在作用域内DESERIALIZE有效
+	//安全性存疑，可能会发生析构时内存错误（待测试）
+	//默认使用二进制方式序列化
 	class mystreambuf :public std::basic_stringbuf<char, std::char_traits<char>, std::allocator<char> >
 	{
 		friend class myostringstream;
@@ -176,7 +176,7 @@ namespace ytlib
 		mystreambuf _mybuf;
 	};
 
-	//�û�Ҳ���Բο���Щ���������Լ������л������л�����
+	//用户也可以参考这些宏来定制自己的序列化反序列化操作
 #define SERIALIZE_INIT \
 	myostringstream myostringstream_tmp(std::ios_base::binary); \
 	std::shared_ptr<boost::archive::binary_oarchive> oar_tmp;

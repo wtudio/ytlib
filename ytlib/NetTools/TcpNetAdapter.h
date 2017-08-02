@@ -9,32 +9,32 @@
 
 namespace ytlib {
 	/*
-	Ê¹ÓÃboost.asioµÄÒ»¸ö¼òÒ×ÍøÂçÊÊÅäÆ÷
-	Ê¹ÓÃÊ±ĞèÒª½¨Á¢Ò»¸öÖ÷»úidÓëÆäÍøÂçĞÅÏ¢µÄmap£¬È»ºó·¢ËÍÊ±Ö»Ğè´«µİÊı¾İºÍÄ¿µÄµØid¼´¿É
+	ä½¿ç”¨boost.asioçš„ä¸€ä¸ªç®€æ˜“ç½‘ç»œé€‚é…å™¨
+	ä½¿ç”¨æ—¶éœ€è¦å»ºç«‹ä¸€ä¸ªä¸»æœºidä¸å…¶ç½‘ç»œä¿¡æ¯çš„mapï¼Œç„¶åå‘é€æ—¶åªéœ€ä¼ é€’æ•°æ®å’Œç›®çš„åœ°idå³å¯
 
-	Ê¹ÓÃboostĞòÁĞ»¯µÄ·½Ê½Ö±½Ó½«ÀàĞòÁĞ»¯µ½·¢ËÍÁ÷¡¢Ö±½Ó½«½ÓÊÕÁ÷·´ĞòÁĞ»¯µ½Àà¡£	³ıÁËÀà³ÉÔ±Íâ£¬»¹Ö§³Ö£º
-	1¡¢½«Êı¾İ¿½±´½ømap_datasÖĞ
-	2¡¢Ò»Ğ©´´½¨ÔÚ¶ÑÖĞ¡¢È·±£Éú´æÆÚ²¢ÇÒÖ»¶ÁµÄÊı¾İ£¬¿ÉÒÔÈ¡ÆäÖÇÄÜÖ¸Õë·ÅÓÚmap_datasÖĞ
-	3¡¢ÎÄ¼ş·¢ËÍ¡£ĞèÒªÈ·Á¢·¢ËÍ¡¢½ÓÊÕÄ¿Â¼£¬·ñÔòÖ±½Ó·Åµ½¿ÉÖ´ĞĞÎÄ¼şÄ¿Â¼ÏÂ
+	ä½¿ç”¨booståºåˆ—åŒ–çš„æ–¹å¼ç›´æ¥å°†ç±»åºåˆ—åŒ–åˆ°å‘é€æµã€ç›´æ¥å°†æ¥æ”¶æµååºåˆ—åŒ–åˆ°ç±»ã€‚	é™¤äº†ç±»æˆå‘˜å¤–ï¼Œè¿˜æ”¯æŒï¼š
+	1ã€å°†æ•°æ®æ‹·è´è¿›map_datasä¸­
+	2ã€ä¸€äº›åˆ›å»ºåœ¨å †ä¸­ã€ç¡®ä¿ç”Ÿå­˜æœŸå¹¶ä¸”åªè¯»çš„æ•°æ®ï¼Œå¯ä»¥å–å…¶æ™ºèƒ½æŒ‡é’ˆæ”¾äºmap_datasä¸­
+	3ã€æ–‡ä»¶å‘é€ã€‚éœ€è¦ç¡®ç«‹å‘é€ã€æ¥æ”¶ç›®å½•ï¼Œå¦åˆ™ç›´æ¥æ”¾åˆ°å¯æ‰§è¡Œæ–‡ä»¶ç›®å½•ä¸‹
 
-	¿¼ÂÇ¿çÆ½Ì¨ĞÔ£¬Ç£Éæµ½ÍøÂç´«ÊäµÄÊı¾İÒ»ÂÉÊ¹ÓÃ char¡¢±ê×¼intÕâÖÖ£¨²»ÄÜÓÃwchar¡¢int¡¢long¡¢size_tÕâĞ©²»Ã÷È·µÄ£©
+	è€ƒè™‘è·¨å¹³å°æ€§ï¼Œç‰µæ¶‰åˆ°ç½‘ç»œä¼ è¾“çš„æ•°æ®ä¸€å¾‹ä½¿ç”¨ charã€æ ‡å‡†intè¿™ç§ï¼ˆä¸èƒ½ç”¨wcharã€intã€longã€size_tè¿™äº›ä¸æ˜ç¡®çš„ï¼‰
 	-------------------------------------------------------
-	ËùÓĞÊı¾İ¶¼Ê¹ÓÃshared_bufµÄĞÎÊ½´æ´¢¡£Ìá¹©Ò»Ğ©ÖØÔØµÄº¯Êı½«Ò»Ğ©³£¼ûÊı¾İĞÎÊ½×ª±ä³Éshared_buf¡££¨»¹¿ÉÒÔÍØÕ¹×ÔĞĞÌí¼Ó£©
-	Ìá¹©Á½ÖÖ´æÈë´ı·¢ËÍÊı¾İµÄ·½Ê½£º
-	1¡¢safe·½Ê½£º½«Êı¾İÊµ¼ÊÄÚÈİ¿½±´µ½Ò»¸öshared_buf
-	2¡¢unsafe·½Ê½£ºÖ»Ö§³Ö´«Èëshared_buf¡£ÓÃ»§ĞèÒª±£Ö¤Êı¾İ²»±»ÆäÖ÷¶¯É¾³ı»òĞŞ¸Ä
-	(Êµ¼ÊÉÏÕâÀïÖ»ÊÇ×öÒ»¸öÊ¾Àı£¬½öÒ»Ğ©¸Ä¶¯²»´óµÄÇé¿ö»áÖ±½ÓÊ¹ÓÃÕâÑùµÄ·½Ê½¡£¾ßÌåÇé¿ö»¹ÊÇµÃ¾ßÌåĞ´Êı¾İ½á¹¹À´´ïµ½×î¸ßĞ§ÂÊ)
+	æ‰€æœ‰æ•°æ®éƒ½ä½¿ç”¨shared_bufçš„å½¢å¼å­˜å‚¨ã€‚æä¾›ä¸€äº›é‡è½½çš„å‡½æ•°å°†ä¸€äº›å¸¸è§æ•°æ®å½¢å¼è½¬å˜æˆshared_bufã€‚ï¼ˆè¿˜å¯ä»¥æ‹“å±•è‡ªè¡Œæ·»åŠ ï¼‰
+	æä¾›ä¸¤ç§å­˜å…¥å¾…å‘é€æ•°æ®çš„æ–¹å¼ï¼š
+	1ã€safeæ–¹å¼ï¼šå°†æ•°æ®å®é™…å†…å®¹æ‹·è´åˆ°ä¸€ä¸ªshared_buf
+	2ã€unsafeæ–¹å¼ï¼šåªæ”¯æŒä¼ å…¥shared_bufã€‚ç”¨æˆ·éœ€è¦ä¿è¯æ•°æ®ä¸è¢«å…¶ä¸»åŠ¨åˆ é™¤æˆ–ä¿®æ”¹
+	(å®é™…ä¸Šè¿™é‡Œåªæ˜¯åšä¸€ä¸ªç¤ºä¾‹ï¼Œä»…ä¸€äº›æ”¹åŠ¨ä¸å¤§çš„æƒ…å†µä¼šç›´æ¥ä½¿ç”¨è¿™æ ·çš„æ–¹å¼ã€‚å…·ä½“æƒ…å†µè¿˜æ˜¯å¾—å…·ä½“å†™æ•°æ®ç»“æ„æ¥è¾¾åˆ°æœ€é«˜æ•ˆç‡)
 	----------------------------------------------------
-	sockÁ¬½Ó³Ø,	Á½ÖÖ·½Ê½½¨Á¢Á¬½Ó£º1¡¢accepµ½µÄ	2¡¢Ö÷¶¯Á¬½ÓµÄ
-	±¾µØµÄÁ¬½Ó¶¼°ó¶¨µ½Ò»¸öportÉÏ
+	sockè¿æ¥æ± ,	ä¸¤ç§æ–¹å¼å»ºç«‹è¿æ¥ï¼š1ã€accepåˆ°çš„	2ã€ä¸»åŠ¨è¿æ¥çš„
+	æœ¬åœ°çš„è¿æ¥éƒ½ç»‘å®šåˆ°ä¸€ä¸ªportä¸Š
 	-----------------------------------------------------
 	tag: 2 byte
-	c+0:¶ÔÏó
-	d+255:ËùÓĞÊı¾İµÄtip£¬ÒÔ\n·Ö¸î
-	d+i:µÚi¸öÊı¾İ
-	f+255:ËùÓĞÎÄ¼şµÄtip+ÎÄ¼şÃû£¨Ö»ÓĞÎÄ¼şÃû£¬Ã»ÓĞÂ·¾¶£©£¬¸ñÊ½£ºtip1=filename1\ntip2=filename2\n...
-	f+i:µÚi¸öÎÄ¼şµÄÊı¾İ
-	o+v:½áÊø·û
+	c+0:å¯¹è±¡
+	d+255:æ‰€æœ‰æ•°æ®çš„tipï¼Œä»¥\nåˆ†å‰²
+	d+i:ç¬¬iä¸ªæ•°æ®
+	f+255:æ‰€æœ‰æ–‡ä»¶çš„tip+æ–‡ä»¶åï¼ˆåªæœ‰æ–‡ä»¶åï¼Œæ²¡æœ‰è·¯å¾„ï¼‰ï¼Œæ ¼å¼ï¼štip1=filename1\ntip2=filename2\n...
+	f+i:ç¬¬iä¸ªæ–‡ä»¶çš„æ•°æ®
+	o+v:ç»“æŸç¬¦
 	*/
 
 	struct shared_buf {
@@ -62,19 +62,19 @@ namespace ytlib {
 		bool flag;
 	};
 
-	//TĞèÒªÄÜboostĞòÁĞ»¯
+	//Téœ€è¦èƒ½booståºåˆ—åŒ–
 	template<class T>
 	class DataPackage {
 	public:
-		T obj;//¿ÉĞòÁĞ»¯µÄÀà
-		//tip-dataĞÎÊ½
-		std::map<std::string, shared_buf> map_datas;//Êı¾İ,×î´óÖ§³Ö255¸ö
-		std::map<std::string, std::string> map_files;//ÎÄ¼ş,×î´óÖ§³Ö255¸ö
-		bool complete_flag;//½ÓÊÕÍê³Éflag
+		T obj;//å¯åºåˆ—åŒ–çš„ç±»
+		//tip-dataå½¢å¼
+		std::map<std::string, shared_buf> map_datas;//æ•°æ®,æœ€å¤§æ”¯æŒ255ä¸ª
+		std::map<std::string, std::string> map_files;//æ–‡ä»¶,æœ€å¤§æ”¯æŒ255ä¸ª
+		bool complete_flag;//æ¥æ”¶å®Œæˆflag
 		LightSignal* p_s;
 	};
 
-	//×ÓÀà£ºsockÁ¬½Ó£¬ÎªÍøÂçÊÊÅäÆ÷¶¨ÖÆ×¼±¸£¬Ö»ÄÜÖ÷¶¯·¢ÆğÍ¬²½Ğ´£¬¶ÁÈ¡ÊÇÒì²½×Ô¶¯µÄ
+	//å­ç±»ï¼šsockè¿æ¥ï¼Œä¸ºç½‘ç»œé€‚é…å™¨å®šåˆ¶å‡†å¤‡ï¼Œåªèƒ½ä¸»åŠ¨å‘èµ·åŒæ­¥å†™ï¼Œè¯»å–æ˜¯å¼‚æ­¥è‡ªåŠ¨çš„
 	template<class T>
 	class TcpConnection :public ConnectionBase {
 		typedef std::shared_ptr<boost::asio::streambuf> buff_Ptr;
@@ -102,12 +102,12 @@ namespace ytlib {
 			m_queueThread.join();
 		}
 
-		//ÓÃÓÚÖ÷¶¯Á¬½Ó
+		//ç”¨äºä¸»åŠ¨è¿æ¥
 		bool connect(const TcpEp& ep_, uint16_t port_ = 0) {
 			sock.open(boost::asio::ip::tcp::v4());
 			if (port_) {
 				sock.set_option(TcpSocket::reuse_address(true));
-				sock.bind(TcpEp(boost::asio::ip::tcp::v4(), port_));//Èç¹ûÖ¸¶¨¶Ë¿ÚÁË£¬Ôò°ó¶¨µ½Ö¸¶¨¶Ë¿Ú
+				sock.bind(TcpEp(boost::asio::ip::tcp::v4(), port_));//å¦‚æœæŒ‡å®šç«¯å£äº†ï¼Œåˆ™ç»‘å®šåˆ°æŒ‡å®šç«¯å£
 			}
 			boost::system::error_code err;
 			sock.connect(ep_, err);
@@ -118,7 +118,7 @@ namespace ytlib {
 			remote_ep = ep_;
 			return true;
 		}
-		//Í¬²½·¢ËÍ£¬¼ÓËø
+		//åŒæ­¥å‘é€ï¼ŒåŠ é”
 		bool write(const std::shared_ptr<std::vector<boost::asio::const_buffer> > & data_) {
 			boost::system::error_code err;
 			write_mutex.lock();
@@ -150,25 +150,25 @@ namespace ytlib {
 				delete p_s;
 			}
 		}
-		//Ê¹ÓÃÖÇÄÜÖ¸ÕëµÄÉ¾³ıÆ÷À´ÅĞ¶ÏÊı¾İÊÇ·ñ×¼±¸ºÃ²¢½øĞĞ»Øµ÷
+		//ä½¿ç”¨æ™ºèƒ½æŒ‡é’ˆçš„åˆ é™¤å™¨æ¥åˆ¤æ–­æ•°æ®æ˜¯å¦å‡†å¤‡å¥½å¹¶è¿›è¡Œå›è°ƒ
 		void on_data_ready(DataPackage<T> * p) {
 			LightSignal* p_s = p->p_s;
 			if (p->complete_flag) {
-				m_recv_callback(std::move(dataPtr(p)));//ÏÈÖ´ĞĞÍê»Øµ÷ÔÙ×¼±¸ÏÂÒ»¸ö
+				m_recv_callback(std::move(dataPtr(p)));//å…ˆæ‰§è¡Œå®Œå›è°ƒå†å‡†å¤‡ä¸‹ä¸€ä¸ª
 				p_s->notify_one();
 				return;
 			}
 			p_s->notify_one();
 			delete p;
 		}
-		//¶ÁÈ¡½âÎö±¨Í·£¬»º´æ¸ú×Å»Øµ÷×ß
+		//è¯»å–è§£ææŠ¥å¤´ï¼Œç¼“å­˜è·Ÿç€å›è°ƒèµ°
 		void on_read_head(dataPtr& RData_, const boost::system::error_code & err, size_t read_bytes) {
 			if (read_get_err(err)) return;
 			if (header[0] == TCPHEAD1 && header[1] == TCPHEAD2 && read_bytes == HEAD_SIZE) {
 				uint32_t pack_size = get_num_from_buf(&header[4]);
 				if (!RData_) {
 					if (header[2] == CLASSHEAD) {
-						//ĞÂ½¨Ò»¸öÊı¾İ°ü
+						//æ–°å»ºä¸€ä¸ªæ•°æ®åŒ…
 						RData_ = dataPtr((new DataPackage<T>()), std::bind(&TcpConnection::on_data_ready, this, std::placeholders::_1));
 						RData_->complete_flag = false;
 						RData_->p_s = new LightSignal();
@@ -225,7 +225,7 @@ namespace ytlib {
 		}
 		void on_read_data_tips(dataPtr& RData_, boost::shared_array<char>& buff_, const boost::system::error_code & err, size_t read_bytes) {
 			if (read_get_err(err)) return;
-			//Ò»¶¨ÒªÏÈ½¨Á¢ºÃmapÔÙdo_read_head
+			//ä¸€å®šè¦å…ˆå»ºç«‹å¥½mapå†do_read_head
 			uint32_t pos = 0;
 			for (uint32_t ii = 0; ii < read_bytes; ++ii) {
 				if (buff_[ii] == '\n') {
@@ -251,7 +251,7 @@ namespace ytlib {
 		}
 		void on_read_file_tips(dataPtr& RData_, boost::shared_array<char>& buff_, const boost::system::error_code & err, size_t read_bytes) {
 			if (read_get_err(err)) return;
-			//Ò»¶¨ÒªÏÈ½¨Á¢ºÃmapÔÙdo_read_head
+			//ä¸€å®šè¦å…ˆå»ºç«‹å¥½mapå†do_read_head
 			uint32_t pos = 0, pos1 = 0;
 			for (uint32_t ii = 0; ii < read_bytes; ++ii) {
 				if (buff_[ii] == '=') {
@@ -288,13 +288,13 @@ namespace ytlib {
 
 		std::mutex write_mutex;
 		std::function<void(dataPtr &)> m_recv_callback;
-		tpath* p_RecvPath;//½ÓÊÕÎÄ¼şÂ·¾¶
+		tpath* p_RecvPath;//æ¥æ”¶æ–‡ä»¶è·¯å¾„
 
 		QueueBase<dataPtr> m_DataQueue;
 		std::thread m_queueThread;
 	};
 
-	//Ä¬ÈÏÊ¹ÓÃuint32_t×÷ÎªidĞÎÊ½¡£Ò²¿ÉÒÔ¸ÄÎªstd::stringÖ®ÀàµÄ¿ÉÒÔ×÷ÎªmapÈİÆ÷µÄkeyµÄÀàĞÍ
+	//é»˜è®¤ä½¿ç”¨uint32_tä½œä¸ºidå½¢å¼ã€‚ä¹Ÿå¯ä»¥æ”¹ä¸ºstd::stringä¹‹ç±»çš„å¯ä»¥ä½œä¸ºmapå®¹å™¨çš„keyçš„ç±»å‹
 	template<class T,class ID_Type = uint32_t>
 	class TcpNetAdapter : public TcpConnectionPool<TcpConnection<T> > {
 	private:
@@ -320,11 +320,11 @@ namespace ytlib {
 		virtual ~TcpNetAdapter() { stop(); }
 
 		bool Send(const dataPtr & Tdata_, const std::vector<ID_Type>& dst_) {
-			//×öÒ»Ğ©¼ì²é
+			//åšä¸€äº›æ£€æŸ¥
 			if (stopflag) return false;
 			size_t size = dst_.size();
 			if (size == 0) return false;
-			if (Tdata_->map_datas.size() > 255 || Tdata_->map_files.size() > 255) return false;//×î´óÖ§³Ö255¸öÊı¾İ°ü/ÎÄ¼ş
+			if (Tdata_->map_datas.size() > 255 || Tdata_->map_files.size() > 255) return false;//æœ€å¤§æ”¯æŒ255ä¸ªæ•°æ®åŒ…/æ–‡ä»¶
 			std::vector<TcpEp> vec_hosts;
 			std::shared_lock<std::shared_mutex> lck(m_hostInfoMutex);
 			for (size_t ii = 0; ii < size; ++ii) {
@@ -335,10 +335,10 @@ namespace ytlib {
 			}
 			lck.unlock();
 
-			//½«Tdata_ÏÈ×ª»»Îªstd::vector<boost::asio::const_buffer>ÔÙÒ»´ÎĞÔ·¢ËÍ
+			//å°†Tdata_å…ˆè½¬æ¢ä¸ºstd::vector<boost::asio::const_buffer>å†ä¸€æ¬¡æ€§å‘é€
 			std::shared_ptr<std::vector<boost::asio::const_buffer> > buffersPtr =
 				std::shared_ptr<std::vector<boost::asio::const_buffer> >(new std::vector<boost::asio::const_buffer>());
-			//µÚÒ»²½£º·¢ËÍ¶ÔÏó
+			//ç¬¬ä¸€æ­¥ï¼šå‘é€å¯¹è±¡
 			char c_head_buff[HEAD_SIZE]{ TcpConnection<T>::TCPHEAD1 ,TcpConnection<T>::TCPHEAD2,TcpConnection<T>::CLASSHEAD,0 };
 			boost::asio::streambuf objbuff;
 			boost::archive::binary_oarchive oar(objbuff);
@@ -347,7 +347,7 @@ namespace ytlib {
 			buffersPtr->push_back(std::move(boost::asio::const_buffer(c_head_buff, HEAD_SIZE)));
 			buffersPtr->push_back(std::move(objbuff.data()));
 			
-			//µÚ2²½£¬·¢ËÍÎÄ¼ş,ÏÈ·¢ËÍÎÄ¼şÃûĞÅÏ¢
+			//ç¬¬2æ­¥ï¼Œå‘é€æ–‡ä»¶,å…ˆå‘é€æ–‡ä»¶åä¿¡æ¯
 			std::map<std::string, std::string>& map_files = Tdata_->map_files;
 			std::string file_tips;
 			char f0_head_buff[HEAD_SIZE]{ TcpConnection<T>::TCPHEAD1 ,TcpConnection<T>::TCPHEAD2,TcpConnection<T>::FILEHEAD,static_cast<char>(uint8_t(255)) };
@@ -362,7 +362,7 @@ namespace ytlib {
 				set_buf_from_num(&f0_head_buff[4], static_cast<uint32_t>(file_tips.size()));
 				buffersPtr->push_back(std::move(boost::asio::const_buffer(f0_head_buff, HEAD_SIZE)));
 				buffersPtr->push_back(std::move(boost::asio::buffer(file_tips)));
-				//ÔÙ·¢ËÍÃ¿¸öÎÄ¼ş¡£¶ş½øÖÆ·½Ê½¡£ÎÄ¼ş²»´æÔÚµÄ»°¾ÍÌø¹ı¸ÃÎÄ¼ş
+				//å†å‘é€æ¯ä¸ªæ–‡ä»¶ã€‚äºŒè¿›åˆ¶æ–¹å¼ã€‚æ–‡ä»¶ä¸å­˜åœ¨çš„è¯å°±è·³è¿‡è¯¥æ–‡ä»¶
 				uint8_t ii = 0;
 				for (std::map<std::string, std::string>::const_iterator itr = map_files.begin(); itr != map_files.end(); ++itr) {
 					tpath file_path(T_STRING_TO_TSTRING(itr->second));
@@ -389,9 +389,9 @@ namespace ytlib {
 				}
 			}
 
-			//µÚ3²½£¬·¢ËÍÊı¾İ,ÏÈ·¢ËÍtipsÊı¾İ°ü
+			//ç¬¬3æ­¥ï¼Œå‘é€æ•°æ®,å…ˆå‘é€tipsæ•°æ®åŒ…
 			std::map<std::string, shared_buf>& map_datas = Tdata_->map_datas;
-			//»º³åÇø²»ÄÜ·ÅÔÚÄÚ²ãscopeÀï
+			//ç¼“å†²åŒºä¸èƒ½æ”¾åœ¨å†…å±‚scopeé‡Œ
 			std::string data_tips;
 			char d0_head_buff[HEAD_SIZE]{ TcpConnection<T>::TCPHEAD1 ,TcpConnection<T>::TCPHEAD2,TcpConnection<T>::DATAHEAD,static_cast<char>(uint8_t(255)) };
 			boost::shared_array<char> d_head_buff;
@@ -404,7 +404,7 @@ namespace ytlib {
 				set_buf_from_num(&d0_head_buff[4], static_cast<uint32_t>(data_tips.size()));
 				buffersPtr->push_back(std::move(boost::asio::const_buffer(d0_head_buff, HEAD_SIZE)));
 				buffersPtr->push_back(std::move(boost::asio::buffer(data_tips)));
-				//ÔÙ·¢ËÍÃ¿¸öÊı¾İ°ü¡£sizeÎª0Ôò²»·¢ËÍ
+				//å†å‘é€æ¯ä¸ªæ•°æ®åŒ…ã€‚sizeä¸º0åˆ™ä¸å‘é€
 				uint8_t ii = 0;
 				for (std::map<std::string, shared_buf>::const_iterator itr = map_datas.begin(); itr != map_datas.end(); ++itr) {
 					if (itr->second.buf_size > 0) {
@@ -419,15 +419,15 @@ namespace ytlib {
 				}
 			}
 
-			//µÚËÄ²½£º·¢ËÍ½áÊø·û
+			//ç¬¬å››æ­¥ï¼šå‘é€ç»“æŸç¬¦
 			char end_head_buff[HEAD_SIZE]{ TcpConnection<T>::TCPHEAD1 ,TcpConnection<T>::TCPHEAD2,TcpConnection<T>::TCPEND1,TcpConnection<T>::TCPEND2 };
 			buffersPtr->push_back(std::move(boost::asio::const_buffer(end_head_buff, HEAD_SIZE)));
 
-			//µ¥µØÖ·ÓÅ»¯
+			//å•åœ°å€ä¼˜åŒ–
 			if (vec_hosts.size() == 1) {
 				return _send_one(buffersPtr, vec_hosts[0]);
 			}
-			//·ñÔòÊ¹ÓÃ¶àÏß³Ì²¢ĞĞÈº·¢
+			//å¦åˆ™ä½¿ç”¨å¤šçº¿ç¨‹å¹¶è¡Œç¾¤å‘
 			std::vector<std::future<bool> > v;
 			size_t len = vec_hosts.size();
 			for (size_t ii = 0; ii < len; ii++) {
@@ -440,7 +440,7 @@ namespace ytlib {
 			return result;
 		}
 
-		//hostinfo²Ù×÷£¬Ö÷ÒªÊÇ¶ÔÍâÌá¹©¡£Ö»¿ÉÌí¼Ó»òĞŞ¸Ä£¬²»¿ÉÒÆ³ı
+		//hostinfoæ“ä½œï¼Œä¸»è¦æ˜¯å¯¹å¤–æä¾›ã€‚åªå¯æ·»åŠ æˆ–ä¿®æ”¹ï¼Œä¸å¯ç§»é™¤
 		inline TcpEp GetMyHostInfo() {
 			std::shared_lock<std::shared_mutex> lck(m_hostInfoMutex);
 			return m_mapHostInfo[m_myid];
@@ -449,7 +449,7 @@ namespace ytlib {
 			std::shared_lock<std::shared_mutex> lck(m_hostInfoMutex);
 			return m_mapHostInfo;
 		}
-		//ÉèÖÃÖ÷»úinfo£¬ÓĞÔò¸²¸Ç£¬ÎŞÔğÌí¼Ó
+		//è®¾ç½®ä¸»æœºinfoï¼Œæœ‰åˆ™è¦†ç›–ï¼Œæ— è´£æ·»åŠ 
 		bool SetHost(ID_Type hostid_, const TcpEp & hostInfo_) {
 			std::unique_lock<std::shared_mutex> lck(m_hostInfoMutex);
 			m_mapHostInfo[hostid_] = hostInfo_;
@@ -476,9 +476,9 @@ namespace ytlib {
 			return pc->write(Tdata_);
 		}
 
-		//»ñÈ¡Á¬½Ó
+		//è·å–è¿æ¥
 		TcpConnectionPtr getTcpConnectionPtr(const TcpEp& ep) {
-			//ÏÈÔÚmapÀïÕÒ£¬Ã»ÓĞ¾ÍÖ±½ÓÈ¥Á¬½ÓÒ»¸ö
+			//å…ˆåœ¨mapé‡Œæ‰¾ï¼Œæ²¡æœ‰å°±ç›´æ¥å»è¿æ¥ä¸€ä¸ª
 			{
 				std::shared_lock<std::shared_mutex> lck(m_TcpConnectionMutex);
 				std::map<TcpEp, TcpConnectionPtr>::iterator itr = m_mapTcpConnection.find(ep);
@@ -486,7 +486,7 @@ namespace ytlib {
 					return itr->second;
 				}
 			}
-			//Í¬²½Á¬½Ó
+			//åŒæ­¥è¿æ¥
 			TcpConnectionPtr pConnection = getNewTcpConnectionPtr();
 			if (pConnection->connect(ep, myport)) {
 				YT_DEBUG_PRINTF("connect to %s:%d successful\n", ep.address().to_string().c_str(), ep.port());
@@ -497,7 +497,7 @@ namespace ytlib {
 				return pConnection;
 			}
 			else {
-				//Èç¹ûÍ¬²½Á¬½ÓÊ§°ÜÁË£¬Ò²ÓĞ¿ÉÄÜ¶Ô·½ÒÑ¾­Á¬½Ó¹ıÀ´ÁË¡£¿ÉÒÔÔÙÔÚ±íÖĞÕÒÒ»ÏÂ
+				//å¦‚æœåŒæ­¥è¿æ¥å¤±è´¥äº†ï¼Œä¹Ÿæœ‰å¯èƒ½å¯¹æ–¹å·²ç»è¿æ¥è¿‡æ¥äº†ã€‚å¯ä»¥å†åœ¨è¡¨ä¸­æ‰¾ä¸€ä¸‹
 				std::shared_lock<std::shared_mutex> lck(m_TcpConnectionMutex);
 				std::map<TcpEp, TcpConnectionPtr>::iterator itr = m_mapTcpConnection.find(ep);
 				if (itr != m_mapTcpConnection.end()) {
@@ -509,14 +509,14 @@ namespace ytlib {
 		}
 
 
-		std::function<void(dataPtr &)> m_receiveCallBack;//½ÓÊÕ»Øµ÷
-		tpath m_RecvPath;//½ÓÊÕÎÄ¼şÂ·¾¶
-		tpath m_SendPath;//·¢ËÍÎÄ¼şÂ·¾¶
+		std::function<void(dataPtr &)> m_receiveCallBack;//æ¥æ”¶å›è°ƒ
+		tpath m_RecvPath;//æ¥æ”¶æ–‡ä»¶è·¯å¾„
+		tpath m_SendPath;//å‘é€æ–‡ä»¶è·¯å¾„
 
-		std::map<ID_Type, TcpEp> m_mapHostInfo;//Ö÷»úÁĞ±í£ºid-info
-		std::shared_mutex m_hostInfoMutex;//Ö÷»úÁĞ±íµÄ¶ÁĞ´Ëø
+		std::map<ID_Type, TcpEp> m_mapHostInfo;//ä¸»æœºåˆ—è¡¨ï¼šid-info
+		std::shared_mutex m_hostInfoMutex;//ä¸»æœºåˆ—è¡¨çš„è¯»å†™é”
 
-		const ID_Type m_myid;//×ÔÉíid£¬¹¹ÔìÖ®ºóÎŞ·¨ĞŞ¸Ä
+		const ID_Type m_myid;//è‡ªèº«idï¼Œæ„é€ ä¹‹åæ— æ³•ä¿®æ”¹
 	};
 
 }

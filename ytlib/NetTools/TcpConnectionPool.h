@@ -6,7 +6,7 @@
 
 namespace ytlib
 {
-	//¹ÜÀíµ¥¸ösockÁ¬½Ó
+	//ç®¡ç†å•ä¸ªsockè¿æ¥
 	class ConnectionBase :boost::noncopyable {
 	public:
 		enum {
@@ -57,28 +57,28 @@ namespace ytlib
 			return;
 		}
 		std::atomic_bool stopflag;
-		std::function<void(const TcpEp &)> err_CallBack;//·¢Éú´íÎóÊ±µÄ»Øµ÷¡£Ò»µ©¶Á/Ğ´³ö´í£¬¾Í¹Ø±ÕÁ¬½Ó²¢µ÷ÓÃ»Øµ÷¸æÖªÉÏ²ã
-		char header[HEAD_SIZE];//½ÓÊÕ»º´æ
+		std::function<void(const TcpEp &)> err_CallBack;//å‘ç”Ÿé”™è¯¯æ—¶çš„å›è°ƒã€‚ä¸€æ—¦è¯»/å†™å‡ºé”™ï¼Œå°±å…³é—­è¿æ¥å¹¶è°ƒç”¨å›è°ƒå‘ŠçŸ¥ä¸Šå±‚
+		char header[HEAD_SIZE];//æ¥æ”¶ç¼“å­˜
 	};
 
 
-	//tcpÁ¬½Ó³Ø¡£ĞèÒª¼Ì³ĞÖØÔØgetNewTcpConnectionPtr²ÅÄÜÊ¹ÓÃ¡£Ö»ÄÜÓÃÀ´±»¶¯¼àÌıÁ¬½Ó
+	//tcpè¿æ¥æ± ã€‚éœ€è¦ç»§æ‰¿é‡è½½getNewTcpConnectionPtræ‰èƒ½ä½¿ç”¨ã€‚åªèƒ½ç”¨æ¥è¢«åŠ¨ç›‘å¬è¿æ¥
 	template<class T_Connection>
 	class TcpConnectionPool {
 	protected:
 		typedef std::shared_ptr<T_Connection> TcpConnectionPtr;
 
-		std::atomic_bool stopflag;//Í£Ö¹±êÖ¾
+		std::atomic_bool stopflag;//åœæ­¢æ ‡å¿—
 		boost::thread_group m_RunThreads;
 
-		std::map<TcpEp, TcpConnectionPtr> m_mapTcpConnection;//Ä¿±êep-TcpConnectionµÄmap
+		std::map<TcpEp, TcpConnectionPtr> m_mapTcpConnection;//ç›®æ ‡ep-TcpConnectionçš„map
 		std::shared_mutex m_TcpConnectionMutex;
 
-		std::shared_ptr<boost::asio::ip::tcp::acceptor> acceptorPtr;//¼àÌıÆ÷
+		std::shared_ptr<boost::asio::ip::tcp::acceptor> acceptorPtr;//ç›‘å¬å™¨
 		boost::asio::io_service service;
 
-		const uint32_t m_threadSize;//Ê¹ÓÃµÄÒì²½Ïß³ÌÊıÁ¿
-		const uint16_t myport;//¼àÌı¶Ë¿Ú£¬²¢ÇÒËùÓĞÖ÷¶¯½øĞĞµÄÁ¬½Ó¶¼°ó¶¨µ½Õâ¸ö¶Ë¿ÚÉÏ
+		const uint32_t m_threadSize;//ä½¿ç”¨çš„å¼‚æ­¥çº¿ç¨‹æ•°é‡
+		const uint16_t myport;//ç›‘å¬ç«¯å£ï¼Œå¹¶ä¸”æ‰€æœ‰ä¸»åŠ¨è¿›è¡Œçš„è¿æ¥éƒ½ç»‘å®šåˆ°è¿™ä¸ªç«¯å£ä¸Š
 
 		virtual TcpConnectionPtr getNewTcpConnectionPtr() {
 			return TcpConnectionPtr();

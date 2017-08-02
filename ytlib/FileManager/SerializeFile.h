@@ -5,8 +5,8 @@
 
 namespace ytlib
 {
-	//Ê¹ÓÃboostĞòÁĞ»¯µÄÎÄ¼şÀà
-	//TĞèÒªÖ§³ÖĞòÁĞ»¯
+	//ä½¿ç”¨booståºåˆ—åŒ–çš„æ–‡ä»¶ç±»
+	//Téœ€è¦æ”¯æŒåºåˆ—åŒ–
 	template <class T>
 	class SerializeFile :public FileBase<T> {
 	public:

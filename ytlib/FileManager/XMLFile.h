@@ -4,7 +4,7 @@
 
 namespace ytlib
 {
-	//使用XML的文件类
+	//浣跨敤XML鐨勬枃浠剁被
 	class XMLFile :public FileBase<tptree> {
 	public:
 		XMLFile() :FileBase() {}

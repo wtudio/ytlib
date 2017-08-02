@@ -5,11 +5,11 @@
 #include <boost/shared_array.hpp>
 
 
-//todo£º Ê¹ÓÃboost.log¿â¡¢ÍøÂçÊÊÅäÆ÷¡¢¼òµ¥Êı¾İ¿âÀ´Íê³ÉÒ»¸öÈÕÖ¾·şÎñÆ÷
+//todoï¼š ä½¿ç”¨boost.logåº“ã€ç½‘ç»œé€‚é…å™¨ã€ç®€å•æ•°æ®åº“æ¥å®Œæˆä¸€ä¸ªæ—¥å¿—æœåŠ¡å™¨
 
 namespace ytlib {
 
-	//Á¬½ÓÀà¡£tagÊ¼ÖÕÎª LG
+	//è¿æ¥ç±»ã€‚tagå§‹ç»ˆä¸º LG
 	class LogConnection :public ConnectionBase {
 	public:
 		enum {
@@ -28,7 +28,7 @@ namespace ytlib {
 			boost::asio::async_read(sock, boost::asio::buffer(header, HEAD_SIZE), boost::asio::transfer_exactly(HEAD_SIZE),
 				std::bind(&LogConnection::on_read_head, this, std::placeholders::_1, std::placeholders::_2));
 		}
-		//¶ÁÈ¡½âÎö±¨Í·
+		//è¯»å–è§£ææŠ¥å¤´
 		void on_read_head(const boost::system::error_code & err, size_t read_bytes) {
 			if (read_get_err(err)) return;
 			if (header[0] == TCPHEAD1 && header[1] == TCPHEAD2 &&
@@ -48,7 +48,7 @@ namespace ytlib {
 		void on_read_log(boost::shared_array<char>& buff_, const boost::system::error_code & err, size_t read_bytes) {
 			if (read_get_err(err)) return;
 			do_read_head();
-			//½âÎö´æ´¢ÈÕÖ¾
+			//è§£æå­˜å‚¨æ—¥å¿—
 
 		}
 

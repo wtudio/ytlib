@@ -5,12 +5,12 @@
 namespace ytlib
 {
 
-	//root½Úµã£º¹¤³ÌÃû³Æ¡¢°æ±¾¡¢settings½Úµã£¬item½Úµã£¨¶à¸ö£©
-	//settings½Úµã£ºkey-value¶Ô
-	//item½Úµã:Ãû³Æ¡¢ÀàĞÍ£¬settings½Úµã¡£Ãû³Æ¼´ÎªÂ·¾¶¡£
+	//rootèŠ‚ç‚¹ï¼šå·¥ç¨‹åç§°ã€ç‰ˆæœ¬ã€settingsèŠ‚ç‚¹ï¼ŒitemèŠ‚ç‚¹ï¼ˆå¤šä¸ªï¼‰
+	//settingsèŠ‚ç‚¹ï¼škey-valueå¯¹
+	//itemèŠ‚ç‚¹:åç§°ã€ç±»å‹ï¼ŒsettingsèŠ‚ç‚¹ã€‚åç§°å³ä¸ºè·¯å¾„ã€‚
 
 	/*
-	Ê¾Àıxml£º
+	ç¤ºä¾‹xmlï¼š
 <?xml version="1.0" encoding="utf-8"?>
 <Project Name="testprj1" Version="0.0.1">
 	<Settings>
@@ -46,7 +46,7 @@ namespace ytlib
 		std::map<tstring, ItemInfo> m_PrjItems;//path-obj
 	};
 
-	//Ê¹ÓÃxml¸ñÊ½
+	//ä½¿ç”¨xmlæ ¼å¼
 	class PrjFile :public FileBase<PrjObj>
 	{
 	public:
@@ -60,7 +60,7 @@ namespace ytlib
 			return true;
 		}
 
-		//versionÓ¦¸ÃÊÇÔÚÀà³õÊ¼»¯Ê±È·¶¨µÄ¡£Èç¹ûÎÄ¼şÀï¶Á³öÀ´µÄversion²»¶ÔÔòĞèÒª±¨´í
+		//versionåº”è¯¥æ˜¯åœ¨ç±»åˆå§‹åŒ–æ—¶ç¡®å®šçš„ã€‚å¦‚æœæ–‡ä»¶é‡Œè¯»å‡ºæ¥çš„versionä¸å¯¹åˆ™éœ€è¦æŠ¥é”™
 		inline tstring getPrjVersion()const { return m_version; }
 
 		inline std::map<tstring, tstring> getPrjSettings() const { return m_fileobj->m_PrjSettings; }
@@ -71,7 +71,7 @@ namespace ytlib
 			if (itr != m_fileobj->m_PrjItems.end()) return itr->second;
 			else return ItemInfo();
 		}
-		//¼ì²éÎÄ¼şÄ¿Â¼ÊÇ·ñÔÚ¹¤³ÌÄ¿Â¼ÏÂ¡£²»ÅĞ¶ÏÎÄ¼şÊÇ·ñ´æÔÚ¡£Ö»¿ÉÊ¹ÓÃÏà¶ÔÂ·¾¶£¬Èç¹ûÓĞÖØÃûµÄ¾Í¸²¸Çµô
+		//æ£€æŸ¥æ–‡ä»¶ç›®å½•æ˜¯å¦åœ¨å·¥ç¨‹ç›®å½•ä¸‹ã€‚ä¸åˆ¤æ–­æ–‡ä»¶æ˜¯å¦å­˜åœ¨ã€‚åªå¯ä½¿ç”¨ç›¸å¯¹è·¯å¾„ï¼Œå¦‚æœæœ‰é‡åçš„å°±è¦†ç›–æ‰
 		bool setPrjItem(const tstring& itemname_, const ItemInfo& obj_) {
 			if(itemname_.empty()) return false;
 			if (tpath(itemname_).is_absolute()) return false;
@@ -84,7 +84,7 @@ namespace ytlib
 			m_fileobj->m_PrjItems.erase(itr);
 			return true;
 		}
-		//»ñÈ¡Ò»ÖÖÀàĞÍµÄ×ÓÏîÄ¿
+		//è·å–ä¸€ç§ç±»å‹çš„å­é¡¹ç›®
 		std::vector<tstring> getTypeItem(const tstring& type_) const {
 			std::vector<tstring> re;
 			for (std::map<tstring, ItemInfo>::const_iterator itr = m_fileobj->m_PrjItems.begin();
@@ -94,9 +94,9 @@ namespace ytlib
 			return re;
 		}
 
-		//»ñÈ¡¹¤³ÌÂ·¾¶£¬¹©items¼ÆËã¾ø¶ÔÂ·¾¶
+		//è·å–å·¥ç¨‹è·¯å¾„ï¼Œä¾›itemsè®¡ç®—ç»å¯¹è·¯å¾„
 		inline tstring getPrjPath() const { return GetFileParentPath();}
-		//»ñÈ¡¾ø¶ÔÂ·¾¶
+		//è·å–ç»å¯¹è·¯å¾„
 		inline tstring getItemAbsolutePath(const tstring& path_) {
 			return (tpath(GetFileParentPath())/ tpath(path_)).string<tstring>();
 		}
@@ -122,7 +122,7 @@ namespace ytlib
 			else {
 				m_fileobj->m_PrjName = GetFileName();
 			}
-			//ÔÚ´Ë´¦È·¶¨version¡£×ÓÀà¼Ì³ĞÊ±Ò²ÔÚ´Ë
+			//åœ¨æ­¤å¤„ç¡®å®šversionã€‚å­ç±»ç»§æ‰¿æ—¶ä¹Ÿåœ¨æ­¤
 			m_fileobj->m_PrjVersion = m_version;
 			return true;
 		}
@@ -132,11 +132,11 @@ namespace ytlib
 
 			tptree ptRoot;
 			if (!realXml(path.string<tstring>(), ptRoot)) return false;
-			//½âÎö,Í¬Ê±»¹Òª¼ì²é
+			//è§£æ,åŒæ—¶è¿˜è¦æ£€æŸ¥
 
 			try {
 				tptree ptprj = ptRoot.get_child(T_TEXT("Project"));
-				//ÅĞ¶ÏversionÊÇ·ñ·ûºÏ
+				//åˆ¤æ–­versionæ˜¯å¦ç¬¦åˆ
 				if (m_version != ptprj.get<tstring>(T_TEXT("<xmlattr>.Version"))) {
 					tcout << T_TEXT("Version not matched : ") << m_version << T_TEXT(" VS ") << ptprj.get<tstring>(T_TEXT("<xmlattr>.Version")) << std::endl;
 					return false;
@@ -147,9 +147,9 @@ namespace ytlib
 					return false;
 				}
 				m_fileobj->m_PrjVersion = m_version;
-				//settings ¿ÉÑ¡
+				//settings å¯é€‰
 				if (!readSettings(ptprj, m_fileobj->m_PrjSettings)) return false;
-				//ItemGroup ¿ÉÑ¡
+				//ItemGroup å¯é€‰
 				boost::optional<tptree&> ptItemGroup = ptprj.get_child_optional(T_TEXT("ItemGroup"));
 				if (ptItemGroup) {
 					for (tptree::iterator itrptig = ptItemGroup->begin(); itrptig != ptItemGroup->end(); ++itrptig) {
@@ -175,7 +175,7 @@ namespace ytlib
 		}
 		virtual bool SaveFileObj() {
 			tptree ptroot;
-			//Ä¬ÈÏÖ®Ç°¼ì²éÓĞĞ§¡£²»¼ì²éÖ±½ÓĞ´Èë
+			//é»˜è®¤ä¹‹å‰æ£€æŸ¥æœ‰æ•ˆã€‚ä¸æ£€æŸ¥ç›´æ¥å†™å…¥
 			tptree ptprj;
 			ptprj.put(T_TEXT("<xmlattr>.Name"), m_fileobj->m_PrjName);
 			ptprj.put(T_TEXT("<xmlattr>.Version"), m_fileobj->m_PrjVersion);

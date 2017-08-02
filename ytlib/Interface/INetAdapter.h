@@ -9,25 +9,25 @@
 namespace ytlib {
 
 	struct RecvData {
-		tstring hostID;//·¢ËÍ·½Ö÷»úid
-		std::vector<std::shared_ptr<std::string> > dataVec;//Êı¾İ
-		std::vector<tstring> files;	//½ÓÊÕµ½µÄËùÓĞÎÄ¼şµÄÎÄ¼şÃû
+		tstring hostID;//å‘é€æ–¹ä¸»æœºid
+		std::vector<std::shared_ptr<std::string> > dataVec;//æ•°æ®
+		std::vector<tstring> files;	//æ¥æ”¶åˆ°çš„æ‰€æœ‰æ–‡ä»¶çš„æ–‡ä»¶å
 	};
 
 	struct TransData {
-		std::vector<std::shared_ptr<std::string> > dataVec;//Êı¾İ
-		std::vector<tstring> files;	//½ÓÊÕµ½µÄËùÓĞÎÄ¼şµÄÎÄ¼şÃû
-		bool delFileFlag;// ·¢ËÍÍê³É,ÊÇ·ñÉ¾³ıÊı¾İÎÄ¼ş
+		std::vector<std::shared_ptr<std::string> > dataVec;//æ•°æ®
+		std::vector<tstring> files;	//æ¥æ”¶åˆ°çš„æ‰€æœ‰æ–‡ä»¶çš„æ–‡ä»¶å
+		bool delFileFlag;// å‘é€å®Œæˆ,æ˜¯å¦åˆ é™¤æ•°æ®æ–‡ä»¶
 	};
 
-	//±È½ÏÍ¨ÓÃµÄÍøÂçÊÊÅäÆ÷½Ó¿Ú
+	//æ¯”è¾ƒé€šç”¨çš„ç½‘ç»œé€‚é…å™¨æ¥å£
 	class INetAdapter {
 	public:
 		INetAdapter(){}
 		virtual ~INetAdapter(){}
 
-		virtual bool Send(const TransData &) = 0;//TransDataÖĞ°üº¬·¢ËÍĞÅÏ¢								 
-		virtual bool Initialize(const std::map<tstring, tstring>&) = 0;//³õÊ¼»¯
+		virtual bool Send(const TransData &) = 0;//TransDataä¸­åŒ…å«å‘é€ä¿¡æ¯								 
+		virtual bool Initialize(const std::map<tstring, tstring>&) = 0;//åˆå§‹åŒ–
 		virtual bool RegisterReceiveCallBack(std::function<void(RecvData &)>) = 0;
 		virtual bool start() = 0;
 		virtual bool stop() = 0;

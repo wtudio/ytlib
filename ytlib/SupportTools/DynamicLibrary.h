@@ -8,9 +8,9 @@
 namespace ytlib
 {
 	/*
-	¶¯Ì¬¿âÔËĞĞÊ±Á´½ÓÓĞÁ½ÖÖ·½Ê½£º
-	1¡¢ÓÃµÄÊ±ºòÁ´½Ó£¬ÓÃÍê¼´free£ºµ¥´¿Ê¹ÓÃDynamicLibraryÀà¼´¿É
-	2¡¢ÀàËÆÓÚ²å¼şÒ»Ñù£¬Ò»Ö±±£´æ×Å¾ä±ú£¬ËæÊ±ÒªÓÃ£ºÊ¹ÓÃDynamicLibraryContainerÀà
+	åŠ¨æ€åº“è¿è¡Œæ—¶é“¾æ¥æœ‰ä¸¤ç§æ–¹å¼ï¼š
+	1ã€ç”¨çš„æ—¶å€™é“¾æ¥ï¼Œç”¨å®Œå³freeï¼šå•çº¯ä½¿ç”¨DynamicLibraryç±»å³å¯
+	2ã€ç±»ä¼¼äºæ’ä»¶ä¸€æ ·ï¼Œä¸€ç›´ä¿å­˜ç€å¥æŸ„ï¼Œéšæ—¶è¦ç”¨ï¼šä½¿ç”¨DynamicLibraryContainerç±»
 	*/
 #if defined(_WIN32)
 	typedef FARPROC SYMBOL_TYPE;
@@ -18,7 +18,7 @@ namespace ytlib
 	typedef void* SYMBOL_TYPE;
 #endif
 
-	//¶¯Ì¬Á´½Ó¿â·â×°Àà,Ìá¹©¶¯Ì¬¼ÓÔØÊÍ·Å¶¯Ì¬Á´½Ó¿â²¢»ñÈ¡º¯ÊıµØÖ·µÄÄÜÁ¦
+	//åŠ¨æ€é“¾æ¥åº“å°è£…ç±»,æä¾›åŠ¨æ€åŠ è½½é‡Šæ”¾åŠ¨æ€é“¾æ¥åº“å¹¶è·å–å‡½æ•°åœ°å€çš„èƒ½åŠ›
 	class DynamicLibrary
 	{
 	public:
@@ -32,7 +32,7 @@ namespace ytlib
 		operator bool() {
 			return (NULL != m_hnd);
 		}
-		// »ñÈ¡º¯ÊıµØÖ·
+		// è·å–å‡½æ•°åœ°å€
 		SYMBOL_TYPE GetSymbol(const tstring& name) {
 			assert(NULL != m_hnd);
 
@@ -43,10 +43,10 @@ namespace ytlib
 #endif
 			return symbol;
 		}
-		//»ñÈ¡¶¯Ì¬Á´½Ó¿âÃû³Æ
+		//è·å–åŠ¨æ€é“¾æ¥åº“åç§°
 		const tstring& GetLibraryName(void) const{ return m_libname; }
 
-		//¸ù¾İÃû³Æ¼ÓÔØ¶¯Ì¬Á´½Ó¿â
+		//æ ¹æ®åç§°åŠ è½½åŠ¨æ€é“¾æ¥åº“
 		bool Load(const tstring& libname) {
 			m_libname = libname;
 			Free();
@@ -72,7 +72,7 @@ namespace ytlib
 #endif
 			return (NULL != m_hnd);
 		}
-		//ÊÍ·Å¶¯Ì¬Á´½Ó¿â
+		//é‡Šæ”¾åŠ¨æ€é“¾æ¥åº“
 		void Free(void) {
 			if (NULL != m_hnd) {
 #if defined(_WIN32)
@@ -86,11 +86,11 @@ namespace ytlib
 
 	private:
 #if defined(_WIN32)
-		HINSTANCE m_hnd;							// WindowsÆ½Ì¨µÄ¶¯Ì¬Á´½Ó¿â¾ä±ú
+		HINSTANCE m_hnd;							// Windowså¹³å°çš„åŠ¨æ€é“¾æ¥åº“å¥æŸ„
 #else
-		void* m_hnd;								// ÀàUnixÆ½Ì¨µÄ¶¯Ì¬Á´½Ó¿âÖ¸Õë
+		void* m_hnd;								// ç±»Unixå¹³å°çš„åŠ¨æ€é“¾æ¥åº“æŒ‡é’ˆ
 #endif
-		tstring m_libname;							// ¶¯Ì¬Á´½Ó¿âÃû³Æ
+		tstring m_libname;							// åŠ¨æ€é“¾æ¥åº“åç§°
 	};
 
 	

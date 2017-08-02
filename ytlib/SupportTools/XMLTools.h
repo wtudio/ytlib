@@ -52,7 +52,7 @@ namespace ytlib
 		return true;
 	}
 
-	//读取以下结构到map中：
+	//璇诲彇浠ヤ笅缁撴瀯鍒癿ap涓細
 	/*
 	<Settings>
 		<setting key="key1" value="value1" />
@@ -75,7 +75,7 @@ namespace ytlib
 		}
 		return true;
 	}
-	//添加settings节点
+	//娣诲姞settings鑺傜偣
 	static bool writeSettings(const std::map<tstring, tstring>& inputmap_, tptree& pt ) {
 		try {
 			if (inputmap_.size() == 0) return true;

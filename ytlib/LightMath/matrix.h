@@ -13,13 +13,13 @@
 namespace ytlib
 {
 
-	//¸ÄÔì³ÉÄ£°åĞÎÊ½£¬¿ÉÒÔ·Å¸´Êı¡¢int¡¢float¡¢doubleµÈµÈ
+	//æ”¹é€ æˆæ¨¡æ¿å½¢å¼ï¼Œå¯ä»¥æ”¾å¤æ•°ã€intã€floatã€doubleç­‰ç­‰
 	template <typename T>
 	class Basic_Matrix {
 	public:
 		// direct data access
 		T   **val;
-		int32_t   m, n;//mĞĞnÁĞ
+		int32_t   m, n;//mè¡Œnåˆ—
 
 		Basic_Matrix() :m(0), n(0), val(0) {}
 		Basic_Matrix(const int32_t m_, const int32_t n_) {
@@ -265,7 +265,7 @@ namespace ytlib
 		}
 
 
-		/////tmp:²âÊÔµ½Õâ¡£»¹ĞèÒªÌí¼ÓËæ»ú¾ØÕóÉú³É·½·¨¡£ÔÙ¿´¿´matlabÀï»¹ÓĞÊ²Ã´³£ÓÃ¾ØÕó
+		/////tmp:æµ‹è¯•åˆ°è¿™ã€‚è¿˜éœ€è¦æ·»åŠ éšæœºçŸ©é˜µç”Ÿæˆæ–¹æ³•ã€‚å†çœ‹çœ‹matlabé‡Œè¿˜æœ‰ä»€ä¹ˆå¸¸ç”¨çŸ©é˜µ
 
 		// simple arithmetic operations
 		// add matrix
@@ -572,7 +572,7 @@ namespace ytlib
 				}
 				vv[i] = 1.0 / big; // Save the scaling.
 			}
-			for (j = 0; j < n; ++j) { // This is the loop over columns of Crout¡¯s method.
+			for (j = 0; j < n; ++j) { // This is the loop over columns of Croutâ€™s method.
 				for (i = 0; i < j; ++i) { // This is equation (2.3.12) except for i = j.
 					sum = val[i][j];
 					for (k = 0; k < i; ++k)

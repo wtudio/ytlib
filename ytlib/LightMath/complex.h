@@ -129,31 +129,31 @@ namespace ytlib
 		tfloat imag;
 	};
 
-	//½«ÊµÊýÊý×éÀ©Õ¹³É¸´ÊýÊý×é
+	//å°†å®žæ•°æ•°ç»„æ‰©å±•æˆå¤æ•°æ•°ç»„
 	static void get_complex(int32_t n, tfloat in[], Complex out[]) {
 		for (int32_t i = 0; i < n; ++i) {
 			out[i].real = in[i];
 			out[i].imag = 0;
 		}
 	}
-	//È¡¹²éî
+	//å–å…±è½­
 	static void conjugate_complex(int32_t n, Complex in[]) {
 		for (int32_t i = 0; i < n; ++i) {
 			in[i].imag = -in[i].imag;
 		}
 	}
-	//¸´ÊýÊý×éÈ¡Ä£
+	//å¤æ•°æ•°ç»„å–æ¨¡
 	static void c_abs(int32_t n, Complex f[], tfloat out[]) {
 		for (int32_t i = 0; i < n; ++i) {
 			out[i] = Complex::abs(f[i]);
 		}
 	}
-	//¸µÁ¢Ò¶±ä»» Êä³öÒ²´æÔÚÊý×éfÖÐ
+	//å‚…ç«‹å¶å˜æ¢ è¾“å‡ºä¹Ÿå­˜åœ¨æ•°ç»„fä¸­
 	static void fft(int32_t N, Complex f[]) {
 		int32_t k, M = 1;
-		/*----¼ÆËã·Ö½âµÄ¼¶ÊýM=log2(N)----*/
+		/*----è®¡ç®—åˆ†è§£çš„çº§æ•°M=log2(N)----*/
 		for (int32_t i = N; (i /= 2) != 1; ++M);
-		/*----°´ÕÕµ¹Î»ÐòÖØÐÂÅÅÁÐÔ­ÐÅºÅ----*/
+		/*----æŒ‰ç…§å€’ä½åºé‡æ–°æŽ’åˆ—åŽŸä¿¡å·----*/
 		for (int32_t i = 1, j = N / 2; i <= N - 2; ++i) {
 			if (i < j) {
 				f[j].swap(f[i]);
@@ -165,17 +165,17 @@ namespace ytlib
 			}
 			j += k;
 		}
-		/*----FFTËã·¨----*/
+		/*----FFTç®—æ³•----*/
 		int32_t r, la, lb, lc;
 		for (int32_t m = 1; m <= M; ++m) {
-			la = static_cast<int32_t>(pow(2.0, m)); //la=2^m´ú±íµÚm¼¶Ã¿¸ö·Ö×éËùº¬½ÚµãÊý
-			lb = la / 2;    //lb´ú±íµÚm¼¶Ã¿¸ö·Ö×éËùº¬µúÐÎµ¥ÔªÊý,Í¬Ê±ËüÒ²±íÊ¾Ã¿¸öµúÐÎµ¥ÔªÉÏÏÂ½ÚµãÖ®¼äµÄ¾àÀë
-							/*----µúÐÎÔËËã----*/
+			la = static_cast<int32_t>(pow(2.0, m)); //la=2^mä»£è¡¨ç¬¬mçº§æ¯ä¸ªåˆ†ç»„æ‰€å«èŠ‚ç‚¹æ•°
+			lb = la / 2;    //lbä»£è¡¨ç¬¬mçº§æ¯ä¸ªåˆ†ç»„æ‰€å«ç¢Ÿå½¢å•å…ƒæ•°,åŒæ—¶å®ƒä¹Ÿè¡¨ç¤ºæ¯ä¸ªç¢Ÿå½¢å•å…ƒä¸Šä¸‹èŠ‚ç‚¹ä¹‹é—´çš„è·ç¦»
+							/*----ç¢Ÿå½¢è¿ç®—----*/
 			for (int32_t l = 1; l <= lb; ++l) {
 				r = (l - 1)* static_cast<int32_t>(pow(2.0, M - m));
-				//±éÀúÃ¿¸ö·Ö×é£¬·Ö×é×ÜÊýÎªN/la
+				//éåŽ†æ¯ä¸ªåˆ†ç»„ï¼Œåˆ†ç»„æ€»æ•°ä¸ºN/la
 				for (int32_t n = l - 1; n < N - 1; n += la) {
-					lc = n + lb;  //n,lc·Ö±ð´ú±íÒ»¸öµúÐÎµ¥ÔªµÄÉÏ¡¢ÏÂ½Úµã±àºÅ
+					lc = n + lb;  //n,lcåˆ†åˆ«ä»£è¡¨ä¸€ä¸ªç¢Ÿå½¢å•å…ƒçš„ä¸Šã€ä¸‹èŠ‚ç‚¹ç¼–å·
 					Complex t(f[lc] * Complex(cos(2 * PI*r / N), -sin(2 * PI*r / N)));
 					f[lc] = f[n] - t;
 					f[n] += t;
@@ -183,7 +183,7 @@ namespace ytlib
 			}
 		}
 	}
-	// ¸µÀïÒ¶Äæ±ä»»
+	// å‚…é‡Œå¶é€†å˜æ¢
 	static void ifft(int32_t N, Complex f[]) {
 		conjugate_complex(N, f);
 		fft(N, f);

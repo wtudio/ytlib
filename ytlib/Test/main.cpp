@@ -23,8 +23,8 @@ using namespace ytlib;
 
 int32_t main(int32_t argc, char** argv) {
 	printf_s("-------------------start-------------------\n");
-	//tcoutÊä³öÖĞÎÄĞèÒªÉèÖÃ
-	//½¨Òé£º×îºÃ²»ÒªÔÚ³ÌĞòÖĞÊ¹ÓÃÖĞÎÄ£¡£¡£¡
+	//tcoutè¾“å‡ºä¸­æ–‡éœ€è¦è®¾ç½®
+	//å»ºè®®ï¼šæœ€å¥½ä¸è¦åœ¨ç¨‹åºä¸­ä½¿ç”¨ä¸­æ–‡ï¼ï¼ï¼
 	//std::locale::global(std::locale(""));
 	//wcout.imbue(locale(""));
 

@@ -6,7 +6,7 @@
 
 namespace ytlib {
 
-	//¼òµ¥µÄ¶àÏß³Ì»·¾³ÏÂÏß³Ì°²È«µÄ¶ÓÁĞ
+	//ç®€å•çš„å¤šçº¿ç¨‹ç¯å¢ƒä¸‹çº¿ç¨‹å®‰å…¨çš„é˜Ÿåˆ—
 	template <class T>
 	class QueueBase{
 	public:
@@ -26,7 +26,7 @@ namespace ytlib {
 			Clear();
 			m_cond.notify_all();
 		}
-		//Ìí¼ÓÔªËØ
+		//æ·»åŠ å…ƒç´ 
 		bool Enqueue(const T &item) {
 			std::lock_guard<std::mutex> lck(m_mutex);
 			if (m_queue.size() < m_maxcount) {
@@ -36,7 +36,7 @@ namespace ytlib {
 			}
 			return false;
 		}
-		//È¡³öÔªËØ
+		//å–å‡ºå…ƒç´ 
 		bool Dequeue(T &item) {
 			std::lock_guard<std::mutex> lck(m_mutex);
 			if (m_queue.empty()) return false; 
@@ -46,7 +46,7 @@ namespace ytlib {
 
 		}
 		
-		//×èÈûÊ½È¡³ö¡£Èç¹û¿ÕÁË¾ÍÒ»Ö±µÈ´ıµ½¿ÉÒÔÈ¡³ö¡££¨Ã»ÓĞ×ö×èÈûÊ½Ìí¼Ó£¬ÒòÎªÒ»°ã²»¿ÉÄÜÓÃµ½£©
+		//é˜»å¡å¼å–å‡ºã€‚å¦‚æœç©ºäº†å°±ä¸€ç›´ç­‰å¾…åˆ°å¯ä»¥å–å‡ºã€‚ï¼ˆæ²¡æœ‰åšé˜»å¡å¼æ·»åŠ ï¼Œå› ä¸ºä¸€èˆ¬ä¸å¯èƒ½ç”¨åˆ°ï¼‰
 		bool BlockDequeue(T &item) {
 			std::unique_lock<std::mutex> lck(m_mutex);
 			while (m_queue.empty()) {
@@ -59,11 +59,11 @@ namespace ytlib {
 		}
 
 	protected:
-		std::mutex m_mutex;//Í¬²½Ëø¡£´Ë´¦²»ÄÜÓÃ¶ÁĞ´Ëø£¬ÒòÎªcondition_variable»¹²»Ö§³Ö
-		std::condition_variable m_cond;//Ìõ¼şËø
-		std::queue<T> m_queue;// ¶ÓÁĞ
+		std::mutex m_mutex;//åŒæ­¥é”ã€‚æ­¤å¤„ä¸èƒ½ç”¨è¯»å†™é”ï¼Œå› ä¸ºcondition_variableè¿˜ä¸æ”¯æŒ
+		std::condition_variable m_cond;//æ¡ä»¶é”
+		std::queue<T> m_queue;// é˜Ÿåˆ—
 		
-		const size_t m_maxcount;//¶ÓÁĞ¿ÉÖ§³Ö×î´ó¸öÊı
+		const size_t m_maxcount;//é˜Ÿåˆ—å¯æ”¯æŒæœ€å¤§ä¸ªæ•°
 		std::atomic_bool stopflag;
 	};
 }

@@ -10,7 +10,7 @@
 
 namespace ytlib
 {
-	//封装了一些boost库不直接提供的。boost库有的直接调用boost库的
+	//灏佽浜嗕竴浜沚oost搴撲笉鐩存帴鎻愪緵鐨勩�俠oost搴撴湁鐨勭洿鎺ヨ皟鐢╞oost搴撶殑
 #if defined(UNICODE)
 	typedef boost::filesystem::wpath tpath;
 	typedef boost::xpressive::wsregex_compiler tsregex_compiler;
@@ -22,7 +22,7 @@ namespace ytlib
 #endif
 
 
-	//获得当前路径（可执行文件所在目录）
+	//鑾峰緱褰撳墠璺緞锛堝彲鎵ц鏂囦欢鎵�鍦ㄧ洰褰曪級
 	static tpath tGetCurrentPath(void) {
 #if defined(_WIN32)
 
@@ -37,7 +37,7 @@ namespace ytlib
 #endif
 	}
 	
-	//获得绝对路径
+	//鑾峰緱缁濆璺緞
 	static tpath tGetAbsolutePath(const tpath& p) {
 		if (p.is_absolute())
 			return p;
