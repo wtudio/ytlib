@@ -31,19 +31,17 @@ namespace ytlib
 	static const tchar* GetErrorMessage(Error err0) {
 		static const tchar* gErrorMessages[ER_ERROR_COUNT] =
 		{
-			T_TEXT("操作successful"),
-			T_TEXT("未知异常"),
-
-			T_TEXT("序列化错误"),
-			T_TEXT("反序列化错误"),
-
-			T_TEXT("文件不存在"),
-			T_TEXT("非法保存"),
-			T_TEXT("非法文件名称"),
-			T_TEXT("非法文件"),
-			T_TEXT("初始化文件失败"),
-			T_TEXT("解析文件失败"),
-			T_TEXT("保存文件失败")
+			T_TEXT("操作successful."),
+			T_TEXT("未知异常."),
+			T_TEXT("序列化错误."),
+			T_TEXT("反序列化错误."),
+			T_TEXT("文件不存在."),
+			T_TEXT("非法保存."),
+			T_TEXT("非法文件名称."),
+			T_TEXT("非法文件."),
+			T_TEXT("初始化文件失败."),
+			T_TEXT("解析文件失败."),
+			T_TEXT("保存文件失败.")
 		};
 
 		int32_t err = static_cast<int32_t>(err0);

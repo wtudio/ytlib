@@ -48,7 +48,7 @@ namespace ytlib
 			if (!ProcessBase::stop()) return false;
 			//等待 waittime ms，如果还不行就返回false
 			if (!mainAlgThread.timed_join(boost::posix_time::millisec(waittime))){
-				fLogCallback(T_TEXT("算法流程无法停止！"));
+				fLogCallback(T_TEXT("算法流程无法停止!"));
 				return false;
 			}
 			return true;
@@ -71,7 +71,7 @@ namespace ytlib
 		}
 		bool setFiles(const tstring& filename, const tstring&  filepath){
 			if (is_running) {
-				fLogCallback(T_TEXT("算法正在运行，无法设置文件"));
+				fLogCallback(T_TEXT("算法正在运行，无法设置文件."));
 				return false;
 			}
 			m_mapFiles[filename] = filepath;
@@ -87,7 +87,7 @@ namespace ytlib
 
 		void defScheCallback(int32_t s) {
 			tostringstream ss;
-			ss << T_TEXT("当前进度：") << s;
+			ss << T_TEXT("当前进度:") << s;
 			fLogCallback(ss.str());
 		}
 		ScheCallback fScheCallback;
@@ -106,7 +106,7 @@ namespace ytlib
 		//最好提供检测到is_running变为false则停止的功能
 		//返回值会被getCurState函数返回给上层调用者
 		virtual void mainAlg() {
-			fLogCallback(T_TEXT("测试"));
+			fLogCallback(T_TEXT("测试."));
 			int32_t ii = 0;
 			while (is_running&&(ii++<100)) {
 				fScheCallback(ii);
