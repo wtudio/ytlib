@@ -106,7 +106,7 @@ namespace ytlib
 		virtual void on_err(const TcpEp& ep) {
 			YT_DEBUG_PRINTF("connection to %s:%d get an err and is closed\n", ep.address().to_string().c_str(), ep.port());
 			std::unique_lock<std::shared_mutex> lck(m_TcpConnectionMutex);
-			std::map<TcpEp, TcpConnectionPtr>::iterator itr = m_mapTcpConnection.find(ep);
+			typename std::map<TcpEp, TcpConnectionPtr>::iterator itr = m_mapTcpConnection.find(ep);
 			if (itr != m_mapTcpConnection.end()) {
 				m_mapTcpConnection.erase(itr);
 			}

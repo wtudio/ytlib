@@ -137,12 +137,13 @@ namespace ytlib
 				m_RunThreads.create_thread(std::bind(&send_fun, a, std::vector<uint32_t>{2000, 3000}));
 				//m_RunThreads.create_thread(std::bind(&send_fun, a, 3000));
 
-				Sleep(100);
+				//Sleep(100);
+				boost::this_thread::sleep(boost::posix_time::milliseconds(100));
 				m_RunThreads.create_thread(std::bind(&send_fun, b, std::vector<uint32_t>{1000, 3000}));
 				//m_RunThreads.create_thread(std::bind(&send_fun, b, 3000));
 
-				Sleep(100);
-
+				//Sleep(100);
+				boost::this_thread::sleep(boost::posix_time::milliseconds(100));
 				m_RunThreads.create_thread(std::bind(&send_fun, c, std::vector<uint32_t>{2000, 1000}));
 				//m_RunThreads.create_thread(std::bind(&send_fun, c, 2000));
 			}
@@ -156,9 +157,11 @@ namespace ytlib
 			getchar();
 
 			delete a;
-			Sleep(500);
+			//Sleep(500);
+			boost::this_thread::sleep(boost::posix_time::milliseconds(500));
 			delete b;
-			Sleep(500);
+			//Sleep(500);
+			boost::this_thread::sleep(boost::posix_time::milliseconds(500));
 			delete c;
 		}
 		if (!iserr) {

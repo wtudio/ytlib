@@ -274,7 +274,7 @@ namespace ytlib
 			const Basic_Matrix &B = M;
 			if (A.m != B.m || A.n != B.n) {
 				std::cerr << "ERROR: Trying to add matrices of size (" << A.m << "x" << A.n <<
-					") and (" << B.m << "x" << B.n << ")" << endl;
+					") and (" << B.m << "x" << B.n << ")" << std::endl;
 				exit(0);
 			}
 			Basic_Matrix C(A.m, A.n);
@@ -289,7 +289,7 @@ namespace ytlib
 			const Basic_Matrix &B = M;
 			if (A.m != B.m || A.n != B.n) {
 				std::cerr << "ERROR: Trying to subtract matrices of size (" << A.m << "x" << A.n <<
-					") and (" << B.m << "x" << B.n << ")" << endl;
+					") and (" << B.m << "x" << B.n << ")" << std::endl;
 				exit(0);
 			}
 			Basic_Matrix C(A.m, A.n);
@@ -304,7 +304,7 @@ namespace ytlib
 			const Basic_Matrix &B = M;
 			if (A.n != B.m) {
 				std::cerr << "ERROR: Trying to multiply matrices of size (" << A.m << "x" << A.n <<
-					") and (" << B.m << "x" << B.n << ")" << endl;
+					") and (" << B.m << "x" << B.n << ")" << std::endl;
 				exit(0);
 			}
 			Basic_Matrix C(A.m, B.n);
@@ -357,14 +357,14 @@ namespace ytlib
 			}
 			else {
 				std::cerr << "ERROR: Trying to divide matrices of size (" << A.m << "x" << A.n <<
-					") and (" << B.m << "x" << B.n << ")" << endl;
+					") and (" << B.m << "x" << B.n << ")" << std::endl;
 				exit(0);
 			}
 		}
 		// divide by scalar
 		Basic_Matrix  operator/ (const T &s) {
 			if (abs(s) < 1e-20) {
-				std::cerr << "ERROR: Trying to divide by zero!" << endl;
+				std::cerr << "ERROR: Trying to divide by zero!" << std::endl;
 				exit(0);
 			}
 			Basic_Matrix C(m, n);
@@ -411,7 +411,7 @@ namespace ytlib
 		// cross product of two vectors
 		static Basic_Matrix cross(const Basic_Matrix &a, const Basic_Matrix &b) {
 			if (a.m != 3 || a.n != 1 || b.m != 3 || b.n != 1) {
-				std::cerr << "ERROR: Cross product vectors must be of size (3x1)" << endl;
+				std::cerr << "ERROR: Cross product vectors must be of size (3x1)" << std::endl;
 				exit(0);
 			}
 			Basic_Matrix c(3, 1);
@@ -423,7 +423,7 @@ namespace ytlib
 		// invert matrix M
 		static Basic_Matrix inv(const Basic_Matrix &M) {
 			if (M.m != M.n) {
-				std::cerr << "ERROR: Trying to invert matrix of size (" << M.m << "x" << M.n << ")" << endl;
+				std::cerr << "ERROR: Trying to invert matrix of size (" << M.m << "x" << M.n << ")" << std::endl;
 				exit(0);
 			}
 			Basic_Matrix A(M);
@@ -434,7 +434,7 @@ namespace ytlib
 		// invert this matrix
 		bool   inv() {
 			if (m != n) {
-				std::cerr << "ERROR: Trying to invert matrix of size (" << m << "x" << n << ")" << endl;
+				std::cerr << "ERROR: Trying to invert matrix of size (" << m << "x" << n << ")" << std::endl;
 				exit(0);
 			}
 			Basic_Matrix A(*this);
@@ -446,7 +446,7 @@ namespace ytlib
 		T  det() {
 
 			if (m != n) {
-				std::cerr << "ERROR: Trying to compute determinant of a matrix of size (" << m << "x" << n << ")" << endl;
+				std::cerr << "ERROR: Trying to compute determinant of a matrix of size (" << m << "x" << n << ")" << std::endl;
 				exit(0);
 			}
 
@@ -468,7 +468,7 @@ namespace ytlib
 
 			if (A.m != A.n || A.m != B.m || A.m < 1 || B.n < 1) {
 				std::cerr << "ERROR: Trying to eliminate matrices of size (" << A.m << "x" << A.n <<
-					") and (" << B.m << "x" << B.n << ")" << endl;
+					") and (" << B.m << "x" << B.n << ")" << std::endl;
 				exit(0);
 			}
 
@@ -553,7 +553,7 @@ namespace ytlib
 		bool   lu(int32_t *idx, tfloat &d, tfloat eps = 1e-20) {
 
 			if (m != n) {
-				std::cerr << "ERROR: Trying to LU decompose a matrix of size (" << m << "x" << n << ")" << endl;
+				std::cerr << "ERROR: Trying to LU decompose a matrix of size (" << m << "x" << n << ")" << std::endl;
 				exit(0);
 			}
 
@@ -611,6 +611,7 @@ namespace ytlib
 			free(vv);
 			return true;
 		}
+		/*
 		// singular value decomposition *this = U*diag(W)*V^T
 		void   svd(Basic_Matrix &U, Basic_Matrix &W, Basic_Matrix &V) {
 
@@ -741,7 +742,7 @@ namespace ytlib
 						break;
 					}
 					if (its == 29)
-						std::cerr << "ERROR in SVD: No convergence in 30 iterations" << endl;
+						std::cerr << "ERROR in SVD: No convergence in 30 iterations" << std::endl;
 					x = w[l]; // Shift from bottom 2-by-2 minor.
 					nm = k - 1;
 					y = w[nm];
@@ -843,7 +844,7 @@ namespace ytlib
 			free(sv);
 		}
 
-
+		*/
 		// print matrix to stream
 		friend std::ostream& operator<< (std::ostream& out, const Basic_Matrix& M) {
 			if (M.m == 0 || M.n == 0) {
@@ -882,7 +883,7 @@ namespace ytlib
 				free(val);
 			}
 		}
-
+		/*
 		T pythag(T a, T b) {
 			tfloat absa, absb;
 			absa = abs(a);
@@ -892,7 +893,7 @@ namespace ytlib
 			else
 				return (absb == 0.0 ? 0.0 : absb*sqrt(1.0 + SQR(absa / absb)));
 		}
-
+		*/
 
 	};
 

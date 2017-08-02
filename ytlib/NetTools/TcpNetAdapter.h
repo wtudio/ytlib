@@ -298,6 +298,7 @@ namespace ytlib {
 	template<class T,class ID_Type = uint32_t>
 	class TcpNetAdapter : public TcpConnectionPool<TcpConnection<T> > {
 	private:
+		typedef TcpConnectionPool<TcpConnection<T> > BaseClass;
 		typedef std::shared_ptr<TcpConnection<T>> TcpConnectionPtr;
 		typedef std::shared_ptr<DataPackage<T> > dataPtr;
 		static const uint8_t HEAD_SIZE = TcpConnection<T>::HEAD_SIZE;
@@ -317,11 +318,11 @@ namespace ytlib {
 			boost::filesystem::create_directories(m_RecvPath);
 			boost::filesystem::create_directories(m_SendPath);
 		}
-		virtual ~TcpNetAdapter() { stop(); }
+		virtual ~TcpNetAdapter() { BaseClass::stop(); }
 
 		bool Send(const dataPtr & Tdata_, const std::vector<ID_Type>& dst_) {
 			//做一些检查
-			if (stopflag) return false;
+			if (BaseClass::stopflag) return false;
 			size_t size = dst_.size();
 			if (size == 0) return false;
 			if (Tdata_->map_datas.size() > 255 || Tdata_->map_files.size() > 255) return false;//最大支持255个数据包/文件
@@ -329,7 +330,7 @@ namespace ytlib {
 			std::shared_lock<std::shared_mutex> lck(m_hostInfoMutex);
 			for (size_t ii = 0; ii < size; ++ii) {
 				if (dst_[ii] == m_myid) return false;
-				std::map<ID_Type, TcpEp>::const_iterator itr = m_mapHostInfo.find(dst_[ii]);
+				typename std::map<ID_Type, TcpEp>::const_iterator itr = m_mapHostInfo.find(dst_[ii]);
 				if (itr == m_mapHostInfo.end()) return false;
 				vec_hosts.push_back(itr->second);
 			}
@@ -457,7 +458,7 @@ namespace ytlib {
 		}
 		bool SetHost(const std::map<ID_Type, TcpEp>& hosts_) {
 			std::unique_lock<std::shared_mutex> lck(m_hostInfoMutex);
-			for (std::map<ID_Type, TcpEp>::iterator itr = hosts_.begin(); itr != hosts_.end(); ++itr) {
+			for (typename std::map<ID_Type, TcpEp>::iterator itr = hosts_.begin(); itr != hosts_.end(); ++itr) {
 				m_mapHostInfo[itr->first] = itr->second;
 			}
 			return true;
@@ -466,9 +467,9 @@ namespace ytlib {
 	private:
 
 		TcpConnectionPtr getNewTcpConnectionPtr() {
-			return TcpConnectionPtr(new TcpConnection<T>(service, std::bind(&TcpNetAdapter::on_err, this, std::placeholders::_1), &m_RecvPath, m_receiveCallBack));
+			return TcpConnectionPtr(new TcpConnection<T>(BaseClass::service, std::bind(&TcpNetAdapter::on_err, this, std::placeholders::_1), &m_RecvPath, m_receiveCallBack));
 		}
-		void on_err(const TcpEp& ep) {	TcpConnectionPool<TcpConnection<T> >::on_err(ep);	}
+		void on_err(const TcpEp& ep) { BaseClass::on_err(ep);	}
 		
 		bool _send_one(const std::shared_ptr<std::vector<boost::asio::const_buffer> > & Tdata_, const TcpEp & ep) {
 			std::shared_ptr<TcpConnection<T> > pc = getTcpConnectionPtr(ep);
@@ -480,25 +481,25 @@ namespace ytlib {
 		TcpConnectionPtr getTcpConnectionPtr(const TcpEp& ep) {
 			//先在map里找，没有就直接去连接一个
 			{
-				std::shared_lock<std::shared_mutex> lck(m_TcpConnectionMutex);
-				std::map<TcpEp, TcpConnectionPtr>::iterator itr = m_mapTcpConnection.find(ep);
+				std::shared_lock<std::shared_mutex> lck(BaseClass::m_TcpConnectionMutex);
+				typename std::map<TcpEp, TcpConnectionPtr>::iterator itr = m_mapTcpConnection.find(ep);
 				if (itr != m_mapTcpConnection.end()) {
 					return itr->second;
 				}
 			}
 			//同步连接
 			TcpConnectionPtr pConnection = getNewTcpConnectionPtr();
-			if (pConnection->connect(ep, myport)) {
+			if (pConnection->connect(ep, BaseClass::myport)) {
 				YT_DEBUG_PRINTF("connect to %s:%d successful\n", ep.address().to_string().c_str(), ep.port());
-				m_TcpConnectionMutex.lock();
+				BaseClass::m_TcpConnectionMutex.lock();
 				m_mapTcpConnection[ep] = pConnection;
-				m_TcpConnectionMutex.unlock();
+				BaseClass::m_TcpConnectionMutex.unlock();
 				pConnection->start();
 				return pConnection;
 			}
 			else {
 				//如果同步连接失败了，也有可能对方已经连接过来了。可以再在表中找一下
-				std::shared_lock<std::shared_mutex> lck(m_TcpConnectionMutex);
+				std::shared_lock<std::shared_mutex> lck(BaseClass::m_TcpConnectionMutex);
 				std::map<TcpEp, TcpConnectionPtr>::iterator itr = m_mapTcpConnection.find(ep);
 				if (itr != m_mapTcpConnection.end()) {
 					return itr->second;
