@@ -54,14 +54,14 @@ SIGAR_INLINE char *sigar_skip_line(char *buffer, int buflen)
     return ++ptr;
 }
 
-SIGAR_INLINE char *sigar_skip_token(char *p)
+char *sigar_skip_token(char *p)
 {
     while (sigar_isspace(*p)) p++;
     while (*p && !sigar_isspace(*p)) p++;
     return p;
 }
 
-SIGAR_INLINE char *sigar_skip_multiple_token(char *p, int count)
+char *sigar_skip_multiple_token(char *p, int count)
 {
     int i;
     

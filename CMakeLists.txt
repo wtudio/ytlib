@@ -9,7 +9,7 @@ option(YTLIB_BUILD_TEST "build tset project" ON)
 mark_as_advanced(YTLIB_BUILD_TEST)
 
 #依赖库
-find_package( Boost COMPONENTS filesystem)
+find_package( Boost )
 
 IF ( NOT Boost_FOUND)
 	message(FATAL_ERROR "Cannot find Boost library. please set the boost path")
