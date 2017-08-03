@@ -12,11 +12,6 @@
 #include <boost/date_time/posix_time/posix_time.hpp>  
 #include <sigar/sigar.h>
 
-#ifndef __STDC_WANT_LIB_EXT1__
-#define __STDC_WANT_LIB_EXT1__ 
-#endif // !__STDC_WANT_LIB_EXT1__
-#include <stdio.h>
-
 extern "C"
 {
 #include  <sigar/sigar_format.h>
@@ -26,7 +21,7 @@ using namespace std;
 using namespace ytlib;
 
 int32_t main(int32_t argc, char** argv) {
-	printf_s("-------------------start-------------------\n");
+	printf("-------------------start-------------------\n");
 	//tcout输出中文需要设置
 	//建议：最好不要在程序中使用中文！！！
 	//std::locale::global(std::locale(""));
