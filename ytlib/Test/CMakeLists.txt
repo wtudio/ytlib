@@ -51,5 +51,5 @@ add_executable( ytTest
   ${Test_Files}
 )
 
-target_link_libraries(ytTest sqlite sigar)
+target_link_libraries(ytTest sqlite sigar ${Boost_LIBRARIES} )
 
