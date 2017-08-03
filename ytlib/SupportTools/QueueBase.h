@@ -19,7 +19,9 @@ namespace ytlib {
 		}
 		inline void Clear() {
 			std::lock_guard<std::mutex> lck(m_mutex);
-			m_queue.swap(std::queue<T>());
+			while (m_queue.size()) {
+				m_queue.pop();
+			}
 		}
 		inline void Stop() {
 			stopflag = true;

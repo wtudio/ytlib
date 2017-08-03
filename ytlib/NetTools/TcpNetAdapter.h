@@ -132,7 +132,7 @@ namespace ytlib {
 			}
 			return true;
 		}
-		void start() { do_read_head(); }
+		void start() { this->do_read_head(); }
 	private:
 
 		void do_read_head(dataPtr& d_ = dataPtr()) {
@@ -154,7 +154,7 @@ namespace ytlib {
 		void on_data_ready(DataPackage<T> * p) {
 			LightSignal* p_s = p->p_s;
 			if (p->complete_flag) {
-				m_recv_callback(std::move(dataPtr(p)));//先执行完回调再准备下一个
+				this->m_recv_callback(std::move(dataPtr(p)));//先执行完回调再准备下一个
 				p_s->notify_one();
 				return;
 			}
@@ -205,7 +205,7 @@ namespace ytlib {
 						return;
 					}
 					if (header[2] == TCPEND1 && header[3] == TCPEND2) {
-						do_read_head();
+						this->do_read_head();
 						RData_->complete_flag = true;
 						return;
 					}
