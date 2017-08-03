@@ -1,6 +1,7 @@
 #pragma once
 #include <ytlib/ProcessManager/ProcessBase.h>
 #include <ytlib/SupportTools/QueueBase.h>
+#include <boost/thread.hpp>
 
 namespace ytlib
 {
@@ -30,10 +31,10 @@ namespace ytlib
 			stop();
 		}
 		virtual bool init() {
-			if (!m_threadVec.empty()) return false;
+			if (m_Threads.size() > 0)  return false;
 			m_bStopFlag = false;
 			for (size_t ii = 0; ii < m_threadCount; ii++) {
-				m_threadVec.push_back(new std::thread(&QueueProcess::Run, this));
+				m_Threads.create_thread(std::bind(&QueueProcess::Run, this));
 			}
 			return ProcessBase::init();
 		}
@@ -44,11 +45,7 @@ namespace ytlib
 			//stop之后需要重新初始化
 			is_init = false;
 			m_bStopFlag = true;
-			for (size_t ii = 0; ii < m_threadCount; ii++) {
-				m_threadVec[ii]->join();//等待所有线程结束
-				delete m_threadVec[ii];
-			}
-			m_threadVec.clear();
+			m_Threads.join_all();//等待所有线程结束
 			return true;
 		}
 
@@ -71,7 +68,7 @@ namespace ytlib
 		virtual void ProcFun(const T&) = 0;
 
 		std::atomic_bool m_bStopFlag;
-		std::vector<std::thread*> m_threadVec;
+		boost::thread_group m_Threads;
 		_Queue m_queue;
 		const size_t m_threadCount;
 	};

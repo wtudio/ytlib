@@ -132,10 +132,13 @@ namespace ytlib {
 			}
 			return true;
 		}
-		void start() { do_read_head(); }
+		void start() { 
+			dataPtr d_ = dataPtr();
+			do_read_head(d_); 
+		}
 	private:
 
-		void do_read_head(dataPtr& d_ = dataPtr()) {
+		void do_read_head(dataPtr& d_) {
 			boost::asio::async_read(sock, boost::asio::buffer(header, HEAD_SIZE), boost::asio::transfer_exactly(HEAD_SIZE),
 				std::bind(&TcpConnection::on_read_head, this, d_, std::placeholders::_1, std::placeholders::_2));
 		}
@@ -154,7 +157,8 @@ namespace ytlib {
 		void on_data_ready(DataPackage<T> * p) {
 			LightSignal* p_s = p->p_s;
 			if (p->complete_flag) {
-				m_recv_callback(std::move(dataPtr(p)));//先执行完回调再准备下一个
+				dataPtr d_ = dataPtr(p);
+				m_recv_callback(d_);//先执行完回调再准备下一个
 				p_s->notify_one();
 				return;
 			}
@@ -205,7 +209,8 @@ namespace ytlib {
 						return;
 					}
 					if (header[2] == TCPEND1 && header[3] == TCPEND2) {
-						do_read_head();
+						dataPtr d_ = dataPtr();
+						do_read_head(d_);
 						RData_->complete_flag = true;
 						return;
 					}
