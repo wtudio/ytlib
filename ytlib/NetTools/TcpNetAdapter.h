@@ -282,7 +282,7 @@ namespace ytlib {
 				f.close();
 			}
 			else {
-				YT_DEBUG_PRINTF("can not write file : %s", ((*p_RecvPath) / tpath(T_STRING_TO_TSTRING(itr->second))).std::string<std::string>().c_str());
+				YT_DEBUG_PRINTF("can not write file : %s", ((*p_RecvPath) / tpath(T_STRING_TO_TSTRING(itr->second))).string<std::string>().c_str());
 			}
 		}
 
@@ -482,8 +482,8 @@ namespace ytlib {
 			//先在map里找，没有就直接去连接一个
 			{
 				std::shared_lock<std::shared_mutex> lck(BaseClass::m_TcpConnectionMutex);
-				typename std::map<TcpEp, TcpConnectionPtr>::iterator itr = m_mapTcpConnection.find(ep);
-				if (itr != m_mapTcpConnection.end()) {
+				typename std::map<TcpEp, TcpConnectionPtr>::iterator itr = BaseClass::m_mapTcpConnection.find(ep);
+				if (itr != BaseClass::m_mapTcpConnection.end()) {
 					return itr->second;
 				}
 			}
@@ -492,7 +492,7 @@ namespace ytlib {
 			if (pConnection->connect(ep, BaseClass::myport)) {
 				YT_DEBUG_PRINTF("connect to %s:%d successful\n", ep.address().to_string().c_str(), ep.port());
 				BaseClass::m_TcpConnectionMutex.lock();
-				m_mapTcpConnection[ep] = pConnection;
+				BaseClass::m_mapTcpConnection[ep] = pConnection;
 				BaseClass::m_TcpConnectionMutex.unlock();
 				pConnection->start();
 				return pConnection;
@@ -500,8 +500,8 @@ namespace ytlib {
 			else {
 				//如果同步连接失败了，也有可能对方已经连接过来了。可以再在表中找一下
 				std::shared_lock<std::shared_mutex> lck(BaseClass::m_TcpConnectionMutex);
-				std::map<TcpEp, TcpConnectionPtr>::iterator itr = m_mapTcpConnection.find(ep);
-				if (itr != m_mapTcpConnection.end()) {
+				typename std::map<TcpEp, TcpConnectionPtr>::iterator itr = BaseClass::m_mapTcpConnection.find(ep);
+				if (itr != BaseClass::m_mapTcpConnection.end()) {
 					return itr->second;
 				}
 			}

@@ -11,3 +11,11 @@ typedef float  tfloat;    // single precision
 #endif 
 
 #define PI 3.1415926535897932384626433832795028841971
+
+#ifndef max
+#define max(a,b)            (((a) > (b)) ? (a) : (b))
+#endif
+
+#ifndef min
+#define min(a,b)            (((a) < (b)) ? (a) : (b))
+#endif

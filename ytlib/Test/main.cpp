@@ -11,12 +11,12 @@
 
 #include <boost/date_time/posix_time/posix_time.hpp>  
 #include <sigar/sigar.h>
+#include <stdio.h>
+
 extern "C"
 {
 #include  <sigar/sigar_format.h>
 }
-
-
 
 using namespace std;
 using namespace ytlib;
@@ -50,7 +50,7 @@ int32_t main(int32_t argc, char** argv) {
 
 	
 
-	for (int ii = 0; ii < 10000; ++ii) {
+	for (int ii = 0; ii < 10; ++ii) {
 
 		sigar_cpu_get(sigar_cpu, &current);
 		sigar_cpu_perc_calculate(&old, &current, &perc);
@@ -59,7 +59,8 @@ int32_t main(int32_t argc, char** argv) {
 		old = current;
 
 		printf_s("cpu : %f \t mem : %f\n", perc.combined, (double)currentmem.used / (double)currentmem.total);
-		Sleep(100);
+		//Sleep(100);
+
 	}
 
 

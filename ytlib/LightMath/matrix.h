@@ -459,6 +459,7 @@ namespace ytlib
 			free(idx);
 			return d;
 		}
+		/*
 		// solve linear system M*x=B, replaces *this and M
 		bool   solve(const Basic_Matrix &M, tfloat eps = 1e-20) {
 
@@ -549,6 +550,7 @@ namespace ytlib
 			delete[] ipiv;
 			return true;
 		}
+		*/
 		// replace *this by lower upper decomposition
 		bool   lu(int32_t *idx, tfloat &d, tfloat eps = 1e-20) {
 
