@@ -11,6 +11,10 @@
 
 #include <boost/date_time/posix_time/posix_time.hpp>  
 #include <sigar/sigar.h>
+
+#ifndef __STDC_WANT_LIB_EXT1__
+#define __STDC_WANT_LIB_EXT1__ 
+#endif // !__STDC_WANT_LIB_EXT1__
 #include <stdio.h>
 
 extern "C"

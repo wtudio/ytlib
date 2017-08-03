@@ -587,7 +587,7 @@ namespace ytlib
 					for (k = 0; k < j; ++k)
 						sum -= val[i][k] * val[k][j];
 					val[i][j] = sum;
-					if ((dum = vv[i] * abs(sum)) >= big) {
+					if ((dum = vv[i] * std::abs(sum)) >= big) {
 						big = dum;
 						imax = i;
 					}
