@@ -59,7 +59,7 @@ int32_t main(int32_t argc, char** argv) {
 
 		printf("cpu : %f \t mem : %f\n", perc.combined, (double)currentmem.used / (double)currentmem.total);
 		//Sleep(100);
-
+		boost::this_thread::sleep(boost::posix_time::milliseconds(100));
 	}
 
 

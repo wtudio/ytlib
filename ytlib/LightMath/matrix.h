@@ -1,10 +1,12 @@
 #ifndef MATRIX_H
 #define MATRIX_H
 
-#include <ytlib/LightMath/mathbase.h>
-#include <ytlib/LightMath/complex.h>
 #include <string>
 #include <iostream>
+#include <cstring>
+
+#include <ytlib/LightMath/mathbase.h>
+#include <ytlib/LightMath/complex.h>
 
 
 #define MAXSIZE 100000
