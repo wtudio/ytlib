@@ -57,7 +57,7 @@ int32_t main(int32_t argc, char** argv) {
 		sigar_mem_get(sigar_mem, &currentmem);
 		old = current;
 
-		printf_s("cpu : %f \t mem : %f\n", perc.combined, (double)currentmem.used / (double)currentmem.total);
+		printf("cpu : %f \t mem : %f\n", perc.combined, (double)currentmem.used / (double)currentmem.total);
 		//Sleep(100);
 
 	}
@@ -82,7 +82,7 @@ int32_t main(int32_t argc, char** argv) {
 
 	test_QueueProcess();
 	
-	printf_s("******************end*******************\n");
+	printf("******************end*******************\n");
 	getchar();
 	
 }

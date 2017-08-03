@@ -23,7 +23,7 @@ namespace ytlib
 	bool iserr = true;
 
 	void handel_recv(std::shared_ptr<myDataPackage>& data) {
-		printf_s("a_R: %d - %f - %s - %s\n", data->obj.a, data->obj.b, data->obj.c.c_str(),
+		printf("a_R: %d - %f - %s - %s\n", data->obj.a, data->obj.b, data->obj.c.c_str(),
 			string(data->map_datas["data1"].buf.get(), 10).c_str());
 		iserr &= (data->map_datas["data1"].buf_size == 1000);
 		//iserr &= (data->map_datas["data2"].buf_size == 1000);
@@ -33,7 +33,7 @@ namespace ytlib
 		//iserr &= (data->map_files["file3"] == "testfile.txt");
 	}
 	void handel_recv2(std::shared_ptr<myDataPackage>& data) {
-		printf_s("b_R: %d - %f - %s - %s\n", data->obj.a, data->obj.b, data->obj.c.c_str(),
+		printf("b_R: %d - %f - %s - %s\n", data->obj.a, data->obj.b, data->obj.c.c_str(),
 			string(data->map_datas["data1"].buf.get(), 10).c_str());
 		iserr &= (data->map_datas["data1"].buf_size == 1000);
 		//iserr &= (data->map_datas["data2"].buf_size == 1000);
@@ -43,7 +43,7 @@ namespace ytlib
 		//iserr &= (data->map_files["file3"] == "testfile.txt");
 	}
 	void handel_recv3(std::shared_ptr<myDataPackage>& data) {
-		printf_s("c_R: %d - %f - %s - %s\n", data->obj.a, data->obj.b, data->obj.c.c_str(),
+		printf("c_R: %d - %f - %s - %s\n", data->obj.a, data->obj.b, data->obj.c.c_str(),
 			string(data->map_datas["data1"].buf.get(), 10).c_str());
 		iserr &= (data->map_datas["data1"].buf_size == 1000);
 		//iserr &= (data->map_datas["data2"].buf_size == 1000);
@@ -95,7 +95,7 @@ namespace ytlib
 			}
 			//Sleep(1000);
 		}
-		printf_s("----------------------get %d failed--------------------\n", count);
+		printf("----------------------get %d failed--------------------\n", count);
 		iserr &= (count == 0);
 	}
 
@@ -150,7 +150,7 @@ namespace ytlib
 			m_RunThreads.join_all();
 
 			tocTime_global = boost::posix_time::microsec_clock::universal_time(); 
-			printf_s("-----------------count : %d us----------------------\n", (tocTime_global - ticTime_global).ticks());
+			printf("-----------------count : %d us----------------------\n", (tocTime_global - ticTime_global).ticks());
 			//std::cout << (tocTime_global - ticTime_global).ticks() << "us" << std::endl;
 
 
@@ -165,7 +165,7 @@ namespace ytlib
 			delete c;
 		}
 		if (!iserr) {
-			printf_s("get err!!!\n");
+			printf("get err!!!\n");
 		}
 		return iserr;
 	}

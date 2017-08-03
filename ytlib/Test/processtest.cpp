@@ -26,7 +26,7 @@ namespace ytlib
 		virtual ~testQueueProcess(){ stop(); }
 	protected:
 		void ProcFun(const std::shared_ptr<testmsg>& ptr_) {
-			printf_s("%d\n", ptr_->index);
+			printf("%d\n", ptr_->index);
 		}
 	};
 
@@ -46,7 +46,7 @@ namespace ytlib
 		//Sleep(500);
 
 		testprocess.stop();
-		printf_s("*************************************\n");
+		printf("*************************************\n");
 		//Sleep(500);
 		testprocess.start();
 		testprocess.init();
