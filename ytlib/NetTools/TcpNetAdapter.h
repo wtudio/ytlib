@@ -105,11 +105,16 @@ namespace ytlib {
 		//用于主动连接
 		bool connect(const TcpEp& ep_, uint16_t port_ = 0) {
 			sock.open(boost::asio::ip::tcp::v4());
+			boost::system::error_code err;
 			if (port_) {
 				sock.set_option(TcpSocket::reuse_address(true));
-				sock.bind(TcpEp(boost::asio::ip::tcp::v4(), port_));//如果指定端口了，则绑定到指定端口
+				sock.bind(TcpEp(boost::asio::ip::tcp::v4(), port_),err);//如果指定端口了，则绑定到指定端口
+				//if (err) {
+				//	YT_DEBUG_PRINTF("connect failed : %s\n", err.message().c_str());
+				//	return false;
+				//}
 			}
-			boost::system::error_code err;
+			
 			sock.connect(ep_, err);
 			if (err) {
 				YT_DEBUG_PRINTF("connect failed : %s\n", err.message().c_str());

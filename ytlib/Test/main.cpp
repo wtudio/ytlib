@@ -21,7 +21,7 @@ using namespace std;
 using namespace ytlib;
 
 int32_t main(int32_t argc, char** argv) {
-	printf("-------------------start-------------------\n");
+	YT_DEBUG_PRINTF("-------------------start-------------------\n");
 	//tcout输出中文需要设置
 	//建议：最好不要在程序中使用中文！！！
 	//std::locale::global(std::locale(""));
