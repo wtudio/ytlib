@@ -34,7 +34,10 @@ namespace ytlib
 #ifdef _MSC_VER
 		uint32_t n;	memcpy(&n, p, 4); return n;
 #else
-		return (p[0] + p[1] * 256 + p[2] * 65536 + p[3] * 256 * 65536);
+		return (static_cast<uint8_t>(p[0]) + 
+		static_cast<uint8_t>(p[1]) * 256 + 
+		static_cast<uint8_t>(p[2]) * 65536 + 
+		static_cast<uint8_t>(p[3]) * 16777216);//256*65536
 #endif // _MSC_VER
 	}
 
