@@ -48,6 +48,10 @@ if( NOT CMAKE_BUILD_TYPE )
   # Set the possible values of build type for cmake-gui
   set_property( CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo" )
 endif()
+#添加debug宏定义
+IF (CMAKE_BUILD_TYPE STREQUAL Debug)
+    ADD_DEFINITIONS(-DDEBUG)
+ENDIF()
 
 #设置库类型
 option(BUILD_SHARED_LIBS "Build with shared libraries." OFF)
