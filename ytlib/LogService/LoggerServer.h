@@ -1,13 +1,19 @@
 #pragma once
 #include <ytlib/Common/Util.h>
+#include <ytlib/Common/FileSystem.h>
 #include <ytlib/NetTools/TcpConnectionPool.h>
 #include <sqlite/sqlite3.h>
 #include <boost/shared_array.hpp>
-
-
-//todo： 使用boost.log库、网络适配器、简单数据库来完成一个日志服务器
+#include <ytlib/SupportTools/ChannelBase.h>
 
 namespace ytlib {
+	/*
+	目前版本日志服务器以目标机器id+ip:port为标签建立table
+	日志内容只有time、level、msg
+	初始化时给定一个路径，日志服务器每新连接一个客户机就在此目录下建立id_ip_port路径
+	并以id_ip_port_[time].db的名称建立日志数据库。time为日志文件建立的时间
+	当满足一定条件（达到某个时间点、日志文件大小过大）时新建一个数据库
+	*/
 
 	//连接类。tag始终为 LG
 	class LogConnection :public ConnectionBase {
@@ -18,7 +24,8 @@ namespace ytlib {
 		};
 		
 		LogConnection(boost::asio::io_service& io_, std::function<void(const TcpEp &)> errcb_) :
-			ConnectionBase(io_, errcb_){
+			ConnectionBase(io_, errcb_),
+			m_handelChannel(std::bind(&LogConnection::logHandel, this, std::placeholders::_1)){
 
 		}
 		virtual ~LogConnection() {stopflag = true;}
@@ -48,16 +55,24 @@ namespace ytlib {
 		void on_read_log(boost::shared_array<char>& buff_, const boost::system::error_code & err, size_t read_bytes) {
 			if (read_get_err(err)) return;
 			do_read_head();
-			//解析存储日志
+			m_handelChannel.Add(buff_);
+		}
+		//解析存储日志
+		void logHandel(boost::shared_array<char>& buff_) {
+
+
+
 
 		}
+		ChannelBase<boost::shared_array<char> > m_handelChannel;//因为要顺序写入数据库，所以使用通道进行缓冲
 
 	};
 
 	class LoggerServer : public TcpConnectionPool<LogConnection>{
 	public:
-		LoggerServer(uint16_t port_,uint32_t threadSize_ = 10):TcpConnectionPool(port_, threadSize_){
-
+		LoggerServer(uint16_t port_,const tstring& path_= T_TEXT(""), uint32_t threadSize_ = 10):
+			TcpConnectionPool(port_, threadSize_), logPath(tGetAbsolutePath(path_)){
+			boost::filesystem::create_directories(logPath);
 		}
 		virtual ~LoggerServer() {}
 		
@@ -68,7 +83,7 @@ namespace ytlib {
 		void on_err(const TcpEp& ep){
 			TcpConnectionPool::on_err(ep);
 		}
-
+		const tpath logPath;
 	};
 	
 }

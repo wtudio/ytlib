@@ -1,6 +1,7 @@
 #pragma once
 #include <ytlib/NetTools/TcpNetUtil.h>
 #include <ytlib/Common/Util.h>
+#include <boost/serialization/singleton.hpp>
 #include <ytlib/LogService/LoggerServer.h>
 
 #include <boost/date_time/posix_time/posix_time_types.hpp>
@@ -11,10 +12,22 @@
 #include <boost/log/utility/setup/file.hpp>
 #include <boost/log/utility/setup/common_attributes.hpp>
 #include <boost/log/support/date_time.hpp>
+#include <boost/log/attributes/scoped_attribute.hpp>
 
-
+#include <boost/smart_ptr/shared_ptr.hpp>
+#include <boost/core/null_deleter.hpp>
+#include <boost/log/core.hpp>
+#include <boost/log/expressions.hpp>
+#include <boost/log/sinks/async_frontend.hpp>
+#include <boost/log/sinks/text_ostream_backend.hpp>
+#include <boost/log/sinks/bounded_fifo_queue.hpp>
+#include <boost/log/sinks/drop_on_overflow.hpp>
+#include <boost/log/sources/severity_channel_logger.hpp>
+#include <boost/log/sources/record_ostream.hpp>
 
 namespace ytlib {
+	//此日志工具用于生产环境，调试环境的日志输出见<ytlib/Common/Util.h>中的YT_DEBUG_PRINTF
+
 	//同步后端，不需要加锁
 	class NetBackend : public boost::log::sinks::basic_formatted_sink_backend<
 		char,boost::log::sinks::synchronized_feeding> {
@@ -76,39 +89,82 @@ namespace ytlib {
 
 	};
 
-	//日志控制中心。提供全局单例。默认使用控制台日志。需要手动设置网络日志
+	//日志控制中心。提供全局单例
 	class LogControlCenter {
+		typedef boost::log::sinks::synchronous_sink<boost::log::sinks::text_ostream_backend> ConSink_t;
+		typedef boost::log::sinks::synchronous_sink<NetBackend> NetSink_t;
 	public:
-		LogControlCenter() {
 
-		}
-		~LogControlCenter() {
-
-		}
 		void EnableConsoleLog() {
-
-		}
-		void DisableNetLog() {
-
-		}
-		void EnableNetLog() {
-
+			DisableConsoleLog();
+			boost::shared_ptr<boost::log::sinks::text_ostream_backend> backend = boost::make_shared<boost::log::sinks::text_ostream_backend>();
+			backend->add_stream(boost::shared_ptr<std::ostream>(&std::clog, boost::null_deleter()));
+			ConSink = boost::shared_ptr<ConSink_t>(new ConSink_t(backend));
+			//设置控制台日志格式
+			ConSink->set_formatter(
+				boost::log::expressions::stream
+				<< "[" << boost::log::expressions::format_date_time< boost::posix_time::ptime >("TimeStamp", "%Y-%m-%d %H:%M:%S")
+				<< "]<" << boost::log::trivial::severity 
+				<< ">:" << boost::log::expressions::smessage
+			);
+			boost::shared_ptr<boost::log::core> core = boost::log::core::get();
+			core->add_sink(ConSink);
+			boost::log::add_common_attributes();
 		}
 		void DisableConsoleLog() {
-
+			if (ConSink) {
+				boost::shared_ptr< boost::log::core > core = boost::log::core::get();
+				core->remove_sink(ConSink);
+			}
 		}
-		
+		void EnableNetLog(uint32_t myid_, const TcpEp& logserver_ep_) {
+			DisableConsoleLog();
+			NetSink = boost::shared_ptr<NetSink_t >(new NetSink_t(myid_, logserver_ep_));
+			//设置网络日志格式。因为会用于生产环境，所以无法给出scope属性
+			NetSink->set_formatter(
+				boost::log::expressions::stream 
+				<< boost::log::expressions::format_date_time< boost::posix_time::ptime >("TimeStamp", "%Y-%m-%d %H:%M:%S")
+				<< "\t" << boost::log::trivial::severity
+				<< "\t" << boost::log::expressions::smessage
+			);
+			boost::shared_ptr< boost::log::core > core = boost::log::core::get();
+			core->add_sink(NetSink);
+			boost::log::add_common_attributes();
+		}
+		void DisableNetLog() {
+			if (NetSink) {
+				boost::shared_ptr< boost::log::core > core = boost::log::core::get();
+				core->remove_sink(NetSink);
+			}
+		}
 
 	private:
-
+		boost::shared_ptr<NetSink_t> NetSink;
+		boost::shared_ptr<ConSink_t> ConSink;
 	};
+	typedef boost::serialization::singleton<LogControlCenter> SingletonLogControlCenter;
+
 
 	//一些宏定义
-#define YT_LOG_TRACE 
-#define YT_LOG_DEBUG
-#define YT_LOG_INFO
-#define YT_LOG_WARNING
-#define YT_LOG_ERROR
-#define YT_LOG_FATAL
+#define YT_LOG_TRACE	BOOST_LOG_TRIVIAL(trace)
+#define YT_LOG_DEBUG	BOOST_LOG_TRIVIAL(debug)
+#define YT_LOG_INFO		BOOST_LOG_TRIVIAL(info)
+#define YT_LOG_WARNING	BOOST_LOG_TRIVIAL(warning)
+#define YT_LOG_ERROR	BOOST_LOG_TRIVIAL(error)
+#define YT_LOG_FATAL	BOOST_LOG_TRIVIAL(fatal)
+
+
+#define YT_SET_LOG_LEVEL(lvl)  boost::log::core::get()->set_filter(boost::log::trivial::severity >=  boost::log::trivial::lvl);
+
+	static void InitNetLog(uint32_t myid_, const TcpEp& logserver_ep_) {
+		SingletonLogControlCenter::get_mutable_instance().EnableNetLog(myid_, logserver_ep_);
+		SingletonLogControlCenter::get_mutable_instance().EnableConsoleLog();
+		YT_SET_LOG_LEVEL(info);//默认info级别
+	}
+	static void StopNetLog() {
+		SingletonLogControlCenter::get_mutable_instance().DisableNetLog();
+		SingletonLogControlCenter::get_mutable_instance().DisableConsoleLog();
+	}
+
 
 }

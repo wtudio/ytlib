@@ -63,9 +63,9 @@
 //debug 调试
 #ifdef DEBUG
 #ifdef _WIN32
-#define YT_DEBUG_PRINTF(_arg_,...) printf_s(_arg_, ##__VA_ARGS__);
+#define YT_DEBUG_PRINTF(_arg_,...) printf_s((std::string("[%s:%d]")+_arg_).c_str(),__FILE__, __LINE__ , __VA_ARGS__);
 #else
-#define YT_DEBUG_PRINTF(_arg_,...) printf(_arg_, ##__VA_ARGS__);
+#define YT_DEBUG_PRINTF(_arg_,...) printf((std::string("[%s:%d]")+_arg_).c_str(),__FILE__, __LINE__ , __VA_ARGS__);
 #endif
 #else  
 #define YT_DEBUG_PRINTF(_arg_,...) ;

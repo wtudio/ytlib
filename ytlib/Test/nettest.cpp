@@ -150,7 +150,7 @@ namespace ytlib
 			m_RunThreads.join_all();
 
 			tocTime_global = boost::posix_time::microsec_clock::universal_time(); 
-			printf("-----------------count : %d us----------------------\n", (tocTime_global - ticTime_global).ticks());
+			printf("-----------------count : %lld us----------------------\n", (tocTime_global - ticTime_global).ticks());
 			//std::cout << (tocTime_global - ticTime_global).ticks() << "us" << std::endl;
 
 
