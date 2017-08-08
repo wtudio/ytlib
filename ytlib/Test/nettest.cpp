@@ -1,5 +1,4 @@
 #include "nettest.h"
-#include <boost/lexical_cast.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>  
 
 using namespace boost::asio;
@@ -73,7 +72,7 @@ namespace ytlib
 			std::shared_ptr<myDataPackage> packptr = std::shared_ptr<myDataPackage>(new myDataPackage());
 			packptr->obj.a = ii;
 			packptr->obj.b = ii / 3.256;
-			packptr->obj.c = boost::lexical_cast<std::string>(ii * 5);
+			packptr->obj.c = to_string(ii * 5);
 			packptr->obj.d = s;
 
 			shared_buf mybuf;

@@ -32,7 +32,7 @@ namespace ytlib
 
 	static uint32_t get_num_from_buf(char* p) {
 #ifdef _MSC_VER
-		uint32_t n;	memcpy(&n, p, 4); return n;
+		uint32_t n;	memcpy(&n, p, 4); return std::move(n);
 #else
 		return (static_cast<uint8_t>(p[0]) + 
 		static_cast<uint8_t>(p[1]) * 256 + 

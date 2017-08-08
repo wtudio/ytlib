@@ -23,8 +23,8 @@ namespace ytlib {
 			LOGHEAD2 = 'G'
 		};
 		
-		LogConnection(boost::asio::io_service& io_, std::function<void(const TcpEp &)> errcb_) :
-			ConnectionBase(io_, errcb_),
+		LogConnection(boost::asio::io_service& io_, std::function<void(const TcpEp &)> errcb_, tpath const *plogPath_) :
+			ConnectionBase(io_, errcb_), plogPath(plogPath_), m_bFirstLogFlag(true),
 			m_handelChannel(std::bind(&LogConnection::logHandel, this, std::placeholders::_1)){
 
 		}
@@ -38,8 +38,7 @@ namespace ytlib {
 		//读取解析报头
 		void on_read_head(const boost::system::error_code & err, size_t read_bytes) {
 			if (read_get_err(err)) return;
-			if (header[0] == TCPHEAD1 && header[1] == TCPHEAD2 &&
-				header[2] == LOGHEAD1 && header[3] == LOGHEAD2 && read_bytes == HEAD_SIZE) {
+			if (header[0] == TCPHEAD1 && header[1] == TCPHEAD2 && header[2] == LOGHEAD1 && header[3] == LOGHEAD2 && read_bytes == HEAD_SIZE) {
 				uint32_t pack_size = get_num_from_buf(&header[4]);
 				boost::shared_array<char> pDataBuff = boost::shared_array<char>(new char[pack_size]);
 				boost::asio::async_read(sock, boost::asio::buffer(pDataBuff.get(), pack_size), boost::asio::transfer_exactly(pack_size),
@@ -59,13 +58,26 @@ namespace ytlib {
 		}
 		//解析存储日志
 		void logHandel(boost::shared_array<char>& buff_) {
+			uint32_t clientID = get_num_from_buf(buff_.get());
+
+			//检查是否是第一条日志
+			if (m_bFirstLogFlag) {
+				//新建数据库
+				std::string dbname(sock.remote_endpoint().address().to_string());
+				for (size_t pos = dbname.find('.'); pos < dbname.size(); pos = dbname.find('.', pos)) dbname[pos] = '_';
+				dbname = dbname + '_' + to_string(clientID) + '_';
 
 
+				m_bFirstLogFlag = false;
+			}
+			//解析日志
 
+			//将日志存入数据库
 
 		}
 		ChannelBase<boost::shared_array<char> > m_handelChannel;//因为要顺序写入数据库，所以使用通道进行缓冲
-
+		tpath const *plogPath;
+		bool m_bFirstLogFlag;
 	};
 
 	class LoggerServer : public TcpConnectionPool<LogConnection>{
@@ -78,7 +90,7 @@ namespace ytlib {
 		
 	private:
 		TcpConnectionPtr getNewTcpConnectionPtr() {
-			return TcpConnectionPtr(new LogConnection(service, std::bind(&LoggerServer::on_err, this, std::placeholders::_1)));
+			return TcpConnectionPtr(new LogConnection(service, std::bind(&LoggerServer::on_err, this, std::placeholders::_1),&logPath));
 		}
 		void on_err(const TcpEp& ep){
 			TcpConnectionPool::on_err(ep);

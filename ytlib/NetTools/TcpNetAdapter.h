@@ -87,7 +87,7 @@ namespace ytlib {
 		};
 		TcpConnection(boost::asio::io_service& io_,
 			std::function<void(const TcpEp &)> errcb_,
-			tpath* p_RecvPath_,
+			tpath const *p_RecvPath_,
 			std::function<void(dataPtr &)> cb_) :
 			ConnectionBase(io_, errcb_),
 			m_recv_callback(cb_),
@@ -298,7 +298,7 @@ namespace ytlib {
 
 		std::mutex write_mutex;
 		std::function<void(dataPtr &)> m_recv_callback;
-		tpath* p_RecvPath;//接收文件路径
+		tpath const *p_RecvPath;//接收文件路径
 
 		QueueBase<dataPtr> m_DataQueue;
 		std::thread m_queueThread;
