@@ -28,7 +28,11 @@ namespace ytlib {
 			m_handelChannel(std::bind(&LogConnection::logHandel, this, std::placeholders::_1)){
 
 		}
-		virtual ~LogConnection() {stopflag = true;}
+		virtual ~LogConnection() {
+			stopflag = true;
+			while (sqlite3_close(db));
+			sqlite3_shutdown();
+		}
 
 	private:
 		void do_read_head() {
@@ -63,13 +67,18 @@ namespace ytlib {
 			//检查是否是第一条日志
 			if (m_bFirstLogFlag) {
 				//建立文件夹
-				std::string dbname(sock.remote_endpoint().address().to_string() + '_' + std::to_string(clientID));
-				boost::filesystem::create_directories((*plogPath) / dbname);
+				std::string dbname(std::to_string(clientID) + '(' + sock.remote_endpoint().address().to_string() + ')');
+				tpath curLogPath = (*plogPath) / dbname;
+				boost::filesystem::create_directories(curLogPath);
 				//提取该条日志的时间：20170809_114750 15字节
 				dbname = dbname + '_' + std::string(&buff_[4], 15) + ".db";
 				//新建数据库
-
-
+				uint32_t rc;
+				rc = sqlite3_open((curLogPath / dbname).string().c_str(), &db);
+				if (rc) {
+					YT_DEBUG_PRINTF("open log database failed: %s\n", sqlite3_errmsg(db));
+					return;
+				}
 				m_bFirstLogFlag = false;
 			}
 			//解析日志
@@ -80,7 +89,11 @@ namespace ytlib {
 		ChannelBase<boost::shared_array<char> > m_handelChannel;//因为要顺序写入数据库，所以使用通道进行缓冲
 		tpath const *plogPath;
 		bool m_bFirstLogFlag;
+		sqlite3 *db;
+		//创建表的sql语句(只有静态常量整型数据成员才可以在类中初始化，其余类型在类外初始化)
+		static const char *log_sql;
 	};
+	const char * LogConnection::log_sql = "test";
 
 	class LoggerServer : public TcpConnectionPool<LogConnection>{
 	public:
@@ -98,6 +111,7 @@ namespace ytlib {
 			TcpConnectionPool::on_err(ep);
 		}
 		const tpath logPath;
+		
 	};
 	
 }

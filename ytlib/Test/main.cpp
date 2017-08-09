@@ -4,6 +4,7 @@
 #include <ytlib/NetTools/TcpNetAdapter.h>
 #include <ytlib/LogService/LoggerServer.h>
 #include <ytlib/LogService/Logger.h>
+#include <ytlib/SupportTools/SysInfoTools.h>
 
 #include "mathtest.h"
 #include "filetest.h"
@@ -30,6 +31,7 @@ int32_t main(int32_t argc, char** argv) {
 	//tocTime_global = boost::posix_time::microsec_clock::universal_time(); 
 	//std::cout << (tocTime_global - ticTime_global).ticks() << "us" << std::endl;
 	
+	cout << GetCpuUsage() << endl;
 
 	LoggerServer l(55555);
 	l.start();

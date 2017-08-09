@@ -125,6 +125,7 @@ namespace ytlib
 		}
 		virtual bool start() {
 			if (!checkPort(myport)) return false;
+			//如果要做高并发连接的话可以在此处添加异步accept的个数
 			TcpConnectionPtr pConnection = getNewTcpConnectionPtr();
 			if (!pConnection) return false;
 			service.reset();
