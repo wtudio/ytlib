@@ -24,11 +24,17 @@ namespace ytlib {
 		}
 		virtual ~ChannelBase(void) {
 			//结束线程，禁止添加
-			m_bRunning = false;
-			m_Threads.join_all();
+			Stop();
 		}
 		inline bool Add(const T &item_) {
 			return m_queue.Enqueue(item_);
+		}
+		void Stop() {
+			if (m_bRunning) {
+				m_bRunning = false;
+				m_queue.Stop();
+				m_Threads.join_all();
+			}
 		}
 		inline void Clear() {m_queue.Clear();}
 		inline double GetUsagePercentage() {return (double)(m_queue.Count()) / (double)(m_queue.GetMaxCount());	}

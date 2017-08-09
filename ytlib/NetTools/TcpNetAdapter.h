@@ -37,11 +37,6 @@ namespace ytlib {
 	o+v:结束符
 	*/
 
-	struct shared_buf {
-		boost::shared_array<char> buf;
-		uint32_t buf_size;
-	};
-
 	class LightSignal {
 	public:
 		LightSignal() :flag(false) {}

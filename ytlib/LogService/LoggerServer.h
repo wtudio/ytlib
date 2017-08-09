@@ -17,8 +17,15 @@ namespace ytlib {
 
 	
 	//创建表的sql语句
-	static const char * log_sql = "test";
-
+	static const char * create_table_sql =
+		"create table if not exists LOG (\
+			id INTEGER not null PRIMARY KEY AUTOINCREMENT,\
+			time TEXT not null,\
+			level INTEGER not null,\
+			msg TEXT not null\
+		);";
+	static const char * insert_log_sql = "INSERT INTO LOG(time,level,msg) values(?,?,?)";
+	static const uint32_t insert_log_sql_size = static_cast<uint32_t>(strlen(insert_log_sql));
 	//连接类。tag始终为 LG
 	class LogConnection :public ConnectionBase {
 	public:
@@ -28,14 +35,14 @@ namespace ytlib {
 		};
 		
 		LogConnection(boost::asio::io_service& io_, std::function<void(const TcpEp &)> errcb_, tpath const *plogPath_) :
-			ConnectionBase(io_, errcb_), plogPath(plogPath_), m_bFirstLogFlag(true),
-			m_handelChannel(std::bind(&LogConnection::logHandel, this, std::placeholders::_1)){
+			ConnectionBase(io_, errcb_), plogPath(plogPath_), m_bFirstLogFlag(true), m_logQueue(1000), 
+			m_handleThread(std::bind(&LogConnection::logHandel,this)){
 
 		}
 		virtual ~LogConnection() {
 			stopflag = true;
-			while (sqlite3_close(db));
-			sqlite3_shutdown();
+			m_logQueue.Stop();
+			m_handleThread.join();
 		}
 
 	private:
@@ -62,38 +69,63 @@ namespace ytlib {
 		void on_read_log(boost::shared_array<char>& buff_, const boost::system::error_code & err, size_t read_bytes) {
 			if (read_get_err(err)) return;
 			do_read_head();
-			m_handelChannel.Add(buff_);
+			m_logQueue.Enqueue(shared_buf(buff_, static_cast<uint32_t>(read_bytes)));
 		}
-		//解析存储日志
-		void logHandel(boost::shared_array<char>& buff_) {
-			uint32_t clientID = get_num_from_buf(buff_.get());
+		//解析存储日志。格式应该为：4byte客户端id+1byte日志等级+14byte时间信息+n byte日志信息
+		//此方法里还需判断格式是否正确
+		void logHandel() {
+			sqlite3 *db;
+			while (!stopflag) {
+				shared_buf buff_;
+				if (m_logQueue.BlockDequeue(buff_)) {
+					if (buff_.buf_size < 20) return;
+					//检查是否是此连接第一条日志
+					if (m_bFirstLogFlag) {
+						//建立文件夹
+						uint32_t clientID = get_num_from_buf(buff_.buf.get());
+						std::string dbname(std::to_string(clientID) + '(' + sock.remote_endpoint().address().to_string() + ')');
+						tpath curLogPath = (*plogPath) / dbname;
+						boost::filesystem::create_directories(curLogPath);
+						//提取该条日志的时间：20170809114750 14字节
+						dbname = dbname + '_' + std::string(&(buff_.buf[5]), 14) + ".db";
+						//新建数据库
+						uint32_t rc;
+						rc = sqlite3_open((curLogPath / dbname).string().c_str(), &db);
+						if (rc) {
+							YT_DEBUG_PRINTF("open log database failed: %s\n", sqlite3_errmsg(db));
+							return;
+						}
+						char *zErr;
+						rc = sqlite3_exec(db, create_table_sql, NULL, NULL, &zErr);
+						if (rc) {
+							sqlite3_close(db);
+							YT_DEBUG_PRINTF("err in create table: %s\n", zErr);
+							sqlite3_free(zErr);
+							return;
+						}
+						m_bFirstLogFlag = false;
+					}
+					//解析日志
+					uint8_t lglvl = static_cast<uint8_t>(buff_.buf[4]);
+					//将日志存入数据库。日志
+					sqlite3_stmt *stmt;
+					sqlite3_prepare_v2(db, insert_log_sql, insert_log_sql_size, &stmt, NULL);
+					sqlite3_bind_text(stmt, 1, &(buff_.buf[5]), 14, SQLITE_STATIC);
+					sqlite3_bind_int(stmt, 2, lglvl);
+					sqlite3_bind_text(stmt, 3, &(buff_.buf[19]), buff_.buf_size - 19, SQLITE_STATIC);
 
-			//检查是否是第一条日志
-			if (m_bFirstLogFlag) {
-				//建立文件夹
-				std::string dbname(std::to_string(clientID) + '(' + sock.remote_endpoint().address().to_string() + ')');
-				tpath curLogPath = (*plogPath) / dbname;
-				boost::filesystem::create_directories(curLogPath);
-				//提取该条日志的时间：20170809_114750 15字节
-				dbname = dbname + '_' + std::string(&buff_[4], 15) + ".db";
-				//新建数据库
-				uint32_t rc;
-				rc = sqlite3_open((curLogPath / dbname).string().c_str(), &db);
-				if (rc) {
-					YT_DEBUG_PRINTF("open log database failed: %s\n", sqlite3_errmsg(db));
-					return;
+					sqlite3_step(stmt);
+					sqlite3_finalize(stmt);
+					
 				}
-				m_bFirstLogFlag = false;
-			}
-			//解析日志
-
-			//将日志存入数据库
-
+			}	
+			if(!m_bFirstLogFlag) sqlite3_close(db);
 		}
-		ChannelBase<boost::shared_array<char> > m_handelChannel;//因为要顺序写入数据库，所以使用通道进行缓冲
+
+		QueueBase<shared_buf> m_logQueue;
+		std::thread m_handleThread;
 		tpath const *plogPath;
 		bool m_bFirstLogFlag;
-		sqlite3 *db;
 	};
 	
 

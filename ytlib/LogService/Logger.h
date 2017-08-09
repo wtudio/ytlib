@@ -40,8 +40,8 @@ namespace ytlib {
 			header[2] = LogConnection::LOGHEAD1;
 			header[3] = LogConnection::LOGHEAD2;
 			logBuff.push_back(std::move(boost::asio::const_buffer(header, HEAD_SIZE)));
-			//设置本机id。如果以后要添加本地信息也在此处添加拓展
-			HostInfoSize = 4;
+			//设置本机id和日志等级。如果以后要添加其他信息也在此处添加拓展
+			HostInfoSize = 5;
 			HostInfoBuff = boost::shared_array<char>(new char[HostInfoSize]);
 			set_buf_from_num(HostInfoBuff.get(), myid_);
 			logBuff.push_back(std::move(boost::asio::const_buffer(HostInfoBuff.get(), HostInfoSize)));
@@ -51,6 +51,7 @@ namespace ytlib {
 			//如果有连接才发送，否则不发送
 			if (connect()) {
 				set_buf_from_num(&header[4], static_cast<uint32_t>(command_line.size() + HostInfoSize));
+				HostInfoBuff[4] = static_cast<uint8_t>(*((rec.attribute_values())[boost::log::trivial::severity]));
 				logBuff.push_back(std::move(boost::asio::buffer(command_line)));
 				boost::system::error_code err;
 				//发送失败则将ConnectFlag置为false
@@ -94,6 +95,13 @@ namespace ytlib {
 		typedef boost::log::sinks::synchronous_sink<boost::log::sinks::text_ostream_backend> ConSink_t;
 		typedef boost::log::sinks::synchronous_sink<NetBackend> NetSink_t;
 	public:
+		LogControlCenter() {
+			//要添加什么属性在这里添加
+			//boost::log::add_common_attributes();
+			(boost::log::core::get())->add_global_attribute(
+				boost::log::aux::default_attribute_names::timestamp(),
+				boost::log::attributes::local_clock());
+		}
 
 		void EnableConsoleLog() {
 			DisableConsoleLog();
@@ -107,34 +115,27 @@ namespace ytlib {
 				<< "]<" << boost::log::trivial::severity 
 				<< ">:" << boost::log::expressions::smessage
 			);
-			boost::shared_ptr<boost::log::core> core = boost::log::core::get();
-			core->add_sink(ConSink);
-			boost::log::add_common_attributes();
+			(boost::log::core::get())->add_sink(ConSink);
 		}
 		void DisableConsoleLog() {
 			if (ConSink) {
-				boost::shared_ptr< boost::log::core > core = boost::log::core::get();
-				core->remove_sink(ConSink);
+				(boost::log::core::get())->remove_sink(ConSink);
 			}
 		}
 		void EnableNetLog(uint32_t myid_, const TcpEp& logserver_ep_) {
 			DisableConsoleLog();
 			NetSink = boost::shared_ptr<NetSink_t >(new NetSink_t(myid_, logserver_ep_));
-			//设置网络日志格式。因为会用于生产环境，所以无法给出scope属性
+			//设置网络日志格式。因为会用于生产环境，所以无法给出scope属性。日志等级直接在后端获取
 			NetSink->set_formatter(
 				boost::log::expressions::stream 
-				<< boost::log::expressions::format_date_time< boost::posix_time::ptime >("TimeStamp", "%Y%m%d_%H%M%S")
-				<< "\t" << boost::log::trivial::severity
-				<< "\t" << boost::log::expressions::smessage
+				<< boost::log::expressions::format_date_time< boost::posix_time::ptime >("TimeStamp", "%Y%m%d%H%M%S")
+				<< boost::log::expressions::smessage
 			);
-			boost::shared_ptr< boost::log::core > core = boost::log::core::get();
-			core->add_sink(NetSink);
-			boost::log::add_common_attributes();
+			(boost::log::core::get())->add_sink(NetSink);
 		}
 		void DisableNetLog() {
 			if (NetSink) {
-				boost::shared_ptr< boost::log::core > core = boost::log::core::get();
-				core->remove_sink(NetSink);
+				(boost::log::core::get())->remove_sink(NetSink);
 			}
 		}
 
@@ -154,7 +155,7 @@ namespace ytlib {
 #define YT_LOG_FATAL	BOOST_LOG_TRIVIAL(fatal)
 
 
-#define YT_SET_LOG_LEVEL(lvl)  boost::log::core::get()->set_filter(boost::log::trivial::severity >=  boost::log::trivial::lvl);
+#define YT_SET_LOG_LEVEL(lvl)  (boost::log::core::get())->set_filter(boost::log::trivial::severity >=  boost::log::trivial::lvl);
 
 	static void InitNetLog(uint32_t myid_, const TcpEp& logserver_ep_) {
 		SingletonLogControlCenter::get_mutable_instance().EnableNetLog(myid_, logserver_ep_);

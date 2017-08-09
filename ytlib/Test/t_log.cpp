@@ -14,6 +14,7 @@ namespace ytlib
 		YT_LOG_INFO << "info log test";
 		YT_LOG_WARNING << "warning log test";
 
+		//Sleep(5000);
 		YT_SET_LOG_LEVEL(debug);
 
 		YT_LOG_TRACE << "trace log test";
