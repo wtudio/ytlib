@@ -72,7 +72,7 @@ namespace ytlib
 			std::shared_ptr<myDataPackage> packptr = std::shared_ptr<myDataPackage>(new myDataPackage());
 			packptr->obj.a = ii;
 			packptr->obj.b = ii / 3.256;
-			packptr->obj.c = to_string(ii * 5);
+			packptr->obj.c = std::to_string(ii * 5);
 			packptr->obj.d = s;
 
 			shared_buf mybuf;

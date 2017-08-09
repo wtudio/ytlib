@@ -123,7 +123,7 @@ namespace ytlib {
 			//设置网络日志格式。因为会用于生产环境，所以无法给出scope属性
 			NetSink->set_formatter(
 				boost::log::expressions::stream 
-				<< boost::log::expressions::format_date_time< boost::posix_time::ptime >("TimeStamp", "%Y-%m-%d %H:%M:%S")
+				<< boost::log::expressions::format_date_time< boost::posix_time::ptime >("TimeStamp", "%Y%m%d_%H%M%S")
 				<< "\t" << boost::log::trivial::severity
 				<< "\t" << boost::log::expressions::smessage
 			);

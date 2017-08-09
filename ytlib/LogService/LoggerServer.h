@@ -11,7 +11,7 @@ namespace ytlib {
 	目前版本日志服务器以目标机器id+ip:port为标签建立table
 	日志内容只有time、level、msg
 	初始化时给定一个路径，日志服务器每新连接一个客户机就在此目录下建立id_ip_port路径
-	并以id_ip_port_[time].db的名称建立日志数据库。time为日志文件建立的时间
+	并以time_ip_id.db的名称建立日志数据库。time为日志文件建立的时间
 	当满足一定条件（达到某个时间点、日志文件大小过大）时新建一个数据库
 	*/
 
@@ -62,10 +62,12 @@ namespace ytlib {
 
 			//检查是否是第一条日志
 			if (m_bFirstLogFlag) {
+				//建立文件夹
+				std::string dbname(sock.remote_endpoint().address().to_string() + '_' + std::to_string(clientID));
+				boost::filesystem::create_directories((*plogPath) / dbname);
+				//提取该条日志的时间：20170809_114750 15字节
+				dbname = dbname + '_' + std::string(&buff_[4], 15) + ".db";
 				//新建数据库
-				std::string dbname(sock.remote_endpoint().address().to_string());
-				for (size_t pos = dbname.find('.'); pos < dbname.size(); pos = dbname.find('.', pos)) dbname[pos] = '_';
-				dbname = dbname + '_' + to_string(clientID) + '_';
 
 
 				m_bFirstLogFlag = false;
