@@ -9,7 +9,7 @@
 namespace ytlib
 {
 	//生成UUID
-	tstring GenerateUUID(void) {
+	static tstring GenerateUUID(void) {
 		boost::uuids::random_generator rgen;
 #ifdef UNICODE
 		return boost::uuids::to_wstring(rgen());

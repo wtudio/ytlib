@@ -1,4 +1,4 @@
-#include "nettest.h"
+#include "t_net.h"
 #include <boost/date_time/posix_time/posix_time.hpp>  
 
 using namespace boost::asio;
@@ -64,9 +64,9 @@ namespace ytlib
 			data[ii] = '0' + ii % 10;
 		}
 
-		string file1("D:/project/ytlib/ytlib/build/bin/Debug/filetest/testprj2.prj");
-		string file2("D:/project/ytlib/ytlib/build/bin/Debug/filetest/TrunkCenter2.xml");
-		string file3("D:/project/ytlib/ytlib/build/bin/Debug/filetest/testfile.txt");
+		string file1("D:/project/ytlib/ytlib/build/bin/Debug/t_file/testprj2.prj");
+		string file2("D:/project/ytlib/ytlib/build/bin/Debug/t_file/TrunkCenter2.xml");
+		string file3("D:/project/ytlib/ytlib/build/bin/Debug/t_file/testfile.txt");
 
 		for (int ii = 0; ii < 100; ++ii) {
 			std::shared_ptr<myDataPackage> packptr = std::shared_ptr<myDataPackage>(new myDataPackage());

@@ -1,0 +1,29 @@
+#include "t_log.h"
+
+
+namespace ytlib
+{
+	bool test_NetLog() {
+		LoggerServer l(55555);
+		l.start();
+
+		InitNetLog(12345, TcpEp(boost::asio::ip::address::from_string("127.0.0.1"), 55555));
+
+		YT_LOG_TRACE << "trace log test";
+		YT_LOG_DEBUG << "debug log test";
+		YT_LOG_INFO << "info log test";
+		YT_LOG_WARNING << "warning log test";
+
+		YT_SET_LOG_LEVEL(debug);
+
+		YT_LOG_TRACE << "trace log test";
+		YT_LOG_DEBUG << "debug log test";
+		YT_LOG_INFO << "info log test";
+		YT_LOG_WARNING << "warning log test";
+
+		getchar();
+
+		return true;
+	}
+	
+}

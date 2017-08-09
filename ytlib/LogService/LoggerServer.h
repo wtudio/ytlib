@@ -15,6 +15,10 @@ namespace ytlib {
 	当满足一定条件（达到某个时间点、日志文件大小过大）时新建一个数据库
 	*/
 
+	
+	//创建表的sql语句
+	static const char * log_sql = "test";
+
 	//连接类。tag始终为 LG
 	class LogConnection :public ConnectionBase {
 	public:
@@ -90,10 +94,8 @@ namespace ytlib {
 		tpath const *plogPath;
 		bool m_bFirstLogFlag;
 		sqlite3 *db;
-		//创建表的sql语句(只有静态常量整型数据成员才可以在类中初始化，其余类型在类外初始化)
-		static const char *log_sql;
 	};
-	const char * LogConnection::log_sql = "test";
+	
 
 	class LoggerServer : public TcpConnectionPool<LogConnection>{
 	public:
