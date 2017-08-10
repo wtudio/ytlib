@@ -46,8 +46,6 @@ namespace ytlib {
 		//tip-data形式
 		std::map<std::string, shared_buf> map_datas;//数据,最大支持255个
 		std::map<std::string, std::string> map_files;//文件,最大支持255个
-		bool complete_flag;//接收完成flag
-		LightSignal* p_s;
 	};
 
 	//子类：sock连接，为网络适配器定制准备，只能主动发起同步写，读取是异步自动的
@@ -55,6 +53,12 @@ namespace ytlib {
 	class TcpConnection :public ConnectionBase {
 		typedef std::shared_ptr<boost::asio::streambuf> buff_Ptr;
 		typedef std::shared_ptr<DataPackage<T> > dataPtr;
+		struct RecvDataPackage {
+			dataPtr pdata;
+			bool complete_flag;//接收完成flag
+			LightSignal* p_s;
+		};
+		typedef std::shared_ptr<RecvDataPackage> RecvDataPtr;
 	public:
 		enum {
 			CLASSHEAD = 'C',
@@ -114,18 +118,16 @@ namespace ytlib {
 			return true;
 		}
 		void start() { 
-			dataPtr d_ = dataPtr();
+			RecvDataPtr d_ = RecvDataPtr();
 			do_read_head(d_); 
 		}
 	private:
-
-		void do_read_head(dataPtr& d_) {
+		void do_read_head(RecvDataPtr& d_) {
 			boost::asio::async_read(sock, boost::asio::buffer(header, HEAD_SIZE), boost::asio::transfer_exactly(HEAD_SIZE),
 				std::bind(&TcpConnection::on_read_head, this, d_, std::placeholders::_1, std::placeholders::_2));
 		}
-
 		void run_queue() {
-			dataPtr p;
+			RecvDataPtr p;
 			while (!stopflag) {
 				if (!m_DataQueue.BlockDequeue(p)) return;
 				LightSignal* p_s = p->p_s;
@@ -135,26 +137,24 @@ namespace ytlib {
 			}
 		}
 		//使用智能指针的删除器来判断数据是否准备好并进行回调
-		void on_data_ready(DataPackage<T> * p) {
+		void on_data_ready(RecvDataPackage * p) {
 			LightSignal* p_s = p->p_s;
 			if (p->complete_flag) {
-				dataPtr d_ = dataPtr(p);
-				m_recv_callback(d_);//先执行完回调再准备下一个
-				p_s->notify();
-				return;
+				m_recv_callback(p->pdata);//先执行完回调再准备下一个
 			}
 			p_s->notify();
 			delete p;
 		}
 		//读取解析报头，缓存跟着回调走
-		void on_read_head(dataPtr& RData_, const boost::system::error_code & err, size_t read_bytes) {
+		void on_read_head(RecvDataPtr& RData_, const boost::system::error_code & err, size_t read_bytes) {
 			if (read_get_err(err)) return;
 			if (header[0] == TCPHEAD1 && header[1] == TCPHEAD2 && read_bytes == HEAD_SIZE) {
 				uint32_t pack_size = get_num_from_buf(&header[4]);
 				if (!RData_) {
 					if (header[2] == CLASSHEAD) {
 						//新建一个数据包
-						RData_ = dataPtr((new DataPackage<T>()), std::bind(&TcpConnection::on_data_ready, this, std::placeholders::_1));
+						RData_ = RecvDataPtr((new RecvDataPackage()), std::bind(&TcpConnection::on_data_ready, this, std::placeholders::_1));
+						RData_->pdata = dataPtr(new DataPackage<T>());
 						RData_->complete_flag = false;
 						RData_->p_s = new LightSignal();
 						m_DataQueue.Enqueue(RData_);
@@ -165,18 +165,6 @@ namespace ytlib {
 					}
 				}
 				else {
-					if (header[2] == DATAHEAD) {
-						boost::shared_array<char> pDataBuff = boost::shared_array<char>(new char[pack_size]);
-						if (header[3] == static_cast<char>(uint8_t(255))) {
-							boost::asio::async_read(sock, boost::asio::buffer(pDataBuff.get(), pack_size), boost::asio::transfer_exactly(pack_size),
-								std::bind(&TcpConnection::on_read_data_tips, this, RData_, pDataBuff, std::placeholders::_1, std::placeholders::_2));
-						}
-						else {
-							boost::asio::async_read(sock, boost::asio::buffer(pDataBuff.get(), pack_size), boost::asio::transfer_exactly(pack_size),
-								std::bind(&TcpConnection::on_read_data, this, RData_, pDataBuff, std::placeholders::_1, std::placeholders::_2));
-						}
-						return;
-					}
 					if (header[2] == FILEHEAD) {
 						boost::shared_array<char> pDataBuff = boost::shared_array<char>(new char[pack_size]);
 						if (header[3] == static_cast<char>(uint8_t(255))) {
@@ -189,8 +177,20 @@ namespace ytlib {
 						}
 						return;
 					}
+					if (header[2] == DATAHEAD) {
+						boost::shared_array<char> pDataBuff = boost::shared_array<char>(new char[pack_size]);
+						if (header[3] == static_cast<char>(uint8_t(255))) {
+							boost::asio::async_read(sock, boost::asio::buffer(pDataBuff.get(), pack_size), boost::asio::transfer_exactly(pack_size),
+								std::bind(&TcpConnection::on_read_data_tips, this, RData_, pDataBuff, std::placeholders::_1, std::placeholders::_2));
+						}
+						else {
+							boost::asio::async_read(sock, boost::asio::buffer(pDataBuff.get(), pack_size), boost::asio::transfer_exactly(pack_size),
+								std::bind(&TcpConnection::on_read_data, this, RData_, pDataBuff, std::placeholders::_1, std::placeholders::_2));
+						}
+						return;
+					}
 					if (header[2] == TCPEND1 && header[3] == TCPEND2) {
-						dataPtr d_ = dataPtr();
+						RecvDataPtr d_ = RecvDataPtr();
 						do_read_head(d_);
 						RData_->complete_flag = true;
 						return;
@@ -198,44 +198,43 @@ namespace ytlib {
 				}
 			}
 			stopflag = true;
-			YT_DEBUG_PRINTF("read failed : recv an invalid header : %c %c %c %d %d\n",
-				header[0], header[1], header[2], header[3], get_num_from_buf(&header[4]));
+			YT_DEBUG_PRINTF("read failed : recv an invalid header : %c %c %c %d %d\n",header[0], header[1], header[2], header[3], get_num_from_buf(&header[4]));
 			err_CallBack(remote_ep);
 			return;
 		}
-		void on_read_obj(dataPtr& RData_, buff_Ptr& buff_, const boost::system::error_code & err, size_t read_bytes) {
+		void on_read_obj(RecvDataPtr& RData_, buff_Ptr& buff_, const boost::system::error_code & err, size_t read_bytes) {
 			if (read_get_err(err)) return;
 			do_read_head(RData_);
 			boost::archive::binary_iarchive iar(*buff_);
-			iar >> RData_->obj;
+			iar >> RData_->pdata->obj;
 		}
-		void on_read_data_tips(dataPtr& RData_, boost::shared_array<char>& buff_, const boost::system::error_code & err, size_t read_bytes) {
+		void on_read_data_tips(RecvDataPtr& RData_, boost::shared_array<char>& buff_, const boost::system::error_code & err, size_t read_bytes) {
 			if (read_get_err(err)) return;
 			//一定要先建立好map再do_read_head
 			uint32_t pos = 0;
 			for (uint32_t ii = 0; ii < read_bytes; ++ii) {
 				if (buff_[ii] == '\n') {
-					RData_->map_datas.insert(std::pair<std::string, shared_buf>(std::string(&buff_[pos], ii - pos), shared_buf()));
+					RData_->pdata->map_datas.insert(std::pair<std::string, shared_buf>(std::string(&buff_[pos], ii - pos), shared_buf()));
 					pos = ii + 1;
 				}
 			}
 			do_read_head(RData_);
 		}
-		void on_read_data(dataPtr& RData_, boost::shared_array<char>& buff_, const boost::system::error_code & err, size_t read_bytes) {
+		void on_read_data(RecvDataPtr& RData_, boost::shared_array<char>& buff_, const boost::system::error_code & err, size_t read_bytes) {
 			if (read_get_err(err)) return;
 			uint8_t pos = header[3];
-			if (pos > RData_->map_datas.size()) {
+			if (pos > RData_->pdata->map_datas.size()) {
 				YT_DEBUG_PRINTF("read failed : recv an invalid data");
 				err_CallBack(remote_ep);
 				return;
 			}
 			do_read_head(RData_);
-			std::map<std::string, shared_buf>::iterator itr = RData_->map_datas.begin();
+			std::map<std::string, shared_buf>::iterator itr = RData_->pdata->map_datas.begin();
 			for (; pos > 0; --pos) ++itr;
 			itr->second.buf = buff_;
 			itr->second.buf_size = static_cast<uint32_t>(read_bytes);
 		}
-		void on_read_file_tips(dataPtr& RData_, boost::shared_array<char>& buff_, const boost::system::error_code & err, size_t read_bytes) {
+		void on_read_file_tips(RecvDataPtr& RData_, boost::shared_array<char>& buff_, const boost::system::error_code & err, size_t read_bytes) {
 			if (read_get_err(err)) return;
 			//一定要先建立好map再do_read_head
 			uint32_t pos = 0, pos1 = 0;
@@ -244,23 +243,23 @@ namespace ytlib {
 					pos1 = ii + 1;
 				}
 				if (buff_[ii] == '\n') {
-					RData_->map_files.insert(std::pair<std::string, std::string>(
+					RData_->pdata->map_files.insert(std::pair<std::string, std::string>(
 						std::string(&buff_[pos], pos1 - 1 - pos), std::string(&buff_[pos1], ii - pos1)));
 					pos = ii + 1;
 				}
 			}
 			do_read_head(RData_);
 		}
-		void on_read_file(dataPtr& RData_, boost::shared_array<char>& buff_, const boost::system::error_code & err, size_t read_bytes) {
+		void on_read_file(RecvDataPtr& RData_, boost::shared_array<char>& buff_, const boost::system::error_code & err, size_t read_bytes) {
 			if (read_get_err(err)) return;
 			uint8_t pos = header[3];
-			if (pos > RData_->map_files.size()) {
+			if (pos > RData_->pdata->map_files.size()) {
 				YT_DEBUG_PRINTF("read failed : recv an invalid file");
 				err_CallBack(remote_ep);
 				return;
 			}
 			do_read_head(RData_);
-			std::map<std::string, std::string>::iterator itr = RData_->map_files.begin();
+			std::map<std::string, std::string>::iterator itr = RData_->pdata->map_files.begin();
 			for (; pos > 0; --pos) ++itr;
 			std::ofstream f(((*p_RecvPath) / tpath(T_STRING_TO_TSTRING(itr->second))).string<tstring>(), std::ios::out | std::ios::trunc | std::ios::binary);
 			if (f) {
@@ -276,7 +275,7 @@ namespace ytlib {
 		std::function<void(dataPtr &)> m_recv_callback;
 		tpath const *p_RecvPath;//接收文件路径
 
-		QueueBase<dataPtr> m_DataQueue;
+		QueueBase<RecvDataPtr> m_DataQueue;
 		std::thread m_queueThread;
 	};
 
@@ -306,7 +305,11 @@ namespace ytlib {
 		}
 		virtual ~TcpNetAdapter() { BaseClass::stop(); }
 
-		bool Send(const dataPtr & Tdata_, const std::vector<ID_Type>& dst_) {
+		inline bool Send(const dataPtr & Tdata_, const ID_Type& dst ,bool delfiles=false) {
+			return Send(Tdata_, std::vector<ID_Type>{dst}, delfiles);
+		}
+
+		bool Send(const dataPtr & Tdata_, const std::vector<ID_Type>& dst_, bool delfiles = false) {
 			//做一些检查
 			if (BaseClass::stopflag) return false;
 			size_t size = dst_.size();
@@ -368,6 +371,11 @@ namespace ytlib {
 						boost::shared_array<char> file_buf = boost::shared_array<char>(new char[length]);
 						f.read(file_buf.get(), length);
 						f.close();
+						if (delfiles) {
+							boost::system::error_code ec;
+							boost::filesystem::remove(p, ec);
+							if (ec) YT_DEBUG_PRINTF("delete file %s failed: %s\n", file_path.string().c_str(), ec.message().c_str());
+						}
 						buffersPtr->push_back(std::move(boost::asio::const_buffer(&f_head_buff[cur_offerset], HEAD_SIZE)));
 						buffersPtr->push_back(std::move(boost::asio::const_buffer(file_buf.get(), length)));
 						vec_file_buf.push_back(std::move(file_buf));
@@ -437,7 +445,7 @@ namespace ytlib {
 			return m_mapHostInfo;
 		}
 		//设置主机info，有则覆盖，无责添加
-		bool SetHost(ID_Type hostid_, const TcpEp & hostInfo_) {
+		bool SetHost(const ID_Type& hostid_, const TcpEp & hostInfo_) {
 			std::unique_lock<std::shared_mutex> lck(m_hostInfoMutex);
 			m_mapHostInfo[hostid_] = hostInfo_;
 			return true;

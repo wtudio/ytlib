@@ -9,7 +9,7 @@ namespace ytlib
 {
 	bool test_SysInfoTools();
 
-
+	bool test_Serialize();
 }
 
 

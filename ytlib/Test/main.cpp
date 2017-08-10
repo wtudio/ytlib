@@ -28,12 +28,9 @@ int32_t main(int32_t argc, char** argv) {
 	//std::cout << (tocTime_global - ticTime_global).ticks() << "us" << std::endl;
 	
 
-	test_NetLog();
-
-	getchar();
-
+	test_Serialize();
 	test_SysInfoTools();
-
+	test_NetLog();
 	test_TcpNetAdapter();
 	
 
