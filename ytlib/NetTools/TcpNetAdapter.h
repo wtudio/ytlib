@@ -3,6 +3,7 @@
 #include <ytlib/Common/FileSystem.h>
 #include <ytlib/SupportTools/QueueBase.h>
 #include <ytlib/NetTools/TcpConnectionPool.h>
+#include <ytlib/SupportTools/LightSignal.h>
 #include <future>
 #include <memory>
 #include <atomic>
@@ -36,26 +37,6 @@ namespace ytlib {
 	f+i:第i个文件的数据
 	o+v:结束符
 	*/
-
-	class LightSignal {
-	public:
-		LightSignal() :flag(false) {}
-		~LightSignal() {}
-		void notify_one() {
-			std::lock_guard<std::mutex> lck(m_mutex);
-			flag = true;
-			m_cond.notify_one();
-		}
-		void wait() {
-			std::unique_lock<std::mutex> lck(m_mutex);
-			if (flag) return;
-			m_cond.wait(lck);
-		}
-	private:
-		std::mutex m_mutex;
-		std::condition_variable m_cond;
-		bool flag;
-	};
 
 	//T需要能boost序列化
 	template<class T>
@@ -159,10 +140,10 @@ namespace ytlib {
 			if (p->complete_flag) {
 				dataPtr d_ = dataPtr(p);
 				m_recv_callback(d_);//先执行完回调再准备下一个
-				p_s->notify_one();
+				p_s->notify();
 				return;
 			}
-			p_s->notify_one();
+			p_s->notify();
 			delete p;
 		}
 		//读取解析报头，缓存跟着回调走
