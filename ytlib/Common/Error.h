@@ -28,17 +28,17 @@ namespace ytlib
 	};
 	static const char* gErrorMessages[ER_ERROR_COUNT] =
 	{
-		"操作successful.",
-		"未知异常.",
-		"序列化错误.",
-		"反序列化错误.",
-		"文件不存在.",
-		"非法保存.",
-		"非法文件名称.",
-		"非法文件.",
-		"初始化文件失败.",
-		"解析文件失败.",
-		"保存文件失败."
+		"successful.",
+		"unknown error.",
+		"serialize error.",
+		"deserialize error.",
+		"file not exist.",
+		"invalid save.",
+		"invalid file name.",
+		"invalid file.",
+		"initialize file failed.",
+		"parse file failed.",
+		"save file failed."
 	};
 
 	static const char* GetErrorMessage(Error err0) {

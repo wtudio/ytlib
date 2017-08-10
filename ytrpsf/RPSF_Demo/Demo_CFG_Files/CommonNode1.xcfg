@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--普通节点的配置文件-->
+<system id="1001" type="CommonNode" name="CommonNode1" port="61001" />
+<!--配置中心节点信息-->
+<CenterNode id="1000" Ip="127.0.0.1" port="61000" />
+<!--网络日志配置-->
+<log useNetLog="true" Ip="127.0.0.1" port="55555" />
+<!--配置加载的插件-->
+<plugins>
+	<plugin libname="RPSF_DemoPlugin2" enable="true" >
+		<initParas>
+			<para key="key1" value="value1" />
+			<para key="key2" value="value2" />
+		</initParas>
+	</plugin>
+	<plugin libname="RPSF_DemoPlugin3" enable="true" >
+		<initParas>
+			<para key="key1" value="value1" />
+			<para key="key2" value="value2" />
+		</initParas>
+	</plugin>
+</plugins>
+

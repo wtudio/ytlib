@@ -19,7 +19,7 @@ namespace ytlib
 		//文件内容解析后的结构体
 		std::shared_ptr<T> m_fileobj;
 
-		//检查文件名称正确性
+		//检查文件名称正确性。如果子类需要检查文件名则重载此函数
 		virtual bool CheckFileName(const tstring& filename) const {
 			//一般就是检查后缀名
 			/*

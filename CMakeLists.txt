@@ -74,7 +74,13 @@ if(YTLIB_BUILD_TEST)
 endif()
 #ytrpsf：远程插件服务框架
 if(YTLIB_BUILD_RPSF)
-  add_subdirectory( ytrpsf )
+  add_subdirectory( ytrpsf/RPSF_Module/RPSF_CenterNode )
+  add_subdirectory( ytrpsf/RPSF_Module/RPSF_CommonNode )
+  add_subdirectory( ytrpsf/RPSF_Module/RPSF_LogServer )
+
+  add_subdirectory( ytrpsf/RPSF_Demo/RPSF_DemoPlugin1 )
+  add_subdirectory( ytrpsf/RPSF_Demo/RPSF_DemoPlugin2 )
+  add_subdirectory( ytrpsf/RPSF_Demo/RPSF_DemoPlugin3 )
 endif()
 
 #提供给使用者的
