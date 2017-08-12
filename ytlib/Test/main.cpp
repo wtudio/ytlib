@@ -12,7 +12,14 @@
 using namespace std;
 using namespace ytlib;
 
-
+uint64_t tnow;
+void setTime() {
+	tnow = static_cast<uint64_t>(std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()));
+}
+std::string getTime() {
+	std::time_t t_time(static_cast<std::time_t>(tnow));
+	return std::string(std::ctime(&t_time));
+}
 int32_t main(int32_t argc, char** argv) {
 	YT_DEBUG_PRINTF("-------------------start-------------------\n");
 	//tcout输出中文需要设置
@@ -27,6 +34,8 @@ int32_t main(int32_t argc, char** argv) {
 	//tocTime_global = boost::posix_time::microsec_clock::universal_time(); 
 	//std::cout << (tocTime_global - ticTime_global).ticks() << "us" << std::endl;
 	
+	//setTime();
+	//cout << getTime() << endl;
 
 	test_Serialize();
 	test_SysInfoTools();

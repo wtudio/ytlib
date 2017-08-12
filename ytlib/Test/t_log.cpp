@@ -23,7 +23,7 @@ namespace ytlib
 		YT_LOG_WARNING << "warning log test";
 
 		getchar();
-
+		StopNetLog();
 		return true;
 	}
 	

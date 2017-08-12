@@ -373,7 +373,7 @@ namespace ytlib {
 						f.close();
 						if (delfiles) {
 							boost::system::error_code ec;
-							boost::filesystem::remove(p, ec);
+							boost::filesystem::remove(file_path, ec);
 							if (ec) YT_DEBUG_PRINTF("delete file %s failed: %s\n", file_path.string().c_str(), ec.message().c_str());
 						}
 						buffersPtr->push_back(std::move(boost::asio::const_buffer(&f_head_buff[cur_offerset], HEAD_SIZE)));

@@ -138,12 +138,15 @@ namespace ytlib
 			return true;
 		}
 		virtual void stop() {
-			stopflag = true;
-			service.stop();
-			acceptorPtr.reset();
-			std::unique_lock<std::shared_mutex> lck(m_TcpConnectionMutex);
-			m_mapTcpConnection.clear();
-			m_RunThreads.join_all();
+			if (!stopflag) {
+				stopflag = true;
+				service.stop();
+				acceptorPtr.reset();
+				std::unique_lock<std::shared_mutex> lck(m_TcpConnectionMutex);
+				m_mapTcpConnection.clear();
+				lck.unlock();
+				m_RunThreads.join_all();
+			}
 		}
 	};
 

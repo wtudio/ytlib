@@ -34,6 +34,31 @@ namespace ytlib
 	};
 
 	//默认vs
+	static void set_buf_from_num_64bit(char* p, uint64_t n) {
+#ifdef _MSC_VER
+		memcpy(p, &n, 8);
+#else
+		p[0] = char(n % 256); n /= 256;	p[1] = char(n % 256); n /= 256;
+		p[2] = char(n % 256); n /= 256;	p[3] = char(n % 256); n /= 256;
+		p[4] = char(n % 256); n /= 256;	p[5] = char(n % 256); n /= 256;
+		p[6] = char(n % 256); n /= 256;	p[7] = char(n % 256); 
+#endif // _MSC_VER
+	}
+	static uint64_t get_num_from_buf_64bit(char* p) {
+#ifdef _MSC_VER
+		uint64_t n;	memcpy(&n, p, 8); return std::move(n);
+#else
+		return (static_cast<uint8_t>(p[0]) +
+			static_cast<uint8_t>(p[1]) * 256 +
+			static_cast<uint8_t>(p[2]) * 65536 +
+			static_cast<uint8_t>(p[3]) * (256 * 65536) +
+			static_cast<uint8_t>(p[4]) * (65536 * 65536) +
+			static_cast<uint8_t>(p[5]) * (256 * 65536 * 65536) +
+			static_cast<uint8_t>(p[6]) * (65536 * 65536 * 65536) +
+			static_cast<uint8_t>(p[7]) * (256 * 65536 * 65536 * 65536));
+#endif // _MSC_VER
+	}
+
 	static void set_buf_from_num(char* p, uint32_t n) {
 #ifdef _MSC_VER
 		memcpy(p, &n, 4);

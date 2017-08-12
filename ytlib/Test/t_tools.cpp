@@ -1,5 +1,5 @@
 #include "t_tools.h"
-
+#include <ytlib/SupportTools/UUID.h>
 
 namespace ytlib
 {
@@ -19,6 +19,7 @@ namespace ytlib
 		uint32_t a;
 		boost::shared_ptr<test_a> ps;
 		boost::shared_ptr<test_a> ps2;
+		
 	};
 
 

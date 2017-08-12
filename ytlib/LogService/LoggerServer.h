@@ -5,6 +5,7 @@
 #include <sqlite/sqlite3.h>
 #include <boost/shared_array.hpp>
 #include <ytlib/SupportTools/ChannelBase.h>
+#include <boost/date_time/posix_time/posix_time.hpp>  
 
 namespace ytlib {
 	/*
@@ -20,7 +21,7 @@ namespace ytlib {
 	static const char * create_table_sql =
 		"create table if not exists LOG (\
 			id INTEGER not null PRIMARY KEY AUTOINCREMENT,\
-			time TEXT not null,\
+			time INTEGER not null,\
 			level INTEGER not null,\
 			msg TEXT not null\
 		);";
@@ -68,26 +69,36 @@ namespace ytlib {
 		}
 		void on_read_log(boost::shared_array<char>& buff_, const boost::system::error_code & err, size_t read_bytes) {
 			if (read_get_err(err)) return;
-			do_read_head();
 			m_logQueue.Enqueue(shared_buf(buff_, static_cast<uint32_t>(read_bytes)));
+			do_read_head();
 		}
-		//解析存储日志。格式应该为：4byte客户端id+1byte日志等级+14byte时间信息+n byte日志信息
 		//此方法里还需判断格式是否正确
 		void logHandel() {
 			sqlite3 *db;
 			while (!stopflag) {
 				shared_buf buff_;
 				if (m_logQueue.BlockDequeue(buff_)) {
-					if (buff_.buf_size < 20) return;
+					if (buff_.buf_size < 10) return;
+					//日志等级
+					uint8_t lglvl = static_cast<uint8_t>(buff_.buf[0]);
+
+					//提取该条日志的时间
+					uint64_t logTime = get_num_from_buf_64bit(&(buff_.buf[1]));
+					boost::posix_time::ptime pt;
+					memcpy(&pt, &logTime, 8);
+
+					uint32_t msgpos(9);
+
 					//检查是否是此连接第一条日志
 					if (m_bFirstLogFlag) {
+						if (buff_.buf_size < 14) return;
 						//建立文件夹
-						uint32_t clientID = get_num_from_buf(buff_.buf.get());
+						uint32_t clientID = get_num_from_buf(&buff_.buf[9]);
 						std::string dbname(std::to_string(clientID) + '(' + sock.remote_endpoint().address().to_string() + ')');
 						tpath curLogPath = (*plogPath) / dbname;
 						boost::filesystem::create_directories(curLogPath);
-						//提取该条日志的时间：20170809114750 14字节
-						dbname = dbname + '_' + std::string(&(buff_.buf[5]), 14) + ".db";
+						
+						dbname = dbname + '_' + boost::posix_time::to_iso_string(pt) + ".db";
 						//新建数据库
 						uint32_t rc;
 						rc = sqlite3_open((curLogPath / dbname).string().c_str(), &db);
@@ -103,16 +114,17 @@ namespace ytlib {
 							sqlite3_free(zErr);
 							return;
 						}
+						msgpos += 4;
 						m_bFirstLogFlag = false;
 					}
-					//解析日志
-					uint8_t lglvl = static_cast<uint8_t>(buff_.buf[4]);
+
+					
 					//将日志存入数据库。日志
 					sqlite3_stmt *stmt;
 					sqlite3_prepare_v2(db, insert_log_sql, insert_log_sql_size, &stmt, NULL);
-					sqlite3_bind_text(stmt, 1, &(buff_.buf[5]), 14, SQLITE_STATIC);
+					sqlite3_bind_int64(stmt, 1, logTime);
 					sqlite3_bind_int(stmt, 2, lglvl);
-					sqlite3_bind_text(stmt, 3, &(buff_.buf[19]), buff_.buf_size - 19, SQLITE_STATIC);
+					sqlite3_bind_text(stmt, 3, &(buff_.buf[msgpos]), buff_.buf_size - msgpos, SQLITE_STATIC);
 
 					sqlite3_step(stmt);
 					sqlite3_finalize(stmt);
