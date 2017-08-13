@@ -31,6 +31,15 @@ namespace ytlib
 		shared_buf(uint32_t buf_size_) : buf_size(buf_size_) {
 			buf = boost::shared_array<char>(new char[buf_size]);
 		}
+		shared_buf getCopy() {
+			shared_buf tmp;
+			if (buf_size > 0) {
+				tmp.buf_size = buf_size;
+				tmp.buf = boost::shared_array<char>(new char[buf_size]);
+				memcpy(tmp.buf.get(), buf.get(), buf_size);
+			}
+			return std::move(tmp);
+		}
 	};
 
 	//默认vs

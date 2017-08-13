@@ -31,6 +31,7 @@ namespace ytlib {
 	-----------------------------------------------------
 	tag: 2 byte
 	c+0:对象
+	q+0:快速内容
 	d+255:所有数据的tip，以\n分割
 	d+i:第i个数据
 	f+255:所有文件的tip+文件名（只有文件名，没有路径），格式：tip1=filename1\ntip2=filename2\n...
@@ -43,9 +44,15 @@ namespace ytlib {
 	class DataPackage {
 	public:
 		T obj;//可序列化的类
+		shared_buf quick_data;//快速内容
 		//tip-data形式
 		std::map<std::string, shared_buf> map_datas;//数据,最大支持255个
 		std::map<std::string, std::string> map_files;//文件,最大支持255个
+
+		//提高效率？
+		std::shared_mutex m_sysMutex;
+		std::shared_mutex m_datasMutex;
+		std::shared_mutex m_filesMutex;
 	};
 
 	//子类：sock连接，为网络适配器定制准备，只能主动发起同步写，读取是异步自动的
@@ -62,6 +69,7 @@ namespace ytlib {
 	public:
 		enum {
 			CLASSHEAD = 'C',
+			QUICKHEAD = 'Q',
 			DATAHEAD = 'D',
 			FILEHEAD = 'F'
 		};
@@ -165,6 +173,11 @@ namespace ytlib {
 					}
 				}
 				else {
+					if (header[2] == QUICKHEAD) {
+						boost::shared_array<char> pDataBuff = boost::shared_array<char>(new char[pack_size]);
+
+						return;
+					}
 					if (header[2] == FILEHEAD) {
 						boost::shared_array<char> pDataBuff = boost::shared_array<char>(new char[pack_size]);
 						if (header[3] == static_cast<char>(uint8_t(255))) {
@@ -207,6 +220,12 @@ namespace ytlib {
 			do_read_head(RData_);
 			boost::archive::binary_iarchive iar(*buff_);
 			iar >> RData_->pdata->obj;
+		}
+		void on_read_quick_data(RecvDataPtr& RData_, boost::shared_array<char>& buff_, const boost::system::error_code & err, size_t read_bytes){
+			if (read_get_err(err)) return;
+			do_read_head(RData_);
+			RData_->pdata->quick_data.buf = buff_;
+			RData_->pdata->quick_data.buf_size = read_bytes;
 		}
 		void on_read_data_tips(RecvDataPtr& RData_, boost::shared_array<char>& buff_, const boost::system::error_code & err, size_t read_bytes) {
 			if (read_get_err(err)) return;
@@ -337,7 +356,15 @@ namespace ytlib {
 			buffersPtr->push_back(std::move(boost::asio::const_buffer(c_head_buff, HEAD_SIZE)));
 			buffersPtr->push_back(std::move(objbuff.data()));
 			
-			//第2步，发送文件,先发送文件名信息
+			//第二步，发送快速数据
+			char q_head_buff[HEAD_SIZE]{ TcpConnection<T>::TCPHEAD1 ,TcpConnection<T>::TCPHEAD2,TcpConnection<T>::QUICKHEAD,0 };
+			if (Tdata_->quick_data.buf_size > 0) {
+				set_buf_from_num(&c_head_buff[4], Tdata_->quick_data.buf_size);
+				buffersPtr->push_back(std::move(boost::asio::const_buffer(q_head_buff, HEAD_SIZE)));
+				buffersPtr->push_back(std::move(boost::asio::const_buffer(Tdata_->quick_data.buf.get(), Tdata_->quick_data.buf_size)));
+			}
+
+			//第三步，发送文件,先发送文件名信息
 			std::map<std::string, std::string>& map_files = Tdata_->map_files;
 			std::string file_tips;
 			char f0_head_buff[HEAD_SIZE]{ TcpConnection<T>::TCPHEAD1 ,TcpConnection<T>::TCPHEAD2,TcpConnection<T>::FILEHEAD,static_cast<char>(uint8_t(255)) };
@@ -384,7 +411,7 @@ namespace ytlib {
 				}
 			}
 
-			//第3步，发送数据,先发送tips数据包
+			//第四步，发送数据,先发送tips数据包
 			std::map<std::string, shared_buf>& map_datas = Tdata_->map_datas;
 			//缓冲区不能放在内层scope里
 			std::string data_tips;
@@ -414,7 +441,7 @@ namespace ytlib {
 				}
 			}
 
-			//第四步：发送结束符
+			//第五步：发送结束符
 			char end_head_buff[HEAD_SIZE]{ TcpConnection<T>::TCPHEAD1 ,TcpConnection<T>::TCPHEAD2,TcpConnection<T>::TCPEND1,TcpConnection<T>::TCPEND2 };
 			buffersPtr->push_back(std::move(boost::asio::const_buffer(end_head_buff, HEAD_SIZE)));
 

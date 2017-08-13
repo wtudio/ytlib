@@ -12,20 +12,38 @@
 using namespace std;
 using namespace ytlib;
 
-uint64_t tnow;
-void setTime() {
-	tnow = static_cast<uint64_t>(std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()));
-}
-std::string getTime() {
-	std::time_t t_time(static_cast<std::time_t>(tnow));
-	return std::string(std::ctime(&t_time));
-}
+class c1 {
+public:
+	c1() {
+		YT_DEBUG_PRINTF("create\n");
+	}
+	~c1() {
+		YT_DEBUG_PRINTF("delete\n");
+	}
+};
+class c2 {
+public:
+	c2() {
+		p = std::shared_ptr<c1>(new c1());
+	}
+private:
+	std::shared_ptr<void> p;
+};
+
+
 int32_t main(int32_t argc, char** argv) {
 	YT_DEBUG_PRINTF("-------------------start-------------------\n");
 	//tcout输出中文需要设置
 	//建议：最好不要在程序中使用中文！！！
 	//std::locale::global(std::locale(""));
 	//wcout.imbue(locale(""));
+
+	if (1) {
+		c2 tmp1;
+		YT_DEBUG_PRINTF("fff\n");
+	}
+	
+
 
 
 	//boost::posix_time::ptime ticTime_global, tocTime_global;
