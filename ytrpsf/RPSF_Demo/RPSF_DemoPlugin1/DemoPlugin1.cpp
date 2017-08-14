@@ -18,12 +18,9 @@ namespace {
 		void OnData(const rpsf::rpsfData& data_) {
 
 		}
-		void OnEvent(const rpsf::rpsfEvent& event_) {
-
-		}
-		rpsf::rpsfResult Invoke(const rpsf::rpsfCallArgs& callArgs_) {
-			rpsf::rpsfResult result_;
-			if (callArgs_.getFunName() == "testRPC") {
+		rpsf::rpsfRpcResult Invoke(const rpsf::rpsfRpcArgs& callArgs_) {
+			rpsf::rpsfRpcResult result_;
+			if (callArgs_.m_fun == "testRPC") {
 				//将参数解包，调用真正的处理函数并将结果打包返回
 				para2 p_;
 				callArgs_.getData("buf", p_.buf_, p_.buf_size_);

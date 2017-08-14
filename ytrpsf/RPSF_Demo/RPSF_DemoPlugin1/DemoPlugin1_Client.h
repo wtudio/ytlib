@@ -1,5 +1,5 @@
 #pragma once
-#include <ytrpsf/RPSF_Interface/IPlugin.h>
+#include <ytrpsf/RPSF_Interface/Plugin_Bus_Interface.h>
 #include <iostream>
 //提供给RPC调用方的
 
@@ -8,6 +8,7 @@ public:
 	para2(){}
 	boost::shared_array<char> buf_;
 	uint32_t buf_size_;
+	std::string data1;
 	std::string file1;
 };
 
@@ -25,7 +26,7 @@ public:
 
 	//需要和处理处的程序一致
 	bool testRPC(const para2& p_, result1& r_) {
-		rpsf::rpsfCallArgs callargs(service, "testRPC");
+		rpsf::rpsfRpcArgs callargs(service, "testRPC");
 		callargs.addData("buf", p_.buf_, p_.buf_size_);
 		callargs.addFile("f", p_.file1);
 		rpsf::rpsfResult re = m_pBus->Invoke(callargs);

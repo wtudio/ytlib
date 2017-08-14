@@ -4,21 +4,16 @@
 #include <boost/shared_array.hpp>
 
 namespace rpsf {
-	//本文件提供bus的接口
-	enum handleType {
+	//本文件提供bus的接口和一些数据包的定义
+	enum HandleType {
 		RPSF_ORDER,
 		RPSF_UNORDER,
 		RPSF_EMCY
 	};
-	/*数据包基类。注意：
-	1、拷贝此类的对象需要使用getCopy函数。否则只是增加对相同的数据的引用
-	2、自带读写锁，线程安全
-	3、在调用ibus接口将这些数据送入总线后（如发布事件、数据、RPC调用）将导致一段时间的读锁lock，在此期间的写操作将导致阻塞
-	*/
+
 	class rpsfPackage {
 	public:
 		rpsfPackage();
-		rpsfPackage getCopy() const;
 
 		void addData(const std::string& dataTag, const boost::shared_array<char>& buf_, uint32_t buf_size_);
 		void addData(const std::string& dataTag, const char* buf_, uint32_t buf_size_);
@@ -38,10 +33,10 @@ namespace rpsf {
 		void setIfDelFiles(bool delfiles_);
 		bool getIfDelFiles() const;
 
-		void setHandleType(handleType type_);
-		handleType getHandleType() const;
+		void setHandleType(HandleType type_);
+		HandleType getHandleType() const;
 	protected:
-		std::shared_ptr<void> p;
+		std::map<std::string,>
 	};
 
 	//数据包，用来发送数据
