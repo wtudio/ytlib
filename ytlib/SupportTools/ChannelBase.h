@@ -13,12 +13,11 @@ namespace ytlib {
 	class ChannelBase {
 	public:
 		//单处理线程的通道适用于顺序数据处理，多处理线程的通道适用于并行处理
-		ChannelBase(std::function<void(T&)> f_, size_t thCount_ = 1, size_t queueSize_ = 1000) :
+		ChannelBase(std::function<void(T&)> f_, uint32_t thCount_ = 1, uint32_t queueSize_ = 1000) :
 			m_processFun(f_),
-			m_threadCount(thCount_), 
 			m_bRunning(true),
 			m_queue(queueSize_) {
-			for (size_t ii = 0; ii < m_threadCount; ++ii) {
+			for (uint32_t ii = 0; ii < thCount_; ++ii) {
 				m_Threads.create_thread(std::bind(&ChannelBase::Run, this));
 			}
 		}
@@ -54,7 +53,6 @@ namespace ytlib {
 		boost::thread_group m_Threads;
 		_Queue m_queue;
 		std::function<void(T&)> m_processFun;//处理内容函数。参数推荐使用（智能）指针
-		const size_t m_threadCount;
 		
 	};
 

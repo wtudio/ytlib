@@ -477,6 +477,9 @@ namespace ytlib {
 			m_mapHostInfo[hostid_] = hostInfo_;
 			return true;
 		}
+		inline bool SetHost(const ID_Type& hostid_, const std::string& ip_, uint16_t port_) {
+			return SetHost(hostid_, TcpEp(boost::asio::ip::address::from_string(ip_), port_));
+		}
 		bool SetHost(const std::map<ID_Type, TcpEp>& hosts_) {
 			std::unique_lock<std::shared_mutex> lck(m_hostInfoMutex);
 			for (typename std::map<ID_Type, TcpEp>::iterator itr = hosts_.begin(); itr != hosts_.end(); ++itr) {
@@ -484,7 +487,13 @@ namespace ytlib {
 			}
 			return true;
 		}
-
+		bool SetHost(const std::map<ID_Type, std::pair<std::string, uint16_t> >& hosts_) {
+			std::unique_lock<std::shared_mutex> lck(m_hostInfoMutex);
+			for (typename std::map<ID_Type, TcpEp>::iterator itr = hosts_.begin(); itr != hosts_.end(); ++itr) {
+				m_mapHostInfo[itr->first] = std::move(TcpEp(boost::asio::ip::address::from_string(itr->second.first), itr->second.second));
+			}
+			return true;
+		}
 	private:
 
 		TcpConnectionPtr getNewTcpConnectionPtr() {

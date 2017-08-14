@@ -60,12 +60,13 @@ namespace ytlib
 		<setting key="key3" value="value3" />
 	</Settings>
 	*/
-	static bool readSettings(const tptree& pt, std::map<tstring, tstring>& inputmap_) {
+	template<class string_type = ytlib::tstring>
+	static bool readSettings(const tptree& pt, std::map<string_type, string_type>& inputmap_) {
 		try {
 			boost::optional<const tptree&> ptSettings = pt.get_child_optional(T_TEXT("Settings"));
 			if (ptSettings) {
 				for (tptree::const_iterator itrptsetting = ptSettings->begin(); itrptsetting != ptSettings->end(); ++itrptsetting) {
-					inputmap_[itrptsetting->second.get<tstring>(T_TEXT("<xmlattr>.key"))] = itrptsetting->second.get<tstring>(T_TEXT("<xmlattr>.value"));
+					inputmap_[itrptsetting->second.get<string_type>(T_TEXT("<xmlattr>.key"))] = itrptsetting->second.get<string_type>(T_TEXT("<xmlattr>.value"));
 				}
 			}
 		}
@@ -76,11 +77,12 @@ namespace ytlib
 		return true;
 	}
 	//添加settings节点
-	static bool writeSettings(const std::map<tstring, tstring>& inputmap_, tptree& pt ) {
+	template<class string_type = ytlib::tstring>
+	static bool writeSettings(const std::map<string_type, string_type>& inputmap_, tptree& pt ) {
 		try {
 			if (inputmap_.size() == 0) return true;
 			tptree ptSettings;
-			for (std::map<tstring, tstring>::const_iterator itr = inputmap_.begin(); itr != inputmap_.end(); ++itr) {
+			for (std::map<string_type, string_type>::const_iterator itr = inputmap_.begin(); itr != inputmap_.end(); ++itr) {
 				tptree ptsetting;
 				ptsetting.put(T_TEXT("<xmlattr>.key"), itr->first);
 				ptsetting.put(T_TEXT("<xmlattr>.value"), itr->second);

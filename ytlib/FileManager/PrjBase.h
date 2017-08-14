@@ -102,9 +102,9 @@ namespace ytlib
 		}
 	protected:
 		const tstring m_version;
-		virtual std::shared_ptr<PrjObj> GetFileObjPtr() const{
+		/*virtual std::shared_ptr<PrjObj> GetFileObjPtr() const{
 			return FileBase::GetFileObjPtr();
-		}
+		}*/
 		virtual bool CheckFileName(const tstring& filename) const {
 			tstring Suffix1 = T_TEXT("xml");
 			tstring Suffix2 = T_TEXT("prj");
@@ -162,7 +162,7 @@ namespace ytlib
 						ItemInfo tmpiteminfo;
 						tmpiteminfo.type = Itempt.get<tstring>(T_TEXT("<xmlattr>.type"));
 						if (!readSettings(Itempt, tmpiteminfo.settings)) return false;
-						m_fileobj->m_PrjItems[itemname] = tmpiteminfo;
+						m_fileobj->m_PrjItems[itemname] = std::move(tmpiteminfo);
 					}
 				}
 			}
