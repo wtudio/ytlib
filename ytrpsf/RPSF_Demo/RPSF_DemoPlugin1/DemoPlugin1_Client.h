@@ -28,17 +28,19 @@ public:
 	bool testRPC(const para2& p_, result1& r_) {
 		rpsf::rpsfRpcArgs callargs(service, "testRPC");
 		callargs.addData("buf", p_.buf_, p_.buf_size_);
-		callargs.addFile("f", p_.file1);
-		rpsf::rpsfResult re = m_pBus->Invoke(callargs);
-		if (!re) {
-			std::cout << re.getErrorInfo() << std::endl;
+		callargs.m_mapFiles["f"] = p_.file1;
+		rpsf::rpsfRpcResult re = m_pBus->Invoke(callargs);
+		if (re.m_rpcErr) {
+			std::cout << m_pBus->getBusErrMsg(re.m_rpcErr) << std::endl;
+			if (!re.m_errMsg.empty()) std::cout << re.m_errMsg << std::endl;
 			return false;
 		}
-		boost::shared_array<char> buf_; 
-		uint32_t buf_size_;
-		re.getData("msg", buf_, buf_size_);
-		r_.remsg = std::move(std::string(buf_.get(),buf_size_));
-		re.getFile("f", r_.refile);
+		std::map<std::string, std::pair<boost::shared_array<char>, uint32_t>>::iterator itr = re.m_mapDatas.find("msg");
+		if (itr == re.m_mapDatas.end()) return false;
+		r_.remsg= std::move(std::string(itr->second.first.get(), itr->second.second));
+		std::map<std::string, std::string>::iterator itrf = re.m_mapFiles.find("f");
+		if (itrf == re.m_mapFiles.end()) return false;
+		r_.refile = itrf->second;
 		return true;
 	}
 

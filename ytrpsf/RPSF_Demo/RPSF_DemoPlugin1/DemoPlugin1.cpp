@@ -15,7 +15,7 @@ namespace {
 		void Stop(void) {
 
 		}
-		void OnData(const rpsf::rpsfData& data_) {
+		void OnData(const rpsf::rpsfData& data_, const std::string& dataTime_) {
 
 		}
 		rpsf::rpsfRpcResult Invoke(const rpsf::rpsfRpcArgs& callArgs_) {
@@ -23,13 +23,23 @@ namespace {
 			if (callArgs_.m_fun == "testRPC") {
 				//将参数解包，调用真正的处理函数并将结果打包返回
 				para2 p_;
-				callArgs_.getData("buf", p_.buf_, p_.buf_size_);
-				callArgs_.getFile("f", p_.file1);
+				std::map<std::string, std::pair<boost::shared_array<char>, uint32_t>>::const_iterator itr = callArgs_.m_mapDatas.find("buf");
+				if (itr == callArgs_.m_mapDatas.end()) {
+					result_.m_errMsg = "err args";
+					return result_;
+				}
+				p_.buf_ = itr->second.first;
+				p_.buf_size_ = itr->second.second;
+				std::map<std::string, std::string>::const_iterator itrf = callArgs_.m_mapFiles.find("f");
+				if (itrf == callArgs_.m_mapFiles.end()) {
+					result_.m_errMsg = "err args";
+					return result_;
+				}
+				p_.file1 = itrf->second;
 				result1 r_;
 				testRPC(p_, r_);
-				
 				result_.addData("msg", r_.remsg);
-				result_.addFile("f", r_.refile);
+				result_.m_mapFiles["f"] = r_.refile;
 			}
 			return result_;
 		}
