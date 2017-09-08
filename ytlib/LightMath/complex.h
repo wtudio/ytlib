@@ -115,9 +115,10 @@ namespace ytlib
 
 		friend std::ostream &operator<<(std::ostream& output, const Complex &rhs) {
 			output << rhs.real;
-			std::stringstream ss;
-			ss << rhs.imag;
-			std::string tmp(ss.str());
+			//std::stringstream ss;
+			//ss << rhs.imag;
+			//std::string tmp(ss.str());
+			std::string tmp(std::to_string(rhs.imag));
 			if (tmp[0] != '-') {
 				output << "+";
 			}

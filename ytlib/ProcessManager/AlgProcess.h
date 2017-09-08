@@ -6,10 +6,22 @@
 
 namespace ytlib
 {
-	enum AlgRunType
-	{
+	enum AlgRunType	{
 		ALG_SYNC,
 		ALG_ASYNC
+	};
+
+	enum AlgState {
+		ALGSTATE_SUCCESS=0,
+		ALGSTATE_STOP,
+		ALGSTATE_INPUT_FILE_ERR,
+		ALGSTATE_COUNT
+	};
+
+	const static ytlib::tstring AlgStateMsg[ALGSTATE_COUNT] = {
+		T_TEXT("成功."),
+		T_TEXT("算法已被强制停止."),
+		T_TEXT("输入文件错误.")
 	};
 
 	//进度回调
@@ -65,7 +77,10 @@ namespace ytlib
 		inline int32_t getCurState() {
 			return m_state;
 		}
-
+		virtual ytlib::tstring getStateMsg() {
+			if (m_state >= AlgState::ALGSTATE_COUNT) return T_TEXT("未知错误");
+			return AlgStateMsg[m_state];
+		}
 		inline void registerScheCallback(ScheCallback f) {
 			fScheCallback = f;
 		}
@@ -83,7 +98,7 @@ namespace ytlib
 
 	protected:
 		//暂时不提供暂停功能
-		bool pause(){}
+		bool pause() { return true; }
 
 		void defScheCallback(int32_t s) {
 			tostringstream ss;
