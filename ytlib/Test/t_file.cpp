@@ -7,7 +7,7 @@ namespace ytlib
 
 		KeyValueFile f1;
 		f1.NewFile(T_TEXT("t_file/testfile3.txt"));
-		std::shared_ptr<std::map<std::string, std::string> > o1 = f1.GetFileObjPtr();
+		std::shared_ptr<std::map<std::string, std::string> > o1 = f1.m_fileobj;
 		(*o1)["aaa"] = "bbb";
 		(*o1)["ccc"] = "ddd";
 		(*o1)["测试1"] = "测试2";
@@ -16,7 +16,7 @@ namespace ytlib
 
 		KeyValueFile f2;
 		f2.OpenFile(T_TEXT("t_file/testfile3.txt"));
-		std::shared_ptr<std::map<std::string, std::string> > o2 = f2.GetFileObjPtr();
+		std::shared_ptr<std::map<std::string, std::string> > o2 = f2.m_fileobj;
 		
 		for (std::map<std::string, std::string>::const_iterator itr = o2->begin();
 		itr != o2->end(); ++itr) {
@@ -42,7 +42,7 @@ namespace ytlib
 	bool test_SerializeFile() {
 		SFTestFile f1;
 		f1.NewFile(T_TEXT("t_file/testfile.txt"));
-		std::shared_ptr<SFTestObj> o = f1.GetFileObjPtr();
+		std::shared_ptr<SFTestObj> o = f1.m_fileobj;
 		o->s1 = "sssadafasf";
 		o->s2 = "测试";
 		o->i1 = 1067;

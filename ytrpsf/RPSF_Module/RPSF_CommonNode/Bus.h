@@ -37,7 +37,7 @@ namespace rpsf {
 				std::cout << e.what() << std::endl;
 				return false;
 			}
-			RpsfNode& thisnode = *(cfgfile.GetFileObjPtr().get());
+			RpsfNode& thisnode = *(cfgfile.m_fileobj.get());
 			if (thisnode.NodeType != thisNodeType) {
 				tcout << T_TEXT("error : node type mismatch! please check the cfg file and exe type.") << std::endl;
 				return false;

@@ -12,14 +12,15 @@ namespace ytlib
 	};
 
 	enum AlgState {
-		ALGSTATE_SUCCESS=0,
+		ALGSTATE_RUNNING =0,
+		ALGSTATE_SUCCESS =0,
 		ALGSTATE_STOP,
 		ALGSTATE_INPUT_FILE_ERR,
 		ALGSTATE_COUNT
 	};
 
 	const static ytlib::tstring AlgStateMsg[ALGSTATE_COUNT] = {
-		T_TEXT("成功."),
+		T_TEXT("运行正常."),
 		T_TEXT("算法已被强制停止."),
 		T_TEXT("输入文件错误.")
 	};
@@ -30,7 +31,7 @@ namespace ytlib
 	class AlgProcess : public ProcessBase
 	{
 	public:
-		AlgProcess() :ProcessBase(), m_state(0){
+		AlgProcess() :ProcessBase(), m_state(0), m_scheRange(10000){
 			registerScheCallback(std::bind(&AlgProcess::defScheCallback, this, std::placeholders::_1));
 		}
 		virtual ~AlgProcess() {
@@ -96,6 +97,10 @@ namespace ytlib
 			return m_mapFiles;
 		}
 
+		inline uint32_t getScheRange() const {
+			return m_scheRange;
+		}
+
 	protected:
 		//暂时不提供暂停功能
 		bool pause() { return true; }
@@ -106,9 +111,9 @@ namespace ytlib
 			fLogCallback(ss.str());
 		}
 		ScheCallback fScheCallback;
-
+		uint32_t m_scheRange;//进度值上限。超过进度值意味着算法没有正常结束
 		//状态值
-		int32_t m_state;
+		uint32_t m_state;
 		//所需文件：名称+目录
 		std::map<tstring, tstring> m_mapFiles;//输入的参数文件路径和输出文件路径一块
 		//线程
@@ -122,8 +127,8 @@ namespace ytlib
 		//返回值会被getCurState函数返回给上层调用者
 		virtual void mainAlg() {
 			fLogCallback(T_TEXT("测试."));
-			int32_t ii = 0;
-			while (is_running&&(ii++<100)) {
+			uint32_t ii = 0;
+			while (is_running&&(ii++<m_scheRange)) {
 				fScheCallback(ii);
 				boost::this_thread::sleep(boost::posix_time::millisec(10));//等待
 			}

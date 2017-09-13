@@ -102,8 +102,8 @@ namespace ytlib
 		}
 	protected:
 		const tstring m_version;
-		/*virtual std::shared_ptr<PrjObj> GetFileObjPtr() const{
-			return FileBase::GetFileObjPtr();
+		/*virtual std::shared_ptr<PrjObj> m_fileobj const{
+			return FileBase::m_fileobj;
 		}*/
 		virtual bool CheckFileName(const tstring& filename) const {
 			tstring Suffix1 = T_TEXT("xml");

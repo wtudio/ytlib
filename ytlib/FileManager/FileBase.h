@@ -16,8 +16,7 @@ namespace ytlib
 		tstring m_filepath;
 		bool m_bInitialized;
 
-		//文件内容解析后的结构体
-		std::shared_ptr<T> m_fileobj;
+		
 
 		//检查文件名称正确性。如果子类需要检查文件名则重载此函数
 		virtual bool CheckFileName(const tstring& filename) const {
@@ -43,9 +42,8 @@ namespace ytlib
 		FileBase(): m_bInitialized(false), m_fileobj(std::shared_ptr<T>(new T())){}
 		virtual ~FileBase() {}
 
-		inline std::shared_ptr<T> GetFileObjPtr() const{
-			return m_fileobj;
-		}
+		//文件内容解析后的结构体。提供直接访问
+		std::shared_ptr<T> m_fileobj;
 
 		//子类在open成功后解析文件获得结构体，最终成功才返回success
 		void OpenFile(const tstring& path) {

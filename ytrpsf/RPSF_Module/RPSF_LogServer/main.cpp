@@ -32,7 +32,7 @@ int32_t main(int32_t argc, char** argv) {
 	}
 
 	//开启日志服务器
-	std::shared_ptr<std::map<std::string, std::string> > pcfgmap = LogServerCfg.GetFileObjPtr();
+	std::shared_ptr<std::map<std::string, std::string> > pcfgmap = LogServerCfg.m_fileobj;
 	std::map<std::string, std::string>::const_iterator itr = pcfgmap->find("port");
 	if (itr == pcfgmap->end()) {
 		tcout << T_TEXT("invalid cfg file") << std::endl;
