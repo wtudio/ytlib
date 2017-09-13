@@ -13,18 +13,16 @@ mark_as_advanced(YTLIB_BUILD_RPSF)
 
 #依赖库
 find_package( Boost )
-
 IF ( NOT Boost_FOUND)
 	message(FATAL_ERROR "Cannot find Boost library. please set the boost path")
 	mark_as_advanced( Boost_INCLUDE_DIRS Boost_LIBRARY_DIRS )
 ENDIF()
-
 include_directories( ${Boost_INCLUDE_DIRS} )
 link_directories( ${Boost_LIBRARY_DIRS} )
 	
 	
 #设置cmake目录（让cmake能够找到自定义cmake函数。如findpackage等）
-list( APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/ytlib/CMake )
+list( APPEND CMAKE_MODULE_PATH ${ytlib_SOURCE_DIR}/CMake )
 
 # 设置输出路径
 if( NOT LIBRARY_OUTPUT_PATH )
@@ -83,7 +81,10 @@ if(YTLIB_BUILD_RPSF)
   add_subdirectory( ytrpsf/RPSF_Demo/RPSF_DemoPlugin3 )
 endif()
 
-#提供给使用者的
+
 
 #配置文件config.in
+#提供给使用者的
+
+configure_file( ${ytlib_SOURCE_DIR}/CMake/UseYTLIB.cmake.in  ${ytlib_BINARY_DIR}/UseYTLIB.cmake @ONLY )
 
