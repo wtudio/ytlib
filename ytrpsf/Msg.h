@@ -1,7 +1,7 @@
 #pragma once
 #include <ytlib/NetTools/TcpNetAdapter.h>
 #include <boost/date_time/posix_time/posix_time.hpp>  
-#include <ytrpsf/RPSF_Interface/Plugin_Bus_Interface.h>
+#include <ytrpsf/Plugin_Bus_Interface.h>
 
 namespace rpsf {
 

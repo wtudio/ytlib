@@ -45,7 +45,6 @@ namespace rpsf {
 		}
 
 
-
 		//数据容器
 		std::map<std::string, std::pair<boost::shared_array<char>, uint32_t> > m_mapDatas;
 		//文件容器
@@ -63,8 +62,6 @@ namespace rpsf {
 		}
 		std::string m_dataName;//数据名称
 		std::string m_sender;//数据发送者
-
-		
 	};
 
 	class rpsfRpcArgs : public rpsfPackage {
@@ -91,9 +88,6 @@ namespace rpsf {
 		//订阅、取消订阅数据、事件
 		virtual BusErr SubscribeData(const std::string& pluginName_, const std::set<std::string>& dataNames_) = 0;
 		virtual BusErr UnsubscribeData(const std::string& pluginName_, const std::set<std::string>& dataName_) = 0;
-		virtual BusErr SubscribeEvent(const std::string& pluginName_, const std::set<std::string>& eventName_) = 0;
-		virtual BusErr UnsubscribeEvent(const std::string& pluginName_, const std::set<std::string>& eventName_) = 0;
-
 
 		virtual rpsfRpcResult Invoke(const rpsfRpcArgs& callArgs_, uint32_t timeout = 0) = 0;//RPC接口。timeout：等待时间，0表示永远等待
 		virtual BusErr PublishData(const rpsfData& data_) = 0;//发布数据
@@ -116,7 +110,7 @@ namespace rpsf {
 
 		const std::string name;
 		const std::set<std::string> funs;
-	private:
+	protected:
 		const IBus* pBus;
 	};
 

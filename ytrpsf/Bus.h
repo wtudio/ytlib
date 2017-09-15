@@ -1,8 +1,7 @@
 #pragma once
-#include <ytrpsf/RPSF_Interface/Client_Bus_Interface.h>
-#include <ytrpsf/RPSF_Module/RPSF_CommonNode/RpsfCfgFile.h>
-
-#include <ytrpsf/RPSF_Module/RPSF_CommonNode/Msg.h>
+#include <ytrpsf/Client_Bus_Interface.h>
+#include <ytrpsf/RpsfCfgFile.h>
+#include <ytrpsf/Msg.h>
 #include <ytlib/LogService/Logger.h>
 #include <ytlib/SupportTools/ChannelBase.h>
 

@@ -1,7 +1,7 @@
 project( RPSF_CenterNode )
 #中心节点
 
-File(GLOB SRC_Files *.cpp *.h )
+File(GLOB SRC_Files *.cpp *.h ${ytlib_SOURCE_DIR}/ytrpsf/*.h )
 
 
 add_executable( RPSF_CenterNode ${SRC_Files} )

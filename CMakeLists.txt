@@ -8,8 +8,8 @@ project( ytlib )#工程名称
 option(YTLIB_BUILD_TEST "build tset project" ON)
 mark_as_advanced(YTLIB_BUILD_TEST)
 
-option(YTLIB_BUILD_RPSF "build remote plugin service framework project" ON)
-mark_as_advanced(YTLIB_BUILD_RPSF)
+option(YTLIB_BUILD_RPSF_DEMO "build remote plugin service framework project" ON)
+mark_as_advanced(YTLIB_BUILD_RPSF_DEMO)
 
 #依赖库
 find_package( Boost )
@@ -71,10 +71,10 @@ if(YTLIB_BUILD_TEST)
   add_subdirectory( ytlib/Test )
 endif()
 #ytrpsf：远程插件服务框架
-if(YTLIB_BUILD_RPSF)
-  add_subdirectory( ytrpsf/RPSF_Module/RPSF_CenterNode )
-  add_subdirectory( ytrpsf/RPSF_Module/RPSF_CommonNode )
-  add_subdirectory( ytrpsf/RPSF_Module/RPSF_LogServer )
+if(YTLIB_BUILD_RPSF_DEMO)
+  add_subdirectory( ytrpsf/RPSF_Demo/RPSF_CenterNode )
+  add_subdirectory( ytrpsf/RPSF_Demo/RPSF_CommonNode )
+  add_subdirectory( ytrpsf/RPSF_Demo/RPSF_LogServer )
 
   add_subdirectory( ytrpsf/RPSF_Demo/RPSF_DemoPlugin1 )
   add_subdirectory( ytrpsf/RPSF_Demo/RPSF_DemoPlugin2 )

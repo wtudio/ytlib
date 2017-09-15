@@ -1,5 +1,5 @@
 #pragma once
-#include <ytrpsf/RPSF_Interface/Plugin_Bus_Interface.h>
+#include <ytrpsf/Plugin_Bus_Interface.h>
 #include <iostream>
 //提供给RPC调用方的
 

@@ -1,7 +1,7 @@
 project( RPSF_CommonNode )
 #日志服务器
 
-File(GLOB SRC_Files *.cpp *.h )
+File(GLOB SRC_Files *.cpp *.h ${ytlib_SOURCE_DIR}/ytrpsf/*.h)
 
 
 add_executable( RPSF_CommonNode ${SRC_Files} )
