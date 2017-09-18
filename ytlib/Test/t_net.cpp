@@ -75,7 +75,7 @@ namespace ytlib
 			packptr->obj.c = std::to_string(ii * 5);
 			packptr->obj.d = s;
 
-			shared_buf mybuf;
+			sharedBuf mybuf;
 			mybuf.buf = data;
 			mybuf.buf_size = 1000;
 			packptr->map_datas["data1"] = mybuf;

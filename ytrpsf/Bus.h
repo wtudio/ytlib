@@ -13,9 +13,12 @@ namespace rpsf {
 		"successful.",
 		"file not exist.",
 		"service not exist."
-		"function not exist."
 		"RPC timeout.",
-		"RPC failed."
+		"RPC failed.",
+		"subscribe data failed",
+		"unsubscribe data failed",
+		"subscribe service failed",
+		"unsubscribe service failed"
 	};
 
 	class Bus : public IBus {

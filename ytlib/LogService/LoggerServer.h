@@ -69,14 +69,14 @@ namespace ytlib {
 		}
 		void on_read_log(boost::shared_array<char>& buff_, const boost::system::error_code & err, size_t read_bytes) {
 			if (read_get_err(err)) return;
-			m_logQueue.Enqueue(shared_buf(buff_, static_cast<uint32_t>(read_bytes)));
+			m_logQueue.Enqueue(sharedBuf(buff_, static_cast<uint32_t>(read_bytes)));
 			do_read_head();
 		}
 		//此方法里还需判断格式是否正确
 		void logHandel() {
 			sqlite3 *db;
 			while (!stopflag) {
-				shared_buf buff_;
+				sharedBuf buff_;
 				if (m_logQueue.BlockDequeue(buff_)) {
 					if (buff_.buf_size < 10) return;
 					//日志等级
@@ -134,7 +134,7 @@ namespace ytlib {
 			if(!m_bFirstLogFlag) sqlite3_close(db);
 		}
 
-		QueueBase<shared_buf> m_logQueue;
+		QueueBase<sharedBuf> m_logQueue;
 		std::thread m_handleThread;
 		tpath const *plogPath;
 		bool m_bFirstLogFlag;

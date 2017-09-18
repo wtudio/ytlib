@@ -2,6 +2,7 @@
 #include <ytrpsf/Plugin_Bus_Interface.h>
 #include <boost/noncopyable.hpp>
 
+//这个模块最后再弄
 namespace rpsf {
 	//定义客户端：使用总线的业务主动启动程序。
 	//其自身是一个普通节点，能够控制这个节点的启动停止，并能够将自定义的插件动态添加到自身节点上来和总线上其他节点的插件互动

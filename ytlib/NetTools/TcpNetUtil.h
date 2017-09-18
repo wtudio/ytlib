@@ -1,6 +1,5 @@
 #pragma once
 #include <boost/asio.hpp>
-#include <boost/shared_array.hpp>
 
 namespace ytlib
 {
@@ -18,29 +17,6 @@ namespace ytlib
 
 	typedef boost::asio::ip::tcp::endpoint TcpEp;//28个字节
 	typedef boost::asio::ip::tcp::socket TcpSocket;
-
-	//通用buff
-	class shared_buf {
-	public:
-		boost::shared_array<char> buf;
-		uint32_t buf_size;
-		shared_buf(){}
-		shared_buf(const boost::shared_array<char>& buf_, uint32_t buf_size_):
-			buf(buf_), buf_size(buf_size_){
-		}
-		shared_buf(uint32_t buf_size_) : buf_size(buf_size_) {
-			buf = boost::shared_array<char>(new char[buf_size]);
-		}
-		shared_buf getCopy() {
-			shared_buf tmp;
-			if (buf_size > 0) {
-				tmp.buf_size = buf_size;
-				tmp.buf = boost::shared_array<char>(new char[buf_size]);
-				memcpy(tmp.buf.get(), buf.get(), buf_size);
-			}
-			return std::move(tmp);
-		}
-	};
 
 	//默认vs
 	static void set_buf_from_num_64bit(char* p, uint64_t n) {

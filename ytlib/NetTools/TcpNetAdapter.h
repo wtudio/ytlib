@@ -3,6 +3,7 @@
 #include <ytlib/Common/FileSystem.h>
 #include <ytlib/SupportTools/QueueBase.h>
 #include <ytlib/NetTools/TcpConnectionPool.h>
+#include <ytlib/NetTools/SharedBuf.h>
 #include <ytlib/SupportTools/LightSignal.h>
 #include <future>
 #include <memory>
@@ -20,10 +21,10 @@ namespace ytlib {
 
 	考虑跨平台性，牵涉到网络传输的数据一律使用 char、标准int这种（不能用wchar、int、long、size_t这些不明确的）
 	-------------------------------------------------------
-	所有数据都使用shared_buf的形式存储。提供一些重载的函数将一些常见数据形式转变成shared_buf。（还可以拓展自行添加）
+	所有数据都使用sharedBuf的形式存储。提供一些重载的函数将一些常见数据形式转变成sharedBuf。（还可以拓展自行添加）
 	提供两种存入待发送数据的方式：
-	1、safe方式：将数据实际内容拷贝到一个shared_buf
-	2、unsafe方式：只支持传入shared_buf。用户需要保证数据不被其主动删除或修改
+	1、safe方式：将数据实际内容拷贝到一个sharedBuf
+	2、unsafe方式：只支持传入sharedBuf。用户需要保证数据不被其主动删除或修改
 	(实际上这里只是做一个示例，仅一些改动不大的情况会直接使用这样的方式。具体情况还是得具体写数据结构来达到最高效率)
 	----------------------------------------------------
 	sock连接池,	两种方式建立连接：1、accep到的	2、主动连接的
@@ -44,15 +45,10 @@ namespace ytlib {
 	class DataPackage {
 	public:
 		T obj;//可序列化的类
-		shared_buf quick_data;//快速内容
+		sharedBuf quick_data;//快速内容
 		//tip-data形式
-		std::map<std::string, shared_buf> map_datas;//数据,最大支持255个
+		std::map<std::string, sharedBuf> map_datas;//数据,最大支持255个
 		std::map<std::string, std::string> map_files;//文件,最大支持255个
-
-		//提高效率？
-		std::shared_mutex m_sysMutex;
-		std::shared_mutex m_datasMutex;
-		std::shared_mutex m_filesMutex;
 	};
 
 	//子类：sock连接，为网络适配器定制准备，只能主动发起同步写，读取是异步自动的
@@ -233,7 +229,7 @@ namespace ytlib {
 			uint32_t pos = 0;
 			for (uint32_t ii = 0; ii < read_bytes; ++ii) {
 				if (buff_[ii] == '\n') {
-					RData_->pdata->map_datas.insert(std::pair<std::string, shared_buf>(std::string(&buff_[pos], ii - pos), shared_buf()));
+					RData_->pdata->map_datas.insert(std::pair<std::string, sharedBuf>(std::string(&buff_[pos], ii - pos), sharedBuf()));
 					pos = ii + 1;
 				}
 			}
@@ -248,7 +244,7 @@ namespace ytlib {
 				return;
 			}
 			do_read_head(RData_);
-			std::map<std::string, shared_buf>::iterator itr = RData_->pdata->map_datas.begin();
+			std::map<std::string, sharedBuf>::iterator itr = RData_->pdata->map_datas.begin();
 			for (; pos > 0; --pos) ++itr;
 			itr->second.buf = buff_;
 			itr->second.buf_size = static_cast<uint32_t>(read_bytes);
@@ -412,14 +408,14 @@ namespace ytlib {
 			}
 
 			//第四步，发送数据,先发送tips数据包
-			std::map<std::string, shared_buf>& map_datas = Tdata_->map_datas;
+			std::map<std::string, sharedBuf>& map_datas = Tdata_->map_datas;
 			//缓冲区不能放在内层scope里
 			std::string data_tips;
 			char d0_head_buff[HEAD_SIZE]{ TcpConnection<T>::TCPHEAD1 ,TcpConnection<T>::TCPHEAD2,TcpConnection<T>::DATAHEAD,static_cast<char>(uint8_t(255)) };
 			boost::shared_array<char> d_head_buff;
 			if (map_datas.size() > 0) {
 				d_head_buff = boost::shared_array<char>(new char[map_datas.size() * HEAD_SIZE]);
-				for (std::map<std::string, shared_buf>::const_iterator itr = map_datas.begin(); itr != map_datas.end(); ++itr) {
+				for (std::map<std::string, sharedBuf>::const_iterator itr = map_datas.begin(); itr != map_datas.end(); ++itr) {
 					data_tips += itr->first;
 					data_tips += '\n';
 				}
@@ -428,7 +424,7 @@ namespace ytlib {
 				buffersPtr->push_back(std::move(boost::asio::buffer(data_tips)));
 				//再发送每个数据包。size为0则不发送
 				uint8_t ii = 0;
-				for (std::map<std::string, shared_buf>::const_iterator itr = map_datas.begin(); itr != map_datas.end(); ++itr) {
+				for (std::map<std::string, sharedBuf>::const_iterator itr = map_datas.begin(); itr != map_datas.end(); ++itr) {
 					if (itr->second.buf_size > 0) {
 						size_t cur_offerset = ii * HEAD_SIZE;
 						memcpy(&d_head_buff[cur_offerset], d0_head_buff, 3);
