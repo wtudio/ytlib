@@ -68,19 +68,19 @@ namespace rpsf {
 		return true;
 	}
 	static bool getMsgFromPackage(rpsfPackagePtr& package_, rpsfRpcArgs& m_) {
-		getBaseMsgFromPackage(package_, m_);
+		if (!getBaseMsgFromPackage(package_, m_)) return false;
 		m_.m_service.assign(package_->quick_data.buf.get(), package_->quick_data.buf_size);
 		return true;
 	}
 	static bool getMsgFromPackage(rpsfPackagePtr& package_, rpsfData& m_) {
-		getBaseMsgFromPackage(package_, m_);
+		if (!getBaseMsgFromPackage(package_, m_)) return false;
 		m_.m_dataName.assign(package_->quick_data.buf.get(), package_->quick_data.buf_size);
 		return true;
 	}
 	static bool getMsgFromPackage(rpsfPackagePtr& package_, rpsfRpcResult& m_) {
-		getBaseMsgFromPackage(package_, m_);
+		if (!getBaseMsgFromPackage(package_, m_)) return false;
 		m_.m_rpcErr = static_cast<BusErr>(static_cast<uint8_t>(package_->quick_data.buf[0]));
-		//m_.m_dataName.assign(package_->quick_data.buf.get(), package_->quick_data.buf_size);
+		m_.m_errMsg.assign(package_->quick_data.buf.get() + 1, package_->quick_data.buf_size - 1);
 		return true;
 	}
 }

@@ -64,7 +64,7 @@ namespace rpsf {
 			if (itr != thisnode.NodeSettings.end()) sendpath = itr->second;
 
 			m_netAdapter = std::shared_ptr<ytlib::TcpNetAdapter<rpsfMsg> >(new ytlib::TcpNetAdapter<rpsfMsg>(
-				thisnode.NodeId, thisnode.NodePort, std::bind(&Bus::RecvCallBack, this, std::placeholders::_1), recvpath, sendpath));
+				thisnode.NodeId, thisnode.NodePort, std::bind(&Bus::on_RecvCallBack, this, std::placeholders::_1), recvpath, sendpath));
 		
 			if(BusTrivialConfig(thisnode)) return false;
 			
@@ -75,28 +75,34 @@ namespace rpsf {
 
 		}
 		//½Ó¿Ú£ºbus-plugin
-		BusErr SubscribeData(const std::string& pluginName_, const std::set<std::string>& dataNames_) {
+		BusErr SubscribeData(const IPlugin* pPlugin_, const std::string& dataNames_) {
 
 		}
-		BusErr UnsubscribeData(const std::string& pluginName_, const std::set<std::string>& dataName_) {
+		BusErr UnsubscribeData(const IPlugin* pPlugin_, const std::string& dataName_) {
 
 		}
-		BusErr SubscribeEvent(const std::string& pluginName_, const std::set<std::string>& eventName_) {
-
-		}
-		BusErr UnsubscribeEvent(const std::string& pluginName_, const std::set<std::string>& eventName_) {
+		std::set<std::string> GetSubscribeDataList(const IPlugin* pPlugin_) {
 
 		}
 
-		rpsfRpcResult Invoke(const rpsfRpcArgs& callArgs_, uint32_t timeout ) {
+		BusErr SubscribeService(const IPlugin* pPlugin_, const std::string& service_, const std::string& remark_ = "") {
 
 		}
-		BusErr PublishData(const rpsfData& data_) {
+		BusErr UnsubscribeService(const IPlugin* pPlugin_, const std::string& service_) {
+
+		}
+		std::map<std::string, std::string> GetSubscribeServiceList(const IPlugin* pPlugin_) {
+
+		}
+		rpsfRpcResult Invoke(std::unique_ptr<rpsfRpcArgs>& callArgs_, uint32_t timeout = 0) {
+
+		}
+		BusErr PublishData(std::unique_ptr<rpsfData>& data_) {
 
 		}
 
 		const char* getBusErrMsg(BusErr err) {
-
+			return busErrMsg[err];
 		}
 		
 	protected:
@@ -107,7 +113,7 @@ namespace rpsf {
 		}
 
 
-		void RecvCallBack(rpsfPackagePtr& pmsg) {
+		void on_RecvCallBack(rpsfPackagePtr& pmsg) {
 
 		}
 
