@@ -5,6 +5,7 @@ File(GLOB SRC_Files *.cpp *.h )
 
 
 add_executable( RPSF_LogServer ${SRC_Files} )
+set_target_properties(RPSF_LogServer PROPERTIES FOLDER "RPSF") 
 
 IF(WIN32)
 target_link_libraries(RPSF_LogServer sqlite sigar )

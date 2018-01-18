@@ -1,5 +1,6 @@
 #pragma once
 #include <map>
+#include <set>
 #include <ytlib/NetTools/SharedBuf.h>
 #include <memory>
 
@@ -80,8 +81,9 @@ namespace rpsf {
 		BusErr m_rpcErr;
 		std::string m_errMsg;
 	};
-
+	
 	//总线基类
+	class IPlugin;
 	class IBus {
 	public:
 		IBus(){}

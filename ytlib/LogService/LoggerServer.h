@@ -6,6 +6,7 @@
 #include <boost/shared_array.hpp>
 #include <ytlib/SupportTools/ChannelBase.h>
 #include <boost/date_time/posix_time/posix_time.hpp>  
+#include <ytlib/NetTools/SharedBuf.h>
 
 namespace ytlib {
 	/*

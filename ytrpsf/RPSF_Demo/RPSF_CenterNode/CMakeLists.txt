@@ -5,6 +5,7 @@ File(GLOB SRC_Files *.cpp *.h ${ytlib_SOURCE_DIR}/ytrpsf/*.h )
 
 
 add_executable( RPSF_CenterNode ${SRC_Files} )
+set_target_properties(RPSF_CenterNode PROPERTIES FOLDER "RPSF") 
 
 IF(WIN32)
 target_link_libraries(RPSF_CenterNode sqlite sigar )
