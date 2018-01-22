@@ -183,7 +183,7 @@ namespace ytlib
 
 #define SERIALIZE(obj,p,len) \
 	myostringstream_tmp.str(""); \
-	oar_tmp=std::shared_ptr<boost::archive::binary_oarchive>(new boost::archive::binary_oarchive(myostringstream_tmp)); \
+	oar_tmp=std::make_shared<boost::archive::binary_oarchive>(myostringstream_tmp); \
 	*oar_tmp << obj; \
 	myostringstream_tmp.getPoint(p, len);
 
@@ -193,7 +193,7 @@ namespace ytlib
 
 #define DESERIALIZE(obj,p,len) \
 	myistringstream_tmp.setPoint(p,len); \
-	iar_tmp=std::shared_ptr<boost::archive::binary_iarchive>(new boost::archive::binary_iarchive(myistringstream_tmp)); \
+	iar_tmp==std::make_shared<boost::archive::binary_iarchive>(myistringstream_tmp); \
 	*iar_tmp >> obj; 
 
 

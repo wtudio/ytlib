@@ -47,10 +47,9 @@ namespace rpsf {
 
 
 			//设置通道
-			m_orderChannel = std::shared_ptr<ytlib::ChannelBase<rpsfPackagePtr> >(new ytlib::ChannelBase<rpsfPackagePtr>(
-				std::bind(&Bus::rpsfMsgHandler, this, std::placeholders::_1)));
-			m_unorderChannel = std::shared_ptr<ytlib::ChannelBase<rpsfPackagePtr> >(new ytlib::ChannelBase<rpsfPackagePtr>(
-				std::bind(&Bus::rpsfMsgHandler, this, std::placeholders::_1),5));
+			m_orderChannel = std::make_shared<ytlib::ChannelBase<rpsfPackagePtr> >(std::bind(&Bus::rpsfMsgHandler, this, std::placeholders::_1));
+			m_unorderChannel = std::make_shared<ytlib::ChannelBase<rpsfPackagePtr> >(std::bind(&Bus::rpsfMsgHandler, this, std::placeholders::_1), 5);
+		
 
 
 			//最后才能开启网络适配器监听
@@ -63,8 +62,7 @@ namespace rpsf {
 			itr = thisnode.NodeSettings.find(T_TEXT("sendpath"));
 			if (itr != thisnode.NodeSettings.end()) sendpath = itr->second;
 
-			m_netAdapter = std::shared_ptr<ytlib::TcpNetAdapter<rpsfMsg> >(new ytlib::TcpNetAdapter<rpsfMsg>(
-				thisnode.NodeId, thisnode.NodePort, std::bind(&Bus::on_RecvCallBack, this, std::placeholders::_1), recvpath, sendpath));
+			m_netAdapter = std::make_shared<ytlib::TcpNetAdapter<rpsfMsg> >(thisnode.NodeId, thisnode.NodePort, std::bind(&Bus::on_RecvCallBack, this, std::placeholders::_1), recvpath, sendpath);
 		
 			if(BusTrivialConfig(thisnode)) return false;
 			

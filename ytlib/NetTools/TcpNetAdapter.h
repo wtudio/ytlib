@@ -158,11 +158,11 @@ namespace ytlib {
 					if (header[2] == CLASSHEAD) {
 						//新建一个数据包
 						RData_ = RecvDataPtr((new RecvDataPackage()), std::bind(&TcpConnection::on_data_ready, this, std::placeholders::_1));
-						RData_->pdata = dataPtr(new DataPackage<T>());
+						RData_->pdata = std::make_shared<DataPackage<T> >();
 						RData_->complete_flag = false;
 						RData_->p_s = new LightSignal();
 						m_DataQueue.Enqueue(RData_);
-						buff_Ptr pBuff = buff_Ptr(new boost::asio::streambuf());
+						buff_Ptr pBuff = std::make_shared<boost::asio::streambuf>();
 						boost::asio::async_read(sock, *pBuff, boost::asio::transfer_exactly(pack_size),
 							std::bind(&TcpConnection::on_read_obj, this, RData_, pBuff, std::placeholders::_1, std::placeholders::_2));
 						return;
@@ -341,8 +341,7 @@ namespace ytlib {
 			lck.unlock();
 
 			//将Tdata_先转换为std::vector<boost::asio::const_buffer>再一次性发送
-			std::shared_ptr<std::vector<boost::asio::const_buffer> > buffersPtr =
-				std::shared_ptr<std::vector<boost::asio::const_buffer> >(new std::vector<boost::asio::const_buffer>());
+			std::shared_ptr<std::vector<boost::asio::const_buffer> > buffersPtr = std::make_shared<std::vector<boost::asio::const_buffer> >();
 			//第一步：发送对象
 			char c_head_buff[HEAD_SIZE]{ TcpConnection<T>::TCPHEAD1 ,TcpConnection<T>::TCPHEAD2,TcpConnection<T>::CLASSHEAD,0 };
 			boost::asio::streambuf objbuff;
@@ -493,7 +492,7 @@ namespace ytlib {
 	private:
 
 		TcpConnectionPtr getNewTcpConnectionPtr() {
-			return TcpConnectionPtr(new TcpConnection<T>(BaseClass::service, std::bind(&TcpNetAdapter::on_err, this, std::placeholders::_1), &m_RecvPath, m_receiveCallBack));
+			return std::make_shared<TcpConnection<T> >(BaseClass::service, std::bind(&TcpNetAdapter::on_err, this, std::placeholders::_1), &m_RecvPath, m_receiveCallBack);
 		}
 		void on_err(const TcpEp& ep) { BaseClass::on_err(ep);	}
 		

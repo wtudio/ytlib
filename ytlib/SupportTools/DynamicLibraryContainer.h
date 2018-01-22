@@ -17,7 +17,7 @@ namespace ytlib
 		std::shared_ptr<DynamicLibrary> GetLibrary(const tstring& libname) {
 			std::map<tstring, std::shared_ptr<DynamicLibrary> >::iterator iter = m_mapLibraries.find(libname);
 			if (iter == m_mapLibraries.end()) {
-				std::shared_ptr<DynamicLibrary> pLibrary(new DynamicLibrary());
+				std::shared_ptr<DynamicLibrary> pLibrary = std::make_shared<DynamicLibrary>();
 				if (pLibrary->Load(libname)) {
 					m_mapLibraries.insert(std::make_pair(libname, pLibrary));
 					return pLibrary;

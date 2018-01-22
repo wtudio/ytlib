@@ -31,7 +31,7 @@ namespace ytlib
 		}
 		//新建一个文件内容结构体。做一些初始化的工作
 		virtual bool CreateFileObj() {
-			m_fileobj = std::shared_ptr<T>(new T());
+			m_fileobj = std::make_shared<T>();
 			return true;
 		}
 		//从打开的文件中解析获取文件内容结构体
@@ -39,7 +39,7 @@ namespace ytlib
 		//将当前的文件内容结构体保存为文件
 		virtual bool SaveFileObj() = 0;
 	public:
-		FileBase(): m_bInitialized(false), m_fileobj(std::shared_ptr<T>(new T())){}
+		FileBase(): m_bInitialized(false), m_fileobj(std::make_shared<T>()){}
 		virtual ~FileBase() {}
 
 		//文件内容解析后的结构体。提供直接访问

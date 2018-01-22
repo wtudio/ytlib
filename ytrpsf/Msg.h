@@ -30,7 +30,7 @@ namespace rpsf {
 
 	//将各种类型的消息包打包为一个rpsfPackagePtr。同时原消息包将不可用
 	static rpsfPackagePtr setBaseMsgToPackage(rpsfPackage& m_) {
-		rpsfPackagePtr package = rpsfPackagePtr(new rpsfDataPackage());
+		rpsfPackagePtr package = std::make_shared<rpsfDataPackage>();
 		package->map_datas.swap(m_.m_mapDatas);
 		package->map_files.swap(m_.m_mapFiles);
 		package->obj.m_handleType = m_.m_handleType;

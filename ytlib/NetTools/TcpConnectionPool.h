@@ -130,7 +130,7 @@ namespace ytlib
 			if (!pConnection) return false;
 			service.reset();
 			stopflag = false;
-			acceptorPtr = std::shared_ptr<boost::asio::ip::tcp::acceptor>(new boost::asio::ip::tcp::acceptor(service, TcpEp(boost::asio::ip::tcp::v4(), myport), true));
+			acceptorPtr = std::make_shared<boost::asio::ip::tcp::acceptor>(service, TcpEp(boost::asio::ip::tcp::v4(), myport), true);
 			acceptorPtr->async_accept(pConnection->sock, std::bind(&TcpConnectionPool::on_accept, this, pConnection, std::placeholders::_1));
 			for (uint32_t i = 0; i < m_threadSize; ++i) {
 				m_RunThreads.create_thread(boost::bind(&boost::asio::io_service::run, &service));

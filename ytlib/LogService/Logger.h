@@ -134,7 +134,7 @@ namespace ytlib {
 			DisableConsoleLog();
 			boost::shared_ptr<boost::log::sinks::text_ostream_backend> backend = boost::make_shared<boost::log::sinks::text_ostream_backend>();
 			backend->add_stream(boost::shared_ptr<std::ostream>(&std::clog, boost::null_deleter()));
-			ConSink = boost::shared_ptr<ConSink_t>(new ConSink_t(backend));
+			ConSink = boost::make_shared<ConSink_t>(backend);
 			//设置控制台日志格式
 			ConSink->set_formatter(
 				boost::log::expressions::stream
@@ -152,7 +152,7 @@ namespace ytlib {
 		}
 		void EnableNetLog(uint32_t myid_, const TcpEp& logserver_ep_) {
 			DisableConsoleLog();
-			NetSink = boost::shared_ptr<NetSink_t >(new NetSink_t(myid_, logserver_ep_));
+			NetSink = boost::make_shared<NetSink_t>(myid_, logserver_ep_);
 			(boost::log::core::get())->add_sink(NetSink);
 		}
 		void DisableNetLog() {

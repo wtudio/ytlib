@@ -115,7 +115,7 @@ namespace ytlib
 			return true;
 		}
 		virtual bool CreateFileObj() {
-			m_fileobj = std::shared_ptr<PrjObj>(new PrjObj());
+			m_fileobj = std::make_shared<PrjObj>();
 			if (m_filepath.empty()) {
 				m_fileobj->m_PrjName = T_TEXT("NewProject");
 			}

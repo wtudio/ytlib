@@ -152,7 +152,7 @@ namespace ytlib {
 		
 	private:
 		TcpConnectionPtr getNewTcpConnectionPtr() {
-			return TcpConnectionPtr(new LogConnection(service, std::bind(&LoggerServer::on_err, this, std::placeholders::_1),&logPath));
+			return std::make_shared<LogConnection>(service, std::bind(&LoggerServer::on_err, this, std::placeholders::_1), &logPath);
 		}
 		void on_err(const TcpEp& ep){
 			TcpConnectionPool::on_err(ep);
