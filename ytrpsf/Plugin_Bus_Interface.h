@@ -61,16 +61,14 @@ namespace rpsf {
 	class rpsfData : public rpsfPackage {
 	public:
 		rpsfData() {}
-		rpsfData(const std::string& dataName_) :
-			m_dataName(dataName_) {	}
+		rpsfData(const std::string& dataName_) :m_dataName(dataName_) {	}
 		std::string m_dataName;//数据名称
 	};
 
 	class rpsfRpcArgs : public rpsfPackage {
 	public:
 		rpsfRpcArgs(){}
-		rpsfRpcArgs(const std::string& service_) :
-			m_service(service_){}
+		rpsfRpcArgs(const std::string& service_) :m_service(service_){}
 		std::string m_service;//服务名称
 	};
 	class rpsfRpcResult : public rpsfPackage {
@@ -98,12 +96,15 @@ namespace rpsf {
 		virtual std::map<std::string, std::string> GetSubscribeServiceList(const IPlugin* pPlugin_) = 0;
 
 		//数据传入都是unique_ptr。传入之后指针将被重置
+		//调用总线上的服务。阻塞式的
 		virtual rpsfRpcResult Invoke(std::unique_ptr<rpsfRpcArgs>& callArgs_, uint32_t timeout = 0) = 0;//RPC接口。timeout：等待时间，0表示永远等待
+		//向总线上发布数据
 		virtual BusErr PublishData(std::unique_ptr<rpsfData>& data_) = 0;//发布数据
 
 		virtual const char* getBusErrMsg(BusErr err) = 0;
 	};
 
+	//定义插件：由用户开发的，实现一些接口的被动调用的独立模块
 	//plugin的虚基类，直接提供给用户进行开发。用户需要继承它
 	class IPlugin {
 	public:
@@ -117,9 +118,32 @@ namespace rpsf {
 		virtual void OnData(const rpsfData& data_,const std::string& dataTime_) = 0;
 		virtual rpsfRpcResult Invoke(const rpsfRpcArgs& callArgs_) = 0;
 
+		//对总线接口的快捷操作
+		inline BusErr SubscribeData(const std::string& dataNames_) {
+			return pBus->SubscribeData(this, dataNames_);
+		}
+
+		inline BusErr UnsubscribeData(const std::string& dataNames_) {
+			return pBus->UnsubscribeData(this, dataNames_);
+		}
+		inline std::set<std::string> GetSubscribeDataList() {
+			return pBus->GetSubscribeDataList(this);
+		}
+
+		inline BusErr SubscribeService(const std::string& service_, const std::string& remark_ = "") {
+			return pBus->SubscribeService(this, service_, remark_);
+		}
+		inline BusErr UnsubscribeService(const std::string& service_) {
+			return pBus->UnsubscribeService(this, service_);
+		}
+		inline std::map<std::string, std::string> GetSubscribeServiceList() {
+			return pBus->GetSubscribeServiceList(this);
+		}
+
+
 		const std::string name;
 	protected:
-		const IBus* pBus;
+		IBus* pBus;
 	};
 
 
@@ -127,4 +151,5 @@ namespace rpsf {
 #ifndef CREATE_PLUGIN_STRING
 #define CREATE_PLUGIN_STRING CL_TEXT("CreatePlugin")
 #endif
+
 }

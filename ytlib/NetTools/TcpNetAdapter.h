@@ -40,6 +40,8 @@ namespace ytlib {
 	o+v:结束符
 	*/
 
+	//todo：需要对比一下异步接收与同步接收的快慢差异。异步接收多出了一些线程创建的性能消耗，同步接收多出了一些线程保持的性能消耗
+
 	//T需要能boost序列化
 	template<class T>
 	class DataPackage {

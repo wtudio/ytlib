@@ -21,10 +21,11 @@ namespace rpsf {
 		"unsubscribe service failed"
 	};
 
+	//普通节点的总线。中心节点的总线继承普通节点的总线
 	class Bus : public IBus {
 	public:
-		//接口：bus-client
-		Bus():m_bInit(false), thisNodeType(RpsfNodeType::NODETYPE_COMMON){
+		
+		Bus():thisNodeType(RpsfNodeType::NODETYPE_COMMON){
 
 		}
 		virtual ~Bus() {
@@ -45,13 +46,10 @@ namespace rpsf {
 				return false;
 			}
 
-
 			//设置通道
 			m_orderChannel = std::make_shared<ytlib::ChannelBase<rpsfPackagePtr> >(std::bind(&Bus::rpsfMsgHandler, this, std::placeholders::_1));
 			m_unorderChannel = std::make_shared<ytlib::ChannelBase<rpsfPackagePtr> >(std::bind(&Bus::rpsfMsgHandler, this, std::placeholders::_1), 5);
 		
-
-
 			//最后才能开启网络适配器监听
 			//设置文件收发路径
 			ytlib::tstring nodename(T_STRING_TO_TSTRING(thisnode.NodeName));
@@ -66,7 +64,9 @@ namespace rpsf {
 		
 			if(BusTrivialConfig(thisnode)) return false;
 			
-			m_bInit = m_netAdapter->start();
+			if (!(m_netAdapter->start())) return false;
+
+
 		}
 
 		bool AddPlugin(IPlugin* p_plugin) {
@@ -108,21 +108,21 @@ namespace rpsf {
 		virtual bool BusTrivialConfig(const RpsfNode& cfg_){
 			//common node
 			m_netAdapter->SetHost(cfg_.CenterNodeId, cfg_.CenterNodeIp, cfg_.CenterNodePort);
+
+			return true;
 		}
 
-
+		//收到信息的回调
 		void on_RecvCallBack(rpsfPackagePtr& pmsg) {
 
 		}
 
+		//处理信息
 		void rpsfMsgHandler(rpsfPackagePtr& pmsg) {
 
 		}
 
-
-
 		//所有成员都只能用智能指针了
-		bool m_bInit;
 		RpsfNodeType thisNodeType;
 
 		std::shared_ptr<ytlib::TcpNetAdapter<rpsfMsg> >  m_netAdapter;//网络适配器
