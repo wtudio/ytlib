@@ -35,7 +35,7 @@ namespace ytlib
 			registerScheCallback(std::bind(&AlgProcess::defScheCallback, this, std::placeholders::_1));
 		}
 		virtual ~AlgProcess() {
-			if(is_running) stop();
+			if(m_bRunning) stop();
 		}
 		bool init(const std::map<tstring, tstring>& m) {
 			m_mapFiles = m;
@@ -68,11 +68,11 @@ namespace ytlib
 		}
 
 		bool isRunning() {
-			if (!is_running) return false;
+			if (!m_bRunning) return false;
 			if (mainAlgThread.timed_join(boost::posix_time::millisec(0))) {
-				is_running = false;
+				m_bRunning = false;
 			}
-			return is_running;
+			return m_bRunning;
 		}
 
 		inline int32_t getCurState() {
@@ -86,7 +86,7 @@ namespace ytlib
 			fScheCallback = f;
 		}
 		bool setFiles(const tstring& filename, const tstring&  filepath){
-			if (is_running) {
+			if (m_bRunning) {
 				fLogCallback(T_TEXT("算法正在运行，无法设置文件."));
 				return false;
 			}
@@ -122,24 +122,24 @@ namespace ytlib
 		//只需要继承此方法就行了
 		//因为要提供类内接口支持，所以不能改成函数注册形式
 		//示例：
-		//一定要在结束时将is_running设置为false
-		//最好提供检测到is_running变为false则停止的功能
+		//一定要在结束时将m_bRunning设置为false
+		//最好提供检测到m_bRunning变为false则停止的功能
 		//返回值会被getCurState函数返回给上层调用者
 		virtual void mainAlg() {
 			fLogCallback(T_TEXT("测试."));
 			uint32_t ii = 0;
-			while (is_running&&(ii++<m_scheRange)) {
+			while (m_bRunning&&(ii++<m_scheRange)) {
 				fScheCallback(ii);
 				boost::this_thread::sleep(boost::posix_time::millisec(10));//等待
 			}
-			if (is_running) {
-				is_running = false;
+			if (m_bRunning) {
+				m_bRunning = false;
 				m_state = 0;
 				return;//正常退出
 			}
 			else {
 				m_state = 1;
-				return;//非正常退出。is_running是外部改变的
+				return;//非正常退出。m_bRunning是外部改变的
 			}
 			
 		}

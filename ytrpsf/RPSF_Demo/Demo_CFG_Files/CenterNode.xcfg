@@ -2,7 +2,7 @@
 <!--中心节点的配置文件-->
 <system id="1000" type="CenterNode" name="CenterNode" port="61000" >
   <!--网络日志配置-->
-  <Netlog useNetLog="true" Ip="127.0.0.1" port="55555" />
+  <Netlog Ip="127.0.0.1" port="55555" />
   <!--配置加载的插件-->
   <plugins>
 	  <plugin libname="RPSF_DemoPlugin1" enable="true" >

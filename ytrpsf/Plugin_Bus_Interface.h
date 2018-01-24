@@ -95,11 +95,11 @@ namespace rpsf {
 		virtual BusErr UnsubscribeService(const IPlugin* pPlugin_, const std::string& service_) = 0;
 		virtual std::map<std::string, std::string> GetSubscribeServiceList(const IPlugin* pPlugin_) = 0;
 
-		//数据传入都是unique_ptr。传入之后指针将被重置
+		//数据传入后将失效
 		//调用总线上的服务。阻塞式的
-		virtual rpsfRpcResult Invoke(std::unique_ptr<rpsfRpcArgs>& callArgs_, uint32_t timeout = 0) = 0;//RPC接口。timeout：等待时间，0表示永远等待
+		virtual rpsfRpcResult Invoke(rpsfRpcArgs& callArgs_, uint32_t timeout = 0) = 0;//RPC接口。timeout：等待时间，0表示永远等待
 		//向总线上发布数据
-		virtual BusErr PublishData(std::unique_ptr<rpsfData>& data_) = 0;//发布数据
+		virtual BusErr PublishData(rpsfData& data_) = 0;//发布数据
 
 		virtual const char* getBusErrMsg(BusErr err) = 0;
 	};
@@ -116,7 +116,7 @@ namespace rpsf {
 		virtual bool Start(std::map<std::string, std::string>& params_) = 0;
 		virtual void Stop(void) = 0;
 		virtual void OnData(const rpsfData& data_,const std::string& dataTime_) = 0;
-		virtual rpsfRpcResult Invoke(const rpsfRpcArgs& callArgs_) = 0;
+		virtual rpsfRpcResult Invoke(rpsfRpcArgs& callArgs_) = 0;
 
 		//对总线接口的快捷操作
 		inline BusErr SubscribeData(const std::string& dataNames_) {

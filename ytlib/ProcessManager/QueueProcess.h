@@ -43,7 +43,7 @@ namespace ytlib
 		virtual bool stop() {
 			if (m_bStopFlag || !ProcessBase::stop()) return false;
 			//stop之后需要重新初始化
-			is_init = false;
+			m_bInit = false;
 			m_bStopFlag = true;
 			m_Threads.join_all();//等待所有线程结束
 			return true;
@@ -51,7 +51,7 @@ namespace ytlib
 
 		//start之后才能add
 		virtual bool Add(const T& item_) {
-			return is_running && m_queue.Enqueue(item_);
+			return m_bRunning && m_queue.Enqueue(item_);
 		}
 	private:
 		//线程运行函数

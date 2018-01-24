@@ -6,63 +6,64 @@ namespace ytlib
 {
 	//日志回调
 	typedef std::function<void(const tstring &)> LogCallback;
+	//一般过程型程序的类模板。供参考，实际使用时可以参照着写，不一定要继承它
 	//非线程安全，不要并发操作
 	class ProcessBase
 	{
 	public:
-		ProcessBase():is_init(false), is_running(false){
+		ProcessBase():m_bInit(false), m_bRunning(false){
 			registerLogCallback(std::bind(&ProcessBase::defLogCallback, this, std::placeholders::_1));
 		}
 		virtual ~ProcessBase(){
-			if (is_running) stop();
+			if (m_bRunning) stop();
 		}
 
 		virtual bool init() {
-			is_running = false;
-			is_init = true;
+			m_bRunning = false;
+			m_bInit = true;
 			fLogCallback(T_TEXT("Init Successfully"));
 			return true;
 		}
 		virtual bool start() {
-			if (!is_init) { 
+			if (!m_bInit) { 
 				fLogCallback(T_TEXT("Start failed : uninitialized"));
 				return false; 
 			}
-			if (is_running) {
+			if (m_bRunning) {
 				fLogCallback(T_TEXT("Start failed : process is running"));
 				return false;
 			}
-			is_running = true;
+			m_bRunning = true;
 			fLogCallback(T_TEXT("Start"));
 			return true;
 		}
 		//pause表示暂停，可以再接着start。stop表示停止，就算重新start也是从头开始
 		//此处的pause和stop表现是一样的。交给子类重载
 		virtual bool pause() {
-			if (!is_running) {
+			if (!m_bRunning) {
 				fLogCallback(T_TEXT("Pause failed : process is not running"));
 				return false;
 			}
-			is_running = false;
+			m_bRunning = false;
 			fLogCallback(T_TEXT("Pause"));
 			return true;
 		}
 
 		virtual bool stop() {
-			if (!is_running) {
+			if (!m_bRunning) {
 				fLogCallback(T_TEXT("Stop failed : process is not running"));
 				return false;
 			}
-			is_running = false;
+			m_bRunning = false;
 			fLogCallback(T_TEXT("Stop"));
 			return true;
 		}
 
 		virtual bool isInit() {
-			return is_init;
+			return m_bInit;
 		}
 		virtual bool isRunning() {
-			return is_running;
+			return m_bRunning;
 		}
 		//由派生类决定怎样返回当前状态
 		virtual int32_t getCurState() {
@@ -79,8 +80,8 @@ namespace ytlib
 			tcout << s << std::endl;
 		}
 	
-		bool is_init;
-		bool is_running;
+		bool m_bInit;
+		bool m_bRunning;
 		LogCallback fLogCallback;
 		
 	};

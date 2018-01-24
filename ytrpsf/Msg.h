@@ -31,24 +31,23 @@ namespace rpsf {
 	//将各种类型的消息包打包为一个rpsfPackagePtr。同时原消息包将不可用
 	static rpsfPackagePtr setBaseMsgToPackage(rpsfPackage& m_) {
 		rpsfPackagePtr package = std::make_shared<rpsfDataPackage>();
-		package->map_datas.swap(m_.m_mapDatas);
-		package->map_files.swap(m_.m_mapFiles);
+		package->map_datas = std::move(m_.m_mapDatas);
+		package->map_files = std::move(m_.m_mapFiles);
 		package->obj.m_handleType = m_.m_handleType;
 		package->obj.m_delfiles = m_.m_bDelFiles;
-
-		return package;
+		return std::move(package);
 	}
 	static rpsfPackagePtr setMsgToPackage(rpsfRpcArgs& m_) {
 		rpsfPackagePtr package = setBaseMsgToPackage(m_);
 		package->obj.m_msgType = MsgType::RPSF_RPC;
 		package->quick_data = ytlib::sharedBuf(m_.m_service);
-		return package;
+		return std::move(package);
 	}
 	static rpsfPackagePtr setMsgToPackage(rpsfData& m_) {
 		rpsfPackagePtr package = setBaseMsgToPackage(m_);
 		package->obj.m_msgType = MsgType::RPSF_DATA;
 		package->quick_data = ytlib::sharedBuf(m_.m_dataName);
-		return package;
+		return std::move(package);
 	}
 	static rpsfPackagePtr setMsgToPackage(rpsfRpcResult& m_) {
 		rpsfPackagePtr package = setBaseMsgToPackage(m_);
@@ -57,31 +56,27 @@ namespace rpsf {
 		package->quick_data = ytlib::sharedBuf(1 + static_cast<uint32_t>(m_.m_errMsg.size()));
 		package->quick_data.buf[0] = static_cast<uint8_t>(m_.m_rpcErr);
 		memcpy(package->quick_data.buf.get() + 1, m_.m_errMsg.c_str(), m_.m_errMsg.size());
-		return package;
+		return std::move(package);
 	}
 
 	//将rpsfPackagePtr解包为各种类型的消息包
-	static bool getBaseMsgFromPackage(rpsfPackagePtr& package_, rpsfPackage& m_) {
-		package_->map_datas.swap(m_.m_mapDatas);
-		package_->map_files.swap(m_.m_mapFiles);
+	static void getBaseMsgFromPackage(rpsfPackagePtr& package_, rpsfPackage& m_) {
+		m_.m_mapDatas = std::move(package_->map_datas);
+		m_.m_mapFiles = std::move(package_->map_files);
 		m_.m_handleType = package_->obj.m_handleType;
-		return true;
 	}
-	static bool getMsgFromPackage(rpsfPackagePtr& package_, rpsfRpcArgs& m_) {
-		if (!getBaseMsgFromPackage(package_, m_)) return false;
+	static void getMsgFromPackage(rpsfPackagePtr& package_, rpsfRpcArgs& m_) {
+		getBaseMsgFromPackage(package_, m_);
 		m_.m_service.assign(package_->quick_data.buf.get(), package_->quick_data.buf_size);
-		return true;
 	}
-	static bool getMsgFromPackage(rpsfPackagePtr& package_, rpsfData& m_) {
-		if (!getBaseMsgFromPackage(package_, m_)) return false;
+	static void getMsgFromPackage(rpsfPackagePtr& package_, rpsfData& m_) {
+		getBaseMsgFromPackage(package_, m_);
 		m_.m_dataName.assign(package_->quick_data.buf.get(), package_->quick_data.buf_size);
-		return true;
 	}
-	static bool getMsgFromPackage(rpsfPackagePtr& package_, rpsfRpcResult& m_) {
-		if (!getBaseMsgFromPackage(package_, m_)) return false;
+	static void getMsgFromPackage(rpsfPackagePtr& package_, rpsfRpcResult& m_) {
+		getBaseMsgFromPackage(package_, m_);
 		m_.m_rpcErr = static_cast<BusErr>(static_cast<uint8_t>(package_->quick_data.buf[0]));
 		m_.m_errMsg.assign(package_->quick_data.buf.get() + 1, package_->quick_data.buf_size - 1);
-		return true;
 	}
 }
 

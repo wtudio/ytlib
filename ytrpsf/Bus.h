@@ -1,6 +1,4 @@
 #pragma once
-#include <ytrpsf/Client_Bus_Interface.h>
-#include <ytrpsf/RpsfCfgFile.h>
 #include <ytrpsf/Msg.h>
 #include <ytlib/LogService/Logger.h>
 #include <ytlib/SupportTools/ChannelBase.h>
@@ -25,42 +23,16 @@ namespace rpsf {
 	class Bus : public IBus {
 	public:
 		
-		Bus():thisNodeType(RpsfNodeType::NODETYPE_COMMON){
-
-		}
-		virtual ~Bus() {
-
-		}
-		bool Init(const std::string& cfgpath) {
-			RpsfCfgFile cfgfile;
-			try {
-				cfgfile.OpenFile(T_STRING_TO_TSTRING(cfgpath));
-			}
-			catch (const ytlib::Exception& e) {
-				std::cout << e.what() << std::endl;
-				return false;
-			}
-			RpsfNode& thisnode = *(cfgfile.m_fileobj.get());
-			if (thisnode.NodeType != thisNodeType) {
-				tcout << T_TEXT("error : node type mismatch! please check the cfg file and exe type.") << std::endl;
-				return false;
-			}
+		Bus(){}
+		virtual ~Bus() {}
+		bool Init(uint32_t NodeId_, uint16_t NodePort_, ytlib::tstring recvpath_, ytlib::tstring sendpath_) {
 
 			//设置通道
 			m_orderChannel = std::make_shared<ytlib::ChannelBase<rpsfPackagePtr> >(std::bind(&Bus::rpsfMsgHandler, this, std::placeholders::_1));
 			m_unorderChannel = std::make_shared<ytlib::ChannelBase<rpsfPackagePtr> >(std::bind(&Bus::rpsfMsgHandler, this, std::placeholders::_1), 5);
 		
 			//最后才能开启网络适配器监听
-			//设置文件收发路径
-			ytlib::tstring nodename(T_STRING_TO_TSTRING(thisnode.NodeName));
-			ytlib::tstring recvpath(nodename + T_TEXT("/recv"));
-			ytlib::tstring sendpath(nodename + T_TEXT("/send"));
-			std::map<ytlib::tstring, ytlib::tstring>::iterator itr = thisnode.NodeSettings.find(T_TEXT("recvpath"));
-			if (itr != thisnode.NodeSettings.end()) recvpath = itr->second;
-			itr = thisnode.NodeSettings.find(T_TEXT("sendpath"));
-			if (itr != thisnode.NodeSettings.end()) sendpath = itr->second;
-
-			m_netAdapter = std::make_shared<ytlib::TcpNetAdapter<rpsfMsg> >(thisnode.NodeId, thisnode.NodePort, std::bind(&Bus::on_RecvCallBack, this, std::placeholders::_1), recvpath, sendpath);
+			m_netAdapter = std::make_shared<ytlib::TcpNetAdapter<rpsfMsg> >(NodeId_, NodePort_, std::bind(&Bus::on_RecvCallBack, this, std::placeholders::_1), recvpath_, sendpath_);
 		
 			if(BusTrivialConfig(thisnode)) return false;
 			
@@ -69,9 +41,6 @@ namespace rpsf {
 
 		}
 
-		bool AddPlugin(IPlugin* p_plugin) {
-
-		}
 		//接口：bus-plugin
 		BusErr SubscribeData(const IPlugin* pPlugin_, const std::string& dataNames_) {
 
@@ -92,10 +61,10 @@ namespace rpsf {
 		std::map<std::string, std::string> GetSubscribeServiceList(const IPlugin* pPlugin_) {
 
 		}
-		rpsfRpcResult Invoke(std::unique_ptr<rpsfRpcArgs>& callArgs_, uint32_t timeout = 0) {
+		rpsfRpcResult Invoke(rpsfRpcArgs& callArgs_, uint32_t timeout = 0) {
 
 		}
-		BusErr PublishData(std::unique_ptr<rpsfData>& data_) {
+		BusErr PublishData(rpsfData& data_) {
 
 		}
 
@@ -123,8 +92,6 @@ namespace rpsf {
 		}
 
 		//所有成员都只能用智能指针了
-		RpsfNodeType thisNodeType;
-
 		std::shared_ptr<ytlib::TcpNetAdapter<rpsfMsg> >  m_netAdapter;//网络适配器
 		std::shared_ptr<ytlib::ChannelBase<rpsfPackagePtr> > m_orderChannel;//有序通道
 		std::shared_ptr<ytlib::ChannelBase<rpsfPackagePtr> > m_unorderChannel;//无序通道
@@ -133,21 +100,4 @@ namespace rpsf {
 
 #define PBUS(p) static_cast<Bus*>(p)
 
-	Client::Client() {
-		p = new Bus();
-	}
-	Client::~Client() {
-		delete p;
-	}
-	bool Client::Init(const std::string& cfgpath) {
-		return PBUS(p)->Init(cfgpath);
-	}
-
-	bool Client::AddPlugin(IPlugin* p_plugin) {
-		return PBUS(p)->AddPlugin(p_plugin);
-	}
-
-	IBus* Client::get_pIBus() {
-		return PBUS(p);
-	}
 }
