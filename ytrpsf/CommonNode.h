@@ -3,20 +3,14 @@
 #include <ytrpsf/Bus.h>
 
 namespace rpsf {
-
-	//普通节点，使用时：初始化-》开始-》结束，单向，线程不安全
-	class CommonNode {
-	private:
-		bool m_bInit;
-		bool m_bRunning;
-
-		Bus m_bus;
+	//普通节点
+	class CommonNode : public Bus{
 
 	public:
-		CommonNode() :m_bInit(false), m_bRunning(false) {}
-		virtual ~CommonNode() { stop(); }
+		CommonNode():Bus(){}
+		virtual ~CommonNode() {}
 
-		virtual bool init(const std::string& cfgpath) {
+		virtual bool Init(const std::string& cfgpath) {
 
 			RpsfCfgFile cfgfile;
 			try {
@@ -32,41 +26,34 @@ namespace rpsf {
 				return false;
 			}
 
-			//设置文件收发路径
-			ytlib::tstring nodename(T_STRING_TO_TSTRING(thisnode.NodeName));
-			ytlib::tstring recvpath(nodename + T_TEXT("/recv"));
-			ytlib::tstring sendpath(nodename + T_TEXT("/send"));
-			std::map<ytlib::tstring, ytlib::tstring>::iterator itr = thisnode.NodeSettings.find(T_TEXT("recvpath"));
-			if (itr != thisnode.NodeSettings.end()) recvpath = itr->second;
-			itr = thisnode.NodeSettings.find(T_TEXT("sendpath"));
-			if (itr != thisnode.NodeSettings.end()) sendpath = itr->second;
+			if (!(Bus::Init(thisnode))) return false;
 
-			if (!(m_bus.Init(thisnode.NodeId, thisnode.NodePort, recvpath, sendpath))) return false;
+			//载入中心节点信息
+			m_netAdapter->SetHost(thisnode.CenterNodeId, thisnode.CenterNodeIp, thisnode.CenterNodePort);
+
+			//订阅系统事件
+
+
+			//注册
+
+			//等待接收到回复信息
+
+
+			//注册成功，订阅系统监控事件
+
+			//加载各个插件
+
+			
+
 
 
 			m_bInit = true;
+			return true;
 
-			return m_bInit;
 		}
 
-		virtual bool start() {
-			if (!m_bInit)return false;
 
 
-
-			m_bRunning = true;
-			return m_bRunning;
-		}
-
-		virtual bool stop() {
-			if (!m_bRunning) return true;//已经停止了
-
-
-
-			m_bRunning = false;
-
-			return !m_bRunning;
-		}
 
 	};
 

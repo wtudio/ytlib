@@ -17,9 +17,9 @@ namespace rpsf {
 	class rpsfMsg {
 		T_CLASS_SERIALIZE(&m_srcAddr&m_msgType)
 	public:
-		rpsfMsg():m_delfiles(false){}
+		rpsfMsg():m_srcAddr(0),m_delfiles(false){}
 
-		uint32_t m_srcAddr;//消息源框架id
+		uint32_t m_srcAddr;//消息源框架id。0代表本地
 		uint8_t m_msgType;//消息类型。因为要支持序列化所以类型为uint8
 
 		HandleType m_handleType;//处理方式
