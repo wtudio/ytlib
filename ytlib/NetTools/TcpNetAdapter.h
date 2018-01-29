@@ -322,10 +322,28 @@ namespace ytlib {
 		}
 		virtual ~TcpNetAdapter() { BaseClass::stop(); }
 
-		inline bool Send(const dataPtr & Tdata_, const ID_Type& dst ,bool delfiles=false) {
-			return Send(Tdata_, std::vector<ID_Type>{dst}, delfiles);
+		inline bool Send(const dataPtr & Tdata_, const ID_Type& dst_ ,bool delfiles=false) {
+			return Send(Tdata_, std::vector<ID_Type>{dst_}, delfiles);
+		}
+		//不重复发送的接口
+		bool Send(const dataPtr & Tdata_, const std::set<ID_Type>& dst_, bool delfiles = false) {
+			//做一些检查
+			if (BaseClass::stopflag) return false;
+			if (dst_.size() == 0) return false;
+			if (Tdata_->map_datas.size() > 255 || Tdata_->map_files.size() > 255) return false;//最大支持255个数据包/文件
+			std::vector<TcpEp> vec_hosts;
+			std::shared_lock<std::shared_mutex> lck(m_hostInfoMutex);
+			for (std::set<ID_Type>::const_iterator itr = dst_.begin(); itr != dst_.end(); ++itr) {
+				if (*itr == m_myid) return false;//不能发给自己。上层做好检查
+				typename std::map<ID_Type, TcpEp>::const_iterator itr = m_mapHostInfo.find(*itr);
+				if (itr == m_mapHostInfo.end()) return false;
+				vec_hosts.push_back(itr->second);
+			}
+			lck.unlock();
+			return _Send(Tdata_, vec_hosts, delfiles);
 		}
 
+		//使用vector作为地址容器，允许重复地址（重复地址意味着重复发送）
 		bool Send(const dataPtr & Tdata_, const std::vector<ID_Type>& dst_, bool delfiles = false) {
 			//做一些检查
 			if (BaseClass::stopflag) return false;
@@ -335,13 +353,94 @@ namespace ytlib {
 			std::vector<TcpEp> vec_hosts;
 			std::shared_lock<std::shared_mutex> lck(m_hostInfoMutex);
 			for (size_t ii = 0; ii < size; ++ii) {
-				if (dst_[ii] == m_myid) return false;
+				if (dst_[ii] == m_myid) return false;//不能发给自己。上层做好检查
 				typename std::map<ID_Type, TcpEp>::const_iterator itr = m_mapHostInfo.find(dst_[ii]);
 				if (itr == m_mapHostInfo.end()) return false;
 				vec_hosts.push_back(itr->second);
 			}
 			lck.unlock();
+			return _Send(Tdata_, vec_hosts, delfiles);
+		}
 
+		//hostinfo操作，主要是对外提供。只可添加或修改，不可移除
+		inline TcpEp GetMyHostInfo() {
+			std::shared_lock<std::shared_mutex> lck(m_hostInfoMutex);
+			return m_mapHostInfo[m_myid];
+		}
+		inline std::map<ID_Type, TcpEp> GetHostInfoMap() {
+			std::shared_lock<std::shared_mutex> lck(m_hostInfoMutex);
+			return m_mapHostInfo;
+		}
+		//设置主机info，有则覆盖，无责添加
+		bool SetHost(const ID_Type& hostid_, const TcpEp & hostInfo_) {
+			std::unique_lock<std::shared_mutex> lck(m_hostInfoMutex);
+			m_mapHostInfo[hostid_] = hostInfo_;
+			return true;
+		}
+		inline bool SetHost(const ID_Type& hostid_, const std::string& ip_, uint16_t port_) {
+			return SetHost(hostid_, TcpEp(boost::asio::ip::address::from_string(ip_), port_));
+		}
+		bool SetHost(const std::map<ID_Type, TcpEp>& hosts_) {
+			std::unique_lock<std::shared_mutex> lck(m_hostInfoMutex);
+			for (typename std::map<ID_Type, TcpEp>::iterator itr = hosts_.begin(); itr != hosts_.end(); ++itr) {
+				m_mapHostInfo[itr->first] = itr->second;
+			}
+			return true;
+		}
+		bool SetHost(const std::map<ID_Type, std::pair<std::string, uint16_t> >& hosts_) {
+			std::unique_lock<std::shared_mutex> lck(m_hostInfoMutex);
+			for (typename std::map<ID_Type, TcpEp>::iterator itr = hosts_.begin(); itr != hosts_.end(); ++itr) {
+				m_mapHostInfo[itr->first] = std::move(TcpEp(boost::asio::ip::address::from_string(itr->second.first), itr->second.second));
+			}
+			return true;
+		}
+	private:
+
+		TcpConnectionPtr getNewTcpConnectionPtr() {
+			return std::make_shared<TcpConnection<T> >(BaseClass::service, std::bind(&TcpNetAdapter::on_err, this, std::placeholders::_1), &m_RecvPath, m_receiveCallBack);
+		}
+		void on_err(const TcpEp& ep) { BaseClass::on_err(ep);	}
+		
+		bool _send_one(const std::shared_ptr<std::vector<boost::asio::const_buffer> > & Tdata_, const TcpEp & ep) {
+			std::shared_ptr<TcpConnection<T> > pc = getTcpConnectionPtr(ep);
+			if (!pc) return false;
+			return pc->write(Tdata_);
+		}
+
+		//获取连接
+		TcpConnectionPtr getTcpConnectionPtr(const TcpEp& ep) {
+			//先在map里找，没有就直接去连接一个
+			{
+				std::shared_lock<std::shared_mutex> lck(BaseClass::m_TcpConnectionMutex);
+				typename std::map<TcpEp, TcpConnectionPtr>::iterator itr = BaseClass::m_mapTcpConnection.find(ep);
+				if (itr != BaseClass::m_mapTcpConnection.end()) {
+					return itr->second;
+				}
+			}
+			//同步连接
+			TcpConnectionPtr pConnection = getNewTcpConnectionPtr();
+			if (pConnection->connect(ep, BaseClass::myport)) {
+				YT_DEBUG_PRINTF("connect to %s:%d successful\n", ep.address().to_string().c_str(), ep.port());
+				BaseClass::m_TcpConnectionMutex.lock();
+				BaseClass::m_mapTcpConnection[ep] = pConnection;
+				BaseClass::m_TcpConnectionMutex.unlock();
+				pConnection->start();
+				return pConnection;
+			}
+			else {
+				//如果同步连接失败了，也有可能对方已经连接过来了。可以再在表中找一下
+				std::shared_lock<std::shared_mutex> lck(BaseClass::m_TcpConnectionMutex);
+				typename std::map<TcpEp, TcpConnectionPtr>::iterator itr = BaseClass::m_mapTcpConnection.find(ep);
+				if (itr != BaseClass::m_mapTcpConnection.end()) {
+					return itr->second;
+				}
+			}
+			YT_DEBUG_PRINTF("connect to %s:%d failed\n", ep.address().to_string().c_str(), ep.port());
+			return TcpConnectionPtr();
+		}
+
+
+		bool _Send(const dataPtr & Tdata_, const std::vector<TcpEp>& vec_hosts, bool delfiles = false) {
 			//将Tdata_先转换为std::vector<boost::asio::const_buffer>再一次性发送
 			std::shared_ptr<std::vector<boost::asio::const_buffer> > buffersPtr = std::make_shared<std::vector<boost::asio::const_buffer> >();
 			//第一步：发送对象
@@ -352,7 +451,7 @@ namespace ytlib {
 			set_buf_from_num(&c_head_buff[4], static_cast<uint32_t>(objbuff.size()));
 			buffersPtr->push_back(std::move(boost::asio::const_buffer(c_head_buff, HEAD_SIZE)));
 			buffersPtr->push_back(std::move(objbuff.data()));
-			
+
 			//第二步，发送快速数据
 			char q_head_buff[HEAD_SIZE]{ TcpConnection<T>::TCPHEAD1 ,TcpConnection<T>::TCPHEAD2,TcpConnection<T>::QUICKHEAD,0 };
 			if (Tdata_->quick_data.buf_size > 0) {
@@ -457,83 +556,6 @@ namespace ytlib {
 				result = result && (v[ii].get());
 			}
 			return result;
-		}
-
-		//hostinfo操作，主要是对外提供。只可添加或修改，不可移除
-		inline TcpEp GetMyHostInfo() {
-			std::shared_lock<std::shared_mutex> lck(m_hostInfoMutex);
-			return m_mapHostInfo[m_myid];
-		}
-		inline std::map<ID_Type, TcpEp> GetHostInfoMap() {
-			std::shared_lock<std::shared_mutex> lck(m_hostInfoMutex);
-			return m_mapHostInfo;
-		}
-		//设置主机info，有则覆盖，无责添加
-		bool SetHost(const ID_Type& hostid_, const TcpEp & hostInfo_) {
-			std::unique_lock<std::shared_mutex> lck(m_hostInfoMutex);
-			m_mapHostInfo[hostid_] = hostInfo_;
-			return true;
-		}
-		inline bool SetHost(const ID_Type& hostid_, const std::string& ip_, uint16_t port_) {
-			return SetHost(hostid_, TcpEp(boost::asio::ip::address::from_string(ip_), port_));
-		}
-		bool SetHost(const std::map<ID_Type, TcpEp>& hosts_) {
-			std::unique_lock<std::shared_mutex> lck(m_hostInfoMutex);
-			for (typename std::map<ID_Type, TcpEp>::iterator itr = hosts_.begin(); itr != hosts_.end(); ++itr) {
-				m_mapHostInfo[itr->first] = itr->second;
-			}
-			return true;
-		}
-		bool SetHost(const std::map<ID_Type, std::pair<std::string, uint16_t> >& hosts_) {
-			std::unique_lock<std::shared_mutex> lck(m_hostInfoMutex);
-			for (typename std::map<ID_Type, TcpEp>::iterator itr = hosts_.begin(); itr != hosts_.end(); ++itr) {
-				m_mapHostInfo[itr->first] = std::move(TcpEp(boost::asio::ip::address::from_string(itr->second.first), itr->second.second));
-			}
-			return true;
-		}
-	private:
-
-		TcpConnectionPtr getNewTcpConnectionPtr() {
-			return std::make_shared<TcpConnection<T> >(BaseClass::service, std::bind(&TcpNetAdapter::on_err, this, std::placeholders::_1), &m_RecvPath, m_receiveCallBack);
-		}
-		void on_err(const TcpEp& ep) { BaseClass::on_err(ep);	}
-		
-		bool _send_one(const std::shared_ptr<std::vector<boost::asio::const_buffer> > & Tdata_, const TcpEp & ep) {
-			std::shared_ptr<TcpConnection<T> > pc = getTcpConnectionPtr(ep);
-			if (!pc) return false;
-			return pc->write(Tdata_);
-		}
-
-		//获取连接
-		TcpConnectionPtr getTcpConnectionPtr(const TcpEp& ep) {
-			//先在map里找，没有就直接去连接一个
-			{
-				std::shared_lock<std::shared_mutex> lck(BaseClass::m_TcpConnectionMutex);
-				typename std::map<TcpEp, TcpConnectionPtr>::iterator itr = BaseClass::m_mapTcpConnection.find(ep);
-				if (itr != BaseClass::m_mapTcpConnection.end()) {
-					return itr->second;
-				}
-			}
-			//同步连接
-			TcpConnectionPtr pConnection = getNewTcpConnectionPtr();
-			if (pConnection->connect(ep, BaseClass::myport)) {
-				YT_DEBUG_PRINTF("connect to %s:%d successful\n", ep.address().to_string().c_str(), ep.port());
-				BaseClass::m_TcpConnectionMutex.lock();
-				BaseClass::m_mapTcpConnection[ep] = pConnection;
-				BaseClass::m_TcpConnectionMutex.unlock();
-				pConnection->start();
-				return pConnection;
-			}
-			else {
-				//如果同步连接失败了，也有可能对方已经连接过来了。可以再在表中找一下
-				std::shared_lock<std::shared_mutex> lck(BaseClass::m_TcpConnectionMutex);
-				typename std::map<TcpEp, TcpConnectionPtr>::iterator itr = BaseClass::m_mapTcpConnection.find(ep);
-				if (itr != BaseClass::m_mapTcpConnection.end()) {
-					return itr->second;
-				}
-			}
-			YT_DEBUG_PRINTF("connect to %s:%d failed\n", ep.address().to_string().c_str(), ep.port());
-			return TcpConnectionPtr();
 		}
 
 

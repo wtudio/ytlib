@@ -50,7 +50,7 @@ namespace rpsf {
 			itr = thisnode_.NodeSettings.find(T_TEXT("sendpath"));
 			if (itr != thisnode_.NodeSettings.end()) sendpath = itr->second;
 			//最后才能开启网络适配器监听
-			m_netAdapter = std::make_shared<ytlib::TcpNetAdapter<rpsfMsg> >(thisnode_.NodeId, thisnode_.NodePort, std::bind(&Bus::on_RecvCallBack, this, std::placeholders::_1), recvpath, sendpath);
+			m_netAdapter = std::make_shared<ytlib::TcpNetAdapter<rpsfMsg> >(thisnode_.NodeId, thisnode_.NodePort, std::bind(&Bus::rpsfMsgClassifier, this, std::placeholders::_1), recvpath, sendpath);
 
 			
 
@@ -71,13 +71,13 @@ namespace rpsf {
 
 		virtual bool Stop() {
 			if (!m_bRunning) return true;//已经停止了
-
-
-
-
-			ytlib::StopNetLog();
-
 			m_bRunning = false;
+
+
+			m_orderChannel->Stop();
+			m_unorderChannel->Stop();
+			m_netAdapter->stop();
+			ytlib::StopNetLog();
 
 			return !m_bRunning;
 		}
@@ -116,10 +116,10 @@ namespace rpsf {
 	protected:
 
 		//从网络收到消息的回调
-		void on_RecvCallBack(rpsfPackagePtr& pmsg) {
+		void rpsfMsgClassifier(rpsfPackagePtr& pmsg) {
 			switch (pmsg->obj.m_handleType) {
 			case HandleType::RPSF_SYNC :
-				rpsfMsgHandler(pmsg);
+				rpsfMsgHandlerLocal(pmsg);
 				break;
 			case HandleType::RPSF_ORDER:
 				m_orderChannel->Add(pmsg);
@@ -137,40 +137,56 @@ namespace rpsf {
 		void rpsfMsgHandler(rpsfPackagePtr& pmsg) {
 			//先判断是否是本地发出的
 			if (pmsg->obj.m_srcAddr == 0) {
-				//如果是本地的，找出目的地，如果是其他节点，则通过网络发送
 				pmsg->obj.m_srcAddr = m_NodeId;
+				//如果是本地的，找出目的地，如果目的地是其他节点，则通过网络发送
+				std::set<uint32_t> dst;
 
-
-
+				//根据数据类型，从不同的表里找目的地
 				switch (pmsg->obj.m_msgType) {
 				case MsgType::RPSF_SYS:
 
 					break;
 				case MsgType::RPSF_DATA: {
-		
+
 					break;
 				}
 				case MsgType::RPSF_RPC: {
-	
+
 					break;
 				}
 				case MsgType::RPSF_RRPC: {
-		
+
 					break;
 				}
 				default:
 					break;
 				}
 
+				//如果目的地是本地，则进行处理
+				std::set<uint32_t>::const_iterator itr = dst.find(m_NodeId);
+				if (itr != dst.end()) {
+					rpsfMsgHandlerLocal(pmsg);
+					dst.erase(itr);
+				}
+
+				//先进行本地处理再发送到网络
+				if (dst.size() > 0)	m_netAdapter->Send(pmsg, dst, pmsg->obj.m_delfiles);
 			}
+			else {
+				//如果是从网络收到的
+				rpsfMsgHandlerLocal(pmsg);
+			}
+		}
 
-			//如果目的地是本地节点，或者消息是从网络上收到的，则进行处理
-
-
+		void rpsfMsgHandlerLocal(rpsfPackagePtr& pmsg){
+			//如果目的地是本地节点，或者消息是从网络上收到的（目的地肯定是本地），则进行处理
 			switch (pmsg->obj.m_msgType) {
-			case MsgType::RPSF_SYS:
-
+			case MsgType::RPSF_SYS: {
+				rpsfSysMsg sysMsg;
+				getMsgFromPackage(pmsg, sysMsg);
+				rpsfSysHandler(sysMsg);
 				break;
+			}
 			case MsgType::RPSF_DATA: {
 				rpsfData data;
 				getMsgFromPackage(pmsg, data);
@@ -194,6 +210,28 @@ namespace rpsf {
 			}
 			
 		}
+
+		//系统信息处理。通用的一些系统事件在此次处理，其他的交给上层
+		void rpsfSysHandler(const rpsfSysMsg& m_) {
+			switch (m_.m_sysMsgType) {
+			case SysMsgType::SYS_TEST1: {
+
+
+				break;
+			}
+			case SysMsgType::SYS_TEST2: {
+
+
+				break;
+			}
+			default:
+
+				break;
+			}
+
+		}
+		
+
 
 		//所有成员都只能用智能指针了
 		std::shared_ptr<ytlib::TcpNetAdapter<rpsfMsg> >  m_netAdapter;//网络适配器

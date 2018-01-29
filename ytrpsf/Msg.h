@@ -1,7 +1,7 @@
 #pragma once
 #include <ytlib/NetTools/TcpNetAdapter.h>
-#include <boost/date_time/posix_time/posix_time.hpp>  
 #include <ytrpsf/Plugin_Bus_Interface.h>
+#include <ytrpsf/SysMsg.h>
 
 namespace rpsf {
 
@@ -37,6 +37,13 @@ namespace rpsf {
 		package->obj.m_delfiles = m_.m_bDelFiles;
 		return std::move(package);
 	}
+	static rpsfPackagePtr setMsgToPackage(rpsfSysMsg& m_) {
+		rpsfPackagePtr package = setBaseMsgToPackage(m_);
+		package->obj.m_msgType = MsgType::RPSF_SYS;
+		package->quick_data = ytlib::sharedBuf(1);
+		package->quick_data.buf[0] = static_cast<uint8_t>(m_.m_sysMsgType);
+		return std::move(package);
+	}
 	static rpsfPackagePtr setMsgToPackage(rpsfRpcArgs& m_) {
 		rpsfPackagePtr package = setBaseMsgToPackage(m_);
 		package->obj.m_msgType = MsgType::RPSF_RPC;
@@ -64,6 +71,10 @@ namespace rpsf {
 		m_.m_mapDatas = std::move(package_->map_datas);
 		m_.m_mapFiles = std::move(package_->map_files);
 		m_.m_handleType = package_->obj.m_handleType;
+	}
+	static void getMsgFromPackage(rpsfPackagePtr& package_, rpsfSysMsg& m_) {
+		getBaseMsgFromPackage(package_, m_);
+		m_.m_sysMsgType = static_cast<SysMsgType>(static_cast<uint8_t>(package_->quick_data.buf[0]));
 	}
 	static void getMsgFromPackage(rpsfPackagePtr& package_, rpsfRpcArgs& m_) {
 		getBaseMsgFromPackage(package_, m_);
