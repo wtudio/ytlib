@@ -56,13 +56,14 @@ namespace rpsf {
 		package->quick_data = ytlib::sharedBuf(m_.m_dataName);
 		return std::move(package);
 	}
-	static rpsfPackagePtr setMsgToPackage(rpsfRpcResult& m_) {
+	static rpsfPackagePtr setMsgToPackage(rpsfRpcResult& m_, uint32_t dst) {
 		rpsfPackagePtr package = setBaseMsgToPackage(m_);
 		package->obj.m_msgType = MsgType::RPSF_RRPC;
 		//BusErr总数小于256个.因为考虑跨平台时的大小端问题
-		package->quick_data = ytlib::sharedBuf(1 + static_cast<uint32_t>(m_.m_errMsg.size()));
-		package->quick_data.buf[0] = static_cast<uint8_t>(m_.m_rpcErr);
-		memcpy(package->quick_data.buf.get() + 1, m_.m_errMsg.c_str(), m_.m_errMsg.size());
+		package->quick_data = ytlib::sharedBuf(5 + static_cast<uint32_t>(m_.m_errMsg.size()));
+		ytlib::set_buf_from_num(package->quick_data.buf.get(), dst);
+		package->quick_data.buf[4] = static_cast<uint8_t>(m_.m_rpcErr);
+		memcpy(package->quick_data.buf.get() + 5, m_.m_errMsg.c_str(), m_.m_errMsg.size());
 		return std::move(package);
 	}
 
@@ -86,9 +87,25 @@ namespace rpsf {
 	}
 	static void getMsgFromPackage(rpsfPackagePtr& package_, rpsfRpcResult& m_) {
 		getBaseMsgFromPackage(package_, m_);
-		m_.m_rpcErr = static_cast<BusErr>(static_cast<uint8_t>(package_->quick_data.buf[0]));
-		m_.m_errMsg.assign(package_->quick_data.buf.get() + 1, package_->quick_data.buf_size - 1);
+		m_.m_rpcErr = static_cast<BusErr>(static_cast<uint8_t>(package_->quick_data.buf[4]));
+		m_.m_errMsg.assign(package_->quick_data.buf.get() + 5, package_->quick_data.buf_size - 5);
 	}
+
+	//从rpsfPackagePtr提取出各个消息的key
+	static SysMsgType getSysMsgTypeFromPackage(const rpsfPackagePtr& package_) {
+		return static_cast<SysMsgType>(static_cast<uint8_t>(package_->quick_data.buf[0]));
+	}
+	static std::string getDataNameFromPackage(const rpsfPackagePtr& package_) {
+		return std::string(package_->quick_data.buf.get(), package_->quick_data.buf_size);
+	}
+	static std::string getServiceFromPackage(const rpsfPackagePtr& package_) {
+		return std::string(package_->quick_data.buf.get(), package_->quick_data.buf_size);
+	}
+	static uint32_t getRrpcDstFromPackage(const rpsfPackagePtr& package_) {
+		return ytlib::get_num_from_buf(package_->quick_data.buf.get());
+	}
+
+
 }
 
 

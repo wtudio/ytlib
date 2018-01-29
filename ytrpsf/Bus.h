@@ -1,5 +1,6 @@
 #pragma once
 #include <ytrpsf/Msg.h>
+#include <ytrpsf/RpsfCfgFile.h>
 #include <ytlib/LogService/Logger.h>
 #include <ytlib/SupportTools/ChannelBase.h>
 
@@ -143,19 +144,30 @@ namespace rpsf {
 
 				//根据数据类型，从不同的表里找目的地
 				switch (pmsg->obj.m_msgType) {
-				case MsgType::RPSF_SYS:
-
+				case MsgType::RPSF_SYS: {
+					//找有哪些节点订阅了此系统事件
+					std::shared_lock<std::shared_mutex> lck(m_mapSysMsgType2NodeIdMutex);
+					std::map<SysMsgType, std::set<uint32_t> >::const_iterator itr =	m_mapSysMsgType2NodeId.find(getSysMsgTypeFromPackage(pmsg));
+					if (itr != m_mapSysMsgType2NodeId.end()) dst = itr->second;
 					break;
+				}
 				case MsgType::RPSF_DATA: {
-
+					//找有哪些节点订阅了此数据
+					std::shared_lock<std::shared_mutex> lck(m_mapDataNmae2NodeIdMutex);
+					std::map<std::string, std::set<uint32_t> >::const_iterator itr = m_mapDataNmae2NodeId.find(getDataNameFromPackage(pmsg));
+					if (itr != m_mapDataNmae2NodeId.end()) dst = itr->second;
 					break;
 				}
 				case MsgType::RPSF_RPC: {
-
+					//找有哪些节点提供此RPC服务
+					std::shared_lock<std::shared_mutex> lck(m_mapService2NodeIdMutex);
+					std::map<std::string, std::set<uint32_t> >::const_iterator itr = m_mapService2NodeId.find(getServiceFromPackage(pmsg));
+					if (itr != m_mapService2NodeId.end()) dst = itr->second;
 					break;
 				}
 				case MsgType::RPSF_RRPC: {
-
+					//找这个RPC服务是从哪个节点发出来的
+					dst.insert(getRrpcDstFromPackage(pmsg));
 					break;
 				}
 				default:
@@ -190,12 +202,16 @@ namespace rpsf {
 			case MsgType::RPSF_DATA: {
 				rpsfData data;
 				getMsgFromPackage(pmsg, data);
+				//找到本地对应的插件进行派发
 
 				break;
 			}	
 			case MsgType::RPSF_RPC: {
 				rpsfRpcArgs rpcArgs;
 				getMsgFromPackage(pmsg, rpcArgs);
+				//找到本地的插件进行调用
+
+				//将结果打包并交由分类器处理
 
 				break;
 			}
@@ -224,6 +240,10 @@ namespace rpsf {
 
 				break;
 			}
+			case SysMsgType::SYS_COUNT: {
+
+				break;
+			}
 			default:
 
 				break;
@@ -242,6 +262,19 @@ namespace rpsf {
 		bool m_bRunning;
 
 		uint32_t m_NodeId;
+
+		//系统事件与节点id的表
+		std::shared_mutex m_mapSysMsgType2NodeIdMutex;
+		std::map<SysMsgType, std::set<uint32_t> > m_mapSysMsgType2NodeId;
+		//数据名称与节点id的表
+		std::shared_mutex m_mapDataNmae2NodeIdMutex;
+		std::map<std::string, std::set<uint32_t> > m_mapDataNmae2NodeId;
+		//服务名称与节点id的表
+		std::shared_mutex m_mapService2NodeIdMutex;
+		std::map<std::string, std::set<uint32_t> > m_mapService2NodeId;
+
+
+
 	};
 
 

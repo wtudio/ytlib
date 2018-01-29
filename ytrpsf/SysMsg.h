@@ -7,7 +7,8 @@ namespace rpsf {
 	//系统信息类型。最多256个
 	enum SysMsgType {
 		SYS_TEST1,
-		SYS_TEST2
+		SYS_TEST2,
+		SYS_COUNT	//计数，同时也是无效值
 	};
 
 	class rpsfSysMsg : public rpsfPackage {
