@@ -103,11 +103,13 @@ namespace rpsf {
 		std::map<std::string, std::string> GetSubscribeServiceList(const IPlugin* pPlugin_) {
 
 		}
+
 		rpsfRpcResult Invoke(rpsfRpcArgs& callArgs_, uint32_t timeout = 0) {
 
 		}
-		BusErr PublishData(rpsfData& data_) {
 
+		BusErr PublishData(rpsfData& data_) {
+			rpsfMsgClassifier(setMsgToPackage(data_));
 		}
 
 		const char* getBusErrMsg(BusErr err) {
@@ -202,7 +204,22 @@ namespace rpsf {
 			case MsgType::RPSF_DATA: {
 				rpsfData data;
 				getMsgFromPackage(pmsg, data);
-				//找到本地对应的插件进行派发
+				//找到本地对应的插件进行并行化异步派发，以减少此步骤占用插件列表的时间
+				std::shared_lock<std::shared_mutex> lck(m_mapDataName2PluginMutex);
+				std::map<std::string, std::set<IPlugin*> >::iterator itr = m_mapDataName2Plugin.find(data.m_dataName);
+				if (itr == m_mapDataName2Plugin.end())	break;
+				const std::set<IPlugin*>& pgList = itr->second;
+				std::vector<std::thread> onDataThreads;
+				for (std::set<IPlugin*>::iterator itr2 = pgList.begin(); itr2 != pgList.end(); ++itr2) {
+					//创建线程。todo:需要测试要不要std::move?
+					onDataThreads.push_back(std::thread(std::bind(&IPlugin::OnData, *itr2, std::placeholders::_1), data));
+				}
+				lck.unlock();
+				//等待线程结束
+				size_t len = onDataThreads.size();
+				for (size_t ii = 0; ii < len; ++ii) {
+					onDataThreads[ii].join();
+				}
 
 				break;
 			}	
@@ -273,7 +290,9 @@ namespace rpsf {
 		std::shared_mutex m_mapService2NodeIdMutex;
 		std::map<std::string, std::set<uint32_t> > m_mapService2NodeId;
 
-
+		//数据名称与插件指针的表
+		std::shared_mutex m_mapDataName2PluginMutex;
+		std::map<std::string, std::set<IPlugin*> > m_mapDataName2Plugin;
 
 	};
 

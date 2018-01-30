@@ -115,7 +115,7 @@ namespace rpsf {
 		virtual ~IPlugin() {}
 		virtual bool Start(std::map<std::string, std::string>& params_) = 0;
 		virtual void Stop(void) = 0;
-		virtual void OnData(const rpsfData& data_,const std::string& dataTime_) = 0;
+		virtual void OnData(const rpsfData& data_) = 0;
 		virtual rpsfRpcResult Invoke(rpsfRpcArgs& callArgs_) = 0;
 
 		//对总线接口的快捷操作
