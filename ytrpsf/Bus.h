@@ -116,6 +116,26 @@ namespace rpsf {
 			return busErrMsg[err];
 		}
 		
+		//加载插件
+		bool rpsfLoadOnePlugin(const std::string& pgname_, const std::map<std::string, std::string>& initParas) {
+
+			return true;
+		}
+		//卸载插件
+		bool rpsfRemoveOnePlugin(const std::string& pgname_) {
+
+			return true;
+		}
+		//使能插件
+		bool rpsfEnableOnePlugin(const std::string& pgname_) {
+
+			return true;
+		}
+		//失能插件
+		bool rpsfDisableOnePlugin(const std::string& pgname_) {
+
+			return true;
+		}
 	protected:
 
 		//从网络收到消息的回调
@@ -205,16 +225,25 @@ namespace rpsf {
 				rpsfData data;
 				getMsgFromPackage(pmsg, data);
 				//找到本地对应的插件进行并行化异步派发，以减少此步骤占用插件列表的时间
-				std::shared_lock<std::shared_mutex> lck(m_mapDataName2PluginMutex);
-				std::map<std::string, std::set<IPlugin*> >::iterator itr = m_mapDataName2Plugin.find(data.m_dataName);
-				if (itr == m_mapDataName2Plugin.end())	break;
-				const std::set<IPlugin*>& pgList = itr->second;
-				std::vector<std::thread> onDataThreads;
-				for (std::set<IPlugin*>::iterator itr2 = pgList.begin(); itr2 != pgList.end(); ++itr2) {
-					//创建线程。todo:需要测试要不要std::move?
-					onDataThreads.push_back(std::thread(std::bind(&IPlugin::OnData, *itr2, std::placeholders::_1), data));
+				std::shared_lock<std::shared_mutex> lck(m_mapDataName2PgNameMutex);
+				std::map<std::string, std::set<std::string> >::const_iterator itr = m_mapDataName2PgName.find(data.m_dataName);
+				if (itr == m_mapDataName2PgName.end())	break;
+				std::set<IPlugin*> pgList;
+				std::shared_lock<std::shared_mutex> lck2(m_mapPgName2PgPointMutex);
+				for (std::set<std::string>::const_iterator itr2 = itr->second.begin(); itr2 != itr->second.end(); ++itr2) {
+					std::map<std::string, std::pair<IPlugin*, bool> >::const_iterator itr3 = m_mapPgName2PgPoint.find(*itr2);
+					if ((itr3 != m_mapPgName2PgPoint.end())&&(itr3->second.second)) {
+						pgList.insert(itr3->second.first);
+					}
 				}
+				lck2.unlock();
 				lck.unlock();
+				std::vector<std::thread> onDataThreads;
+				for (std::set<IPlugin*>::iterator itr4 = pgList.begin(); itr4 != pgList.end(); ++itr4) {
+					//创建线程。todo:需要测试要不要std::move?
+					onDataThreads.push_back(std::thread(std::bind(&IPlugin::OnData, *itr4, std::placeholders::_1), data));
+				}
+				
 				//等待线程结束
 				size_t len = onDataThreads.size();
 				for (size_t ii = 0; ii < len; ++ii) {
@@ -267,7 +296,6 @@ namespace rpsf {
 			}
 
 		}
-		
 
 
 		//所有成员都只能用智能指针了
@@ -290,9 +318,17 @@ namespace rpsf {
 		std::shared_mutex m_mapService2NodeIdMutex;
 		std::map<std::string, std::set<uint32_t> > m_mapService2NodeId;
 
-		//数据名称与插件指针的表
-		std::shared_mutex m_mapDataName2PluginMutex;
-		std::map<std::string, std::set<IPlugin*> > m_mapDataName2Plugin;
+		//插件名称与插件指针的表
+		std::shared_mutex m_mapPgName2PgPointMutex;
+		std::map<std::string, std::pair<IPlugin*,bool> > m_mapPgName2PgPoint;
+
+		//本地插件订阅的数据名称与插件名称的表
+		std::shared_mutex m_mapDataName2PgNameMutex;
+		std::map<std::string, std::set<std::string> > m_mapDataName2PgName;
+
+
+
+
 
 	};
 

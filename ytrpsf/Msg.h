@@ -101,7 +101,7 @@ namespace rpsf {
 	static std::string getServiceFromPackage(const rpsfPackagePtr& package_) {
 		return std::string(package_->quick_data.buf.get(), package_->quick_data.buf_size);
 	}
-	static uint32_t getRrpcDstFromPackage(const rpsfPackagePtr& package_) {
+	static uint32_t getRrpcDstFromPackage(const rpsfPackagePtr& package_ ) {
 		return ytlib::get_num_from_buf(package_->quick_data.buf.get());
 	}
 
