@@ -14,12 +14,13 @@ namespace rpsf {
 		SYS_NEW_NODE_REG,//新节点向中心节点注册事件
 		SYS_NEW_NODE_ONLINE,//新节点上线事件，由中心节点发布，包含新节点的信息（订阅的系统事件）
 		SYS_ALL_INFO,//更新整个网络当前状态，由中心节点发布，一般给供刚上线的节点更新全网信息
-
+		SYS_SUB_SYSEVENT,//订阅/取消订阅系统事件
 		SYS_COUNT	//计数，同时也是无效值
 	};
 
 	class rpsfSysMsg : public rpsfPackage {
 	public:
+		rpsfSysMsg(){}
 		rpsfSysMsg(SysMsgType sysMsgType_):m_sysMsgType(sysMsgType_){}
 		SysMsgType m_sysMsgType;
 
@@ -28,6 +29,7 @@ namespace rpsf {
 	static rpsfPackagePtr setMsgToPackage(rpsfSysMsg& m_) {
 		rpsfPackagePtr package = setBaseMsgToPackage(m_);
 		package->obj.m_msgType = MsgType::RPSF_SYS;
+		package->obj.m_handleType = HandleType::RPSF_SYNC;//默认为同步处理
 		package->quick_data = ytlib::sharedBuf(1);
 		package->quick_data.buf[0] = static_cast<uint8_t>(m_.m_sysMsgType);
 		return std::move(package);
@@ -78,22 +80,47 @@ namespace rpsf {
 
 	//新订阅数据事件数据包
 	class subscribeDataInfoMsg {
-		T_CLASS_SERIALIZE(&NodeId&DataName)
+		T_CLASS_SERIALIZE(&NodeId&DataName&Operation)
 	public:
 		uint32_t NodeId;//节点id
 		std::string DataName;//订阅的数据
 		bool Operation;//操作：true订阅，false取消订阅
 	};
+	//批量新订阅数据事件数据包
+	class subscribeDatasInfoMsg {
+		T_CLASS_SERIALIZE(&NodeId&DataNames&Operation)
+	public:
+		uint32_t NodeId;//节点id
+		std::set<std::string> DataNames;//订阅的数据
+		bool Operation;//操作：true订阅，false取消订阅
+	};
 
 	//新注册RPC事件数据包
 	class serviceInfoMsg {
-		T_CLASS_SERIALIZE(&NodeId&Service)
+		T_CLASS_SERIALIZE(&NodeId&Service&Operation)
 	public:
 		uint32_t NodeId;//节点id
 		std::string Service;//提供的服务
 		bool Operation;//操作：true提供服务，false取消提供服务
 	};
 
+	//批量新注册RPC事件数据包
+	class servicesInfoMsg {
+		T_CLASS_SERIALIZE(&NodeId&Services&Operation)
+	public:
+		uint32_t NodeId;//节点id
+		std::set<std::string> Services;//提供的服务
+		bool Operation;//操作：true提供服务，false取消提供服务
+	};
+
+	//批量订阅系统事件数据包
+	class subscribeSysEventMsg {
+		T_CLASS_SERIALIZE(&NodeId&SysMsg&Operation)
+	public:
+		uint32_t NodeId;//节点id
+		std::set<SysMsgType> SysMsg;//节点订阅的系统事件
+		bool Operation;//操作：true订阅，false取消订阅
+	};
 
 }
 

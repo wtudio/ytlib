@@ -50,8 +50,18 @@ namespace rpsf {
 			return true;
 
 		}
-
-
+		virtual void SubscribeSysEvent(const std::set<SysMsgType>& sysEvents_) {
+			Bus::SubscribeSysEvent(sysEvents_);
+			subscribeSysEventMsg msg{ m_NodeId ,sysEvents_ ,true };
+			rpsfPackagePtr p = setSysMsgToPackage(msg, SysMsgType::SYS_SUB_SYSEVENT);
+			rpsfMsgHandlerLocal(p);//同步处理
+		}
+		virtual void UnsubscribeSysEvent(const std::set<SysMsgType>& sysEvents_) {
+			Bus::UnsubscribeSysEvent(sysEvents_);
+			subscribeSysEventMsg msg{ m_NodeId ,sysEvents_ ,false };
+			rpsfPackagePtr p = setSysMsgToPackage(msg, SysMsgType::SYS_SUB_SYSEVENT);
+			rpsfMsgHandlerLocal(p);//同步处理
+		}
 		virtual void rpsfSysHandler(rpsfSysMsg& m_) {
 			switch (m_.m_sysMsgType) {
 			case SysMsgType::SYS_TEST1: {

@@ -178,20 +178,27 @@ namespace rpsf {
 
 		//卸载插件
 		virtual bool rpsfRemoveOnePlugin(const std::string& pgname_) {
+			//先失能此插件
+			rpsfEnableOnePlugin(pgname_, false);
+			//取消与此插件有关的一切订阅、RPC
 			std::unique_lock<std::shared_mutex> lck(m_mapPgName2PgPointMutex);
 			std::map<std::string, std::pair<IPlugin*, bool> >::iterator itr = m_mapPgName2PgPoint.find(pgname_);
 			if (itr == m_mapPgName2PgPoint.end()) {
 				//想要卸载未加载的插件
 				return false;
 			}
-			itr->second.first->Stop();
-			m_mapPgName2PgPoint.erase(itr);
+
+			
+			itr->second.first->Stop();//停止插件
+			m_mapPgName2PgPoint.erase(itr);//从表中删除
+			//再卸载此插件
 			if (!REMOVE_LIB(T_STRING_TO_TSTRING(pgname_))) {
-				//加载失败
+				//卸载失败
 				return false;
 			}
 			return true;
 		}
+		//插件不使能的意思是：插件仍然在运行，但是有数据、RPC到来时不予调用
 		//使能插件
 		virtual bool rpsfEnableOnePlugin(const std::string& pgname_, bool enable_ = true) {
 			std::unique_lock<std::shared_mutex> lck(m_mapPgName2PgPointMutex);
