@@ -1,7 +1,7 @@
 #pragma once
 #include <ytlib/NetTools/TcpNetAdapter.h>
 #include <ytrpsf/Plugin_Bus_Interface.h>
-#include <ytrpsf/SysMsg.h>
+#include <ytlib/SupportTools/Serialize.h>
 
 namespace rpsf {
 
@@ -20,6 +20,7 @@ namespace rpsf {
 		rpsfMsg():m_srcAddr(0),m_delfiles(false){}
 
 		uint32_t m_srcAddr;//消息源框架id。0代表本地
+		std::set<uint32_t> m_pushList;//推送名单
 		uint8_t m_msgType;//消息类型。因为要支持序列化所以类型为uint8
 
 		HandleType m_handleType;//处理方式
@@ -35,13 +36,6 @@ namespace rpsf {
 		package->map_files = std::move(m_.m_mapFiles);
 		package->obj.m_handleType = m_.m_handleType;
 		package->obj.m_delfiles = m_.m_bDelFiles;
-		return std::move(package);
-	}
-	static rpsfPackagePtr setMsgToPackage(rpsfSysMsg& m_) {
-		rpsfPackagePtr package = setBaseMsgToPackage(m_);
-		package->obj.m_msgType = MsgType::RPSF_SYS;
-		package->quick_data = ytlib::sharedBuf(1);
-		package->quick_data.buf[0] = static_cast<uint8_t>(m_.m_sysMsgType);
 		return std::move(package);
 	}
 	static rpsfPackagePtr setMsgToPackage(rpsfRpcArgs& m_) {
@@ -73,10 +67,6 @@ namespace rpsf {
 		m_.m_mapFiles = std::move(package_->map_files);
 		m_.m_handleType = package_->obj.m_handleType;
 	}
-	static void getMsgFromPackage(rpsfPackagePtr& package_, rpsfSysMsg& m_) {
-		getBaseMsgFromPackage(package_, m_);
-		m_.m_sysMsgType = static_cast<SysMsgType>(static_cast<uint8_t>(package_->quick_data.buf[0]));
-	}
 	static void getMsgFromPackage(rpsfPackagePtr& package_, rpsfRpcArgs& m_) {
 		getBaseMsgFromPackage(package_, m_);
 		m_.m_service.assign(package_->quick_data.buf.get(), package_->quick_data.buf_size);
@@ -92,9 +82,6 @@ namespace rpsf {
 	}
 
 	//从rpsfPackagePtr提取出各个消息的key
-	static SysMsgType getSysMsgTypeFromPackage(const rpsfPackagePtr& package_) {
-		return static_cast<SysMsgType>(static_cast<uint8_t>(package_->quick_data.buf[0]));
-	}
 	static std::string getDataNameFromPackage(const rpsfPackagePtr& package_) {
 		return std::string(package_->quick_data.buf.get(), package_->quick_data.buf_size);
 	}
@@ -105,6 +92,35 @@ namespace rpsf {
 		return ytlib::get_num_from_buf(package_->quick_data.buf.get());
 	}
 
+	//使用高性能序列化方法封装的序列化到sharedBuf的方法。二进制序列化
+	template<class T>
+	bool Serialize(const T& obj, ytlib::sharedBuf& data) {
+		try {
+			char* p;
+			size_t len;
+			SERIALIZE_INIT;
+			SERIALIZE(obj, p, len);
+			data.buf = boost::shared_array<char>(new char[len]);
+			memcpy(data.buf.get(), p, len);
+			return true;
+		}
+		catch (const std::exception& e) {
+			std::cout << "Serialize failed:" << e.what() << std::endl;
+			return false;
+		}
+	}
+	template<class T>
+	bool Deserialize_f(const T& obj, ytlib::sharedBuf& data) {
+		try {
+			DESERIALIZE_INIT;
+			DESERIALIZE(obj, data.buf.get(), data.buf_size);
+			return true;
+		}
+		catch (const std::exception& e) {
+			std::cout << "Serialize failed:" << e.what() << std::endl;
+			return false;
+		}
+	}
 
 }
 

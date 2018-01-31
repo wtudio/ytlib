@@ -166,7 +166,7 @@ namespace ytlib
 	public:
 		myistringstream(ios_base::openmode _Mode = ios_base::out) :std::istringstream(_Mode) {}
 		~myistringstream() {};
-		void setPoint(char* &p, size_t &len) {
+		void setPoint(char* p, size_t len) {
 			rdbuf()->swap(_mybuf);
 			_mybuf.str("");
 			_mybuf.setg(p, p, p + len);
@@ -178,7 +178,7 @@ namespace ytlib
 
 	//用户也可以参考这些宏来定制自己的序列化反序列化操作
 #define SERIALIZE_INIT \
-	myostringstream myostringstream_tmp(std::ios_base::binary); \
+	ytlib::myostringstream myostringstream_tmp(std::ios_base::binary); \
 	std::shared_ptr<boost::archive::binary_oarchive> oar_tmp;
 
 #define SERIALIZE(obj,p,len) \
@@ -188,7 +188,7 @@ namespace ytlib
 	myostringstream_tmp.getPoint(p, len);
 
 #define DESERIALIZE_INIT \
-	myistringstream myistringstream_tmp(std::ios_base::binary); \
+	ytlib::myistringstream myistringstream_tmp(std::ios_base::binary); \
 	std::shared_ptr<boost::archive::binary_iarchive> iar_tmp;
 
 #define DESERIALIZE(obj,p,len) \

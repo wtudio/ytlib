@@ -7,7 +7,7 @@ namespace rpsf {
 	class CommonNode : public Bus{
 
 	public:
-		CommonNode():Bus(){}
+		CommonNode() :Bus() {}
 		virtual ~CommonNode() {}
 
 		virtual bool Init(const std::string& cfgpath) {
@@ -32,8 +32,7 @@ namespace rpsf {
 			m_netAdapter->SetHost(thisnode.CenterNodeId, thisnode.CenterNodeIp, thisnode.CenterNodePort);
 
 			//订阅系统事件
-
-
+			Bus::SubscribeSysEvent(std::set<SysMsgType>());
 			//注册
 
 			//等待接收到回复信息
@@ -53,7 +52,27 @@ namespace rpsf {
 		}
 
 
+		virtual void rpsfSysHandler(rpsfSysMsg& m_) {
+			switch (m_.m_sysMsgType) {
+			case SysMsgType::SYS_TEST1: {
 
+
+				break;
+			}
+			case SysMsgType::SYS_TEST2: {
+
+
+				break;
+			}
+			case SysMsgType::SYS_COUNT: {
+
+				break;
+			}
+			default:
+				Bus::rpsfSysHandler(m_);
+				break;
+			}
+		}
 
 	};
 

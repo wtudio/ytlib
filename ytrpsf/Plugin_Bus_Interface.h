@@ -108,12 +108,12 @@ namespace rpsf {
 	//plugin的虚基类，直接提供给用户进行开发。用户需要继承它
 	class IPlugin {
 	public:
-		//名称和服务需要在插件构造时确定下来并且不能改变。总线指针也需要在构造函数中被传入并且确定
+		//名称需要在插件构造时确定下来并且不能改变。总线指针也需要在构造函数中被传入并且确定
 		IPlugin(IBus* pBus_, const std::string& name_) :
 			pBus(pBus_), name(name_) {
 		}
 		virtual ~IPlugin() {}
-		virtual bool Start(std::map<std::string, std::string>& params_) = 0;
+		virtual bool Start(const std::map<std::string, std::string>& params_) = 0;
 		virtual void Stop(void) = 0;
 		virtual void OnData(const rpsfData& data_) = 0;
 		virtual rpsfRpcResult Invoke(rpsfRpcArgs& callArgs_) = 0;
@@ -149,7 +149,7 @@ namespace rpsf {
 
 	//用户创建的插件需要实现此接口来返回一个IPlugin实例
 #ifndef CREATE_PLUGIN_STRING
-#define CREATE_PLUGIN_STRING CL_TEXT("CreatePlugin")
+#define CREATE_PLUGIN_STRING T_TEXT("CreatePlugin")
 #endif
 
 }

@@ -1,8 +1,9 @@
 #pragma once
-#include <ytrpsf/Msg.h>
+#include <ytrpsf/SysMsg.h>
 #include <ytrpsf/RpsfCfgFile.h>
 #include <ytlib/LogService/Logger.h>
 #include <ytlib/SupportTools/ChannelBase.h>
+#include <ytlib/SupportTools/DynamicLibraryContainer.h>
 
 
 namespace rpsf {
@@ -24,7 +25,7 @@ namespace rpsf {
 	class Bus : public IBus {
 	public:
 		
-		Bus() :m_bInit(false), m_bRunning(false) {}
+		Bus() :m_bInit(false), m_bRunning(false){}
 		virtual ~Bus() { Stop(); }
 
 		virtual bool Init(const RpsfNode& thisnode_) {
@@ -116,27 +117,92 @@ namespace rpsf {
 			return busErrMsg[err];
 		}
 		
-		//加载插件
-		bool rpsfLoadOnePlugin(const std::string& pgname_, const std::map<std::string, std::string>& initParas) {
+	protected:
+		//本地订阅系统事件
+		virtual void SubscribeSysEvent(const std::set<SysMsgType>& sysEvents_) {
+			std::unique_lock<std::shared_mutex> lck(m_mapSysMsgType2NodeIdMutex);
+			for (std::set<SysMsgType>::const_iterator itr = sysEvents_.begin(); itr != sysEvents_.end(); ++itr) {
+				m_mapSysMsgType2NodeId[*itr].insert(m_NodeId);
+			}
 
+		}
+		//本地取消订阅系统事件
+		virtual void UnsubscribeSysEvent(const std::set<SysMsgType>& sysEvents_) {
+			std::unique_lock<std::shared_mutex> lck(m_mapSysMsgType2NodeIdMutex);
+			for (std::set<SysMsgType>::const_iterator itr = sysEvents_.begin(); itr != sysEvents_.end(); ++itr) {
+				std::map<SysMsgType, std::set<uint32_t> >::iterator itr2 = m_mapSysMsgType2NodeId.find(*itr);
+				if (itr2 == m_mapSysMsgType2NodeId.end()) continue;
+				std::set<uint32_t>::iterator itr3 = itr2->second.find(m_NodeId);
+				if (itr3 == itr2->second.end()) continue;
+				itr2->second.erase(itr3);
+				if (itr2->second.empty()) m_mapSysMsgType2NodeId.erase(itr2);
+			}
+		}
+
+		//加载插件
+		virtual bool rpsfLoadOnePlugin(const std::string& pgname_, bool enable_, const std::map<std::string, std::string>& initParas) {
+			std::pair<std::shared_ptr<ytlib::DynamicLibrary>, bool> result = GET_LIB(T_STRING_TO_TSTRING(pgname_));
+			if (!result.first) {
+				//没加载上
+				return false;
+			}
+			if (result.second) {
+				//已经加载过了
+				return false;
+			}
+			typedef IPlugin* (*CreatePluginFun)(IBus*);
+			CreatePluginFun CreatePlugin = (CreatePluginFun)result.first->GetSymbol(CREATE_PLUGIN_STRING);
+			if (CreatePlugin) {
+				IPlugin* pPlugin = CreatePlugin(this);//创建插件对象
+				if (pPlugin == NULL) {
+					//加载失败
+					return false;
+				}
+				if (pgname_ != pPlugin->name) {
+					//名称不对应
+					return false;
+				}
+				pPlugin->Start(initParas);
+				std::unique_lock<std::shared_mutex> lck(m_mapPgName2PgPointMutex);
+				m_mapPgName2PgPoint.insert(std::pair<std::string, std::pair<IPlugin*, bool> >(pgname_, std::pair<IPlugin*, bool>(pPlugin, enable_)));
+				//加载成功
+			}
 			return true;
 		}
-		//卸载插件
-		bool rpsfRemoveOnePlugin(const std::string& pgname_) {
+		//批量加载插件
+		virtual void rpsfLoadPlugins(const std::set<PluginCfg>& plugins) {
+			for (std::set<PluginCfg>::const_iterator itr = plugins.begin(); itr != plugins.end(); ++itr) {
+				rpsfLoadOnePlugin(itr->PluginName, itr->enable, itr->InitParas);
+			}
+		}
 
+		//卸载插件
+		virtual bool rpsfRemoveOnePlugin(const std::string& pgname_) {
+			std::unique_lock<std::shared_mutex> lck(m_mapPgName2PgPointMutex);
+			std::map<std::string, std::pair<IPlugin*, bool> >::iterator itr = m_mapPgName2PgPoint.find(pgname_);
+			if (itr == m_mapPgName2PgPoint.end()) {
+				//想要卸载未加载的插件
+				return false;
+			}
+			itr->second.first->Stop();
+			m_mapPgName2PgPoint.erase(itr);
+			if (!REMOVE_LIB(T_STRING_TO_TSTRING(pgname_))) {
+				//加载失败
+				return false;
+			}
 			return true;
 		}
 		//使能插件
-		bool rpsfEnableOnePlugin(const std::string& pgname_) {
-
+		virtual bool rpsfEnableOnePlugin(const std::string& pgname_, bool enable_ = true) {
+			std::unique_lock<std::shared_mutex> lck(m_mapPgName2PgPointMutex);
+			std::map<std::string, std::pair<IPlugin*, bool> >::iterator itr = m_mapPgName2PgPoint.find(pgname_);
+			if (itr == m_mapPgName2PgPoint.end()) {
+				//没有此插件
+				return false;
+			}
+			itr->second.second = enable_;
 			return true;
 		}
-		//失能插件
-		bool rpsfDisableOnePlugin(const std::string& pgname_) {
-
-			return true;
-		}
-	protected:
 
 		//从网络收到消息的回调
 		void rpsfMsgClassifier(rpsfPackagePtr& pmsg) {
@@ -162,7 +228,7 @@ namespace rpsf {
 			if (pmsg->obj.m_srcAddr == 0) {
 				pmsg->obj.m_srcAddr = m_NodeId;
 				//如果是本地的，找出目的地，如果目的地是其他节点，则通过网络发送
-				std::set<uint32_t> dst;
+				std::set<uint32_t> dst = std::move(pmsg->obj.m_pushList);//读取推送地址
 
 				//根据数据类型，从不同的表里找目的地
 				switch (pmsg->obj.m_msgType) {
@@ -170,21 +236,21 @@ namespace rpsf {
 					//找有哪些节点订阅了此系统事件
 					std::shared_lock<std::shared_mutex> lck(m_mapSysMsgType2NodeIdMutex);
 					std::map<SysMsgType, std::set<uint32_t> >::const_iterator itr =	m_mapSysMsgType2NodeId.find(getSysMsgTypeFromPackage(pmsg));
-					if (itr != m_mapSysMsgType2NodeId.end()) dst = itr->second;
+					if (itr != m_mapSysMsgType2NodeId.end()) dst.insert(itr->second.begin(), itr->second.end());
 					break;
 				}
 				case MsgType::RPSF_DATA: {
 					//找有哪些节点订阅了此数据
 					std::shared_lock<std::shared_mutex> lck(m_mapDataNmae2NodeIdMutex);
 					std::map<std::string, std::set<uint32_t> >::const_iterator itr = m_mapDataNmae2NodeId.find(getDataNameFromPackage(pmsg));
-					if (itr != m_mapDataNmae2NodeId.end()) dst = itr->second;
+					if (itr != m_mapDataNmae2NodeId.end()) dst.insert(itr->second.begin(), itr->second.end());
 					break;
 				}
 				case MsgType::RPSF_RPC: {
 					//找有哪些节点提供此RPC服务
 					std::shared_lock<std::shared_mutex> lck(m_mapService2NodeIdMutex);
 					std::map<std::string, std::set<uint32_t> >::const_iterator itr = m_mapService2NodeId.find(getServiceFromPackage(pmsg));
-					if (itr != m_mapService2NodeId.end()) dst = itr->second;
+					if (itr != m_mapService2NodeId.end()) dst.insert(itr->second.begin(), itr->second.end());
 					break;
 				}
 				case MsgType::RPSF_RRPC: {
@@ -274,7 +340,7 @@ namespace rpsf {
 		}
 
 		//系统信息处理。通用的一些系统事件在此次处理，其他的交给上层
-		void rpsfSysHandler(const rpsfSysMsg& m_) {
+		virtual void rpsfSysHandler(rpsfSysMsg& m_) {
 			switch (m_.m_sysMsgType) {
 			case SysMsgType::SYS_TEST1: {
 
@@ -325,10 +391,6 @@ namespace rpsf {
 		//本地插件订阅的数据名称与插件名称的表
 		std::shared_mutex m_mapDataName2PgNameMutex;
 		std::map<std::string, std::set<std::string> > m_mapDataName2PgName;
-
-
-
-
 
 	};
 

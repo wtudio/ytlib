@@ -1,6 +1,7 @@
 #pragma once
 #include <ytlib/SupportTools/DynamicLibrary.h>
 #include <boost/serialization/singleton.hpp>
+#include <mutex>
 
 namespace ytlib
 {
@@ -13,31 +14,43 @@ namespace ytlib
 			m_mapLibraries.clear();
 		}
 
-		//根据名称获取动态链接库对象
-		std::shared_ptr<DynamicLibrary> GetLibrary(const tstring& libname) {
+		//根据名称获取动态链接库对象，并返回是否已经加载，true表示已经加载
+		std::pair<std::shared_ptr<DynamicLibrary>,bool> GetLibrary(const tstring& libname) {
+			std::lock_guard<std::mutex> lck(m_mapLibrariesMutex);
 			std::map<tstring, std::shared_ptr<DynamicLibrary> >::iterator iter = m_mapLibraries.find(libname);
 			if (iter == m_mapLibraries.end()) {
 				std::shared_ptr<DynamicLibrary> pLibrary = std::make_shared<DynamicLibrary>();
 				if (pLibrary->Load(libname)) {
 					m_mapLibraries.insert(std::make_pair(libname, pLibrary));
-					return pLibrary;
+					return std::pair<std::shared_ptr<DynamicLibrary>, bool>(pLibrary, false);
 				}
 				else {
 					pLibrary.reset();
-					return pLibrary;
+					return std::pair<std::shared_ptr<DynamicLibrary>, bool>(pLibrary, false);
 				}
 			}
 			else {
-				return iter->second;
+				return std::pair<std::shared_ptr<DynamicLibrary>, bool>(iter->second, true);
 			}
 		}
+		bool RemoveLibrary(const tstring& libname) {
+			std::lock_guard<std::mutex> lck(m_mapLibrariesMutex);
+			std::map<tstring, std::shared_ptr<DynamicLibrary> >::iterator iter = m_mapLibraries.find(libname);
+			if (iter == m_mapLibraries.end()) {
+				//没有加载此lib
+				return false;
+			}
+			m_mapLibraries.erase(iter);
+			return true;
+		}
 	private:
+		std::mutex m_mapLibrariesMutex;
 		std::map<tstring, std::shared_ptr<DynamicLibrary> > m_mapLibraries;
 	};
 
 	typedef boost::serialization::singleton<DynamicLibraryContainer> SingletonDynamicLibraryContainer;
 
-#define GET_LIB(libname)	SingletonDynamicLibraryContainer::get_mutable_instance().GetLibrary(libname)
-
+#define GET_LIB(libname)	ytlib::SingletonDynamicLibraryContainer::get_mutable_instance().GetLibrary(libname)
+#define REMOVE_LIB(libname)	ytlib::SingletonDynamicLibraryContainer::get_mutable_instance().RemoveLibrary(libname)
 
 }
