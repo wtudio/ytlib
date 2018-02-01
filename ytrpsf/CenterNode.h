@@ -4,18 +4,15 @@
 namespace rpsf {
 
 	//中心节点。提供一系列管理监控接口
-	class CenterNode {
-	private:
-		bool m_bInit;
-		bool m_bRunning;
-
-		Bus m_bus;
-
+	class CenterNode : public Bus {
 	public:
-		CenterNode() :m_bInit(false), m_bRunning(false) {}
-		virtual ~CenterNode() { stop(); }
+		CenterNode() :Bus() {}
+		virtual ~CenterNode() {
+			Stop;
+			m_pheartBeatThread->join();
+		}
 
-		virtual bool init(const std::string& cfgpath) {
+		virtual bool Init(const std::string& cfgpath) {
 
 			RpsfCfgFile cfgfile;
 			try {
@@ -32,32 +29,74 @@ namespace rpsf {
 			}
 
 
+			if (!(Bus::Init(thisnode))) return false;
+
+			//订阅系统事件
 
 
-			m_bInit = true;
-
-			return m_bInit;
-		}
-
-		virtual bool start() {
-			if (!m_bInit)return false;
-
-
-
+			//启动心跳进程
 			m_bRunning = true;
-			return m_bRunning;
+			m_pheartBeatThread = std::make_unique<std::thread>(std::bind(&CenterNode::heartBeatThreadFun, this));
+
+			//加载各个插件
+
+			return true;
 		}
 
-		virtual bool stop() {
-			if (!m_bRunning) return true;//已经停止了
+		virtual void rpsfSysHandler(rpsfSysMsg& m_) {
+			switch (m_.m_sysMsgType) {
+			case SysMsgType::SYS_TEST1: {
 
 
+				break;
+			}
+			case SysMsgType::SYS_TEST2: {
 
-			m_bRunning = false;
 
-			return !m_bRunning;
+				break;
+			}
+			case SysMsgType::SYS_COUNT: {
+
+				break;
+			}
+			default:
+				Bus::rpsfSysHandler(m_);
+				break;
+			}
 		}
 
+		
+
+	private:
+		//心跳进程。进行监控业务，不是严格的等时进行处理
+		void heartBeatThreadFun() {
+			uint32_t heartBeatIndex = 0;
+			while (m_bRunning) {
+				std::this_thread::sleep_for(std::chrono::milliseconds(3000));//3s一次
+				//心跳进程每隔一定时间广播一次心跳事件。普通节点们在收到心跳事件后向中心节点回复自身信息供中心节点监控
+				//心跳进程每隔一定时间检查一个普通节点的信息
+				heartBeatMsg msg;
+				msg.heartBeatIndex = heartBeatIndex;
+
+
+				rpsfPackagePtr p = setSysMsgToPackage(msg, SysMsgType::SYS_SUB_SYSEVENT);
+				p->obj.m_handleType = HandleType::RPSF_SYNC;
+				rpsfMsgHandlerLocal(p);//同步处理
+
+				//一定次数心跳后进行一次全网信息更新
+				if (heartBeatIndex % 10 == 0) {
+					//全网更新一定次数后则不再进行全网更新，除非有新的表改动将次数置零
+
+
+
+				}
+
+				++heartBeatIndex;
+			}
+		}
+
+
+		std::unique_ptr<std::thread> m_pheartBeatThread;
 	};
 
 }

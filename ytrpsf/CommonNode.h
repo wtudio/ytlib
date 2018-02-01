@@ -5,7 +5,6 @@
 namespace rpsf {
 	//普通节点
 	class CommonNode : public Bus{
-
 	public:
 		CommonNode() :Bus() {}
 		virtual ~CommonNode() {}
@@ -42,11 +41,7 @@ namespace rpsf {
 
 			//加载各个插件
 
-			
-
-
-
-			m_bInit = true;
+			m_bRunning = true;
 			return true;
 
 		}
@@ -54,12 +49,14 @@ namespace rpsf {
 			Bus::SubscribeSysEvent(sysEvents_);
 			subscribeSysEventMsg msg{ m_NodeId ,sysEvents_ ,true };
 			rpsfPackagePtr p = setSysMsgToPackage(msg, SysMsgType::SYS_SUB_SYSEVENT);
+			p->obj.m_handleType = HandleType::RPSF_SYNC;
 			rpsfMsgHandlerLocal(p);//同步处理
 		}
 		virtual void UnsubscribeSysEvent(const std::set<SysMsgType>& sysEvents_) {
 			Bus::UnsubscribeSysEvent(sysEvents_);
 			subscribeSysEventMsg msg{ m_NodeId ,sysEvents_ ,false };
 			rpsfPackagePtr p = setSysMsgToPackage(msg, SysMsgType::SYS_SUB_SYSEVENT);
+			p->obj.m_handleType = HandleType::RPSF_SYNC;
 			rpsfMsgHandlerLocal(p);//同步处理
 		}
 		virtual void rpsfSysHandler(rpsfSysMsg& m_) {

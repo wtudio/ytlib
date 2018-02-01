@@ -25,7 +25,7 @@ namespace rpsf {
 	class Bus : public IBus {
 	public:
 		
-		Bus() :m_bInit(false), m_bRunning(false){}
+		Bus() :m_bRunning(false){}
 		virtual ~Bus() { Stop(); }
 
 		virtual bool Init(const RpsfNode& thisnode_) {
@@ -54,21 +54,11 @@ namespace rpsf {
 			//最后才能开启网络适配器监听
 			m_netAdapter = std::make_shared<ytlib::TcpNetAdapter<rpsfMsg> >(thisnode_.NodeId, thisnode_.NodePort, std::bind(&Bus::rpsfMsgClassifier, this, std::placeholders::_1), recvpath, sendpath);
 
-			
-
-			return true;
-
-		}
-
-		virtual bool Start() {
-			if (!m_bInit)return false;
-
-
 			if (!(m_netAdapter->start())) return false;
 
 
-			m_bRunning = true;
-			return m_bRunning;
+			return true;
+
 		}
 
 		virtual bool Stop() {
@@ -376,7 +366,6 @@ namespace rpsf {
 		std::shared_ptr<ytlib::ChannelBase<rpsfPackagePtr> > m_orderChannel;//有序通道
 		std::shared_ptr<ytlib::ChannelBase<rpsfPackagePtr> > m_unorderChannel;//无序通道
 
-		bool m_bInit;
 		bool m_bRunning;
 
 		uint32_t m_NodeId;

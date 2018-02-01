@@ -6,7 +6,8 @@
 
 namespace rpsf {
 	//定义各种系统信息。各种类型的系统信息将储存数据的类序列化到buff中，收到时再反序列化回来
-
+	//系统事件指各普通节点与中心节点进行的交互事件。普通节点之间不可能发送系统事件
+	//例如订阅/取消订阅数据的事件，普通节点将此消息发送给中心节点，中心节点收到后再广播给所有节点
 	//系统信息类型。最多256个
 	enum SysMsgType {
 		SYS_TEST1,
@@ -14,7 +15,11 @@ namespace rpsf {
 		SYS_NEW_NODE_REG,//新节点向中心节点注册事件
 		SYS_NEW_NODE_ONLINE,//新节点上线事件，由中心节点发布，包含新节点的信息（订阅的系统事件）
 		SYS_ALL_INFO,//更新整个网络当前状态，由中心节点发布，一般给供刚上线的节点更新全网信息
+		SYS_SUB_DATAS,//订阅/取消订阅数据
+		SYS_SUB_SERVICES,//注册/取消注册RPC
 		SYS_SUB_SYSEVENT,//订阅/取消订阅系统事件
+		SYS_HEART_BEAT,//心跳事件
+		SYS_HEART_BEAT_RESPONSE,//心跳响应事件
 		SYS_COUNT	//计数，同时也是无效值
 	};
 
@@ -43,7 +48,6 @@ namespace rpsf {
 	}
 
 #define SYSTAG "stg"
-
 	template<class T>
 	rpsfPackagePtr setSysMsgToPackage(T& m_, SysMsgType type_) {
 		rpsfSysMsg sysMsg(type_);
@@ -70,21 +74,11 @@ namespace rpsf {
 	};
 	//中心节点广播新节点上线事件数据包
 	typedef newNodeRegMsg newNodeOnlineMsg;
-
 	//全网信息数据包
 	class allInfoMsg {
 
 	public:
 
-	};
-
-	//新订阅数据事件数据包
-	class subscribeDataInfoMsg {
-		T_CLASS_SERIALIZE(&NodeId&DataName&Operation)
-	public:
-		uint32_t NodeId;//节点id
-		std::string DataName;//订阅的数据
-		bool Operation;//操作：true订阅，false取消订阅
 	};
 	//批量新订阅数据事件数据包
 	class subscribeDatasInfoMsg {
@@ -94,16 +88,6 @@ namespace rpsf {
 		std::set<std::string> DataNames;//订阅的数据
 		bool Operation;//操作：true订阅，false取消订阅
 	};
-
-	//新注册RPC事件数据包
-	class serviceInfoMsg {
-		T_CLASS_SERIALIZE(&NodeId&Service&Operation)
-	public:
-		uint32_t NodeId;//节点id
-		std::string Service;//提供的服务
-		bool Operation;//操作：true提供服务，false取消提供服务
-	};
-
 	//批量新注册RPC事件数据包
 	class servicesInfoMsg {
 		T_CLASS_SERIALIZE(&NodeId&Services&Operation)
@@ -112,7 +96,6 @@ namespace rpsf {
 		std::set<std::string> Services;//提供的服务
 		bool Operation;//操作：true提供服务，false取消提供服务
 	};
-
 	//批量订阅系统事件数据包
 	class subscribeSysEventMsg {
 		T_CLASS_SERIALIZE(&NodeId&SysMsg&Operation)
@@ -120,6 +103,21 @@ namespace rpsf {
 		uint32_t NodeId;//节点id
 		std::set<SysMsgType> SysMsg;//节点订阅的系统事件
 		bool Operation;//操作：true订阅，false取消订阅
+	};
+	//心跳监控事件数据包
+	class heartBeatMsg {
+		T_CLASS_SERIALIZE(&heartBeatIndex)
+	public:
+		uint32_t heartBeatIndex;
+
+	};
+	//心跳监控事件响应数据包
+	class heartBeatResponseMsg {
+		T_CLASS_SERIALIZE(&heartBeatIndex)
+	public:
+		uint32_t heartBeatIndex;
+
+
 	};
 
 }
