@@ -12,14 +12,14 @@ namespace rpsf {
 	enum SysMsgType {
 		SYS_TEST1,
 		SYS_TEST2,
-		SYS_NEW_NODE_REG,//新节点向中心节点注册事件
-		SYS_NEW_NODE_ONLINE,//新节点上线事件，由中心节点发布，包含新节点的信息（订阅的系统事件）
-		SYS_ALL_INFO,//更新整个网络当前状态，由中心节点发布，一般给供刚上线的节点更新全网信息
+		SYS_NEW_NODE_REG,//新节点向中心节点注册事件（com）
+		SYS_NEW_NODE_ONLINE,//新节点上线事件，由中心节点发布，包含新节点的信息（订阅的系统事件）（cen）
+		SYS_ALL_INFO,//更新整个网络当前状态，由中心节点发布，一般给供刚上线的节点更新全网信息（cen）
 		SYS_SUB_DATAS,//订阅/取消订阅数据
 		SYS_SUB_SERVICES,//注册/取消注册RPC
 		SYS_SUB_SYSEVENT,//订阅/取消订阅系统事件
-		SYS_HEART_BEAT,//心跳事件
-		SYS_HEART_BEAT_RESPONSE,//心跳响应事件
+		SYS_HEART_BEAT,//心跳事件（cen）
+		SYS_HEART_BEAT_RESPONSE,//心跳响应事件（com）
 		SYS_COUNT	//计数，同时也是无效值
 	};
 

@@ -82,33 +82,33 @@ namespace rpsf {
 			try {
 				ytlib::tptree ptsys = ptRoot.get_child(T_TEXT("system"));
 				m_fileobj->NodeId= ptsys.get<uint32_t>(T_TEXT("<xmlattr>.id"));
-				m_fileobj->NodeName = ptsys.get<std::string>(T_TEXT("<xmlattr>.name"));
+				m_fileobj->NodeName = T_TSTRING_TO_STRING(ptsys.get<ytlib::tstring>(T_TEXT("<xmlattr>.name")));
 				m_fileobj->NodePort = ptsys.get<uint16_t>(T_TEXT("<xmlattr>.port"));
 				if (ptsys.get<ytlib::tstring>(T_TEXT("<xmlattr>.type")) == T_TEXT("CenterNode")) {
 					m_fileobj->NodeType = RpsfNodeType::NODETYPE_CENTER;
 					ytlib::tptree ptctnode = ptsys.get_child(T_TEXT("CenterNode"));
 					m_fileobj->CenterNodeId= ptctnode.get<uint32_t>(T_TEXT("<xmlattr>.id"));
-					m_fileobj->CenterNodeIp= ptctnode.get<std::string>(T_TEXT("<xmlattr>.Ip"));
+					m_fileobj->CenterNodeIp= T_TSTRING_TO_STRING(ptctnode.get<ytlib::tstring>(T_TEXT("<xmlattr>.Ip")));
 					m_fileobj->CenterNodePort= ptctnode.get<uint16_t>(T_TEXT("<xmlattr>.port"));
 				}
 				boost::optional<ytlib::tptree&> ptnetlog = ptsys.get_child_optional(T_TEXT("Netlog"));
 				if (ptnetlog) {
 					m_fileobj->UseNetLog = true;
-					m_fileobj->LogServerIp= ptnetlog->get<std::string>(T_TEXT("<xmlattr>.Ip"));
+					m_fileobj->LogServerIp= T_TSTRING_TO_STRING(ptnetlog->get<ytlib::tstring>(T_TEXT("<xmlattr>.Ip")));
 					m_fileobj->LogServerPort= ptnetlog->get<uint16_t>(T_TEXT("<xmlattr>.port"));
 				}
 				boost::optional<ytlib::tptree&> ptpgs = ptsys.get_child_optional(T_TEXT("plugins"));
 				if (ptpgs) {
 					for (ytlib::tptree::iterator itrpg = ptpgs->begin(); itrpg != ptpgs->end(); ++itrpg) {
 						ytlib::tptree &Itempt = itrpg->second;
-						std::string pgname(Itempt.get<std::string>(T_TEXT("<xmlattr>.libname")));
+						std::string pgname = T_TSTRING_TO_STRING(Itempt.get<ytlib::tstring>(T_TEXT("<xmlattr>.libname")));
 						if (pgname.empty()) {
 							tcout << T_TEXT("Invalid Item Name!") << std::endl;
 							return false;
 						}
 						PluginCfg pg(pgname);
 						pg.enable = Itempt.get<bool>(T_TEXT("<xmlattr>.enable"));
-						if (!ytlib::readSettings<std::string>(Itempt, pg.InitParas)) return false;
+						if (!ytlib::readSettings(Itempt, pg.InitParas)) return false;
 						m_fileobj->PluginSet.insert(std::move(pg));
 					}
 				}

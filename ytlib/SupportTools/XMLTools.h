@@ -60,13 +60,12 @@ namespace ytlib
 		<setting key="key3" value="value3" />
 	</Settings>
 	*/
-	template<class string_type = ytlib::tstring>
-	static bool readSettings(const tptree& pt, std::map<string_type, string_type>& inputmap_) {
+	static bool readSettings(const tptree& pt, std::map<ytlib::tstring, ytlib::tstring>& inputmap_) {
 		try {
 			boost::optional<const tptree&> ptSettings = pt.get_child_optional(T_TEXT("Settings"));
 			if (ptSettings) {
 				for (tptree::const_iterator itrptsetting = ptSettings->begin(); itrptsetting != ptSettings->end(); ++itrptsetting) {
-					inputmap_[itrptsetting->second.get<string_type>(T_TEXT("<xmlattr>.key"))] = itrptsetting->second.get<string_type>(T_TEXT("<xmlattr>.value"));
+					inputmap_[itrptsetting->second.get<ytlib::tstring>(T_TEXT("<xmlattr>.key"))] = itrptsetting->second.get<ytlib::tstring>(T_TEXT("<xmlattr>.value"));
 				}
 			}
 		}
@@ -76,13 +75,30 @@ namespace ytlib
 		}
 		return true;
 	}
+
+	static bool readSettings(const tptree& pt, std::map<std::string, std::string>& inputmap_) {
+		try {
+			boost::optional<const tptree&> ptSettings = pt.get_child_optional(T_TEXT("Settings"));
+			if (ptSettings) {
+				for (tptree::const_iterator itrptsetting = ptSettings->begin(); itrptsetting != ptSettings->end(); ++itrptsetting) {
+					inputmap_[T_TSTRING_TO_STRING(itrptsetting->second.get<ytlib::tstring>(T_TEXT("<xmlattr>.key")))] = 
+						T_TSTRING_TO_STRING(itrptsetting->second.get<ytlib::tstring>(T_TEXT("<xmlattr>.value")));
+				}
+			}
+		}
+		catch (const std::exception& e) {
+			std::cout << "read settings failed : " << e.what() << std::endl;
+			return false;
+		}
+		return true;
+	}
+
 	//添加settings节点
-	template<class string_type = ytlib::tstring>
-	static bool writeSettings(const std::map<string_type, string_type>& inputmap_, tptree& pt ) {
+	static bool writeSettings(const std::map<ytlib::tstring, ytlib::tstring>& inputmap_, tptree& pt ) {
 		try {
 			if (inputmap_.size() == 0) return true;
 			tptree ptSettings;
-			for (std::map<string_type, string_type>::const_iterator itr = inputmap_.begin(); itr != inputmap_.end(); ++itr) {
+			for (std::map<ytlib::tstring, ytlib::tstring>::const_iterator itr = inputmap_.begin(); itr != inputmap_.end(); ++itr) {
 				tptree ptsetting;
 				ptsetting.put(T_TEXT("<xmlattr>.key"), itr->first);
 				ptsetting.put(T_TEXT("<xmlattr>.value"), itr->second);
@@ -96,4 +112,23 @@ namespace ytlib
 		}
 		return true;
 	}
+	static bool writeSettings(const std::map<std::string, std::string>& inputmap_, tptree& pt) {
+		try {
+			if (inputmap_.size() == 0) return true;
+			tptree ptSettings;
+			for (std::map<std::string, std::string>::const_iterator itr = inputmap_.begin(); itr != inputmap_.end(); ++itr) {
+				tptree ptsetting;
+				ptsetting.put(T_TEXT("<xmlattr>.key"), T_STRING_TO_TSTRING(itr->first));
+				ptsetting.put(T_TEXT("<xmlattr>.value"), T_STRING_TO_TSTRING(itr->second));
+				ptSettings.add_child(T_TEXT("setting"), ptsetting);
+			}
+			pt.put_child(T_TEXT("Settings"), ptSettings);
+		}
+		catch (const std::exception& e) {
+			std::cout << "write settings failed : " << e.what() << std::endl;
+			return false;
+		}
+		return true;
+	}
+
 }

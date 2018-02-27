@@ -77,30 +77,39 @@ namespace rpsf {
 		//接口：bus-plugin
 		BusErr SubscribeData(const IPlugin* pPlugin_, const std::string& dataNames_) {
 
+			return BusErr::RPSF_NO_ERROR;
 		}
 		BusErr UnsubscribeData(const IPlugin* pPlugin_, const std::string& dataName_) {
 
+			return BusErr::RPSF_NO_ERROR;
 		}
 		std::set<std::string> GetSubscribeDataList(const IPlugin* pPlugin_) {
 
+			return std::set<std::string>();
 		}
 
 		BusErr SubscribeService(const IPlugin* pPlugin_, const std::string& service_, const std::string& remark_ = "") {
 
+			return BusErr::RPSF_NO_ERROR;
 		}
 		BusErr UnsubscribeService(const IPlugin* pPlugin_, const std::string& service_) {
 
+			return BusErr::RPSF_NO_ERROR;
 		}
 		std::map<std::string, std::string> GetSubscribeServiceList(const IPlugin* pPlugin_) {
 
+			return std::map<std::string, std::string>();
 		}
 
 		rpsfRpcResult Invoke(rpsfRpcArgs& callArgs_, uint32_t timeout = 0) {
 
+			return rpsfRpcResult();
 		}
 
 		BusErr PublishData(rpsfData& data_) {
 			rpsfMsgClassifier(setMsgToPackage(data_));
+
+			return BusErr::RPSF_NO_ERROR;
 		}
 
 		const char* getBusErrMsg(BusErr err) {
@@ -201,11 +210,11 @@ namespace rpsf {
 			return true;
 		}
 
-		//从网络收到消息的回调
+		//消息分类器。从网络收到消息的回调
 		void rpsfMsgClassifier(rpsfPackagePtr& pmsg) {
 			switch (pmsg->obj.m_handleType) {
 			case HandleType::RPSF_SYNC :
-				rpsfMsgHandlerLocal(pmsg);
+				rpsfMsgHandler(pmsg);
 				break;
 			case HandleType::RPSF_ORDER:
 				m_orderChannel->Add(pmsg);
@@ -291,21 +300,17 @@ namespace rpsf {
 				std::shared_lock<std::shared_mutex> lck(m_mapDataName2PgNameMutex);
 				std::map<std::string, std::set<std::string> >::const_iterator itr = m_mapDataName2PgName.find(data.m_dataName);
 				if (itr == m_mapDataName2PgName.end())	break;
-				std::set<IPlugin*> pgList;
+				std::vector<std::thread> onDataThreads;
 				std::shared_lock<std::shared_mutex> lck2(m_mapPgName2PgPointMutex);
 				for (std::set<std::string>::const_iterator itr2 = itr->second.begin(); itr2 != itr->second.end(); ++itr2) {
 					std::map<std::string, std::pair<IPlugin*, bool> >::const_iterator itr3 = m_mapPgName2PgPoint.find(*itr2);
 					if ((itr3 != m_mapPgName2PgPoint.end())&&(itr3->second.second)) {
-						pgList.insert(itr3->second.first);
+						//创建线程。todo:需要测试要不要std::move?
+						onDataThreads.push_back(std::thread(std::bind(&IPlugin::OnData, itr3->second.first, std::placeholders::_1), data));
 					}
 				}
 				lck2.unlock();
 				lck.unlock();
-				std::vector<std::thread> onDataThreads;
-				for (std::set<IPlugin*>::iterator itr4 = pgList.begin(); itr4 != pgList.end(); ++itr4) {
-					//创建线程。todo:需要测试要不要std::move?
-					onDataThreads.push_back(std::thread(std::bind(&IPlugin::OnData, *itr4, std::placeholders::_1), data));
-				}
 				
 				//等待线程结束
 				size_t len = onDataThreads.size();

@@ -7,7 +7,9 @@ namespace rpsf {
 	class CommonNode : public Bus{
 	public:
 		CommonNode() :Bus() {}
-		virtual ~CommonNode() {}
+		virtual ~CommonNode() {
+			Stop();
+		}
 
 		virtual bool Init(const std::string& cfgpath) {
 
@@ -29,10 +31,20 @@ namespace rpsf {
 
 			//载入中心节点信息
 			m_netAdapter->SetHost(thisnode.CenterNodeId, thisnode.CenterNodeIp, thisnode.CenterNodePort);
-
+			std::unique_lock<std::shared_mutex> lck(m_mapSysMsgType2NodeIdMutex);
+			m_mapSysMsgType2NodeId[SysMsgType::SYS_NEW_NODE_REG].insert(thisnode.CenterNodeId);
+			lck.unlock();
 			//订阅系统事件
-			Bus::SubscribeSysEvent(std::set<SysMsgType>());
+			Bus::SubscribeSysEvent(std::set<SysMsgType>{
+				SysMsgType::SYS_NEW_NODE_ONLINE,
+				SysMsgType::SYS_ALL_INFO,
+				SysMsgType::SYS_SUB_DATAS,
+				SysMsgType::SYS_SUB_SERVICES,
+				SysMsgType::SYS_SUB_SYSEVENT,
+				SysMsgType::SYS_HEART_BEAT
+			});
 			//注册
+
 
 			//等待接收到回复信息
 
@@ -40,6 +52,7 @@ namespace rpsf {
 			//注册成功，订阅系统监控事件
 
 			//加载各个插件
+			rpsfLoadPlugins(thisnode.PluginSet);
 
 			m_bRunning = true;
 			return true;

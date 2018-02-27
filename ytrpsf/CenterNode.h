@@ -8,8 +8,7 @@ namespace rpsf {
 	public:
 		CenterNode() :Bus() {}
 		virtual ~CenterNode() {
-			Stop();
-			m_pheartBeatThread->join();
+			Stop();	
 		}
 
 		virtual bool Init(const std::string& cfgpath) {
@@ -32,17 +31,31 @@ namespace rpsf {
 			if (!(Bus::Init(thisnode))) return false;
 
 			//订阅系统事件
-
+			Bus::SubscribeSysEvent(std::set<SysMsgType>{
+				SysMsgType::SYS_NEW_NODE_REG,
+				SysMsgType::SYS_SUB_DATAS,
+				SysMsgType::SYS_SUB_SERVICES,
+				SysMsgType::SYS_SUB_SYSEVENT,
+				SysMsgType::SYS_HEART_BEAT_RESPONSE
+			});
 
 			//启动心跳进程
-			m_bRunning = true;
+			
 			m_pheartBeatThread = std::make_unique<std::thread>(std::bind(&CenterNode::heartBeatThreadFun, this));
 
 			//加载各个插件
+			rpsfLoadPlugins(thisnode.PluginSet);
 
+			m_bRunning = true;
 			return true;
 		}
 
+		virtual bool Stop() {
+			if (!m_bRunning) return true;//已经停止了
+			if (!Bus::Stop()) return false;
+			m_pheartBeatThread->join();
+			return true;
+		}
 	private:
 		virtual void rpsfSysHandler(rpsfSysMsg& m_) {
 			switch (m_.m_sysMsgType) {
@@ -83,7 +96,7 @@ namespace rpsf {
 
 				//一定次数心跳后进行一次全网信息更新
 				if (heartBeatIndex % 10 == 0) {
-					//全网更新一定次数后则不再进行全网更新，除非有新的表改动将次数置零
+					//全网更新一定次数后则不再进行全网更新，除非有新的表改动将次数重置为零
 
 
 
