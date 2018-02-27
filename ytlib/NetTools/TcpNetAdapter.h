@@ -335,9 +335,9 @@ namespace ytlib {
 			std::shared_lock<std::shared_mutex> lck(m_hostInfoMutex);
 			for (std::set<ID_Type>::const_iterator itr = dst_.begin(); itr != dst_.end(); ++itr) {
 				if (*itr == m_myid) return false;//不能发给自己。上层做好检查
-				typename std::map<ID_Type, TcpEp>::const_iterator itr = m_mapHostInfo.find(*itr);
-				if (itr == m_mapHostInfo.end()) return false;
-				vec_hosts.push_back(itr->second);
+				typename std::map<ID_Type, TcpEp>::const_iterator itr1 = m_mapHostInfo.find(*itr);
+				if (itr1 == m_mapHostInfo.end()) return false;
+				vec_hosts.push_back(itr1->second);
 			}
 			lck.unlock();
 			return _Send(Tdata_, vec_hosts, delfiles);

@@ -8,7 +8,7 @@ namespace rpsf {
 	public:
 		CenterNode() :Bus() {}
 		virtual ~CenterNode() {
-			Stop;
+			Stop();
 			m_pheartBeatThread->join();
 		}
 
@@ -43,6 +43,7 @@ namespace rpsf {
 			return true;
 		}
 
+	private:
 		virtual void rpsfSysHandler(rpsfSysMsg& m_) {
 			switch (m_.m_sysMsgType) {
 			case SysMsgType::SYS_TEST1: {
@@ -65,9 +66,6 @@ namespace rpsf {
 			}
 		}
 
-		
-
-	private:
 		//心跳进程。进行监控业务，不是严格的等时进行处理
 		void heartBeatThreadFun() {
 			uint32_t heartBeatIndex = 0;

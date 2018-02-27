@@ -45,6 +45,9 @@ namespace rpsf {
 			return true;
 
 		}
+
+
+	private:
 		virtual void SubscribeSysEvent(const std::set<SysMsgType>& sysEvents_) {
 			Bus::SubscribeSysEvent(sysEvents_);
 			subscribeSysEventMsg msg{ m_NodeId ,sysEvents_ ,true };
