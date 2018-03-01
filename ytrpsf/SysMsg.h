@@ -12,7 +12,8 @@ namespace rpsf {
 	enum SysMsgType {
 		SYS_TEST1,
 		SYS_TEST2,
-		SYS_NEW_NODE_REG,//新节点向中心节点注册事件（com）
+		SYS_NEW_NODE_REG,//新节点向中心节点注册事件（com）（推送）
+		SYS_NEW_NODE_REG_RESPONSE,//中心节点回复新节点注册事件（cen）（推送）
 		SYS_NEW_NODE_ONLINE,//新节点上线事件，由中心节点发布，包含新节点的信息（订阅的系统事件）（cen）
 		SYS_ALL_INFO,//更新整个网络当前状态，由中心节点发布，一般给供刚上线的节点更新全网信息（cen）
 		SYS_SUB_DATAS,//订阅/取消订阅数据
@@ -63,6 +64,12 @@ namespace rpsf {
 		DESERIALIZE_INIT;
 		DESERIALIZE(m_, itr->second.buf.get(), itr->second.buf_size);
 	}
+	template<class T>
+	void getSysMsgFromPackage(rpsfSysMsg& package_, T& m_) {
+		std::map<std::string, ytlib::sharedBuf >::iterator itr = package_.m_mapDatas.find(SYSTAG);
+		DESERIALIZE_INIT;
+		DESERIALIZE(m_, itr->second.buf.get(), itr->second.buf_size);
+	}
 
 	//新节点向中心节点注册事件数据包
 	class newNodeRegMsg {
@@ -76,10 +83,13 @@ namespace rpsf {
 	typedef newNodeRegMsg newNodeOnlineMsg;
 	//全网信息数据包
 	class allInfoMsg {
-
+		T_CLASS_SERIALIZE(&mapSysMsgType2NodeId&mapDataNmae2NodeId&mapService2NodeId)
 	public:
-
+		std::map<SysMsgType, std::set<uint32_t> > mapSysMsgType2NodeId;
+		std::map<std::string, std::set<uint32_t> > mapDataNmae2NodeId;
+		std::map<std::string, std::set<uint32_t> > mapService2NodeId;
 	};
+	typedef allInfoMsg newNodeRegResponseMsg;
 	//批量新订阅数据事件数据包
 	class subscribeDatasInfoMsg {
 		T_CLASS_SERIALIZE(&NodeId&DataNames&Operation)

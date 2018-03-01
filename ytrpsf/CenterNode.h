@@ -32,7 +32,6 @@ namespace rpsf {
 
 			//订阅系统事件
 			Bus::SubscribeSysEvent(std::set<SysMsgType>{
-				SysMsgType::SYS_NEW_NODE_REG,
 				SysMsgType::SYS_SUB_DATAS,
 				SysMsgType::SYS_SUB_SERVICES,
 				SysMsgType::SYS_SUB_SYSEVENT,
@@ -92,7 +91,7 @@ namespace rpsf {
 
 				rpsfPackagePtr p = setSysMsgToPackage(msg, SysMsgType::SYS_SUB_SYSEVENT);
 				p->obj.m_handleType = HandleType::RPSF_SYNC;
-				rpsfMsgHandlerLocal(p);//同步处理
+				rpsfMsgHandler(p);//同步处理
 
 				//一定次数心跳后进行一次全网信息更新
 				if (heartBeatIndex % 10 == 0) {

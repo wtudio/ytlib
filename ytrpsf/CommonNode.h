@@ -31,25 +31,33 @@ namespace rpsf {
 
 			//载入中心节点信息
 			m_netAdapter->SetHost(thisnode.CenterNodeId, thisnode.CenterNodeIp, thisnode.CenterNodePort);
-			std::unique_lock<std::shared_mutex> lck(m_mapSysMsgType2NodeIdMutex);
-			m_mapSysMsgType2NodeId[SysMsgType::SYS_NEW_NODE_REG].insert(thisnode.CenterNodeId);
-			lck.unlock();
+			
 			//订阅系统事件
-			Bus::SubscribeSysEvent(std::set<SysMsgType>{
+			std::set<SysMsgType> sysevents{
 				SysMsgType::SYS_NEW_NODE_ONLINE,
 				SysMsgType::SYS_ALL_INFO,
 				SysMsgType::SYS_SUB_DATAS,
 				SysMsgType::SYS_SUB_SERVICES,
 				SysMsgType::SYS_SUB_SYSEVENT,
-				SysMsgType::SYS_HEART_BEAT
-			});
+				SysMsgType::SYS_HEART_BEAT };
+			Bus::SubscribeSysEvent(sysevents);
 			//注册
+			
+			newNodeRegMsg msg{ m_NodeId ,sysevents ,thisnode.NodeName };
+			rpsfPackagePtr p = setSysMsgToPackage(msg, SysMsgType::SYS_NEW_NODE_REG);
+			p->obj.m_handleType = HandleType::RPSF_SYNC;
+			p->obj.m_pushList.insert(thisnode.CenterNodeId);
+			regFlag.reset();
+			rpsfMsgHandler(p);//同步处理
 
-
-			//等待接收到回复信息
-
-
+			//等待接收到回复信息。如果一定时间没有注册成功则提示注册失败
+			if (!regFlag.wait_for(5000)) {
+				//等了5s还未收到回复信息
+				tcout << T_TEXT("Registration failed: timeout!") << std::endl;
+				return false;
+			}
 			//注册成功，订阅系统监控事件
+			SubscribeSysEvent(std::set<SysMsgType>{SysMsgType::SYS_HEART_BEAT});
 
 			//加载各个插件
 			rpsfLoadPlugins(thisnode.PluginSet);
@@ -66,25 +74,63 @@ namespace rpsf {
 			subscribeSysEventMsg msg{ m_NodeId ,sysEvents_ ,true };
 			rpsfPackagePtr p = setSysMsgToPackage(msg, SysMsgType::SYS_SUB_SYSEVENT);
 			p->obj.m_handleType = HandleType::RPSF_SYNC;
-			rpsfMsgHandlerLocal(p);//同步处理
+			rpsfMsgHandler(p);//同步处理
 		}
 		virtual void UnsubscribeSysEvent(const std::set<SysMsgType>& sysEvents_) {
 			Bus::UnsubscribeSysEvent(sysEvents_);
 			subscribeSysEventMsg msg{ m_NodeId ,sysEvents_ ,false };
 			rpsfPackagePtr p = setSysMsgToPackage(msg, SysMsgType::SYS_SUB_SYSEVENT);
 			p->obj.m_handleType = HandleType::RPSF_SYNC;
-			rpsfMsgHandlerLocal(p);//同步处理
+			rpsfMsgHandler(p);//同步处理
 		}
 		virtual void rpsfSysHandler(rpsfSysMsg& m_) {
+			//跟新表时要注意，只能跟新其他节点的信息。自己本地的信息如果跟发过来的不一样需要向上纠正
 			switch (m_.m_sysMsgType) {
 			case SysMsgType::SYS_TEST1: {
-
+				
 
 				break;
 			}
 			case SysMsgType::SYS_TEST2: {
 
 
+				break;
+			}
+			case SysMsgType::SYS_HEART_BEAT: {
+
+
+				break;
+			}
+			case SysMsgType::SYS_ALL_INFO: {
+				allInfoMsg msg;
+
+				getSysMsgFromPackage(m_, msg);
+
+				//更新系统事件与节点id的表
+				std::set<SysMsgType> delset, addset;
+				syncSysMsgType2NodeId(msg.mapSysMsgType2NodeId, delset, addset);
+				if (!delset.empty()) UnsubscribeSysEvent(delset);
+				if (!addset.empty()) SubscribeSysEvent(addset);
+
+
+
+
+				break;
+			}
+			case SysMsgType::SYS_NEW_NODE_REG_RESPONSE: {
+				newNodeRegResponseMsg msg;
+				getSysMsgFromPackage(m_, msg);
+
+				//更新系统事件与节点id的表
+				std::set<SysMsgType> delset, addset;
+				syncSysMsgType2NodeId(msg.mapSysMsgType2NodeId, delset, addset);
+				if (!delset.empty()) UnsubscribeSysEvent(delset);
+				if (!addset.empty()) SubscribeSysEvent(addset);
+
+
+
+
+				regFlag.notify();
 				break;
 			}
 			case SysMsgType::SYS_COUNT: {
@@ -96,6 +142,9 @@ namespace rpsf {
 				break;
 			}
 		}
+
+
+		ytlib::LightSignal regFlag;
 
 	};
 

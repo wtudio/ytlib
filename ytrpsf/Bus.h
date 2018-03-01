@@ -393,6 +393,91 @@ namespace rpsf {
 		std::shared_mutex m_mapDataName2PgNameMutex;
 		std::map<std::string, std::set<std::string> > m_mapDataName2PgName;
 
+
+		//找本地节点在某个表中注册了什么信息的小工具。使用时注意上锁
+		template<class T>
+		std::set<T> getInfoOfNode(const std::map<T, std::set<uint32_t> >& table_) {
+			std::set<T> re;
+			for (std::map<T, std::set<uint32_t> >::const_iterator citr = table_.begin(); citr != table_.end(); ++citr) {
+				if (citr->second.find(m_NodeId) != citr->second.end()) {
+					re.insert(citr->first);
+				}
+			}
+			return std::move(re);
+		}
+
+		//更新系统事件与节点id的表
+		void syncSysMsgType2NodeId(std::map<SysMsgType, std::set<uint32_t> >& m_, std::set<SysMsgType>& delset, std::set<SysMsgType>& addset) {
+			std::set<SysMsgType> set1 = getInfoOfNode<SysMsgType>(m_);
+			std::unique_lock<std::shared_mutex> lck(m_mapSysMsgType2NodeIdMutex);
+			std::set<SysMsgType> set2 = getInfoOfNode<SysMsgType>(m_mapSysMsgType2NodeId);
+
+			//1比2多的，要去掉，并再次取消订阅
+			set_difference(set1.begin(), set1.end(), set2.begin(), set2.end(), inserter(delset, delset.begin()));
+			if (!delset.empty()) {
+				for (std::set<SysMsgType>::const_iterator citr = delset.begin(); citr != delset.end(); ++citr) {
+					m_[*citr].erase(m_[*citr].find(m_NodeId));
+				}
+			}
+			//2比1多的，要加上，并再次订阅
+			set_difference(set2.begin(), set2.end(), set1.begin(), set1.end(), inserter(addset, addset.begin()));
+			if (!addset.empty()) {
+				for (std::set<SysMsgType>::const_iterator citr = addset.begin(); citr != addset.end(); ++citr) {
+					m_[*citr].insert(m_NodeId);
+				}
+			}
+			m_mapSysMsgType2NodeId.swap(m_);
+
+		}
+
+		//更新数据名称与节点id的表
+		void syncDataNmae2NodeId(std::map<std::string, std::set<uint32_t> >& m_, std::set<std::string>& delset, std::set<std::string>& addset) {
+			std::set<std::string> set1 = getInfoOfNode<std::string>(m_);
+			std::unique_lock<std::shared_mutex> lck(m_mapDataNmae2NodeIdMutex);
+			std::set<std::string> set2 = getInfoOfNode<std::string>(m_mapDataNmae2NodeId);
+
+			//1比2多的，要去掉，并再次取消订阅
+			set_difference(set1.begin(), set1.end(), set2.begin(), set2.end(), inserter(delset, delset.begin()));
+			if (!delset.empty()) {
+				for (std::set<std::string>::const_iterator citr = delset.begin(); citr != delset.end(); ++citr) {
+					m_[*citr].erase(m_[*citr].find(m_NodeId));
+				}
+			}
+			//2比1多的，要加上，并再次订阅
+			set_difference(set2.begin(), set2.end(), set1.begin(), set1.end(), inserter(addset, addset.begin()));
+			if (!addset.empty()) {
+				for (std::set<std::string>::const_iterator citr = addset.begin(); citr != addset.end(); ++citr) {
+					m_[*citr].insert(m_NodeId);
+				}
+			}
+			m_mapDataNmae2NodeId.swap(m_);
+
+		}
+
+		//服务名称与节点id的表
+		void syncService2NodeId(std::map<std::string, std::set<uint32_t> >& m_, std::set<std::string>& delset, std::set<std::string>& addset) {
+			std::set<std::string> set1 = getInfoOfNode<std::string>(m_);
+			std::unique_lock<std::shared_mutex> lck(m_mapService2NodeIdMutex);
+			std::set<std::string> set2 = getInfoOfNode<std::string>(m_mapService2NodeId);
+
+			//1比2多的，要去掉，并再次取消订阅
+			set_difference(set1.begin(), set1.end(), set2.begin(), set2.end(), inserter(delset, delset.begin()));
+			if (!delset.empty()) {
+				for (std::set<std::string>::const_iterator citr = delset.begin(); citr != delset.end(); ++citr) {
+					m_[*citr].erase(m_[*citr].find(m_NodeId));
+				}
+			}
+			//2比1多的，要加上，并再次订阅
+			set_difference(set2.begin(), set2.end(), set1.begin(), set1.end(), inserter(addset, addset.begin()));
+			if (!addset.empty()) {
+				for (std::set<std::string>::const_iterator citr = addset.begin(); citr != addset.end(); ++citr) {
+					m_[*citr].insert(m_NodeId);
+				}
+			}
+			m_mapService2NodeId.swap(m_);
+
+		}
+
 	};
 
 

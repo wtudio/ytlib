@@ -29,7 +29,7 @@ namespace ytlib
 		}
 		void reset() {
 			std::lock_guard<std::mutex> lck(m_mutex);
-			if (flag) flag = false;
+			flag = false;
 		}
 	private:
 		std::mutex m_mutex;
