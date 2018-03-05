@@ -15,15 +15,15 @@ namespace rpsf {
 
 	//最底层数据包格式。快速数据： event：数据，RRPC：错误信息
 	class rpsfMsg {
-		T_CLASS_SERIALIZE(&m_srcAddr&m_msgType)
+		T_CLASS_SERIALIZE(&m_srcAddr&m_msgType&m_handleType)
 	public:
 		rpsfMsg():m_srcAddr(0),m_delfiles(false){}
 
 		uint32_t m_srcAddr;//消息源框架id。0代表本地
-		std::set<uint32_t> m_pushList;//推送名单
-		uint8_t m_msgType;//消息类型。因为要支持序列化所以类型为uint8
-
+		MsgType m_msgType;//消息类型。因为要支持序列化所以类型为uint8
 		HandleType m_handleType;//处理方式
+
+		std::set<uint32_t> m_pushList;//推送名单
 		bool m_delfiles;//发送完成后是否删除文件
 	};
 	typedef ytlib::DataPackage<rpsfMsg> rpsfDataPackage;

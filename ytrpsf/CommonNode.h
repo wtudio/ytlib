@@ -1,6 +1,8 @@
 #pragma once
 #include <ytrpsf/RpsfCfgFile.h>
 #include <ytrpsf/Bus.h>
+#include <ytlib/SupportTools/SysInfoTools.h>
+#include <boost/date_time/posix_time/posix_time.hpp>  
 
 namespace rpsf {
 	//普通节点
@@ -86,18 +88,14 @@ namespace rpsf {
 		virtual void rpsfSysHandler(rpsfSysMsg& m_) {
 			//跟新表时要注意，只能跟新其他节点的信息。自己本地的信息如果跟发过来的不一样需要向上纠正
 			switch (m_.m_sysMsgType) {
-			case SysMsgType::SYS_TEST1: {
-				
-
-				break;
-			}
-			case SysMsgType::SYS_TEST2: {
-
-
-				break;
-			}
 			case SysMsgType::SYS_HEART_BEAT: {
+				heartBeatMsg msg;
+				getSysMsgFromPackage(m_, msg);
+				heartBeatResponseMsg msg2{ m_NodeId,msg.heartBeatIndex ,msg.heartBeatTime,ytlib::GetCpuUsage(),ytlib::GetMemUsage() };
 
+				rpsfPackagePtr p = setSysMsgToPackage(msg2, SysMsgType::SYS_HEART_BEAT_RESPONSE);
+				p->obj.m_handleType = HandleType::RPSF_SYNC;
+				rpsfMsgHandler(p);//同步处理
 
 				break;
 			}

@@ -173,7 +173,8 @@ namespace ytlib {
 				else {
 					if (header[2] == QUICKHEAD) {
 						boost::shared_array<char> pDataBuff = boost::shared_array<char>(new char[pack_size]);
-
+						boost::asio::async_read(sock, boost::asio::buffer(pDataBuff.get(), pack_size), boost::asio::transfer_exactly(pack_size),
+							std::bind(&TcpConnection::on_read_quick_data, this, RData_, pDataBuff, std::placeholders::_1, std::placeholders::_2));
 						return;
 					}
 					if (header[2] == FILEHEAD) {
@@ -455,7 +456,7 @@ namespace ytlib {
 			//第二步，发送快速数据
 			char q_head_buff[HEAD_SIZE]{ TcpConnection<T>::TCPHEAD1 ,TcpConnection<T>::TCPHEAD2,TcpConnection<T>::QUICKHEAD,0 };
 			if (Tdata_->quick_data.buf_size > 0) {
-				set_buf_from_num(&c_head_buff[4], Tdata_->quick_data.buf_size);
+				set_buf_from_num(&q_head_buff[4], Tdata_->quick_data.buf_size);
 				buffersPtr->push_back(std::move(boost::asio::const_buffer(q_head_buff, HEAD_SIZE)));
 				buffersPtr->push_back(std::move(boost::asio::const_buffer(Tdata_->quick_data.buf.get(), Tdata_->quick_data.buf_size)));
 			}
