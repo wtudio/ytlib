@@ -86,10 +86,13 @@ namespace rpsf {
 				m_fileobj->NodePort = ptsys.get<uint16_t>(T_TEXT("<xmlattr>.port"));
 				if (ptsys.get<ytlib::tstring>(T_TEXT("<xmlattr>.type")) == T_TEXT("CenterNode")) {
 					m_fileobj->NodeType = RpsfNodeType::NODETYPE_CENTER;
+				}
+				else {
+					m_fileobj->NodeType = RpsfNodeType::NODETYPE_COMMON;
 					ytlib::tptree ptctnode = ptsys.get_child(T_TEXT("CenterNode"));
-					m_fileobj->CenterNodeId= ptctnode.get<uint32_t>(T_TEXT("<xmlattr>.id"));
-					m_fileobj->CenterNodeIp= T_TSTRING_TO_STRING(ptctnode.get<ytlib::tstring>(T_TEXT("<xmlattr>.Ip")));
-					m_fileobj->CenterNodePort= ptctnode.get<uint16_t>(T_TEXT("<xmlattr>.port"));
+					m_fileobj->CenterNodeId = ptctnode.get<uint32_t>(T_TEXT("<xmlattr>.id"));
+					m_fileobj->CenterNodeIp = T_TSTRING_TO_STRING(ptctnode.get<ytlib::tstring>(T_TEXT("<xmlattr>.Ip")));
+					m_fileobj->CenterNodePort = ptctnode.get<uint16_t>(T_TEXT("<xmlattr>.port"));
 				}
 				boost::optional<ytlib::tptree&> ptnetlog = ptsys.get_child_optional(T_TEXT("Netlog"));
 				if (ptnetlog) {

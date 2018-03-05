@@ -193,7 +193,7 @@ namespace ytlib
 
 #define DESERIALIZE(obj,p,len) \
 	myistringstream_tmp.setPoint(p,len); \
-	iar_tmp==std::make_shared<boost::archive::binary_iarchive>(myistringstream_tmp); \
+	iar_tmp=std::make_shared<boost::archive::binary_iarchive>(myistringstream_tmp); \
 	*iar_tmp >> obj; 
 
 

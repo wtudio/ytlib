@@ -344,16 +344,6 @@ namespace rpsf {
 		//系统信息处理。通用的一些系统事件在此次处理，其他的交给上层
 		virtual void rpsfSysHandler(rpsfSysMsg& m_) {
 			switch (m_.m_sysMsgType) {
-			case SysMsgType::SYS_TEST1: {
-
-
-				break;
-			}
-			case SysMsgType::SYS_TEST2: {
-
-
-				break;
-			}
 			case SysMsgType::SYS_COUNT: {
 
 				break;
@@ -364,36 +354,6 @@ namespace rpsf {
 			}
 
 		}
-
-
-		//所有成员都只能用智能指针了
-		std::shared_ptr<ytlib::TcpNetAdapter<rpsfMsg> >  m_netAdapter;//网络适配器
-		std::shared_ptr<ytlib::ChannelBase<rpsfPackagePtr> > m_orderChannel;//有序通道
-		std::shared_ptr<ytlib::ChannelBase<rpsfPackagePtr> > m_unorderChannel;//无序通道
-
-		bool m_bRunning;
-
-		uint32_t m_NodeId;
-
-		//系统事件与节点id的表
-		std::shared_mutex m_mapSysMsgType2NodeIdMutex;
-		std::map<SysMsgType, std::set<uint32_t> > m_mapSysMsgType2NodeId;
-		//数据名称与节点id的表
-		std::shared_mutex m_mapDataNmae2NodeIdMutex;
-		std::map<std::string, std::set<uint32_t> > m_mapDataNmae2NodeId;
-		//服务名称与节点id的表
-		std::shared_mutex m_mapService2NodeIdMutex;
-		std::map<std::string, std::set<uint32_t> > m_mapService2NodeId;
-
-		//插件名称与插件指针的表
-		std::shared_mutex m_mapPgName2PgPointMutex;
-		std::map<std::string, std::pair<IPlugin*,bool> > m_mapPgName2PgPoint;
-
-		//本地插件订阅的数据名称与插件名称的表
-		std::shared_mutex m_mapDataName2PgNameMutex;
-		std::map<std::string, std::set<std::string> > m_mapDataName2PgName;
-
-
 		//找本地节点在某个表中注册了什么信息的小工具。使用时注意上锁
 		template<class T>
 		std::set<T> getInfoOfNode(const std::map<T, std::set<uint32_t> >& table_) {
@@ -430,6 +390,13 @@ namespace rpsf {
 
 		}
 
+		void syncSysMsgType2NodeId(const std::set<SysMsgType>& set_, uint32_t nodeId_) {
+			std::unique_lock<std::shared_mutex> lck(m_mapSysMsgType2NodeIdMutex);
+			for (std::set<SysMsgType>::const_iterator citr = set_.begin(); citr != set_.end(); ++citr) {
+				m_mapSysMsgType2NodeId[*citr].insert(nodeId_);
+			}
+		}
+
 		//更新数据名称与节点id的表
 		void syncDataNmae2NodeId(std::map<std::string, std::set<uint32_t> >& m_, std::set<std::string>& delset, std::set<std::string>& addset) {
 			std::set<std::string> set1 = getInfoOfNode<std::string>(m_);
@@ -452,6 +419,13 @@ namespace rpsf {
 			}
 			m_mapDataNmae2NodeId.swap(m_);
 
+		}
+
+		void syncDataNmae2NodeId(const std::set<std::string>& set_, uint32_t nodeId_) {
+			std::unique_lock<std::shared_mutex> lck(m_mapDataNmae2NodeIdMutex);
+			for (std::set<std::string>::const_iterator citr = set_.begin(); citr != set_.end(); ++citr) {
+				m_mapDataNmae2NodeId[*citr].insert(nodeId_);
+			}
 		}
 
 		//服务名称与节点id的表
@@ -478,6 +452,43 @@ namespace rpsf {
 
 		}
 
+		void syncService2NodeId(const std::set<std::string>& set_, uint32_t nodeId_) {
+			std::unique_lock<std::shared_mutex> lck(m_mapService2NodeIdMutex);
+			for (std::set<std::string>::const_iterator citr = set_.begin(); citr != set_.end(); ++citr) {
+				m_mapService2NodeId[*citr].insert(nodeId_);
+			}
+		}
+
+
+		//所有成员都只能用智能指针了
+		std::shared_ptr<ytlib::TcpNetAdapter<rpsfMsg> >  m_netAdapter;//网络适配器
+		std::shared_ptr<ytlib::ChannelBase<rpsfPackagePtr> > m_orderChannel;//有序通道
+		std::shared_ptr<ytlib::ChannelBase<rpsfPackagePtr> > m_unorderChannel;//无序通道
+
+		bool m_bRunning;
+
+		uint32_t m_NodeId;
+
+		//系统事件与节点id的表
+		std::shared_mutex m_mapSysMsgType2NodeIdMutex;
+		std::map<SysMsgType, std::set<uint32_t> > m_mapSysMsgType2NodeId;
+		//数据名称与节点id的表
+		std::shared_mutex m_mapDataNmae2NodeIdMutex;
+		std::map<std::string, std::set<uint32_t> > m_mapDataNmae2NodeId;
+		//服务名称与节点id的表
+		std::shared_mutex m_mapService2NodeIdMutex;
+		std::map<std::string, std::set<uint32_t> > m_mapService2NodeId;
+
+		//插件名称与插件指针的表
+		std::shared_mutex m_mapPgName2PgPointMutex;
+		std::map<std::string, std::pair<IPlugin*,bool> > m_mapPgName2PgPoint;
+
+		//本地插件订阅的数据名称与插件名称的表
+		std::shared_mutex m_mapDataName2PgNameMutex;
+		std::map<std::string, std::set<std::string> > m_mapDataName2PgName;
+
+
+		
 	};
 
 

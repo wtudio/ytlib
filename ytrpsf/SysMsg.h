@@ -10,8 +10,6 @@ namespace rpsf {
 	//例如订阅/取消订阅数据的事件，普通节点将此消息发送给中心节点，中心节点收到后再广播给所有节点
 	//系统信息类型。最多256个
 	enum SysMsgType {
-		SYS_TEST1,
-		SYS_TEST2,
 		SYS_NEW_NODE_REG,//新节点向中心节点注册事件（com）（推送）
 		SYS_NEW_NODE_REG_RESPONSE,//中心节点回复新节点注册事件（cen）（推送）
 		SYS_NEW_NODE_ONLINE,//新节点上线事件，由中心节点发布，包含新节点的信息（订阅的系统事件）（cen）
@@ -78,6 +76,8 @@ namespace rpsf {
 		uint32_t NodeId;//节点id
 		std::set<SysMsgType> SysMsg;//节点订阅的系统事件
 		std::string NodeName;//节点名称（可作为节点补充信息）
+
+
 	};
 	//中心节点广播新节点上线事件数据包
 	typedef newNodeRegMsg newNodeOnlineMsg;
@@ -116,17 +116,21 @@ namespace rpsf {
 	};
 	//心跳监控事件数据包
 	class heartBeatMsg {
-		T_CLASS_SERIALIZE(&heartBeatIndex)
+		T_CLASS_SERIALIZE(&heartBeatIndex&heartBeatTime)
 	public:
 		uint32_t heartBeatIndex;
-
+		uint64_t heartBeatTime;
 	};
 	//心跳监控事件响应数据包
 	class heartBeatResponseMsg {
-		T_CLASS_SERIALIZE(&heartBeatIndex)
+		T_CLASS_SERIALIZE(&nodeId&heartBeatIndex&heartBeatTime&cpuUsage&memUsage)
 	public:
+		uint32_t nodeId;
 		uint32_t heartBeatIndex;
+		uint64_t heartBeatTime;
 
+		double cpuUsage;
+		double memUsage;
 
 	};
 
