@@ -111,9 +111,12 @@ namespace rpsf {
 		virtual void rpsfSysHandler(rpsfSysMsg& m_) {
 			switch (m_.m_sysMsgType) {
 			case SysMsgType::SYS_NEW_NODE_REG: {
+				//收到新节点注册事件
 				newNodeRegMsg msg;
 				getSysMsgFromPackage(m_, msg);
 				syncSysMsgType2NodeId(msg.SysMsg, msg.NodeId);
+				m_netAdapter->SetHost(msg.NodeId, msg.NodeIp, msg.NodePort);
+
 
 				newNodeRegResponseMsg msg1;
 				std::shared_lock<std::shared_mutex> lck(m_mapSysMsgType2NodeIdMutex);
@@ -126,6 +129,7 @@ namespace rpsf {
 				msg1.mapService2NodeId = m_mapService2NodeId;
 				lck2.unlock();
 
+
 				rpsfPackagePtr p1 = setSysMsgToPackage(msg1, SysMsgType::SYS_NEW_NODE_REG_RESPONSE);
 				p1->obj.m_handleType = HandleType::RPSF_SYNC;
 				p1->obj.m_pushList.insert(msg.NodeId);
@@ -137,6 +141,7 @@ namespace rpsf {
 				break;
 			}
 			case SysMsgType::SYS_HEART_BEAT_RESPONSE: {
+				//收到心跳响应事件
 				heartBeatResponseMsg msg;
 				getSysMsgFromPackage(m_, msg);
 

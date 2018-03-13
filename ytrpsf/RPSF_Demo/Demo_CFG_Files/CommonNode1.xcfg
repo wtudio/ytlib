@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--普通节点的配置文件-->
-<system id="1001" type="CommonNode" name="CommonNode1" port="61001" >
+<system id="1001" type="CommonNode" name="CommonNode1" Ip="127.0.0.1" port="61001" >
   <!--配置中心节点信息-->
   <CenterNode id="1000" Ip="127.0.0.1" port="61000" />
   <!--网络日志配置-->

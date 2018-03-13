@@ -71,12 +71,13 @@ namespace rpsf {
 
 	//新节点向中心节点注册事件数据包
 	class newNodeRegMsg {
-		T_CLASS_SERIALIZE(&NodeId&SysMsg&NodeName)
+		T_CLASS_SERIALIZE(&NodeId&SysMsg&NodeName&NodeIp&NodePort)
 	public:
 		uint32_t NodeId;//节点id
 		std::set<SysMsgType> SysMsg;//节点订阅的系统事件
 		std::string NodeName;//节点名称（可作为节点补充信息）
-
+		std::string NodeIp;
+		uint16_t NodePort;
 
 	};
 	//中心节点广播新节点上线事件数据包
@@ -88,6 +89,8 @@ namespace rpsf {
 		std::map<SysMsgType, std::set<uint32_t> > mapSysMsgType2NodeId;
 		std::map<std::string, std::set<uint32_t> > mapDataNmae2NodeId;
 		std::map<std::string, std::set<uint32_t> > mapService2NodeId;
+
+
 	};
 	typedef allInfoMsg newNodeRegResponseMsg;
 	//批量新订阅数据事件数据包

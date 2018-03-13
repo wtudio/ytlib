@@ -45,7 +45,7 @@ namespace rpsf {
 			Bus::SubscribeSysEvent(sysevents);
 			//注册
 			
-			newNodeRegMsg msg{ m_NodeId ,sysevents ,thisnode.NodeName };
+			newNodeRegMsg msg{ m_NodeId ,sysevents ,thisnode.NodeName,thisnode.NodeIp,thisnode.NodePort };
 			rpsfPackagePtr p = setSysMsgToPackage(msg, SysMsgType::SYS_NEW_NODE_REG);
 			p->obj.m_handleType = HandleType::RPSF_SYNC;
 			p->obj.m_pushList.insert(thisnode.CenterNodeId);
@@ -89,6 +89,7 @@ namespace rpsf {
 			//跟新表时要注意，只能跟新其他节点的信息。自己本地的信息如果跟发过来的不一样需要向上纠正
 			switch (m_.m_sysMsgType) {
 			case SysMsgType::SYS_HEART_BEAT: {
+				//收到心跳事件
 				heartBeatMsg msg;
 				getSysMsgFromPackage(m_, msg);
 				heartBeatResponseMsg msg2{ m_NodeId,msg.heartBeatIndex ,msg.heartBeatTime,ytlib::GetCpuUsage(),ytlib::GetMemUsage() };
@@ -100,6 +101,7 @@ namespace rpsf {
 				break;
 			}
 			case SysMsgType::SYS_ALL_INFO: {
+				//收到跟新全部信息事件
 				allInfoMsg msg;
 
 				getSysMsgFromPackage(m_, msg);
@@ -116,6 +118,7 @@ namespace rpsf {
 				break;
 			}
 			case SysMsgType::SYS_NEW_NODE_REG_RESPONSE: {
+				//收到新节点注册响应事件
 				newNodeRegResponseMsg msg;
 				getSysMsgFromPackage(m_, msg);
 

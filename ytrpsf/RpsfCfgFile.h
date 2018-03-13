@@ -44,6 +44,7 @@ namespace rpsf {
 		uint32_t NodeId;
 		RpsfNodeType NodeType;
 		std::string NodeName;
+		std::string NodeIp;
 		uint16_t NodePort;
 
 		//中心节点信息
@@ -83,6 +84,7 @@ namespace rpsf {
 				ytlib::tptree ptsys = ptRoot.get_child(T_TEXT("system"));
 				m_fileobj->NodeId= ptsys.get<uint32_t>(T_TEXT("<xmlattr>.id"));
 				m_fileobj->NodeName = T_TSTRING_TO_STRING(ptsys.get<ytlib::tstring>(T_TEXT("<xmlattr>.name")));
+				m_fileobj->NodeIp = T_TSTRING_TO_STRING(ptsys.get<ytlib::tstring>(T_TEXT("<xmlattr>.Ip")));
 				m_fileobj->NodePort = ptsys.get<uint16_t>(T_TEXT("<xmlattr>.port"));
 				if (ptsys.get<ytlib::tstring>(T_TEXT("<xmlattr>.type")) == T_TEXT("CenterNode")) {
 					m_fileobj->NodeType = RpsfNodeType::NODETYPE_CENTER;
