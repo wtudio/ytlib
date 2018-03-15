@@ -111,7 +111,15 @@ namespace ytlib
 			return Complex(a*std::cos(t), a*std::sin(t));
 		}
 
-
+		static Complex pow(const Complex &value, uint32_t n) {
+			Complex re(1.0, 0.0), tmp = value;
+			for (; n; n >>= 1) {
+				if (n & 1)
+					re *= tmp;
+				tmp *= tmp;
+			}
+			return re;
+		}
 
 		friend std::ostream &operator<<(std::ostream& output, const Complex &rhs) {
 			output << rhs.real;

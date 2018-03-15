@@ -197,7 +197,6 @@ namespace ytlib
 					M.val[i][j] = T(1);
 			return M;
 		}
-
 		// create diagonal matrix with nx1 or 1xn matrix M as elements
 		static Basic_Matrix diag(const Basic_Matrix &M) {
 			if (M.m > 1 && M.n == 1) {
@@ -285,6 +284,19 @@ namespace ytlib
 					C.val[i][j] = A.val[i][j] + B.val[i][j];
 			return C;
 		}
+		Basic_Matrix&  operator+= (const Basic_Matrix &M) {
+			const Basic_Matrix &A = *this;
+			const Basic_Matrix &B = M;
+			if (A.m != B.m || A.n != B.n) {
+				std::cerr << "ERROR: Trying to add matrices of size (" << A.m << "x" << A.n <<
+					") and (" << B.m << "x" << B.n << ")" << std::endl;
+				exit(0);
+			}
+			for (int32_t i = 0; i < m; ++i)
+				for (int32_t j = 0; j < n; ++j)
+					A.val[i][j] += B.val[i][j];
+			return *this;
+		}
 		// subtract matrix
 		Basic_Matrix  operator- (const Basic_Matrix &M) {
 			const Basic_Matrix &A = *this;
@@ -299,6 +311,19 @@ namespace ytlib
 				for (int32_t j = 0; j < n; ++j)
 					C.val[i][j] = A.val[i][j] - B.val[i][j];
 			return C;
+		}
+		Basic_Matrix&  operator-= (const Basic_Matrix &M) {
+			const Basic_Matrix &A = *this;
+			const Basic_Matrix &B = M;
+			if (A.m != B.m || A.n != B.n) {
+				std::cerr << "ERROR: Trying to subtract matrices of size (" << A.m << "x" << A.n <<
+					") and (" << B.m << "x" << B.n << ")" << std::endl;
+				exit(0);
+			}
+			for (int32_t i = 0; i < m; ++i)
+				for (int32_t j = 0; j < n; ++j)
+					A.val[i][j] -= B.val[i][j];
+			return *this;
 		}
 		// multiply with matrix
 		Basic_Matrix  operator* (const Basic_Matrix &M) {
@@ -316,6 +341,22 @@ namespace ytlib
 						C.val[i][j] += A.val[i][k] * B.val[k][j];
 			return C;
 		}
+		Basic_Matrix&  operator*= (const Basic_Matrix &M) {
+			const Basic_Matrix &A = *this;
+			const Basic_Matrix &B = M;
+			if (A.n != B.m) {
+				std::cerr << "ERROR: Trying to multiply matrices of size (" << A.m << "x" << A.n <<
+					") and (" << B.m << "x" << B.n << ")" << std::endl;
+				exit(0);
+			}
+			Basic_Matrix C(A.m, B.n);
+			for (int32_t i = 0; i < A.m; ++i)
+				for (int32_t j = 0; j < B.n; ++j)
+					for (int32_t k = 0; k < A.n; ++k)
+						C.val[i][j] += A.val[i][k] * B.val[k][j];
+
+			return this->swap(C);
+		}
 		// multiply with scalar
 		Basic_Matrix  operator* (const T &s) {
 			Basic_Matrix C(m, n);
@@ -324,7 +365,12 @@ namespace ytlib
 					C.val[i][j] = val[i][j] * s;
 			return C;
 		}
-
+		Basic_Matrix&  operator*= (const T &s) {
+			for (int32_t i = 0; i < m; ++i)
+				for (int32_t j = 0; j < n; ++j)
+					val[i][j] *= s;
+			return *this;
+		}
 		// divide elementwise by matrix (or vector)
 		Basic_Matrix  operator/ (const Basic_Matrix &M) {
 			const Basic_Matrix &A = *this;
@@ -391,6 +437,17 @@ namespace ytlib
 				for (int32_t j = 0; j < n; ++j)
 					C.val[j][i] = val[i][j];
 			return C;
+		}
+		// pow
+		static Basic_Matrix pow(const Basic_Matrix &value, uint32_t n) {
+			Basic_Matrix tmp = value, re(value.m, value.n);
+			re.eye();
+			for (; n; n >>= 1) {
+				if (n & 1)
+					re *= tmp;
+				tmp *= tmp;
+			}
+			return re;
 		}
 		// euclidean norm (vectors) / frobenius norm (matrices)
 		T   l2norm() {

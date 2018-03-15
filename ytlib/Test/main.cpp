@@ -42,8 +42,6 @@ int32_t main(int32_t argc, char** argv) {
 		c2 tmp1;
 		YT_DEBUG_PRINTF("fff\n");
 	}
-	
-
 
 
 	//boost::posix_time::ptime ticTime_global, tocTime_global;
@@ -64,6 +62,7 @@ int32_t main(int32_t argc, char** argv) {
 	test_Complex();
 	test_Matrix();
 	test_Matrix_c();
+	test_tools();
 
 	test_KeyValueFile();
 	test_SerializeFile();

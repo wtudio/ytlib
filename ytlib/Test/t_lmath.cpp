@@ -66,21 +66,21 @@ namespace ytlib
 	bool test_Matrix() {
 		int32_t count = 9;
 		Matrix m;
-		std::cout << m << std::endl << std::endl;
+		std::cout << m << endll;
 		Matrix m1(3, 2);
-		std::cout << m1 << std::endl << std::endl;
+		std::cout << m1 << endll;
 		tfloat *f = new tfloat[count];
 		for (int32_t ii = 0; ii < count; ++ii) {
 			f[ii] = ii*ii;
 		}
 
 		Matrix m2(3, 3, f);
-		std::cout << m2 << std::endl << std::endl;
+		std::cout << m2 << endll;
 		Matrix m3(m2);
-		std::cout << m3 << std::endl << std::endl;
+		std::cout << m3 << endll;
 
 		m = m3;
-		std::cout << m << std::endl << std::endl;
+		std::cout << m << endll;
 
 		tfloat *f2 = new tfloat[count];
 		m3.getData(f2, 1, 1, 1, 2);
@@ -89,54 +89,55 @@ namespace ytlib
 		}
 
 		Matrix m4 = m3.getMat(0, 0);
-		std::cout << m4 << std::endl << std::endl;
+		std::cout << m4 << endll;
 
 		Matrix m5(5, 6);
 		m5.setMat(m4);
-		std::cout << m5 << std::endl << std::endl;
+		std::cout << m5 << endll;
 		m5.setMat(m4,2,2);
-		std::cout << m5 << std::endl << std::endl;
+		std::cout << m5 << endll;
 		m5.setMat(m4, 4, 4);
-		std::cout << m5 << std::endl << std::endl;
+		std::cout << m5 << endll;
 
 		m5.setVal(55.5, 4, 4);
-		std::cout << m5 << std::endl << std::endl;
+		std::cout << m5 << endll;
 
 		m5.setDiag(77.5);
-		std::cout << m5 << std::endl << std::endl;
+		std::cout << m5 << endll;
 
 		
 
-		std::cout << m << std::endl << std::endl;
+		std::cout << m << endll;
 		std::swap(m5, m);
-		std::cout << m5 << std::endl << std::endl;
-		std::cout << m << std::endl << std::endl;
+		std::cout << m5 << endll;
+		std::cout << m << endll;
 
 		int32_t ii[3] = { 1,2,3 };
 		Matrix m6 = m.extractCols(ii, 3);
-		std::cout << m6 << std::endl << std::endl;
+		std::cout << m6 << endll;
 
 		m5.zero();
-		std::cout << m5 << std::endl << std::endl;
+		std::cout << m5 << endll;
 
 		Matrix m7 = Matrix::eye(5);
-		std::cout << m7 << std::endl << std::endl;
+		std::cout << m7 << endll;
 
 		m.eye();
-		std::cout << m << std::endl << std::endl;
+		std::cout << m << endll;
 
 		Matrix m8 = Matrix::ones(6, 7);
-		std::cout << m8 << std::endl << std::endl;
+		std::cout << m8 << endll;
 
 		Matrix m9 = Matrix::reshape(m, 6, 5);
-		std::cout << m9 << std::endl << std::endl;
+		std::cout << m9 << endll;
 
-		std::cout << Matrix::rotMatX(0.5) << std::endl << std::endl;
-		std::cout << Matrix::rotMatY(0.5) << std::endl << std::endl;
-		std::cout << Matrix::rotMatZ(0.5) << std::endl << std::endl;
+		std::cout << Matrix::rotMatX(0.5) << endll;
+		std::cout << Matrix::rotMatY(0.5) << endll;
+		std::cout << Matrix::rotMatZ(0.5) << endll;
 
-
-
+		Matrix m10 = Matrix::ones(4, 4);
+		m10 = Matrix::pow(m10, 10);
+		std::cout << m10 << endll;
 
 
 		delete[] f;
@@ -146,5 +147,10 @@ namespace ytlib
 	bool test_Matrix_c() {
 
 		return true;
+	}
+	bool test_tools() {
+		std::cout << gcd(42, 30) << std::endl;
+		std::cout << gcd(770, 26) << std::endl;
+		std::cout << gcd(121, 132) << std::endl;
 	}
 }
