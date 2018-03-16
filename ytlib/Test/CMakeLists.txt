@@ -10,6 +10,9 @@ project( ytTest )
 File(GLOB Common_Files ../Common/*.h )
 source_group( "Common" FILES ${Common_Files} )
 
+File(GLOB DataStructure_Files ../DataStructure/*.h )
+source_group( "DataStructure" FILES ${DataStructure_Files} )
+
 File(GLOB FileManager_Files ../FileManager/*.h )
 source_group( "FileManager" FILES ${FileManager_Files} )
 
@@ -41,6 +44,7 @@ source_group( "Test" FILES ${Test_Files} )
 
 add_executable( ytTest
   ${Common_Files}
+  ${DataStructure_Files}
   ${FileManager_Files}
   ${Interface_Files}
   ${LightMath_Files}

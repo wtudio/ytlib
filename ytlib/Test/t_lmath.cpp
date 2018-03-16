@@ -152,5 +152,6 @@ namespace ytlib
 		std::cout << gcd(42, 30) << std::endl;
 		std::cout << gcd(770, 26) << std::endl;
 		std::cout << gcd(121, 132) << std::endl;
+		return true;
 	}
 }
