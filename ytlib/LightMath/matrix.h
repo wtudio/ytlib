@@ -1,5 +1,4 @@
-#ifndef MATRIX_H
-#define MATRIX_H
+#pragma once
 
 #include <string>
 #include <iostream>
@@ -634,7 +633,12 @@ namespace ytlib
 
 	};
 
+	template <typename T>
+	void swap(Basic_Matrix<T>& a, Basic_Matrix<T>& b) {
+		a.swap(b);
+	}
+
+
 	typedef Basic_Matrix<tfloat> Matrix;
 	typedef Basic_Matrix<Complex> Matrix_c;
 }
-#endif // MATRIX_H

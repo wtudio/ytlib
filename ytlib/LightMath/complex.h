@@ -211,5 +211,6 @@ namespace ytlib
 
 	inline tfloat abs(const Complex &value) { return Complex::abs(value); }
 	inline Complex sqrt(const Complex &value) { return Complex::sqrt(value); }
+	inline void swap(Complex& a, Complex& b) { a.swap(b); }
 }
 

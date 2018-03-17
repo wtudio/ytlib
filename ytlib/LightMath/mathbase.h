@@ -12,15 +12,7 @@ typedef float  tfloat;    // single precision
 
 #define PI 3.1415926535897932384626433832795028841971
 
-#ifndef max
-#define max(a,b)            (((a) > (b)) ? (a) : (b))
-#endif
-
-#ifndef min
-#define min(a,b)            (((a) < (b)) ? (a) : (b))
-#endif
-
-						  //判断浮点数是否相等
+//判断浮点数是否相等
 #ifndef fequal
 #define fequal(a,b)          (((a-b)>-1e-6)&&((a-b)<1e-6))
 #endif
