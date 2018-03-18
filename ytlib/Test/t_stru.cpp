@@ -52,27 +52,27 @@ namespace ytlib
 		typedef BinTreeNode<int> mybt;
 		typedef std::shared_ptr<mybt> mybtPtr;
 		mybtPtr rootp = std::make_shared<mybt>(10);
-		rootp->setLChild(std::make_shared<mybt>(5));
-		rootp->setRChild(std::make_shared<mybt>(3));
+		setLChild(rootp.get(), std::make_shared<mybt>(5));
+		setRChild(rootp.get(), std::make_shared<mybt>(3));
 
 		mybtPtr p = rootp->pl;
-		p->setLChild(std::make_shared<mybt>(1));
-		p->setRChild(std::make_shared<mybt>(7));
+		setLChild(p.get(), std::make_shared<mybt>(1));
+		setRChild(p.get(), std::make_shared<mybt>(7));
 
 		p = p->pr;
-		p->setRChild(std::make_shared<mybt>(4));
+		setRChild(p.get(), std::make_shared<mybt>(4));
 
 		p = rootp->pr;
-		p->setRChild(std::make_shared<mybt>(8));
+		setRChild(p.get(), std::make_shared<mybt>(8));
 		p = p->pr;
-		p->setLChild(std::make_shared<mybt>(9));
+		setLChild(p.get(), std::make_shared<mybt>(9));
 
 		std::cout << rootp->getHeight() << std::endl;
 		std::cout << p->getDepth() << std::endl;
 
 		//前序遍历
 		std::vector<mybtPtr> vec;
-		rootp->DLR(vec);
+		DLR(rootp,vec);
 		for (size_t ii = 0; ii < vec.size(); ++ii) {
 			std::cout << vec[ii]->obj << " ";
 		}
@@ -80,7 +80,7 @@ namespace ytlib
 
 		//中序遍历
 		vec.clear();
-		rootp->LDR(vec);
+		LDR(rootp,vec);
 		for (size_t ii = 0; ii < vec.size(); ++ii) {
 			std::cout << vec[ii]->obj << " ";
 		}
@@ -88,7 +88,7 @@ namespace ytlib
 
 		//后续遍历
 		vec.clear();
-		rootp->LRD(vec);
+		LRD(rootp,vec);
 		for (size_t ii = 0; ii < vec.size(); ++ii) {
 			std::cout << vec[ii]->obj << " ";
 		}
@@ -99,5 +99,42 @@ namespace ytlib
 		return true;
 	}
 
+	bool test_bst() {
+		typedef BinSearchTreeNode<int> mybst;
+		typedef std::shared_ptr<mybst> mybstPtr;
 
+		mybstPtr rootp = std::make_shared<mybst>(10);
+
+		for (int ii = 0; ii < 20; ii += 2) {
+			rootp->insert(std::make_shared<mybst>(ii));
+		}
+
+		std::vector<mybstPtr> vec;
+		LDR(rootp,vec);
+		for (size_t ii = 0; ii < vec.size(); ++ii) {
+			std::cout << vec[ii]->obj << " ";
+		}
+		std::cout << std::endl;
+
+		vec.clear();
+		DLR(rootp, vec);
+		for (size_t ii = 0; ii < vec.size(); ++ii) {
+			std::cout << vec[ii]->obj << " ";
+		}
+		std::cout << std::endl;
+
+		return true;
+	}
+
+	bool test_avlt() {
+
+
+		return true;
+	}
+
+	bool test_brt() {
+
+
+		return true;
+	}
 }

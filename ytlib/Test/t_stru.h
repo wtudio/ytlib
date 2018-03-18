@@ -6,6 +6,12 @@ namespace ytlib
 {
 	bool test_heap();
 	bool test_bintree();
+	bool test_bst();
+	bool test_avlt();
+	bool test_brt();
+
+
+
 }
 
 

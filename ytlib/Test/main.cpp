@@ -54,6 +54,9 @@ int32_t main(int32_t argc, char** argv) {
 	//setTime();
 	//cout << getTime() << endl;
 
+	test_avlt();
+	test_brt();
+	test_bst();
 	test_bintree();
 	test_heap();
 
