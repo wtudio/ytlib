@@ -91,7 +91,7 @@ namespace ytlib {
 				}
 				tmp->pf = pf;
 				tmp->pr = pr; pr->pf = tmp.get();
-				if (pf) {
+				if (pf != NULL) {
 					if (getLR(this)) pf->pl = tmp;
 					else pf->pr = tmp;
 				}
@@ -103,7 +103,7 @@ namespace ytlib {
 
 	//AVL树
 	template<typename T>
-	class AVLTreeNode {
+	class AVLTreeNode :public std::enable_shared_from_this<AVLTreeNode<T> > {
 	private:
 		typedef std::shared_ptr<AVLTreeNode<T> > AVLTNodePtr;
 	public:
@@ -118,62 +118,151 @@ namespace ytlib {
 
 		size_t hgt;//节点高度
 
-		void insert(AVLTNodePtr& ndptr) {
+		//插入，因为根节点可能会变，所以返回根节点
+		AVLTNodePtr insert(AVLTNodePtr& ndptr) {
 			assert(ndptr);
+			AVLTNodePtr re;
 			if (ndptr->obj < obj) {
 				if (pl) { 
-					AVLTPTR(pl)->insert(ndptr);
-
-					size_t Rhgt = 0;
-					if (pr) Rhgt = AVLTPTR(pr)->hgt;
-					if (2 == AVLTPTR(pl)->hgt - Rhgt) {
-						if (ndptr->obj < AVLTPTR(pl)->obj) {
-							rotateL();
-						}
+					pl->insert(ndptr);
+					size_t Rhgt = pr ? pr->hgt : 0;
+					if (2 == (pl->hgt - Rhgt)) {
+						//左边比右边高了2
+						if (ndptr->obj < pl->obj) re = rotateL();
 						else {
-							AVLTPTR(pr)->rotateR();
-							rotateL();
+							pl->rotateR();
+							re = rotateL();
 						}
 					}
-
 				}
 				else {
 					setLChild(this, ndptr);
 					ndptr->updateHeight();
 				}
-
-
-
 			}
 			else {
-				if (pr) AVLTPTR(pr)->insert(ndptr);
+				if (pr) {
+					pr->insert(ndptr);
+					size_t Lhgt = pl ? pl->hgt : 0;
+					if (2 == (pr->hgt - Lhgt)) {
+						//左边比右边低了2
+						if (ndptr->obj > pr->obj) re = rotateR();
+						else {
+							pr->rotateL();
+							re = rotateR();
+						}
+					}
+				}
 				else {
 					setRChild(this, ndptr);
 					ndptr->updateHeight();
 				}
 			}
-
+			if(re)	return re;
+			return shared_from_this();
 		}
 
+		//删除当前节点。
 		void erase() {
+			if (!pl && !pr) {
+				//左右都为空，为叶子节点
+				if (pf == NULL) return;
+				if (getLR(this)) breakLChild(pf);
+				else breakRChild(pf);
+			}
+			else if (pl && !pr) {
+				//只有左子树
+				if (pf == NULL) breakLChild(this);
+				else {
+					pl->pf = pf;
+					pf->pl = pl;
+					pf = NULL; pl.reset();
+				}
+			}
+			else if (!pl && pr) {
+				//只有右子树
+				if (pf == NULL) breakRChild(this);
+				else {
+					pr->pf = pf;
+					pf->pr = pr;
+					pf = NULL; pr.reset();
+				}
+			}
+			else {
+				//换左子树的前驱
+				BSTNodePtr tmp = pl;
+				if (tmp->pr) {
+					//左子节点有右子树，找到其前驱
+					while (tmp->pr) tmp = tmp->pr;
+					tmp->pf->pr = tmp->pl;
+					if (tmp->pl) tmp->pl->pf = tmp->pf;
+					tmp->pl = pl; pl->pf = tmp.get();
+				}
+				tmp->pf = pf;
+				tmp->pr = pr; pr->pf = tmp.get();
+				if (pf != NULL) {
+					if (getLR(this)) pf->pl = tmp;
+					else pf->pr = tmp;
+				}
+				pf = NULL; pl.reset(); pr.reset();
+			}
 
 		}
 
 		//左旋转，顺时针
-		void rotateL() {
-
+		AVLTNodePtr rotateL() {
+			AVLTNodePtr re = pl;
+			if (re->pr) re->pr->pf = this;
+			pl = re->pr;
+			if (pf == NULL) re->pr = shared_from_this();
+			else {
+				if (getLR(this)) {
+					re->pr = pf->pl;
+					pf->pl = re;
+				}
+				else {
+					re->pr = pf->pr;
+					pf->pr = re;
+				}
+			}
+			re->pf = pf;
+			pf = re.get();
+			re->hgt = 0;//这里高度要重新计算
+			updateHeight();
+			return re;
 		}
 		//右旋转，逆时针
-		void rotateR() {
-
+		AVLTNodePtr rotateR() {
+			AVLTNodePtr re = pr;
+			if (re->pl) re->pl->pf = this;
+			pr = re->pl;
+			if (pf == NULL) re->pl = shared_from_this();
+			else {
+				if (getLR(this)) {
+					re->pl = pf->pl;
+					pf->pl = re;
+				}
+				else {
+					re->pl = pf->pr;
+					pf->pr = re;
+				}
+			}
+			re->pf = pf;
+			pf = re.get();
+			re->hgt = 0;
+			updateHeight();
+			return re;
 		}
 
 		//由子节点向上更新高度
 		void updateHeight() {
 			AVLTreeNode<T>* tmp = this;
-			while (tmp->pf != NULL) {
-				if (tmp->pf->hgt == (tmp->hgt + 1)) break;
-				tmp->pf->hgt = (tmp->hgt + 1);
+			while (tmp != NULL) {
+				size_t lh = (tmp->pl) ? tmp->pl->hgt : 0;
+				size_t lr = (tmp->pr) ? tmp->pr->hgt : 0;
+				size_t h = max(lh, lr) + 1;
+				if (tmp->hgt == h && tmp != this) break;
+				tmp->hgt = h;
 				tmp = tmp->pf;
 			}
 		}
@@ -184,9 +273,6 @@ namespace ytlib {
 	class BRTreeNode {
 
 	};
-
-
-
 
 	//以当前节点为根节点，前序遍历，返回一个指针数组。以当前节点为根节点
 	template<typename T>
@@ -242,13 +328,13 @@ namespace ytlib {
 	//将一个节点作为左/右子节点，与原左/右子节点断开。插入的节点与其原父节点断开
 	template<typename T>
 	void setLChild(T* pfather,std::shared_ptr<T>& pchild) {
-		assert(pfather && pchild);
+		assert((pfather!=NULL) && pchild);
 		pchild->pf = pfather;
 		pfather->pl = pchild;
 	}
 	template<typename T>
 	void setRChild(T* pfather, std::shared_ptr<T>& pchild) {
-		assert(pfather && pchild);
+		assert((pfather != NULL) && pchild);
 		pchild->pf = pfather;
 		pfather->pr = pchild;
 	}
@@ -256,11 +342,13 @@ namespace ytlib {
 	//与左/右子树断开
 	template<typename T>
 	void breakLChild(T* pnode) {
+		assert((pnode != NULL) && pnode->pl);
 		pnode->pl->pf = NULL;
 		pnode->pl.reset();
 	}
 	template<typename T>
 	void breakRChild(T* pnode) {
+		assert((pnode != NULL) && pnode->pr);
 		pnode->pr->pf = NULL;
 		pnode->pr.reset();
 	}

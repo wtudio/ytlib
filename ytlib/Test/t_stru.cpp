@@ -128,6 +128,39 @@ namespace ytlib
 	}
 
 	bool test_avlt() {
+		typedef AVLTreeNode<int> myavlt;
+		typedef shared_ptr<myavlt> myavltPtr;
+
+		myavltPtr rootp = make_shared<myavlt>(10);
+
+		//≤Â»Î
+		vector<myavltPtr> vec;
+		for (int ii = 0; ii < 20; ii += 2) {
+			rootp = rootp->insert(make_shared<myavlt>(ii));
+			vec.clear();
+			DLR(rootp, vec);
+			for (size_t ii = 0; ii < vec.size(); ++ii) {
+				cout << vec[ii]->obj << "(" << vec[ii]->hgt << ") ";
+			}
+			cout << endl;
+		}
+
+		LDR(rootp, vec);
+		for (size_t ii = 0; ii < vec.size(); ++ii) {
+			cout << vec[ii]->obj << "(" << vec[ii]->hgt << ") ";
+		}
+		cout << endl;
+
+		vec.clear();
+		DLR(rootp, vec);
+		for (size_t ii = 0; ii < vec.size(); ++ii) {
+			cout << vec[ii]->obj << "(" << vec[ii]->hgt << ") ";
+		}
+		cout << endl;
+
+		//…æ≥˝
+
+
 
 
 		return true;
