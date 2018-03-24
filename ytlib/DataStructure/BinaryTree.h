@@ -277,6 +277,7 @@ namespace ytlib {
 	//以当前节点为根节点，前序遍历，返回一个指针数组。以当前节点为根节点
 	template<typename T>
 	void DLR(std::shared_ptr<T>& nd, std::vector<std::shared_ptr<T> >& vec) {
+		assert(nd);
 		vec.push_back(nd);
 		if (nd->pl) DLR(nd->pl, vec);
 		if (nd->pr) DLR(nd->pr, vec);
@@ -284,6 +285,7 @@ namespace ytlib {
 	//中序遍历
 	template<typename T>
 	void LDR(std::shared_ptr<T>& nd, std::vector<std::shared_ptr<T> >& vec) {
+		assert(nd);
 		if (nd->pl) LDR(nd->pl, vec);
 		vec.push_back(nd);
 		if (nd->pr) LDR(nd->pr, vec);
@@ -291,6 +293,7 @@ namespace ytlib {
 	//后续遍历
 	template<typename T>
 	void LRD(std::shared_ptr<T>& nd, std::vector<std::shared_ptr<T> >& vec) {
+		assert(nd);
 		if (nd->pl) LRD(nd->pl, vec);
 		if (nd->pr) LRD(nd->pr, vec);
 		vec.push_back(nd);
@@ -299,6 +302,7 @@ namespace ytlib {
 	//获取深度，根节点深度为0
 	template<typename T>
 	size_t getDepth(const T* pnode) {
+		assert(pnode != NULL);
 		pnode = pnode->pf;
 		size_t count = 0;
 		while (pnode != NULL) {
@@ -311,6 +315,7 @@ namespace ytlib {
 	//获取高度，叶子节点高度为1
 	template<typename T>
 	size_t getHeight(const T* pnode) {
+		assert(pnode != NULL);
 		size_t lh = 0, rh = 0;
 		if (pnode->pl) lh = getHeight(pnode->pl.get());
 		if (pnode->pr) rh = getHeight(pnode->pr.get());
@@ -319,6 +324,7 @@ namespace ytlib {
 	//获取树中节点个数
 	template<typename T>
 	size_t getNodeNum(const T* pnode) {
+		assert(pnode != NULL);
 		size_t num = 1;
 		if (pnode->pl) num += getNodeNum(pnode->pl.get());
 		if (pnode->pr) num += getNodeNum(pnode->pr.get());
@@ -356,11 +362,27 @@ namespace ytlib {
 	//判断是父节点的左节点还是右节点。true表示左。使用前应检查父节点是否为空
 	template<typename T>
 	bool getLR(const T* pnode) {
-		assert(pnode->pf != NULL);
+		assert(pnode && pnode->pf != NULL);
 		if (pnode == pnode->pf->pl.get()) return true;
 		if (pnode == pnode->pf->pr.get()) return false;
 		assert(0);//不是父节点的左右节点。报错
 		return true;
+	}
+
+	//分层遍历
+	template<typename T>
+	void traByLevel(std::shared_ptr<T>& nd, std::vector<std::shared_ptr<T> >& vec) {
+		assert(nd);
+		size_t pos1 = vec.size(),pos2;
+		vec.push_back(nd);
+		while (pos1 < vec.size()) {
+			pos2 = vec.size();
+			while (pos1 < pos2) {
+				if (vec[pos1]->pl) vec.push_back(vec[pos1]->pl);
+				if (vec[pos1]->pr) vec.push_back(vec[pos1]->pr);
+				++pos1;
+			}
+		}
 	}
 }
 

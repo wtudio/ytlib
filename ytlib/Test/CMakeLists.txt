@@ -7,6 +7,9 @@ project( ytTest )
 
 #---------------------------------------------------------------------
 # Construct source groups for nice visualisation in Visual Studio.
+File(GLOB Algorithm_Files ../Algorithm/*.h )
+source_group( "Algorithm" FILES ${Algorithm_Files} )
+
 File(GLOB Common_Files ../Common/*.h )
 source_group( "Common" FILES ${Common_Files} )
 
@@ -43,6 +46,7 @@ source_group( "Test" FILES ${Test_Files} )
 # Create the elxCommon library.
 
 add_executable( ytTest
+  ${Algorithm_Files}
   ${Common_Files}
   ${DataStructure_Files}
   ${FileManager_Files}

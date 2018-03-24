@@ -7,6 +7,7 @@
 #include "t_log.h"
 #include "t_tools.h"
 #include "t_stru.h"
+#include "t_algs.h"
 
 #include <boost/date_time/posix_time/posix_time.hpp>  
 
@@ -53,6 +54,10 @@ int32_t main(int32_t argc, char** argv) {
 	
 	//setTime();
 	//cout << getTime() << endl;
+
+	test_kmp();
+	test_strdif();
+	test_lgsswd();
 
 	test_avlt();
 	test_brt();

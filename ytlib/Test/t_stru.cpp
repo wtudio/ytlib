@@ -144,7 +144,7 @@ namespace ytlib
 			}
 			cout << endl;
 		}
-
+		vec.clear();
 		LDR(rootp, vec);
 		for (size_t ii = 0; ii < vec.size(); ++ii) {
 			cout << vec[ii]->obj << "(" << vec[ii]->hgt << ") ";
@@ -153,6 +153,14 @@ namespace ytlib
 
 		vec.clear();
 		DLR(rootp, vec);
+		for (size_t ii = 0; ii < vec.size(); ++ii) {
+			cout << vec[ii]->obj << "(" << vec[ii]->hgt << ") ";
+		}
+		cout << endl;
+
+		//·Ö²ã±éÀú
+		vec.clear();
+		traByLevel(rootp, vec);
 		for (size_t ii = 0; ii < vec.size(); ++ii) {
 			cout << vec[ii]->obj << "(" << vec[ii]->hgt << ") ";
 		}
