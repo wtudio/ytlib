@@ -1,6 +1,7 @@
 #pragma once
 #include <ytlib/Common/Util.h>
 #include <cmath>
+#include <vector>
 
 #define USE_DOUBLE_PRECISION
 
@@ -43,9 +44,9 @@ namespace ytlib
 		//不在6的倍数两侧的一定不是质数  
 		if (num % 6 != 1 && num % 6 != 5)
 			return false;
-		int tmp = std::sqrt(num);
+		uint32_t tmp = uint32_t(std::sqrt(num));
 		//在6的倍数两侧的也可能不是质数  
-		for (int i = 5; i <= tmp; i += 6)
+		for (uint32_t i = 5; i <= tmp; i += 6)
 			if (num %i == 0 || num % (i + 2) == 0)
 				return false;
 		//排除所有，剩余的是质数  
@@ -67,6 +68,16 @@ namespace ytlib
 		}
 	}
 
+	//分解质因数
+	static void factoring(uint32_t num, std::vector<uint32_t>& re) {
+		if (num < 2) return;
+		for (uint32_t ii = 2; ii <= num; ++ii) {
+			while (num%ii == 0) {
+				re.push_back(ii);
+				num /= ii;
+			}
+		}
+	}
 
 
 

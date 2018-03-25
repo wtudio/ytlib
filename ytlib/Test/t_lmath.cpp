@@ -152,6 +152,13 @@ namespace ytlib
 		cout << gcd(42, 30) << endl;
 		cout << gcd(770, 26) << endl;
 		cout << gcd(121, 132) << endl;
+
+		std::vector<uint32_t> v;
+		factoring(60, v);
+		for (uint32_t ii = 0; ii < v.size(); ++ii) {
+			cout << v[ii] << " ";
+		}
+
 		return true;
 	}
 }

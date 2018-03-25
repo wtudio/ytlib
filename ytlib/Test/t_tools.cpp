@@ -1,5 +1,10 @@
 #include "t_tools.h"
 #include <ytlib/SupportTools/UUID.h>
+#include <vector>
+#include <set>
+#include <map>
+#include <algorithm>
+
 
 namespace ytlib
 {
@@ -35,4 +40,17 @@ namespace ytlib
 
 		return true;
 	}
+
+	//这个函数只是用于学习stl库里的算法
+	bool test_stl() {
+
+
+
+
+
+
+
+		return true;
+	}
+
 }

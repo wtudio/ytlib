@@ -10,6 +10,10 @@ namespace ytlib
 	bool test_SysInfoTools();
 
 	bool test_Serialize();
+
+
+	bool test_stl();
+
 }
 
 
