@@ -1,6 +1,6 @@
 #pragma once
-#include <ytlib/LightMath/complex.h>
-#include <ytlib/LightMath/matrix.h>
+#include <ytlib/LightMath/Complex.h>
+#include <ytlib/LightMath/Matrix.h>
 
 
 namespace ytlib

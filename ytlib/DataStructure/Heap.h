@@ -3,7 +3,10 @@
 #include <vector>
 
 namespace ytlib {
-
+	/*
+	stl中有关于heap的函数：
+	make_heap/pop_heap/push_heap/sort_heap
+	*/
 #define LEFT_CHILD(x)	((x << 1) + 1)
 #define RIGHT_CHILD(x)	((x << 1) + 2)
 #define PARENT(x)		((x - 1) >> 1)
