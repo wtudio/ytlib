@@ -102,6 +102,7 @@ int32_t main(int32_t argc, char** argv) {
 	//setTime();
 	//cout << getTime() << endl;
 
+	test_sort();
 	test_kmp();
 	test_strdif();
 	test_lgsswd();

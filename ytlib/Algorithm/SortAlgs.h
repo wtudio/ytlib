@@ -38,23 +38,65 @@ namespace ytlib {
 
 
 
-	//冒泡排序
+	//冒泡排序 in-place/稳定
 	template<typename T>
-	void sortBubble(T* arr, size_t len) {
-		for (size_t ii = 0; ii < len; ++i) {
-
+	void bubbleSort(T* arr, size_t len) {
+		using std::swap;
+		for (size_t ii = 0; ii < len; ++ii) {
+			for (size_t jj = 0; jj < len - 1 - ii; ++jj) {
+				if (arr[jj] > arr[jj + 1]) {
+					swap(arr[jj], arr[jj + 1]);
+				}
+			}
 		}
 	}
 
 
 
-	//归并排序
+	//归并排序 out-place/稳定。todo：还没完成
+	template<typename T>
+	void mergeSort(T* arr, size_t len) {
+		if (len < 2) return;
+		size_t llen = len / 2, rlen = len - llen;
+		
+		mergeSort(arr, llen);
+		mergeSort(arr + llen, rlen);
+		//在另外的空间排序好了再复制回来
+		T* tmpArr = new T[len];
+		size_t lc = 0, rc = llen, tc = 0;
+		while ((lc<llen) && (rc<len)) {
+			if (arr[lc] < arr[rc]) {
+				tmpArr[tc++] = arr[lc++];
+			}
+			else {
+				tmpArr[tc++] = arr[rc++];
+			}
+		}
+
+		if (lc < llen && rc==len) {
+			memcpy(arr + lc + llen, arr + lc, (llen - lc) * sizeof(T));
+		}
+		memcpy(arr, tmpArr, tc * sizeof(T));
+		delete[] tmpArr;
+	}
+
+	//快速排序 in-place/不稳定
+	template<typename T>
+	void quickSort(T* arr, size_t len) {
+		using std::swap;
 
 
-	//快速排序
+	}
+
+
 
 	//
 	
+
+
+	//二分查找
+
+
 
 }
 

@@ -33,4 +33,28 @@ namespace ytlib
 		return true;
 	}
 
+	bool test_sort() {
+		const uint32_t num = 10;
+		//Ã°ÅÝ
+		int data1[num] = { 1,4,2,8,5,9,0,7,6,3 };
+		bubbleSort(data1, num);
+		for (uint32_t ii = 0; ii < num; ++ii) {
+			cout << data1[ii] << " ";
+		}
+		cout << endl;
+
+		//¹é²¢
+		int data2[num] = { 1,4,2,8,5,9,0,7,6,3 };
+		mergeSort(data2, num);
+		for (uint32_t ii = 0; ii < num; ++ii) {
+			cout << data2[ii] << " ";
+		}
+		cout << endl;
+
+
+
+
+
+		return true;
+	}
 }
