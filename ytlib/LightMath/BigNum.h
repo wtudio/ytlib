@@ -3,7 +3,7 @@
 #include <ytlib/LightMath/mathbase.h>
 #include <vector>
 
-//大整数数工具
+//大整数数工具。todo待完善
 namespace ytlib
 {
 	class BigNum {

@@ -78,7 +78,36 @@ namespace ytlib
 			}
 		}
 	}
+	//累乘，需保证n>=m，且m!=0
+	static uint64_t Mul(uint64_t n, uint64_t m = 1) {
+		assert(n >= m && m);
+		uint64_t re = n;
+		while ((--n) >= m) re *= n;
+		return re;
+	}
 
+	//排列数，从从n个不同元素中，任取m(m≤n,m与n均为自然数）个元素，其排列的个数。A(n,m)=n!/(n-m)!
+	static uint64_t Arn(uint64_t n, uint64_t m) {
+		assert(n >= m && m);
+		return Mul(n, n - m + 1);
+	}
+
+	//组合数，C(n,m)=A(n,m)/m!=n!/(m!*(n-m)!)。C(n,m)=C(n,n-m)
+	static uint64_t Crn(uint64_t n, uint64_t m) {
+		assert(n >= m && m);
+		return (n == m) ? 1 : (Mul(n, m + 1) / Mul(n - m));
+	}
+
+	//等差数列求和
+	static tfloat SumAP(tfloat a1, tfloat d, uint64_t n) {
+		return n * (a1 + d / 2 * (n - 1));
+	}
+
+	//等比数列求和
+	static tfloat SumGP(tfloat a1, tfloat q, uint64_t n) {
+		assert(q != 0.0);
+		return (q == 1.0) ? (n*a1) : (a1*(1 - std::pow(q, n)) / (1 - q));
+	}
 
 
 }

@@ -265,7 +265,7 @@ namespace ytlib
 		}
 
 
-		/////tmp:测试到这。还需要添加随机矩阵生成方法。再看看matlab里还有什么常用矩阵
+		/////todo:测试到这。还需要添加随机矩阵生成方法。再看看matlab里还有什么常用矩阵
 
 		// simple arithmetic operations
 		// add matrix

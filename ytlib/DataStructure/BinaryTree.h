@@ -162,7 +162,7 @@ namespace ytlib {
 			return shared_from_this();
 		}
 
-		//删除当前节点。
+		//删除当前节点。todo待完善
 		void erase() {
 			if (!pl && !pr) {
 				//左右都为空，为叶子节点
@@ -268,7 +268,7 @@ namespace ytlib {
 		}
 	};
 
-	//红黑树
+	//红黑树。todo待完善
 	template<typename T>
 	class BRTreeNode {
 

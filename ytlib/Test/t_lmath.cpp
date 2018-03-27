@@ -158,6 +158,16 @@ namespace ytlib
 		for (uint32_t ii = 0; ii < v.size(); ++ii) {
 			cout << v[ii] << " ";
 		}
+		cout << endl;
+
+		cout << Mul(5) << endl;//120
+		cout << Mul(9, 5) << endl;//15120
+		cout << Arn(9, 2) << endl;//72
+		cout << Crn(9, 2) << endl;//36
+
+		cout << SumAP(1.0, 2.0, 3) << endl;//9
+		cout << SumGP(2.0, 1.0, 10) << endl;//20
+		cout << SumGP(2.0, 3.0, 4) << endl;//80
 
 		return true;
 	}
