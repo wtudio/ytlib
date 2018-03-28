@@ -19,7 +19,7 @@ namespace ytlib {
 	class Heap {
 	public:
 		Heap(bool _type = true) : type(_type) {}
-		virtual ~Heap() {}
+		~Heap() {}
 
 		Heap(const std::vector<T>& a, bool _type = true) :container(a), type(_type) {
 			adjust();

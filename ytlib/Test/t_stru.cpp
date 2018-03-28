@@ -170,6 +170,24 @@ namespace ytlib
 
 
 
+		//序列化、反序列化
+		vec.clear();
+		SerializeTree(rootp, vec);
+		for (size_t ii = 0; ii < vec.size(); ++ii) {
+			if (vec[ii]) cout << vec[ii]->obj << " ";
+			else cout << "* ";
+		}
+		cout << endl;
+
+		myavltPtr rootp2;
+		DeserializeTree(rootp2, vec.begin());
+		vec.clear();
+		traByLevel(rootp2, vec);
+		for (size_t ii = 0; ii < vec.size(); ++ii) {
+			cout << vec[ii]->obj << "(" << vec[ii]->hgt << ") ";
+		}
+		cout << endl;
+
 
 		return true;
 	}

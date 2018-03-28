@@ -15,7 +15,7 @@ namespace ytlib {
 		typedef std::shared_ptr<BinTreeNode<T> > nodePtr;
 	public:
 		BinTreeNode():pf(NULL){}
-		virtual ~BinTreeNode(){}
+		~BinTreeNode(){}
 		BinTreeNode(const T& _obj) :obj(_obj), pf(NULL) {}
 
 		T obj;
@@ -32,7 +32,7 @@ namespace ytlib {
 		typedef std::shared_ptr<BinSearchTreeNode<T> > BSTNodePtr;
 	public:
 		BinSearchTreeNode() :pf(NULL) {}
-		virtual ~BinSearchTreeNode() {}
+		~BinSearchTreeNode() {}
 		BinSearchTreeNode(const T& _obj) :obj(_obj), pf(NULL) {}
 
 		T obj;
@@ -108,7 +108,7 @@ namespace ytlib {
 		typedef std::shared_ptr<AVLTreeNode<T> > AVLTNodePtr;
 	public:
 		AVLTreeNode() :pf(NULL), hgt(1){}
-		virtual ~AVLTreeNode() {}
+		~AVLTreeNode() {}
 		AVLTreeNode(const T& _obj) :obj(_obj), pf(NULL), hgt(1) {}
 
 		T obj;
@@ -276,7 +276,7 @@ namespace ytlib {
 
 	//以当前节点为根节点，前序遍历，返回一个指针数组。以当前节点为根节点
 	template<typename T>
-	void DLR(std::shared_ptr<T>& nd, std::vector<std::shared_ptr<T> >& vec) {
+	void DLR(T& nd, std::vector<T>& vec) {
 		assert(nd);
 		vec.push_back(nd);
 		if (nd->pl) DLR(nd->pl, vec);
@@ -284,7 +284,7 @@ namespace ytlib {
 	}
 	//中序遍历
 	template<typename T>
-	void LDR(std::shared_ptr<T>& nd, std::vector<std::shared_ptr<T> >& vec) {
+	void LDR(T& nd, std::vector<T>& vec) {
 		assert(nd);
 		if (nd->pl) LDR(nd->pl, vec);
 		vec.push_back(nd);
@@ -292,7 +292,7 @@ namespace ytlib {
 	}
 	//后续遍历
 	template<typename T>
-	void LRD(std::shared_ptr<T>& nd, std::vector<std::shared_ptr<T> >& vec) {
+	void LRD(T& nd, std::vector<T>& vec) {
 		assert(nd);
 		if (nd->pl) LRD(nd->pl, vec);
 		if (nd->pr) LRD(nd->pr, vec);
@@ -382,6 +382,24 @@ namespace ytlib {
 				if (vec[pos1]->pr) vec.push_back(vec[pos1]->pr);
 				++pos1;
 			}
+		}
+	}
+
+	//二叉树的序列化
+	template<typename T>
+	void SerializeTree(const T& proot, std::vector<T>& vec) {
+		vec.push_back(proot);
+		if (!proot)	return;
+		SerializeTree(proot->pl, vec);
+		SerializeTree(proot->pr, vec);
+	}
+	//反序列化
+	template<typename T>
+	void DeserializeTree(T& proot, typename std::vector<T>::iterator& itr) {
+		if (*itr) {
+			proot = *itr;
+			DeserializeTree(proot->pl, ++itr);
+			DeserializeTree(proot->pr, ++itr);
 		}
 	}
 }

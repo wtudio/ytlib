@@ -27,42 +27,12 @@ public:
 	static int b;
 	static const int c;
 
+private:
+
+
 };
 int c1::b = 1;
 const int c1::c = 1;
-
-
-//输出从v[pos]~v[end]的所有d个值的选择方案到pre中
-void dfs(const vector<int> v,int pos, int d, vector<int>& pre) {
-	if (d == 1) {
-		for (; pos < v.size(); ++pos) {
-			for (int ct = 0; ct < pre.size(); ++ct) {
-				cout << pre[ct] << " ";
-			}
-			cout << v[pos] << endl;
-		}
-	}
-	else {
-		if ((d + pos) == v.size()) {
-			for (int ct = 0; ct < pre.size(); ++ct) {
-				cout << pre[ct] << " ";
-			}
-			for (; pos < v.size(); ++pos) {
-				cout << v[pos] << " ";
-			}
-			cout << endl;
-		}
-		else {
-			for (; pos < v.size(); ++pos) {
-				pre.push_back(v[pos]);
-				dfs(v, pos + 1, d - 1, pre);
-				pre.pop_back();
-			}
-		}
-
-	}
-
-}
 
 
 
@@ -73,22 +43,6 @@ int32_t main(int32_t argc, char** argv) {
 	//std::locale::global(std::locale(""));
 	//wcout.imbue(locale(""));
 
-
-	vector<int> v{ 1,2,3,4 }, v2;
-	v2.reserve(v.size());
-	for (int ii = 1; ii <= v.size(); ++ii) {
-		dfs(v, 0, ii, v2);
-	}
-	
-	YT_DEBUG_PRINTF("--------------------------------------\n");
-
-	do{
-		for (int ii = 0; ii < v.size(); ++ii) {
-			cout << v[ii] << " ";
-		}
-		cout << endl;
-	} while (next_permutation(v.begin(), v.end()));
-	
 
 
 
