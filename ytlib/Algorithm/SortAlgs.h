@@ -53,29 +53,25 @@ namespace ytlib {
 
 
 
-	//归并排序 out-place/稳定。todo：还没完成
+	//归并排序 out-place/稳定
 	template<typename T>
 	void mergeSort(T* arr, size_t len) {
 		if (len < 2) return;
-		size_t llen = len / 2, rlen = len - llen;
-		
-		mergeSort(arr, llen);
-		mergeSort(arr + llen, rlen);
+		if (len == 2) {
+			using std::swap;
+			if (arr[0] > arr[1]) swap(arr[0], arr[1]);
+			return;
+		}
+		size_t middle = len / 2;
+		mergeSort(arr, middle);
+		mergeSort(arr + middle, len - middle);
 		//在另外的空间排序好了再复制回来
 		T* tmpArr = new T[len];
-		size_t lc = 0, rc = llen, tc = 0;
-		while ((lc<llen) && (rc<len)) {
-			if (arr[lc] < arr[rc]) {
-				tmpArr[tc++] = arr[lc++];
-			}
-			else {
-				tmpArr[tc++] = arr[rc++];
-			}
+		size_t lc = 0, rc = middle, tc = 0;
+		while ((lc<middle) && (rc<len)) {
+			tmpArr[tc++] = (arr[lc] < arr[rc]) ? arr[lc++] : arr[rc++];
 		}
-
-		if (lc < llen && rc==len) {
-			memcpy(arr + lc + llen, arr + lc, (llen - lc) * sizeof(T));
-		}
+		if (lc < middle && rc == len) memcpy(arr + len - middle + lc, arr + lc, (middle - lc) * sizeof(T));
 		memcpy(arr, tmpArr, tc * sizeof(T));
 		delete[] tmpArr;
 	}
@@ -83,18 +79,44 @@ namespace ytlib {
 	//快速排序 in-place/不稳定
 	template<typename T>
 	void quickSort(T* arr, size_t len) {
+		if (len < 2) return;
 		using std::swap;
-
-
+		if (len == 2) {
+			if (arr[0] > arr[1]) swap(arr[0], arr[1]);
+			return;
+		}
+		size_t first = 0, last = len - 1, cur = first;
+		while (first < last) {
+			while (first < last && arr[last] >= arr[cur]) --last;
+			if (cur != last) {
+				swap(arr[cur], arr[last]);
+				cur = last;
+			}
+			while (first < last && arr[first] <= arr[cur]) ++first;
+			if (cur != first) {
+				swap(arr[cur], arr[first]);
+				cur = first;
+			}
+		}
+		if (cur > 1) quickSort(arr, cur);
+		if (cur < len - 2) quickSort(arr + cur + 1, len - cur - 1);
 	}
 
 
-
-	//
-	
-
-
-	//二分查找
+	//二分查找。应用于排序好的数组中
+	template<typename T>
+	size_t binarySearch(T* arr, size_t len,const T& key) {
+		assert(len);
+		size_t low = 0, high = len - 1;
+		while (low <= high) {
+			size_t mid = low + (high - low) / 2;
+			if (arr[mid] < key) low = mid + 1;
+			else if (arr[mid] > key) high = mid - 1;
+			else return mid;
+		}
+		//没找到，返回len
+		return len;
+	}
 
 
 

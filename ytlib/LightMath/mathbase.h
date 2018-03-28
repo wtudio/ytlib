@@ -53,7 +53,7 @@ namespace ytlib
 		return true;
 
 	}
-	//求最大公约数。最小公倍数：num1*num2/gcd(num1,num2)
+	//求最大公约数
 	static uint32_t gcd(uint32_t num1, uint32_t num2) {
 		if (num1 < num2) return gcd(num2, num1);
 		if (num2 == 0) return num1;
@@ -67,7 +67,10 @@ namespace ytlib
 			return (gcd(num1 >> 1, num2 >> 1) << 1);
 		}
 	}
-
+	//求最小公倍数：num1*num2/gcd(num1,num2)
+	static uint32_t lcm(uint32_t num1, uint32_t num2) {
+		return num1 / gcd(num1, num2) * num2;
+	}
 	//分解质因数
 	static void factoring(uint32_t num, std::vector<uint32_t>& re) {
 		if (num < 2) return;

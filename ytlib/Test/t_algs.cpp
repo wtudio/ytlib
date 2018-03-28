@@ -51,9 +51,15 @@ namespace ytlib
 		}
 		cout << endl;
 
+		//¿ìÅÅ
+		int data3[num] = { 1,4,2,8,5,9,0,7,6,3 };
+		quickSort(data3, num);
+		for (uint32_t ii = 0; ii < num; ++ii) {
+			cout << data3[ii] << " ";
+		}
+		cout << endl;
 
-
-
+		cout << binarySearch(data3, num, 6) << endl;
 
 		return true;
 	}
