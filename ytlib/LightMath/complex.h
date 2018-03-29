@@ -2,7 +2,7 @@
 
 #include <iostream>
 #include <sstream>
-#include <ytlib/LightMath/mathbase.h>
+#include <ytlib/LightMath/Mathbase.h>
 
 
 
@@ -17,7 +17,7 @@ namespace ytlib
 		Complex(const Complex &value) : real(value.real), imag(value.imag) {}
 		~Complex() {}
 
-		Complex  operator+ (const Complex &value) {
+		Complex  operator+ (const Complex &value) const {
 			return Complex(this->real + value.real, this->imag + value.imag);
 		}
 		Complex&  operator+= (const Complex &value) {
@@ -26,7 +26,7 @@ namespace ytlib
 			return *this;
 		}
 
-		Complex  operator- (const Complex &value) {
+		Complex  operator- (const Complex &value) const {
 			return Complex(this->real - value.real, this->imag - value.imag);
 		}
 		Complex&  operator-= (const Complex &value) {
@@ -35,7 +35,7 @@ namespace ytlib
 			return *this;
 		}
 
-		Complex  operator* (const Complex &value) {
+		Complex  operator* (const Complex &value) const {
 			return Complex(
 				this->real*value.real - this->imag * value.imag,
 				this->real*value.imag + this->imag * value.real
@@ -48,7 +48,7 @@ namespace ytlib
 			return *this;
 		}
 
-		Complex  operator* (const tfloat &s) {
+		Complex  operator* (const tfloat &s) const {
 			return Complex(this->real*s, this->imag*s);
 		}
 		Complex&  operator*= (const tfloat &s) {
@@ -57,7 +57,7 @@ namespace ytlib
 			return *this;
 		}
 
-		Complex  operator/ (const Complex &value) {
+		Complex  operator/ (const Complex &value) const {
 			tfloat abs_value = Complex::abs(value);
 			return Complex(
 				(this->real*value.real + this->imag * value.imag) / abs_value,
@@ -72,7 +72,7 @@ namespace ytlib
 			return *this;
 		}
 
-		Complex  operator/ (const tfloat &s) {
+		Complex  operator/ (const tfloat &s) const {
 			return Complex(this->real / s, this->imag / s);
 		}
 		Complex&  operator/= (const tfloat &s) {
@@ -81,7 +81,7 @@ namespace ytlib
 			return *this;
 		}
 
-		Complex  operator- () {
+		Complex  operator- () const {
 			return Complex(-(this->real), -(this->imag));
 		}
 

@@ -4,7 +4,7 @@
 #include <iostream>
 #include <cstring>
 
-#include <ytlib/LightMath/mathbase.h>
+#include <ytlib/LightMath/Mathbase.h>
 #include <ytlib/LightMath/complex.h>
 
 
@@ -59,7 +59,7 @@ namespace ytlib
 		}
 
 		// copies submatrix of M into array 'val', default values copy whole row/column/matrix
-		void getData(T* val_, int32_t i1 = 0, int32_t j1 = 0, int32_t i2 = -1, int32_t j2 = -1, int32_t N_ = 0) {
+		void getData(T* val_, int32_t i1 = 0, int32_t j1 = 0, int32_t i2 = -1, int32_t j2 = -1, int32_t N_ = 0) const {
 			if (i2 == -1) i2 = m - 1;
 			if (j2 == -1) j2 = n - 1;
 			if (i1 < 0 || i2 >= m || j1 < 0 || j2 >= n) {
@@ -81,7 +81,7 @@ namespace ytlib
 		}
 
 		// set or get submatrices of current matrix
-		Basic_Matrix getMat(int32_t i1, int32_t j1, int32_t i2 = -1, int32_t j2 = -1) {
+		Basic_Matrix getMat(int32_t i1, int32_t j1, int32_t i2 = -1, int32_t j2 = -1) const {
 			if (i2 == -1) i2 = m - 1;
 			if (j2 == -1) j2 = n - 1;
 			if (i1 < 0 || i2 >= m || j1 < 0 || j2 >= n) {
@@ -159,7 +159,7 @@ namespace ytlib
 			return *this;
 		}
 		// extract columns with given index
-		Basic_Matrix extractCols(const int32_t* idx,const int32_t N_) {
+		Basic_Matrix extractCols(const int32_t* idx,const int32_t N_) const {
 			Basic_Matrix M(m, N_);
 			for (int32_t j = 0; j < N_; ++j)
 				if ((idx[j] < n) && (idx[j] > 0)) {
@@ -269,7 +269,7 @@ namespace ytlib
 
 		// simple arithmetic operations
 		// add matrix
-		Basic_Matrix  operator+ (const Basic_Matrix &M) {
+		Basic_Matrix  operator+ (const Basic_Matrix &M) const {
 			const Basic_Matrix &A = *this;
 			const Basic_Matrix &B = M;
 			if (A.m != B.m || A.n != B.n) {
@@ -297,7 +297,7 @@ namespace ytlib
 			return *this;
 		}
 		// subtract matrix
-		Basic_Matrix  operator- (const Basic_Matrix &M) {
+		Basic_Matrix  operator- (const Basic_Matrix &M) const {
 			const Basic_Matrix &A = *this;
 			const Basic_Matrix &B = M;
 			if (A.m != B.m || A.n != B.n) {
@@ -325,7 +325,7 @@ namespace ytlib
 			return *this;
 		}
 		// multiply with matrix
-		Basic_Matrix  operator* (const Basic_Matrix &M) {
+		Basic_Matrix  operator* (const Basic_Matrix &M) const {
 			const Basic_Matrix &A = *this;
 			const Basic_Matrix &B = M;
 			if (A.n != B.m) {
@@ -357,7 +357,7 @@ namespace ytlib
 			return this->swap(C);
 		}
 		// multiply with scalar
-		Basic_Matrix  operator* (const T &s) {
+		Basic_Matrix  operator* (const T &s) const {
 			Basic_Matrix C(m, n);
 			for (int32_t i = 0; i < m; ++i)
 				for (int32_t j = 0; j < n; ++j)
@@ -371,7 +371,7 @@ namespace ytlib
 			return *this;
 		}
 		// divide elementwise by matrix (or vector)
-		Basic_Matrix  operator/ (const Basic_Matrix &M) {
+		Basic_Matrix  operator/ (const Basic_Matrix &M) const {
 			const Basic_Matrix &A = *this;
 			const Basic_Matrix &B = M;
 
@@ -409,7 +409,7 @@ namespace ytlib
 			}
 		}
 		// divide by scalar
-		Basic_Matrix  operator/ (const T &s) {
+		Basic_Matrix  operator/ (const T &s) const {
 			if (abs(s) < 1e-20) {
 				std::cerr << "ERROR: Trying to divide by zero!" << std::endl;
 				exit(0);
@@ -422,7 +422,7 @@ namespace ytlib
 		}
 
 		// negative matrix
-		Basic_Matrix  operator- () {
+		Basic_Matrix  operator- () const {
 			Basic_Matrix C(m, n);
 			for (int32_t i = 0; i < m; ++i)
 				for (int32_t j = 0; j < n; ++j)
@@ -430,7 +430,7 @@ namespace ytlib
 			return C;
 		}
 		// transpose
-		Basic_Matrix  operator~ () {
+		Basic_Matrix  operator~ () const {
 			Basic_Matrix C(n, m);
 			for (int32_t i = 0; i < m; ++i)
 				for (int32_t j = 0; j < n; ++j)
@@ -449,7 +449,7 @@ namespace ytlib
 			return re;
 		}
 		// euclidean norm (vectors) / frobenius norm (matrices)
-		T   l2norm() {
+		T   l2norm() const {
 			T norm = 0;
 			for (int32_t i = 0; i < m; ++i)
 				for (int32_t j = 0; j < n; ++j)
@@ -457,7 +457,7 @@ namespace ytlib
 			return sqrt(norm);
 		}
 		// mean of all elements in matrix
-		T   mean() {
+		T   mean() const {
 			T mean = 0;
 			for (int32_t i = 0; i < m; ++i)
 				for (int32_t j = 0; j < n; ++j)
@@ -490,7 +490,7 @@ namespace ytlib
 			return B;
 		}
 		// invert this matrix
-		bool   inv() {
+		bool   inv() const {
 			if (m != n) {
 				std::cerr << "ERROR: Trying to invert matrix of size (" << m << "x" << n << ")" << std::endl;
 				exit(0);
@@ -501,7 +501,7 @@ namespace ytlib
 			return true;
 		}
 		// returns determinant of matrix
-		T  det() {
+		T  det() const {
 
 			if (m != n) {
 				std::cerr << "ERROR: Trying to compute determinant of a matrix of size (" << m << "x" << n << ")" << std::endl;
@@ -519,7 +519,7 @@ namespace ytlib
 		}
 		
 		// replace *this by lower upper decomposition
-		bool   lu(int32_t *idx, tfloat &d, tfloat eps = 1e-20) {
+		bool   lu(int32_t *idx, tfloat &d, tfloat eps = 1e-20) const {
 
 			if (m != n) {
 				std::cerr << "ERROR: Trying to LU decompose a matrix of size (" << m << "x" << n << ")" << std::endl;
