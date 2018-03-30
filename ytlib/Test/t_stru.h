@@ -1,6 +1,7 @@
 #pragma once
 #include <ytlib/DataStructure/Heap.h>
 #include <ytlib/DataStructure/BinaryTree.h>
+#include <ytlib/DataStructure/Graph.h>
 
 namespace ytlib
 {
@@ -10,7 +11,7 @@ namespace ytlib
 	bool test_avlt();
 	bool test_brt();
 
-
+	bool test_graph();
 
 }
 

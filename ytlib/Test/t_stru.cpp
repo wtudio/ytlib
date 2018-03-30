@@ -197,4 +197,50 @@ namespace ytlib
 
 		return true;
 	}
+
+
+	bool test_graph() {
+		typedef Graph<uint32_t> myGraph;
+
+		vector<myGraph> myGraphVec;
+		uint32_t num = 10;
+		for (uint32_t ii = 0; ii < num; ++ii) {
+			myGraphVec.push_back(myGraph(ii));
+		}
+
+		connectGraphNode<uint32_t, uint32_t>(myGraphVec[0], myGraphVec[1], 1);
+		connectGraphNode<uint32_t, uint32_t>(myGraphVec[0], myGraphVec[5], 1);
+		connectGraphNode<uint32_t, uint32_t>(myGraphVec[0], myGraphVec[9], 1);
+		connectGraphNode<uint32_t, uint32_t>(myGraphVec[1], myGraphVec[2], 1);
+		connectGraphNode<uint32_t, uint32_t>(myGraphVec[2], myGraphVec[8], 1);
+		connectGraphNode<uint32_t, uint32_t>(myGraphVec[3], myGraphVec[4], 1);
+		connectGraphNode<uint32_t, uint32_t>(myGraphVec[3], myGraphVec[7], 1);
+		connectGraphNode<uint32_t, uint32_t>(myGraphVec[4], myGraphVec[5], 1);
+		connectGraphNode<uint32_t, uint32_t>(myGraphVec[6], myGraphVec[7], 1);
+		connectGraphNode<uint32_t, uint32_t>(myGraphVec[6], myGraphVec[8], 1);
+		connectGraphNode<uint32_t, uint32_t>(myGraphVec[8], myGraphVec[9], 1);
+
+		//dfs
+		vector<myGraph*> vec;
+		for (uint32_t ii = 0; ii < num; ++ii) myGraphVec[ii].visited = false;
+		DFS(myGraphVec[0], vec);
+		for (size_t ii = 0; ii < vec.size(); ++ii) {
+			cout << vec[ii]->obj << " ";
+		}
+		cout << endl;
+
+		//bfs
+		vec.clear();
+		for (uint32_t ii = 0; ii < num; ++ii) myGraphVec[ii].visited = false;
+		BFS(myGraphVec[0], vec);
+		for (size_t ii = 0; ii < vec.size(); ++ii) {
+			cout << vec[ii]->obj << " ";
+		}
+		cout << endl;
+
+
+
+
+		return true;
+	}
 }

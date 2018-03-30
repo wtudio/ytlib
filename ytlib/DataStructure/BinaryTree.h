@@ -276,7 +276,7 @@ namespace ytlib {
 
 	//以当前节点为根节点，前序遍历，返回一个指针数组。以当前节点为根节点
 	template<typename T>
-	void DLR(T& nd, std::vector<T>& vec) {
+	void DLR(std::shared_ptr<T>& nd, std::vector<std::shared_ptr<T> >& vec) {
 		assert(nd);
 		vec.push_back(nd);
 		if (nd->pl) DLR(nd->pl, vec);
@@ -284,7 +284,7 @@ namespace ytlib {
 	}
 	//中序遍历
 	template<typename T>
-	void LDR(T& nd, std::vector<T>& vec) {
+	void LDR(std::shared_ptr<T>& nd, std::vector<std::shared_ptr<T> >& vec) {
 		assert(nd);
 		if (nd->pl) LDR(nd->pl, vec);
 		vec.push_back(nd);
@@ -292,7 +292,7 @@ namespace ytlib {
 	}
 	//后续遍历
 	template<typename T>
-	void LRD(T& nd, std::vector<T>& vec) {
+	void LRD(std::shared_ptr<T>& nd, std::vector<std::shared_ptr<T> >& vec) {
 		assert(nd);
 		if (nd->pl) LRD(nd->pl, vec);
 		if (nd->pr) LRD(nd->pr, vec);
@@ -387,7 +387,7 @@ namespace ytlib {
 
 	//二叉树的序列化
 	template<typename T>
-	void SerializeTree(const T& proot, std::vector<T>& vec) {
+	void SerializeTree(const std::shared_ptr<T>& proot, std::vector<std::shared_ptr<T> >& vec) {
 		vec.push_back(proot);
 		if (!proot)	return;
 		SerializeTree(proot->pl, vec);
@@ -395,13 +395,21 @@ namespace ytlib {
 	}
 	//反序列化
 	template<typename T>
-	void DeserializeTree(T& proot, typename std::vector<T>::iterator& itr) {
+	void DeserializeTree(std::shared_ptr<T>& proot, typename std::vector<std::shared_ptr<T> >::iterator& itr) {
 		if (*itr) {
 			proot = *itr;
 			DeserializeTree(proot->pl, ++itr);
 			DeserializeTree(proot->pr, ++itr);
 		}
 	}
+	//树的复制
+	template<typename T>
+	std::shared_ptr<T> copyTree(const std::shared_ptr<T>& proot) {
+
+
+	}
+
+
 }
 
 
