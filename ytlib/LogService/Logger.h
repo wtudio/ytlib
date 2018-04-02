@@ -43,12 +43,12 @@ namespace ytlib {
 			header[1] = LogConnection::TCPHEAD2;
 			header[2] = LogConnection::LOGHEAD1;
 			header[3] = LogConnection::LOGHEAD2;
-			logBuff.push_back(std::move(boost::asio::const_buffer(header, HEAD_SIZE)));
+			logBuff.push_back(boost::asio::const_buffer(header, HEAD_SIZE));
 			//设置本机id和日志等级。如果以后要添加其他信息也在此处添加拓展
 			HostInfoSize = 1 + 8 + 4;
 			HostInfoBuff = boost::shared_array<char>(new char[HostInfoSize]);
 			set_buf_from_num(&HostInfoBuff[9], myid_);
-			logBuff.push_back(std::move(boost::asio::const_buffer(HostInfoBuff.get(), HostInfoSize)));
+			logBuff.push_back(boost::asio::const_buffer(HostInfoBuff.get(), HostInfoSize));
 			connect();
 		}
 		virtual ~NetBackend() {
@@ -71,7 +71,7 @@ namespace ytlib {
 				set_buf_from_num_64bit(&HostInfoBuff[1], logTime);
 #endif // _MSC_VER
 
-				logBuff.push_back(std::move(boost::asio::buffer(*rec[boost::log::expressions::smessage])));
+				logBuff.push_back(boost::asio::buffer(*rec[boost::log::expressions::smessage]));
 				boost::system::error_code err;
 				//发送失败则将ConnectFlag置为false
 				sock.write_some(logBuff, err);
@@ -86,7 +86,7 @@ namespace ytlib {
 					logBuff.pop_back();//弹出第一包内容
 					HostInfoSize = 1 + 8;
 					HostInfoBuff = boost::shared_array<char>(new char[HostInfoSize]);
-					logBuff.push_back(std::move(boost::asio::const_buffer(HostInfoBuff.get(), HostInfoSize)));
+					logBuff.push_back(boost::asio::const_buffer(HostInfoBuff.get(), HostInfoSize));
 					m_bFirstLogFlag = false;
 				}				
 			}

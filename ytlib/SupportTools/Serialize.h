@@ -68,7 +68,7 @@ namespace ytlib
 	template<class T>
 	bool Deserialize(T& obj, const std::string &data, SerializeType Type = TextType) {
 		try {
-			std::istringstream iss(std::move(data), std::ios_base::binary);
+			std::istringstream iss(data, std::ios_base::binary);
 			if (Type == TextType) {
 				boost::archive::text_iarchive iar(iss);
 				iar >> obj;

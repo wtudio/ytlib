@@ -28,11 +28,11 @@ namespace ytlib {
 			Clear();
 			m_cond.notify_all();
 		}
-		//添加元素
+		//添加元素。一般情况下只添加指针
 		bool Enqueue(const T &item) {
 			std::lock_guard<std::mutex> lck(m_mutex);
 			if (m_queue.size() < m_maxcount) {
-				m_queue.push(std::move(item));
+				m_queue.push(item);
 				m_cond.notify_one();
 				return true;
 			}

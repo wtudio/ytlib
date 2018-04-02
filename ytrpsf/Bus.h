@@ -234,7 +234,8 @@ namespace rpsf {
 			if (pmsg->obj.m_srcAddr == 0) {
 				pmsg->obj.m_srcAddr = m_NodeId;
 				//如果是本地的，找出目的地，如果目的地是其他节点，则通过网络发送
-				std::set<uint32_t> dst = std::move(pmsg->obj.m_pushList);//读取推送地址
+				std::set<uint32_t> dst;
+				dst.swap(pmsg->obj.m_pushList);//读取推送地址
 
 				//根据数据类型，从不同的表里找目的地
 				switch (pmsg->obj.m_msgType) {
@@ -305,7 +306,7 @@ namespace rpsf {
 				for (std::set<std::string>::const_iterator itr2 = itr->second.begin(); itr2 != itr->second.end(); ++itr2) {
 					std::map<std::string, std::pair<IPlugin*, bool> >::const_iterator itr3 = m_mapPgName2PgPoint.find(*itr2);
 					if ((itr3 != m_mapPgName2PgPoint.end())&&(itr3->second.second)) {
-						//创建线程。todo:需要测试要不要std::move?
+						//创建线程
 						onDataThreads.push_back(std::thread(std::bind(&IPlugin::OnData, itr3->second.first, std::placeholders::_1), data));
 					}
 				}

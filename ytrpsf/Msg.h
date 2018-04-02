@@ -61,7 +61,7 @@ namespace rpsf {
 		return std::move(package);
 	}
 
-	//将rpsfPackagePtr解包为各种类型的消息包
+	//将rpsfPackagePtr解包为各种类型的消息包，同时原包将不可用
 	static void getBaseMsgFromPackage(rpsfPackagePtr& package_, rpsfPackage& m_) {
 		m_.m_mapDatas = std::move(package_->map_datas);
 		m_.m_mapFiles = std::move(package_->map_files);

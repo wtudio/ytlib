@@ -57,6 +57,22 @@ namespace ytlib
 			}
 			return *this;
 		}
+		//右值引用
+		Basic_Matrix(Basic_Matrix &&M) :val(M.val), m(M.m), n(M.n) {
+			M.val = NULL;
+			M.m = M.n = 0;
+		}
+		Basic_Matrix& operator=(Basic_Matrix&& M) {
+			if (this != &M) {
+				//先释放自己的资源
+				_releaseMemory();
+				val = M.val;
+				m = M.m; n = M.n;
+				M.val = NULL;
+				M.m = M.n = 0;
+			}
+			return *this;
+		}
 
 		// copies submatrix of M into array 'val', default values copy whole row/column/matrix
 		void getData(T* val_, int32_t i1 = 0, int32_t j1 = 0, int32_t i2 = -1, int32_t j2 = -1, int32_t N_ = 0) const {
@@ -614,7 +630,7 @@ namespace ytlib
 		}
 
 		void _releaseMemory() {
-			if (val != 0) {
+			if (val != NULL) {
 				free(val[0]);
 				free(val);
 			}

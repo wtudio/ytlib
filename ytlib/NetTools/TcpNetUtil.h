@@ -31,7 +31,7 @@ namespace ytlib
 	}
 	static uint64_t get_num_from_buf_64bit(char* p) {
 #ifdef _MSC_VER
-		uint64_t n;	memcpy(&n, p, 8); return std::move(n);
+		uint64_t n;	memcpy(&n, p, 8); return n;
 #else
 		return (static_cast<uint8_t>(p[0]) +
 			static_cast<uint8_t>(p[1]) * 256 +
@@ -55,7 +55,7 @@ namespace ytlib
 
 	static uint32_t get_num_from_buf(char* p) {
 #ifdef _MSC_VER
-		uint32_t n;	memcpy(&n, p, 4); return std::move(n);
+		uint32_t n;	memcpy(&n, p, 4); return n;
 #else
 		return (static_cast<uint8_t>(p[0]) + 
 		static_cast<uint8_t>(p[1]) * 256 + 

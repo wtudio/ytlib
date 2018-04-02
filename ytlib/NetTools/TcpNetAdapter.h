@@ -449,15 +449,15 @@ namespace ytlib {
 			boost::archive::binary_oarchive oar(objbuff);
 			oar << Tdata_->obj;
 			set_buf_from_num(&c_head_buff[4], static_cast<uint32_t>(objbuff.size()));
-			buffersPtr->push_back(std::move(boost::asio::const_buffer(c_head_buff, HEAD_SIZE)));
+			buffersPtr->push_back(boost::asio::const_buffer(c_head_buff, HEAD_SIZE));
 			buffersPtr->push_back(std::move(objbuff.data()));
 
 			//第二步，发送快速数据
 			char q_head_buff[HEAD_SIZE]{ TcpConnection<T>::TCPHEAD1 ,TcpConnection<T>::TCPHEAD2,TcpConnection<T>::QUICKHEAD,0 };
 			if (Tdata_->quick_data.buf_size > 0) {
 				set_buf_from_num(&q_head_buff[4], Tdata_->quick_data.buf_size);
-				buffersPtr->push_back(std::move(boost::asio::const_buffer(q_head_buff, HEAD_SIZE)));
-				buffersPtr->push_back(std::move(boost::asio::const_buffer(Tdata_->quick_data.buf.get(), Tdata_->quick_data.buf_size)));
+				buffersPtr->push_back(boost::asio::const_buffer(q_head_buff, HEAD_SIZE));
+				buffersPtr->push_back(boost::asio::const_buffer(Tdata_->quick_data.buf.get(), Tdata_->quick_data.buf_size));
 			}
 
 			//第三步，发送文件,先发送文件名信息
@@ -473,8 +473,8 @@ namespace ytlib {
 					file_tips += boost::filesystem::path(itr->second).filename().string(); file_tips += '\n';
 				}
 				set_buf_from_num(&f0_head_buff[4], static_cast<uint32_t>(file_tips.size()));
-				buffersPtr->push_back(std::move(boost::asio::const_buffer(f0_head_buff, HEAD_SIZE)));
-				buffersPtr->push_back(std::move(boost::asio::buffer(file_tips)));
+				buffersPtr->push_back(boost::asio::const_buffer(f0_head_buff, HEAD_SIZE));
+				buffersPtr->push_back(boost::asio::const_buffer(file_tips.c_str(), file_tips.size()));
 				//再发送每个文件。二进制方式。文件不存在的话就跳过该文件
 				uint8_t ii = 0;
 				for (std::map<std::string, std::string>::const_iterator itr = map_files.begin(); itr != map_files.end(); ++itr) {
@@ -499,8 +499,8 @@ namespace ytlib {
 							boost::filesystem::remove(file_path, ec);
 							if (ec) YT_DEBUG_PRINTF("delete file %s failed: %s\n", file_path.string().c_str(), ec.message().c_str());
 						}
-						buffersPtr->push_back(std::move(boost::asio::const_buffer(&f_head_buff[cur_offerset], HEAD_SIZE)));
-						buffersPtr->push_back(std::move(boost::asio::const_buffer(file_buf.get(), length)));
+						buffersPtr->push_back(boost::asio::const_buffer(&f_head_buff[cur_offerset], HEAD_SIZE));
+						buffersPtr->push_back(boost::asio::const_buffer(file_buf.get(), length));
 						vec_file_buf.push_back(std::move(file_buf));
 					}
 					++ii;
@@ -520,8 +520,8 @@ namespace ytlib {
 					data_tips += '\n';
 				}
 				set_buf_from_num(&d0_head_buff[4], static_cast<uint32_t>(data_tips.size()));
-				buffersPtr->push_back(std::move(boost::asio::const_buffer(d0_head_buff, HEAD_SIZE)));
-				buffersPtr->push_back(std::move(boost::asio::buffer(data_tips)));
+				buffersPtr->push_back(boost::asio::const_buffer(d0_head_buff, HEAD_SIZE));
+				buffersPtr->push_back(boost::asio::const_buffer(data_tips.c_str(), data_tips.size()));
 				//再发送每个数据包。size为0则不发送
 				uint8_t ii = 0;
 				for (std::map<std::string, sharedBuf>::const_iterator itr = map_datas.begin(); itr != map_datas.end(); ++itr) {
@@ -530,8 +530,8 @@ namespace ytlib {
 						memcpy(&d_head_buff[cur_offerset], d0_head_buff, 3);
 						d_head_buff[cur_offerset + 3] = static_cast<char>(ii);
 						set_buf_from_num(&d_head_buff[cur_offerset + 4], itr->second.buf_size);
-						buffersPtr->push_back(std::move(boost::asio::const_buffer(&d_head_buff[cur_offerset], HEAD_SIZE)));
-						buffersPtr->push_back(std::move(boost::asio::const_buffer(itr->second.buf.get(), itr->second.buf_size)));
+						buffersPtr->push_back(boost::asio::const_buffer(&d_head_buff[cur_offerset], HEAD_SIZE));
+						buffersPtr->push_back(boost::asio::const_buffer(itr->second.buf.get(), itr->second.buf_size));
 					}
 					++ii;
 				}
@@ -539,7 +539,7 @@ namespace ytlib {
 
 			//第五步：发送结束符
 			char end_head_buff[HEAD_SIZE]{ TcpConnection<T>::TCPHEAD1 ,TcpConnection<T>::TCPHEAD2,TcpConnection<T>::TCPEND1,TcpConnection<T>::TCPEND2 };
-			buffersPtr->push_back(std::move(boost::asio::const_buffer(end_head_buff, HEAD_SIZE)));
+			buffersPtr->push_back(boost::asio::const_buffer(end_head_buff, HEAD_SIZE));
 
 			//单地址优化
 			if (vec_hosts.size() == 1) {
