@@ -167,6 +167,49 @@ namespace ytlib
 		cout << endl;
 
 		//删除
+		rootp = rootp->erase(100);
+		vec.clear();
+		DLR(rootp, vec);
+		for (size_t ii = 0; ii < vec.size(); ++ii) {
+			cout << vec[ii]->obj << "(" << vec[ii]->hgt << ") ";
+		}
+		cout << endl;
+
+		rootp = rootp->erase(14);
+		vec.clear();
+		DLR(rootp, vec);
+		for (size_t ii = 0; ii < vec.size(); ++ii) {
+			cout << vec[ii]->obj << "(" << vec[ii]->hgt << ") ";
+		}
+		cout << endl;
+
+		//删除根节点
+		rootp = rootp->erase(rootp);
+		vec.clear();
+		DLR(rootp, vec);
+		for (size_t ii = 0; ii < vec.size(); ++ii) {
+			cout << vec[ii]->obj << "(" << vec[ii]->hgt << ") ";
+		}
+		cout << endl;
+
+		rootp = rootp->erase(0);
+		vec.clear();
+		DLR(rootp, vec);
+		for (size_t ii = 0; ii < vec.size(); ++ii) {
+			cout << vec[ii]->obj << "(" << vec[ii]->hgt << ") ";
+		}
+		cout << endl;
+
+		//删除右节点
+		rootp = rootp->erase(rootp->pr->pr);
+		vec.clear();
+		DLR(rootp, vec);
+		for (size_t ii = 0; ii < vec.size(); ++ii) {
+			cout << vec[ii]->obj << "(" << vec[ii]->hgt << ") ";
+		}
+		cout << endl;
+
+		
 
 
 
@@ -188,6 +231,14 @@ namespace ytlib
 		}
 		cout << endl;
 
+		//树的复制
+		myavltPtr rootp3 = copyTree(rootp);
+		vec.clear();
+		traByLevel(rootp3, vec);
+		for (size_t ii = 0; ii < vec.size(); ++ii) {
+			cout << vec[ii]->obj << "(" << vec[ii]->hgt << ") ";
+		}
+		cout << endl;
 
 		return true;
 	}

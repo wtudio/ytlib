@@ -15,8 +15,7 @@ namespace ytlib {
 		typedef std::shared_ptr<BinTreeNode<T> > nodePtr;
 	public:
 		BinTreeNode():pf(NULL){}
-		~BinTreeNode(){}
-		BinTreeNode(const T& _obj) :obj(_obj), pf(NULL) {}
+		explicit BinTreeNode(const T& _obj) :obj(_obj), pf(NULL) {}
 
 		T obj;
 		BinTreeNode<T>* pf;//父节点。父节点不可使用智能指针，否则会造成循环引用
@@ -32,8 +31,7 @@ namespace ytlib {
 		typedef std::shared_ptr<BinSearchTreeNode<T> > BSTNodePtr;
 	public:
 		BinSearchTreeNode() :pf(NULL) {}
-		~BinSearchTreeNode() {}
-		BinSearchTreeNode(const T& _obj) :obj(_obj), pf(NULL) {}
+		explicit BinSearchTreeNode(const T& _obj) :obj(_obj), pf(NULL) {}
 
 		T obj;
 		BinSearchTreeNode<T>* pf;//父节点
@@ -85,7 +83,6 @@ namespace ytlib {
 				}
 				return re;
 			}
-			
 			//换左子树的前驱
 			BSTNodePtr tmp = pl;
 			if (tmp->pr) {
@@ -103,175 +100,201 @@ namespace ytlib {
 			}
 			pf = NULL;pl.reset();pr.reset();
 			return tmp;
-			
 		}
-
 	};
 
-	//AVL树。todo：实现的不太好，有时间重新梳理一下
+	//AVL树
 	template<typename T>
 	class AVLTreeNode :public std::enable_shared_from_this<AVLTreeNode<T> > {
 	private:
 		typedef std::shared_ptr<AVLTreeNode<T> > AVLTNodePtr;
 	public:
 		AVLTreeNode() :pf(NULL), hgt(1){}
-		~AVLTreeNode() {}
-		AVLTreeNode(const T& _obj) :obj(_obj), pf(NULL), hgt(1) {}
+		explicit AVLTreeNode(const T& _obj) :obj(_obj), pf(NULL), hgt(1) {}
 
 		T obj;
 		AVLTreeNode<T>* pf;//父节点
 		AVLTNodePtr pl;//左子节点
 		AVLTNodePtr pr;//右子节点
-
 		size_t hgt;//节点高度
+
+#define HGT(p)	((p)?p->hgt:0)
 
 		//插入，因为根节点可能会变，所以返回根节点
 		AVLTNodePtr insert(AVLTNodePtr& ndptr) {
 			assert(ndptr);
 			//找到最终要插入的地方的父节点
-			
+			AVLTreeNode<T>* pos = this, *tmppos = (ndptr->obj < obj) ? pl.get() : pr.get();
+			while (tmppos != NULL) {
+				pos = tmppos;
+				tmppos = (ndptr->obj < pos->obj) ? pos->pl.get() : pos->pr.get();
+			}
+			if (ndptr->obj == pos->obj) return shared_from_this();//不允许重复
+			if (ndptr->obj < pos->obj) setLChild(pos, ndptr);
+			else setRChild(pos, ndptr);
 
+			ndptr->hgt = 1;
+			//更新高度，进行旋转
 			AVLTNodePtr re;
-			if (ndptr->obj < obj) {
-				if (pl) { 
-					pl->insert(ndptr);
-					size_t Rhgt = pr ? pr->hgt : 0;
-					if (2 == (pl->hgt - Rhgt)) {
-						//左边比右边高了2
-						if (ndptr->obj < pl->obj) re = rotateL();
-						else {
-							pl->rotateR();
-							re = rotateL();
-						}
+			AVLTreeNode<T>* end = pf;
+			while (pos != end) {
+				re.reset();
+				size_t curhgt = pos->hgt;
+				size_t lh = HGT(pos->pl), lr = HGT(pos->pr);
+				if (lh >= lr + 2) {
+					//左边比右边高了2
+					if (HGT(pos->pl->pl) >= HGT(pos->pl->pr)) re = pos->rotateL();
+					else {
+						pos->pl->rotateR();
+						re = pos->rotateL();
 					}
 				}
-				else {
-					setLChild(this, ndptr);
-					ndptr->updateHeight();
-				}
-			}
-			else {
-				if (pr) {
-					pr->insert(ndptr);
-					size_t Lhgt = pl ? pl->hgt : 0;
-					if (2 == (pr->hgt - Lhgt)) {
-						//左边比右边低了2
-						if (ndptr->obj > pr->obj) re = rotateR();
-						else {
-							pr->rotateL();
-							re = rotateR();
-						}
+				else if (lr >= lh + 2) {
+					//右边比左边高了2
+					if (HGT(pos->pr->pr) >= HGT(pos->pr->pl)) re = pos->rotateR();
+					else {
+						pos->pr->rotateL();
+						re = pos->rotateR();
 					}
 				}
-				else {
-					setRChild(this, ndptr);
-					ndptr->updateHeight();
+				//如果发生旋转了，说明之前左右高度相差2，说明该节点高度一定发生改变
+				size_t cghgt;
+				if (re) {
+					cghgt = re->hgt;
+					pos = re->pf;
 				}
+				else {
+					cghgt = pos->hgt = max(lh, lr) + 1;
+					if (curhgt == cghgt) return shared_from_this();
+					pos = pos->pf;
+				}
+				
 			}
-			if(re)	return re;
+			if (re) return re;
 			return shared_from_this();
 		}
 
-		//删除当前节点。因为树的结构可能会发生变化，所以不返回替代的节点
-		AVLTNodePtr erase() {
-			//让最后实际被删除的节点的父节点更新高度
-			AVLTreeNode<T>* de = pf;
-			if (!pl && !pr) {
+		//在当前节点为根节点的树中删除一个节点，并返回删除后的根节点
+		AVLTNodePtr erase(AVLTNodePtr& ndptr) {
+			if (!ndptr) return shared_from_this();
+			//先确定要删除的节点是自己的子节点
+			AVLTreeNode<T>* pos = ndptr.get();
+			while (pos != NULL) {
+				if (pos == this) break;
+				pos = pos->pf;
+			}
+			if (pos == this) return _erase(ndptr);
+			return shared_from_this();
+		}
+
+		AVLTNodePtr erase(const T& val) {
+			return _erase(binSearch<AVLTreeNode<T>, T>(shared_from_this(), val));
+		}
+
+	private:
+		//假如有重复的，删除第一个找到的
+		AVLTNodePtr _erase(AVLTNodePtr& ndptr) {
+			if (!ndptr) return shared_from_this();
+			//将当前节点的父节点暂时设为NULL以简化程序
+			AVLTreeNode<T>* curpf = pf; pf = NULL;
+			AVLTNodePtr proot = shared_from_this();//如果要删除的是自身，则需要一个指针来保存root节点
+			AVLTreeNode<T>* pos = ndptr->pf;
+			if (!(ndptr->pl) && !(ndptr->pr)) {
 				//左右都为空，为叶子节点
-				if (pf != NULL) {
-					if (getLR(this)) breakLChild(pf);
-					else breakRChild(pf);
+				if (ndptr->pf != NULL) {
+					if (getLR(ndptr.get())) breakLChild(ndptr->pf);
+					else breakRChild(ndptr->pf);
 				}
+				
 			}
-			else if (pl && !pr) {
+			else if (ndptr->pl && !(ndptr->pr)) {
 				//只有左子树
-				if (pf == NULL) breakLChild(this);
+				if (ndptr->pf == NULL) {
+					proot = ndptr->pl;
+					breakLChild(ndptr.get());
+				}
 				else {
-					pl->pf = pf;
-					pf->pl = pl;
-					pf = NULL; pl.reset();
+					ndptr->pl->pf = ndptr->pf;
+					ndptr->pf->pl = ndptr->pl;
+					ndptr->pf = NULL; ndptr->pl.reset();
 				}
 			}
-			else if (!pl && pr) {
+			else if (!(ndptr->pl) && ndptr->pr) {
 				//只有右子树
-				if (pf == NULL) breakRChild(this);
+				if (ndptr->pf == NULL) { 
+					proot = ndptr->pr;
+					breakRChild(ndptr.get());
+				}
 				else {
-					pr->pf = pf;
-					pf->pr = pr;
-					pf = NULL; pr.reset();
+					ndptr->pr->pf = ndptr->pf;
+					ndptr->pf->pr = ndptr->pr;
+					ndptr->pf = NULL; ndptr->pr.reset();
 				}
 			}
 			else {
 				//换左子树的前驱
-				AVLTNodePtr tmp = pl;
+				AVLTNodePtr tmp = ndptr->pl;
 				if (tmp->pr) {
 					//左子节点有右子树，找到其前驱
 					while (tmp->pr) tmp = tmp->pr;
 					tmp->pf->pr = tmp->pl;
 					if (tmp->pl) tmp->pl->pf = tmp->pf;
-					tmp->pl = pl; pl->pf = tmp.get();
-					de = tmp->pf;
+					tmp->pl = ndptr->pl; ndptr->pl->pf = tmp.get();
+					pos = tmp->pf;
 				}
-				
-				tmp->pf = pf;
-				tmp->pr = pr; pr->pf = tmp.get();
-				if (pf != NULL) {
-					if (getLR(this)) pf->pl = tmp;
-					else pf->pr = tmp;
+				else pos = tmp.get();
+				tmp->pf = ndptr->pf;
+				tmp->pr = ndptr->pr; ndptr->pr->pf = tmp.get();
+				if (ndptr->pf != NULL) {
+					if (getLR(ndptr.get())) ndptr->pf->pl = tmp;
+					else ndptr->pf->pr = tmp;
 				}
-				pf = NULL; pl.reset(); pr.reset();
-				tmp->hgt = 0;
+				else proot = tmp;
+				ndptr->pf = NULL; ndptr->pl.reset(); ndptr->pr.reset();
+				tmp->hgt = ndptr->hgt;
 			}
-
 			//更新高度，进行旋转
-			if (de != NULL) de->adjust();
-
+			AVLTNodePtr re;
+			while (pos != NULL) {
+				re.reset();
+				size_t curhgt = pos->hgt;
+				size_t lh = HGT(pos->pl), lr = HGT(pos->pr);
+				if (lh >= lr + 2) {
+					//左边比右边高了2
+					if (HGT(pos->pl->pl) >= HGT(pos->pl->pr)) re = pos->rotateL();
+					else {
+						pos->pl->rotateR();
+						re = pos->rotateL();
+					}
+				}
+				else if (lr >= lh + 2) {
+					//右边比左边高了2
+					if (HGT(pos->pr->pr) >= HGT(pos->pr->pl)) re = pos->rotateR();
+					else {
+						pos->pr->rotateL();
+						re = pos->rotateR();
+					}
+				}
+				//如果发生旋转了，说明之前左右高度相差2，说明该节点高度一定发生改变
+				size_t cghgt;
+				if (re) {
+					cghgt = re->hgt;
+					pos = re->pf;
+				}
+				else {
+					cghgt = pos->hgt = max(lh, lr) + 1;
+					if (curhgt == cghgt) return proot;
+					pos = pos->pf;
+				}
+			}
+			if (re) return re;
+			return proot;
 		}
 
 		inline size_t getHgt() {
 			size_t lh = (pl) ? pl->hgt : 0;
 			size_t lr = (pr) ? pr->hgt : 0;
 			return max(lh, lr) + 1;
-		}
-
-		//此节点的左右节点高度发生变动，有可能需要调整，同时更新高度
-		AVLTNodePtr adjust() {
-			AVLTreeNode<T>* tmp = pf;
-			AVLTNodePtr re;
-			size_t curhgt = hgt;
-			size_t lh = (pl) ? pl->hgt : 0;
-			size_t lr = (pr) ? pr->hgt : 0;
-			if (lh >= lr + 2) {
-				//左边比右边高了2
-				if (((pl->pl) ? pl->pl->hgt : 0) >= ((pl->pr) ? pl->pr->hgt : 0)) {
-					re = rotateL();
-				}
-				else {
-					pl->rotateR();
-					re = rotateL();
-				}
-			}
-			else if (lr >= lh + 2) {
-				//右边比左边高了2
-				if (((pr->pr) ? pr->pr->hgt : 0) >= ((pr->pl) ? pr->pl->hgt : 0)) {
-					re = rotateR();
-				}
-				else {
-					pr->rotateL();
-					re = rotateR();
-				}
-			}
-			size_t cghgt;
-			if (re) {
-				cghgt = re->hgt;
-				re = shared_from_this();
-			}
-			else {
-				cghgt = hgt = max(lh, lr) + 1;
-			}
-
-			if(curhgt!= cghgt && tmp != NULL) return tmp->adjust();
-			return re;
 		}
 
 		//左旋转，顺时针
@@ -318,36 +341,38 @@ namespace ytlib {
 			re->hgt = re->getHgt();
 			return re;
 		}
-
-		//由子节点向上更新高度
-		void updateHeight() {
-			AVLTreeNode<T>* tmp = this;
-			while (tmp != NULL) {
-				size_t lh = (tmp->pl) ? tmp->pl->hgt : 0;
-				size_t lr = (tmp->pr) ? tmp->pr->hgt : 0;
-				size_t h = max(lh, lr) + 1;
-				if (tmp->hgt == h && tmp != this) break;
-				tmp->hgt = h;
-				tmp = tmp->pf;
-			}
-		}
 	};
 
 	//红黑树。todo待完善
 	template<typename T>
 	class BRTreeNode {
+	private:
+		typedef std::shared_ptr<BRTreeNode<T> > BRTreeNodePtr;
+	public:
+		BRTreeNode() :pf(NULL), color(false){}
+		explicit BRTreeNode(const T& _obj) :obj(_obj), pf(NULL), color(false) {}
+
+		T obj;
+		BRTreeNode<T>* pf;//父节点
+		BRTreeNodePtr pl;//左子节点
+		BRTreeNodePtr pr;//右子节点
+		bool color;//颜色，true为红，false为黑
+
+
 
 	};
 
 	//在二叉搜索树中进行查找
-	template<typename T>
-	std::shared_ptr<T> binSearch(const std::shared_ptr<T>& proot, const T& val) {
-		if (proot) {
-			if (*proot == val) return proot;
-			if (val < *proot && proot->pl) return binSearch(proot->pl, val);
-			if (val > *proot && proot->pr) return binSearch(proot->pr, val);
+	template<typename NodeType, typename ValType>
+	std::shared_ptr<NodeType> binSearch(const std::shared_ptr<NodeType>& proot, const ValType& val) {
+		std::shared_ptr<NodeType> p = proot;
+		while (p) {
+			if (p->obj == val) return p;
+			if (val < p->obj) p = p->pl;
+			else if(val > p->obj) p = p->pr;
+			else return std::shared_ptr<NodeType>();
 		}
-		return std::shared_ptr<T>();
+		return std::shared_ptr<NodeType>();
 	}
 
 	//以当前节点为根节点，前序遍历，返回一个指针数组。以当前节点为根节点
@@ -481,8 +506,10 @@ namespace ytlib {
 	//树的复制
 	template<typename T>
 	std::shared_ptr<T> copyTree(const std::shared_ptr<T>& proot) {
-
-
+		std::shared_ptr<T> p = std::make_shared<T>(*proot);
+		if (proot->pl) setLChild(p.get(), copyTree(proot->pl));
+		if (proot->pr) setRChild(p.get(), copyTree(proot->pr));
+		return p;
 	}
 
 
