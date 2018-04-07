@@ -5,7 +5,7 @@
 
 
 namespace ytlib {
-
+	//几种树的类的实现---------------------------------------------------------------------------
 	//全部使用模板化。这里不能使用继承，因为有成员是自身类型的智能指针
 	//一个BinTreeNode实例表示一个二叉树节点，也表示以此节点为根节点的一棵二叉树
 	//如果根节点被析构，那么整个树中所有子节点将被析构，除非子节点有另外的智能指针指着
@@ -283,11 +283,15 @@ namespace ytlib {
 				}
 				else {
 					cghgt = pos->hgt = max(lh, lr) + 1;
-					if (curhgt == cghgt) return proot;
+					if (curhgt == cghgt) break;
 					pos = pos->pf;
 				}
 			}
-			if (re) return re;
+			if (re) {
+				re->pf = curpf;
+				return re;
+			}
+			proot->pf = curpf;
 			return proot;
 		}
 
@@ -345,7 +349,7 @@ namespace ytlib {
 
 	//红黑树。todo待完善
 	template<typename T>
-	class BRTreeNode {
+	class BRTreeNode :public std::enable_shared_from_this<AVLTreeNode<T> > {
 	private:
 		typedef std::shared_ptr<BRTreeNode<T> > BRTreeNodePtr;
 	public:
@@ -358,9 +362,38 @@ namespace ytlib {
 		BRTreeNodePtr pr;//右子节点
 		bool color;//颜色，true为红，false为黑
 
+		//插入，因为根节点可能会变，所以返回根节点
+		BRTreeNodePtr insert(BRTreeNodePtr& ndptr) {
 
+		}
+
+		//在当前节点为根节点的树中删除一个节点，并返回删除后的根节点
+		BRTreeNodePtr erase(BRTreeNodePtr& ndptr) {
+			if (!ndptr) return shared_from_this();
+			//先确定要删除的节点是自己的子节点
+			BRTreeNode<T>* pos = ndptr.get();
+			while (pos != NULL) {
+				if (pos == this) break;
+				pos = pos->pf;
+			}
+			if (pos == this) return _erase(ndptr);
+			return shared_from_this();
+		}
+
+		BRTreeNodePtr erase(const T& val) {
+			return _erase(binSearch<BRTreeNode<T>, T>(shared_from_this(), val));
+		}
+	private:
+		BRTreeNodePtr _erase(BRTreeNodePtr& ndptr) {
+			if (!ndptr) return shared_from_this();
+
+
+
+		}
 
 	};
+
+	//一些外置的算法---------------------------------------------------------------------------
 
 	//在二叉搜索树中进行查找
 	template<typename NodeType, typename ValType>

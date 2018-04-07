@@ -35,8 +35,6 @@ namespace ytlib {
 
 	};
 
-
-
 	//√∞≈›≈≈–Ú in-place/Œ»∂®
 	template<typename T>
 	void bubbleSort(T* arr, size_t len) {
@@ -49,8 +47,6 @@ namespace ytlib {
 			}
 		}
 	}
-
-
 
 	//πÈ≤¢≈≈–Ú out-place/Œ»∂®
 	template<typename T>
@@ -116,8 +112,6 @@ namespace ytlib {
 		//√ª’“µΩ£¨∑µªÿlen
 		return len;
 	}
-
-
 
 }
 

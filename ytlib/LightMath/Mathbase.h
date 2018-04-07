@@ -94,11 +94,27 @@ namespace ytlib
 		assert(n >= m && m);
 		return Mul(n, n - m + 1);
 	}
+	//排列数递归求解，已知A(n,m_)求A(n,m)
+	static uint64_t Arn(uint64_t n, uint64_t m, uint64_t A, uint64_t m_) {
+		assert(n >= m && m && n >= m_ && m_);
+		if (m < m_) return A / Mul(n - m + 2, n - m_ + 1);
+		else if (m > m_) return A * Mul(n - m_ + 2, n - m + 1);
+		else return A;
+	}
 
 	//组合数，C(n,m)=A(n,m)/m!=n!/(m!*(n-m)!)。C(n,m)=C(n,n-m)
 	static uint64_t Crn(uint64_t n, uint64_t m) {
 		assert(n >= m && m);
+		if (n >= (2 * m + 1)) m = n - m;
 		return (n == m) ? 1 : (Mul(n, m + 1) / Mul(n - m));
+	}
+	//组合数递归求解
+	static uint64_t Crn(uint64_t n, uint64_t m, uint64_t C, uint64_t m_) {
+		assert(n >= m && m && n >= m_ && m_);
+		if (n >= (2 * m + 1)) m = n - m;
+		if (m < m_) return C*Mul(m_, m + 1) / Mul(n - m, n - m_ + 1);
+		else if (m > m_) return C*Mul(n - m_, n - m + 1) / Mul(m, m_ + 1);
+		else return C;
 	}
 
 	//等差数列求和
