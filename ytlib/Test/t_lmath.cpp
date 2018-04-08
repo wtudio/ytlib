@@ -171,4 +171,11 @@ namespace ytlib
 
 		return true;
 	}
+	bool test_bignum() {
+		BigNum a(12, 0);
+		BigNum b(1234, 0);
+		BigNum c = a + b;
+
+		return true;
+	}
 }

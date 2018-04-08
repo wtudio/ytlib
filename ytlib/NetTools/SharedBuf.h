@@ -19,7 +19,7 @@ namespace ytlib
 		sharedBuf(uint32_t buf_size_) : buf_size(buf_size_) {
 			buf = boost::shared_array<char>(new char[buf_size]);
 		}
-		sharedBuf(const std::string& buf_):buf_size(buf_.size()){
+		sharedBuf(const std::string& buf_) :buf_size(static_cast<uint32_t>(buf_.size())) {
 			memcpy(buf.get(), buf_.c_str(), buf_size);
 		}
 		//默认的拷贝构造函数的浅拷贝，此处提供深拷贝

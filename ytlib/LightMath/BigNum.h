@@ -8,92 +8,132 @@ namespace ytlib
 {
 	class BigNum {
 	public:
-		explicit BigNum(bool symbol = true, uint32_t _up = 10) :_symbol(symbol), up(_up) {
-			assert(up != 1);
-			_content.push_back(0);
-		}
-		//这里允许将一个int64隐式转换到BigNum
-		BigNum(int64_t num, uint32_t _up = 0) :_symbol(num >= 0), up(0) {
+		explicit BigNum(int64_t num = 0, uint32_t _up = 0) :_symbol(num >= 0), up(0) {
+			assert(_up != 1);
 			num = std::abs(num);
 			_content.push_back(static_cast<uint32_t>(num));
-			_content.push_back(static_cast<uint32_t>(num>>32));
+			if (num >>= 32)	_content.push_back(static_cast<uint32_t>(num));
 			changeNumSys(_up);
 		}
 
 		BigNum  operator+ (const BigNum &value) const {
 			//需要确保进制相同
 			assert(up == value.up);
-			//被加数的位数较大
-			if (_content.size() < value._content.size()) return value + (*this);
-			size_t len1 = value._content.size(), len2 = _content.size();
-			BigNum re(true, up);
+			const BigNum* pNum1 = this, *pNum2 = &value;
+			size_t len1 = pNum1->_content.size(), len2 = pNum2->_content.size();
+			BigNum re(0, up);
 			if (_symbol^value._symbol) {
-				//异符号相加，用大的减小的
-
+				//异符号相加，用绝对值大的减小的，符号与大的相同。默认num1的绝对值大
+				if (len1 == len2) {
+					//从高位开始判断
+					for (size_t ii = len1 - 1; ii > 0; --ii) {
+						if (pNum1->_content[ii] > pNum2->_content[ii]) break;
+						else if (pNum1->_content[ii] < pNum2->_content[ii]) {
+							std::swap(len1, len2);
+							std::swap(pNum1, pNum2);
+							break;
+						}
+					}
+				}
+				else if (len1 < len2) {
+					std::swap(len1, len2);
+					std::swap(pNum1, pNum2);
+				}
+				re._symbol = pNum1->_symbol;
+				bool flag = false;//借位标志
+				for (size_t ii = 0; ii < len2; ++ii) {
+					//需要借位的情况
+					if (flag && pNum1->_content[ii] == 0) {
+						flag = true;
+						re._content[ii] = up - 1 - pNum2->_content[ii];
+					}
+					else if ((pNum1->_content[ii]-(flag?1:0)) < pNum2->_content[ii]) {
+						flag = true;
+						re._content[ii] = up - pNum2->_content[ii] + (pNum1->_content[ii] - (flag ? 1 : 0));
+					}
+					else {
+						flag = false;
+						re._content[ii] = pNum1->_content[ii] - pNum2->_content[ii];
+					}
+					re._content.push_back(0);
+				}
+				for (size_t ii = len2; ii < len1; ++ii) {
+					if (flag && pNum1->_content[ii] == 0) {
+						flag = true;
+						re._content[ii] = up - 1;
+					}
+					else {
+						flag = false;
+						re._content[ii] = pNum1->_content[ii];
+					}
+					re._content.push_back(0);
+				}
 			}
 			else {
 				//同符号相加
 				re._symbol = _symbol;
+				//被加数num1的位数较大
+				if (len1 < len2) {
+					std::swap(len1, len2);
+					std::swap(pNum1, pNum2);
+				}
 				//从低位开始加
-				for (size_t ii = 0; ii < len1; ++ii) {
-					uint32_t tmp = _content[ii] + value._content[ii] + re._content[ii];
-					if (tmp >= up || tmp < _content[ii] || (tmp == _content[ii] && re._content[ii] == 1)) {
+				for (size_t ii = 0; ii < len2; ++ii) {
+					uint32_t tmp = pNum1->_content[ii] + pNum2->_content[ii] + re._content[ii];
+					if ((up && tmp >= up) || tmp < pNum1->_content[ii] || (tmp == pNum1->_content[ii] && re._content[ii] == 1)) {
 						re._content.push_back(1);
 						tmp -= up;
 					}
 					else re._content.push_back(0);
 					re._content[ii] = tmp;
 				}
-				for (size_t ii = len1; ii < len2; ++ii) {
-					if ( _content[ii]==(up-1) && re._content[ii] == 1) {
+				for (size_t ii = len2; ii < len1; ++ii) {
+					if (pNum1->_content[ii]==(up-1) && re._content[ii] == 1) {
 						re._content[ii] = 0;
 						re._content.push_back(1);
 					}
 					else {
-						re._content[ii] += _content[ii];
+						re._content[ii] += pNum1->_content[ii];
 						re._content.push_back(0);
 					}
 				}
 			}
 			//去除最后端的0
-			if (re._content.size() > 1 && re._content[re._content.size() - 1] == 0) re._content.pop_back();
-
+			while (re._content.size() > 1 && re._content[re._content.size() - 1] == 0) re._content.pop_back();
+			return std::move(re);
 		}
 		BigNum&  operator+= (const BigNum &value) {
-			assert(up == value.up);
-
-
+			(*this) = operator+(value);
 			return *this;
 		}
 		//++i
 		BigNum& operator++() {
-
+			operator+=(BigNum(1, up));
 			return *this;
 		}
 		//i++
 		const BigNum operator++(int) {
-
-			
+			BigNum re(*this);
+			operator+=(BigNum(1, up));
+			return re;
 		}
-
 
 		BigNum  operator- (const BigNum &value) const {
-			assert(up == value.up);
-
+			return operator+(-value);
 		}
 		BigNum&  operator-= (const BigNum &value) {
-			assert(up == value.up);
-
+			(*this) = operator+(-value);
 			return *this;
 		}
 
 		BigNum& operator--() {
-
+			operator+=(BigNum(-1, up));
 			return *this;
 		}
 		const BigNum operator--(int) {
-
-
+			BigNum re(*this);
+			operator+=(BigNum(-1, up));
+			return re;
 		}
 
 		BigNum  operator* (const BigNum &value) const {
@@ -111,8 +151,15 @@ namespace ytlib
 		}
 		BigNum&  operator/= (const BigNum &value) {
 			assert(up == value.up);
+			return (*this);
+		}
+		BigNum  operator% (const BigNum &value) const {
+			assert(up == value.up);
 
-			return *this;
+		}
+		BigNum&  operator%= (const BigNum &value) {
+			assert(up == value.up);
+			return (*this);
 		}
 
 		bool operator==(const BigNum &value) const {
@@ -145,7 +192,9 @@ namespace ytlib
 			size_t len = _content.size();
 			//从高位开始判断
 			for (size_t ii = len - 1; ii > 0; --ii) {
-				if (_symbol ^ (_content[ii] >= value._content[ii])) return true;
+				if (_content[ii] == value._content[ii]) continue;
+				if (_symbol ^ (_content[ii] > value._content[ii])) return true;
+				return false;
 			}
 			return _symbol ^ (_content[0] >= value._content[0]);
 		}
@@ -160,19 +209,22 @@ namespace ytlib
 		}
 
 		//以十进制形式输入
-		friend std::istream& operator>>(std::istream& in, const BigNum& M) {
+		friend std::istream& operator>>(std::istream& in, BigNum& val) {
+			val._content.clear();
+			val.up = 10;
+
 
 			return in;
 		}
 
-		friend std::ostream& operator<< (std::ostream& out, const BigNum& M) {
+		friend std::ostream& operator<< (std::ostream& out, const BigNum& val) {
 			//先输出进制
 
 			//符号位
-			if (!_symbol && !(BigNum::operator bool())) out << '-';
+			if (!val._symbol && !val) out << '-';
 
 			
-			if (up <= 16) {
+			if (val.up <= 16) {
 				//如果进制在16之内则采用16进制的符号
 
 
@@ -184,13 +236,29 @@ namespace ytlib
 			}
 			return out;
 		}
+		static BigNum abs(const BigNum& val) {
+			BigNum re(val);
+			re._symbol = true;
+			return std::move(re);
+		}
+		//除，同时返回结果和余数
+		std::pair<BigNum, BigNum> div(const BigNum& val) const {
+			//余数只有一位
+
+
+		}
 
 		//改变进制
 		void changeNumSys(uint32_t up_) {
 			assert(up_ != 1);
 			if (up_ == up) return;
+			std::vector<uint32_t> tmp;
+		
 
 
+
+			up = up_;
+			_content = std::move(tmp);
 		}
 
 	protected:

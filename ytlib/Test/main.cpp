@@ -61,6 +61,7 @@ int32_t main(int32_t argc, char** argv) {
 	
 	//setTime();
 	//cout << getTime() << endl;
+	test_bignum();
 	test_graph();
 
 	test_sort();
