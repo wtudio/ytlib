@@ -172,10 +172,10 @@ namespace ytlib
 		return true;
 	}
 	bool test_bignum() {
-		BigNum a(12, 0);
-		BigNum b(1234, 0);
+		BigNum a(987654321987654321);
+		BigNum b(123456789123456789);
 		BigNum c = a + b;
-
+		c += b;
 		return true;
 	}
 }

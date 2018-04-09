@@ -258,7 +258,7 @@ namespace ytlib
 
 
 			up = up_;
-			_content = std::move(tmp);
+			//_content = std::move(tmp);
 		}
 
 	protected:
@@ -296,7 +296,7 @@ namespace ytlib
 			for (size_t ii = 0; ii < len; ++ii) {
 				_content[ii] += 1;
 				if (_content[ii] == up[ii]) _content[0] = 0;
-				else break;
+				else return *this;
 			}
 			return *this;
 		}
@@ -308,7 +308,7 @@ namespace ytlib
 				if (_content[ii] == 0) _content[0] = up[ii] - 1;
 				else {
 					_content[ii] -= 1;
-					break;
+					return *this;
 				}
 			}
 			return *this;
