@@ -244,9 +244,22 @@ namespace ytlib
 	}
 
 	bool test_brt() {
+		typedef BRTreeNode<int> mybrt;
+		typedef shared_ptr<mybrt> mybrtPtr;
 
-
-
+		mybrtPtr rootp = make_shared<mybrt>(10);
+		//≤Â»Î
+		vector<mybrtPtr> vec;
+		for (int ii = 0; ii < 20; ii += 2) {
+			rootp = rootp->insert(make_shared<mybrt>(ii));
+			vec.clear();
+			DLR(rootp, vec);
+			for (size_t ii = 0; ii < vec.size(); ++ii) {
+				cout << vec[ii]->obj << "(" << vec[ii]->color << ") ";
+			}
+			cout << endl;
+		}
+		//…æ≥˝
 
 
 		return true;

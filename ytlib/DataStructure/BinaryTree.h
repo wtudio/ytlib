@@ -194,9 +194,8 @@ namespace ytlib {
 	private:
 		//假如有重复的，删除第一个找到的
 		AVLTNodePtr _erase(AVLTNodePtr& ndptr) {
+			assert(pf == NULL);//自身需要是根节点
 			if (!ndptr) return shared_from_this();
-			//将当前节点的父节点暂时设为NULL以简化程序
-			AVLTreeNode<T>* curpf = pf; pf = NULL;
 			AVLTNodePtr proot = shared_from_this();//如果要删除的是自身，则需要一个指针来保存root节点
 			AVLTreeNode<T>* pos = ndptr->pf;
 			if (!(ndptr->pl) && !(ndptr->pr)) {
@@ -205,7 +204,10 @@ namespace ytlib {
 					if (getLR(ndptr.get())) breakLChild(ndptr->pf);
 					else breakRChild(ndptr->pf);
 				}
-				
+				else {
+					//整个树就一个要删除的根节点
+					return AVLTNodePtr();
+				}
 			}
 			else if (ndptr->pl && !(ndptr->pr)) {
 				//只有左子树
@@ -287,11 +289,7 @@ namespace ytlib {
 					pos = pos->pf;
 				}
 			}
-			if (re) {
-				re->pf = curpf;
-				return re;
-			}
-			proot->pf = curpf;
+			if (re) return re;
 			return proot;
 		}
 
@@ -349,7 +347,7 @@ namespace ytlib {
 
 	//红黑树。todo待完善
 	template<typename T>
-	class BRTreeNode :public std::enable_shared_from_this<AVLTreeNode<T> > {
+	class BRTreeNode :public std::enable_shared_from_this<BRTreeNode<T> > {
 	private:
 		typedef std::shared_ptr<BRTreeNode<T> > BRTreeNodePtr;
 	public:
@@ -364,7 +362,77 @@ namespace ytlib {
 
 		//插入，因为根节点可能会变，所以返回根节点
 		BRTreeNodePtr insert(BRTreeNodePtr& ndptr) {
+			assert(ndptr && !color);
+			//找到最终要插入的地方的父节点
+			BRTreeNode<T>* pos = this, *tmppos = (ndptr->obj < obj) ? pl.get() : pr.get();
+			while (tmppos != NULL) {
+				pos = tmppos;
+				tmppos = (ndptr->obj < pos->obj) ? pos->pl.get() : pos->pr.get();
+			}
+			if (ndptr->obj == pos->obj) return shared_from_this();//不允许重复
+			if (ndptr->obj < pos->obj) setLChild(pos, ndptr);
+			else setRChild(pos, ndptr);
 
+			//插入节点的颜色总是红色
+			ndptr->color = true;
+			
+			BRTreeNodePtr re;
+			BRTreeNode<T>* end = pf;
+			tmppos = ndptr.get();
+			while (pos != end) {
+				re.reset();
+				//父节点是黑色
+				if (!(pos->color)) {
+					return shared_from_this();
+				}
+				BRTreeNode<T>* uncle = (getLR(pos) ? pos->pf->pr.get() : pos->pf->pl.get());
+				if (uncle!=NULL && uncle->color) {
+					//插入节点的父节点和其叔叔节点均为红色的
+					pos->color = uncle->color = false;
+					pos->pf->color = true;
+					tmppos = pos->pf;
+					pos = tmppos->pf;
+				}
+				else {
+					//插入节点的父节点是红色，叔叔节点是黑色
+					if (getLR(pos)) {
+						//父节点是祖父节点的左支
+						if (getLR(tmppos)) {
+							//插入节点是其父节点的左子节点
+							pos->color = false;
+							pos->pf->color = true;
+							re = pos->pf->rotateL();
+							break;
+						}
+						else {
+							//插入节点是其父节点的右子节点
+							pos->rotateR();
+							tmppos = pos;
+							pos = tmppos->pf;
+						}
+					}
+					else {
+						//父节点是祖父节点的右支
+						if (getLR(tmppos)) {
+							//插入节点是其父节点的左子节点
+							pos->rotateL();
+							tmppos = pos;
+							pos = tmppos->pf;
+						}
+						else {
+							//插入节点是其父节点的右子节点
+							pos->color = false;
+							pos->pf->color = true;
+							re = pos->pf->rotateR();
+							break;
+						}
+					}
+		
+				}
+			}
+			if (pos == end) tmppos->color = false;
+			if (re && (re->pf == end)) return re;
+			return shared_from_this();
 		}
 
 		//在当前节点为根节点的树中删除一个节点，并返回删除后的根节点
@@ -385,10 +453,111 @@ namespace ytlib {
 		}
 	private:
 		BRTreeNodePtr _erase(BRTreeNodePtr& ndptr) {
+			assert(pf == NULL);//自身需要是根节点
 			if (!ndptr) return shared_from_this();
+			BRTreeNodePtr proot = shared_from_this();//如果要删除的是自身，则需要一个指针来保存root节点
+			BRTreeNode<T>* pos = ndptr->pf;
+			if (!(ndptr->pl) && !(ndptr->pr)) {
+				//左右都为空，为叶子节点
+				if (ndptr->pf != NULL) {
+					if (getLR(ndptr.get())) breakLChild(ndptr->pf);
+					else breakRChild(ndptr->pf);
+				}
+				else {
+					//整个树就一个要删除的根节点
+					return BRTreeNodePtr();
+				}
+			}
+			else if (ndptr->pl && !(ndptr->pr)) {
+				//只有左子树
+				if (ndptr->pf == NULL) {
+					proot = ndptr->pl;
+					breakLChild(ndptr.get());
+				}
+				else {
+					ndptr->pl->pf = ndptr->pf;
+					ndptr->pf->pl = ndptr->pl;
+					ndptr->pf = NULL; ndptr->pl.reset();
+				}
+			}
+			else if (!(ndptr->pl) && ndptr->pr) {
+				//只有右子树
+				if (ndptr->pf == NULL) {
+					proot = ndptr->pr;
+					breakRChild(ndptr.get());
+				}
+				else {
+					ndptr->pr->pf = ndptr->pf;
+					ndptr->pf->pr = ndptr->pr;
+					ndptr->pf = NULL; ndptr->pr.reset();
+				}
+			}
+			else {
+				//换左子树的前驱
+				BRTreeNodePtr tmp = ndptr->pl;
+				if (tmp->pr) {
+					//左子节点有右子树，找到其前驱
+					while (tmp->pr) tmp = tmp->pr;
+					tmp->pf->pr = tmp->pl;
+					if (tmp->pl) tmp->pl->pf = tmp->pf;
+					tmp->pl = ndptr->pl; ndptr->pl->pf = tmp.get();
+					pos = tmp->pf;
+				}
+				else pos = tmp.get();
+				tmp->pf = ndptr->pf;
+				tmp->pr = ndptr->pr; ndptr->pr->pf = tmp.get();
+				if (ndptr->pf != NULL) {
+					if (getLR(ndptr.get())) ndptr->pf->pl = tmp;
+					else ndptr->pf->pr = tmp;
+				}
+				else proot = tmp;
+				ndptr->pf = NULL; ndptr->pl.reset(); ndptr->pr.reset();
+				tmp->hgt = ndptr->hgt;
+			}
 
 
 
+
+		}
+		//左旋转，顺时针
+		BRTreeNodePtr rotateL() {
+			BRTreeNodePtr re = pl;
+			if (re->pr) re->pr->pf = this;
+			pl = re->pr;
+			if (pf == NULL) re->pr = shared_from_this();
+			else {
+				if (getLR(this)) {
+					re->pr = pf->pl;
+					pf->pl = re;
+				}
+				else {
+					re->pr = pf->pr;
+					pf->pr = re;
+				}
+			}
+			re->pf = pf;
+			pf = re.get();
+			return re;
+		}
+		//右旋转，逆时针
+		BRTreeNodePtr rotateR() {
+			BRTreeNodePtr re = pr;
+			if (re->pl) re->pl->pf = this;
+			pr = re->pl;
+			if (pf == NULL) re->pl = shared_from_this();
+			else {
+				if (getLR(this)) {
+					re->pl = pf->pl;
+					pf->pl = re;
+				}
+				else {
+					re->pl = pf->pr;
+					pf->pr = re;
+				}
+			}
+			re->pf = pf;
+			pf = re.get();
+			return re;
 		}
 
 	};
