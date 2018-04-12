@@ -38,6 +38,7 @@ namespace ytlib {
 	//√∞≈›≈≈–Ú in-place/Œ»∂®
 	template<typename T>
 	void bubbleSort(T* arr, size_t len) {
+		if (len < 2) return;
 		using std::swap;
 		for (size_t ii = 0; ii < len; ++ii) {
 			for (size_t jj = 0; jj < len - 1 - ii; ++jj) {

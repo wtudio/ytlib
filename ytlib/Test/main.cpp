@@ -71,6 +71,7 @@ int32_t main(int32_t argc, char** argv) {
 	if (!re.second) {
 		re.first->second = "123";
 	}
+	m.erase(m.find(1));
 
 	multimap<int, string> m2;
 	m2.insert(pair<int, string>(1, "001"));

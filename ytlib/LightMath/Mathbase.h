@@ -49,11 +49,9 @@ namespace ytlib
 	//判断是否是质数
 	static bool isPrime(uint64_t num) {
 		//两个较小数另外处理  
-		if (num == 2 || num == 3)
-			return true;
+		if (num == 2 || num == 3) return true;
 		//不在6的倍数两侧的一定不是质数  
-		if (num % 6 != 1 && num % 6 != 5)
-			return false;
+		if (num % 6 != 1 && num % 6 != 5) return false;
 		uint64_t tmp = uint64_t(std::sqrt(num));
 		//在6的倍数两侧的也可能不是质数  
 		for (uint64_t i = 5; i <= tmp; i += 6)
@@ -65,12 +63,11 @@ namespace ytlib
 	}
 	//求最大公约数
 	static uint64_t gcd(uint64_t num1, uint64_t num2) {
-		if (num1 < num2) return gcd(num2, num1);
+		if (num1 < num2) std::swap(num1, num2);
 		if (num2 == 0) return num1;
 		if (num1 & 1) {
 			if (num2 & 1) return gcd(num2, num1 - num2);
 			return gcd(num1, num2 >> 1);
-
 		}
 		else {
 			if (num2 & 1) return gcd(num1 >> 1, num2);
@@ -84,7 +81,7 @@ namespace ytlib
 	//分解质因数
 	static void factoring(uint64_t num, std::vector<uint64_t>& re) {
 		if (num < 2) return;
-		for (uint64_t ii = 2; ii <= num; ++ii) {
+		for (uint64_t ii = 2; num > 1; ++ii) {
 			while (num%ii == 0) {
 				re.push_back(ii);
 				num /= ii;
@@ -93,7 +90,7 @@ namespace ytlib
 	}
 	static void factoring(uint64_t num, std::map<uint64_t, uint64_t>& re) {
 		if (num < 2) return;
-		for (uint64_t ii = 2; ii <= num; ++ii) {
+		for (uint64_t ii = 2;  num > 1; ++ii) {
 			while (num%ii == 0) {
 				std::map<uint64_t, uint64_t>::iterator itr = re.find(ii);
 				if (itr == re.end()) re.insert(std::pair<uint64_t, uint64_t>(ii, 1));
@@ -150,12 +147,12 @@ namespace ytlib
 	}
 
 	// pow
-	static uint64_t pow(const uint64_t &value, uint64_t n) {
-		uint64_t tmp = value, re = 1;
+	static uint64_t pow(uint64_t value, uint64_t n) {
+		uint64_t re = 1;
 		for (; n; n >>= 1) {
 			if (n & 1)
-				re *= tmp;
-			tmp *= tmp;
+				re *= value;
+			value *= value;
 		}
 		return re;
 	}

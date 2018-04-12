@@ -18,7 +18,7 @@ namespace ytlib
 	typedef boost::asio::ip::tcp::endpoint TcpEp;//28个字节
 	typedef boost::asio::ip::tcp::socket TcpSocket;
 
-	//默认vs
+	//默认vs。todo：使用cmake来判断大小端
 	static void set_buf_from_num_64bit(char* p, uint64_t n) {
 #ifdef _MSC_VER
 		memcpy(p, &n, 8);

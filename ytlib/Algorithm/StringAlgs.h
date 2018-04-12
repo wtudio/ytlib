@@ -67,23 +67,15 @@ namespace ytlib {
 		size_t curLen = 0, curPos = 0;//当前不重复字串的长度和位置
 		for (size_t ii = 0; ii < len; ++ii) {
 			size_t &prePos = positions[s[ii]];
-			if (prePos == len || (ii - prePos) > curLen) {
-				++curLen;
-			}
+			if (prePos == len || (ii - prePos) > curLen) ++curLen;
 			else {
-				if (curLen > maxLen) {
-					maxLen = curLen;
-					maxPos = curPos;
-				}
+				if (curLen > maxLen) { maxLen = curLen;	maxPos = curPos; }
 				curLen = ii - prePos;
 				curPos = prePos + 1;
 			}
 			prePos = ii;
 		}
-		if (curLen > maxLen) {
-			maxLen = curLen;
-			maxPos = curPos;
-		}
+		if (curLen > maxLen) { maxLen = curLen;	maxPos = curPos; }
 		return std::pair<size_t, size_t>(maxPos, maxLen);
 	}
 	static std::pair<size_t, size_t> LongestSubStrWithoutDup(const std::string& s) {
