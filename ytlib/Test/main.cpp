@@ -10,6 +10,8 @@
 #include "t_algs.h"
 
 #include <boost/date_time/posix_time/posix_time.hpp>  
+#include <vector>
+#include <map>
 
 using namespace std;
 using namespace ytlib;
@@ -62,8 +64,26 @@ int32_t main(int32_t argc, char** argv) {
 	//std::locale::global(std::locale(""));
 	//wcout.imbue(locale(""));
 
-	sizeof(w1);
-	sizeof(w2);
+	map<int, string> m;
+	m[1] = "111";
+	m[2] = "222";
+	pair<map<int, string>::iterator, bool> re = m.insert(pair<int, string>(1, "123"));
+	if (!re.second) {
+		re.first->second = "123";
+	}
+
+	multimap<int, string> m2;
+	m2.insert(pair<int, string>(1, "001"));
+	m2.insert(pair<int, string>(1, "0001"));
+	m2.insert(pair<int, string>(1, "00001"));
+	m2.insert(pair<int, string>(2, "002"));
+	m2.insert(pair<int, string>(2, "0002"));
+	m2.insert(pair<int, string>(2, "00002"));
+	pair<multimap<int, string>::iterator, multimap<int, string>::iterator> re2 = m2.equal_range(1);
+	for (; re2.first != re2.second; ++re2.first) {
+		cout << re2.first->first << " " << re2.first->second << endl;
+	}
+
 	//boost::posix_time::ptime ticTime_global, tocTime_global;
 	//ticTime_global = boost::posix_time::microsec_clock::universal_time();
 
