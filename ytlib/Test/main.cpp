@@ -44,6 +44,17 @@ private:
 int c1::b = 1;
 const int c1::c = 1;
 
+class w1 {
+	char a;
+	char b;
+	uint32_t c;
+};
+class w2 {
+	char a;
+	uint32_t c;
+	char b;
+};
+
 int32_t main(int32_t argc, char** argv) {
 	YT_DEBUG_PRINTF("-------------------start-------------------\n");
 	//tcout输出中文需要设置
@@ -51,8 +62,8 @@ int32_t main(int32_t argc, char** argv) {
 	//std::locale::global(std::locale(""));
 	//wcout.imbue(locale(""));
 
-
-
+	sizeof(w1);
+	sizeof(w2);
 	//boost::posix_time::ptime ticTime_global, tocTime_global;
 	//ticTime_global = boost::posix_time::microsec_clock::universal_time();
 

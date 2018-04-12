@@ -153,7 +153,7 @@ namespace ytlib
 		cout << gcd(770, 26) << endl;
 		cout << gcd(121, 132) << endl;
 
-		std::vector<uint32_t> v;
+		std::vector<uint64_t> v;
 		factoring(60, v);
 		for (uint32_t ii = 0; ii < v.size(); ++ii) {
 			cout << v[ii] << " ";

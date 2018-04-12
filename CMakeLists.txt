@@ -19,8 +19,22 @@ IF ( NOT Boost_FOUND)
 ENDIF()
 include_directories( ${Boost_INCLUDE_DIRS} )
 link_directories( ${Boost_LIBRARY_DIRS} )
-	
-	
+
+#非必需库
+find_package( OpenCV QUIET)
+IF ( OpenCV_FOUND)
+	message(STATUS "OpenCV library status:")
+	message(STATUS "    version: ${OpenCV_VERSION}")
+	message(STATUS "    libraries: ${OpenCV_LIBS}")
+	message(STATUS "    include path: ${OpenCV_INCLUDE_DIRS}")
+	include_directories( ${OpenCV_INCLUDE_DIRS} )
+#target_link_libraries( xxx ${OpenCV_LIBS}  )
+ELSE()
+	message(STATUS "OpenCV library is not found.")
+	mark_as_advanced( OpenCV_DIR )
+ENDIF()
+
+
 #设置cmake目录（让cmake能够找到自定义cmake函数。如findpackage等）
 list( APPEND CMAKE_MODULE_PATH ${ytlib_SOURCE_DIR}/CMake )
 
@@ -80,8 +94,10 @@ if(YTLIB_BUILD_RPSF_DEMO)
   add_subdirectory( ytrpsf/RPSF_Demo/RPSF_DemoPlugin2 )
   add_subdirectory( ytrpsf/RPSF_Demo/RPSF_DemoPlugin3 )
 endif()
-
-
+#基于opencv的项目
+if ( OpenCV_FOUND)
+  add_subdirectory( ytlib/Test_OpenCV )
+endif()
 
 #配置文件config.in
 #提供给使用者的
