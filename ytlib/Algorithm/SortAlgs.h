@@ -22,11 +22,11 @@ namespace ytlib {
 		sortObj(uint32_t k_) :key(k_) {}
 
 		//关系运算符重载
-		bool operator <(const sortObj& val) {return key < val.key;}
-		bool operator >(const sortObj& val) {return key > val.key;}
-		bool operator <=(const sortObj& val) {return key <= val.key;}
-		bool operator >=(const sortObj& val) {return key >= val.key;}
-		bool operator ==(const sortObj& val) {return key == val.key;}
+		bool operator <(const sortObj& val) const {return key < val.key;}
+		bool operator >(const sortObj& val) const {return key > val.key;}
+		bool operator <=(const sortObj& val) const {return key <= val.key;}
+		bool operator >=(const sortObj& val) const {return key >= val.key;}
+		bool operator ==(const sortObj& val) const {return key == val.key;}
 
 
 		//成员
