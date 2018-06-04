@@ -49,7 +49,7 @@ namespace ytlib {
 		}
 	}
 
-	//归并排序 out-place/稳定
+	//归并排序 out-place/稳定 todo：实现非递归形式
 	template<typename T>
 	void mergeSort(T* arr, size_t len) {
 		if (len < 2) return;
@@ -72,7 +72,7 @@ namespace ytlib {
 		delete[] tmpArr;
 	}
 
-	//快速排序 in-place/不稳定
+	//快速排序 in-place/不稳定 todo：实现非递归形式
 	template<typename T>
 	void quickSort(T* arr, size_t len) {
 		if (len < 2) return;
