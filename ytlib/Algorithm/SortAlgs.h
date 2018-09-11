@@ -94,8 +94,8 @@ namespace ytlib {
 				cur = first;
 			}
 		}
-		if (cur > 1) quickSort(arr, cur);
-		if (cur < len - 2) quickSort(arr + cur + 1, len - cur - 1);
+		quickSort(arr, cur);
+		quickSort(arr + cur + 1, len - cur - 1);
 	}
 
 

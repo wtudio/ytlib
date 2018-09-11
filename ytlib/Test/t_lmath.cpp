@@ -159,6 +159,13 @@ namespace ytlib
 			cout << v[ii] << " ";
 		}
 		cout << endl;
+		std::map<uint64_t, uint64_t> m;
+		factoring(60, m);
+		for (std::map<uint64_t, uint64_t>::iterator ii = m.begin(); ii != m.end(); ++ii) {
+			cout << ii->first << ":" << ii->second << " ";
+		}
+		cout << endl;
+
 
 		cout << Mul(5) << endl;//120
 		cout << Mul(9, 5) << endl;//15120

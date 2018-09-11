@@ -6,6 +6,8 @@ namespace ytlib
 {
 	bool test_kmp();
 	bool test_strdif();
+	bool test_strFuns();
+
 	bool test_lgsswd();
 
 

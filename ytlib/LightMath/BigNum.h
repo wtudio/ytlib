@@ -278,36 +278,36 @@ namespace ytlib
 	*/
 	class LoopTool {
 	public:
-		explicit LoopTool(const std::vector<uint32_t>& up_):up(up_){
-			size_t len = up.size();
+		explicit LoopTool(const std::vector<uint32_t>& up_):m_vecUp(up_){
+			size_t len = m_vecUp.size();
 			assert(len);
-			_content.resize(len);
+			m_vecContent.resize(len);
 			for (size_t ii = 0; ii < len; ++ii) {
-				_content[ii] = 0;
+				m_vecContent[ii] = 0;
 			}
 		}
 
 		//最大只能加到up-1
 		//++i
 		LoopTool& operator++() {
-			size_t len = up.size();
+			size_t len = m_vecUp.size();
 			assert(len);
 			//从低位开始加
 			for (size_t ii = 0; ii < len; ++ii) {
-				_content[ii] += 1;
-				if (_content[ii] == up[ii]) _content[0] = 0;
+				m_vecContent[ii] += 1;
+				if (m_vecContent[ii] == m_vecUp[ii]) m_vecContent[0] = 0;
 				else return *this;
 			}
 			return *this;
 		}
 		LoopTool& operator--() {
-			size_t len = up.size();
+			size_t len = m_vecUp.size();
 			assert(len);
 			//从低位开始加
 			for (size_t ii = 0; ii < len; ++ii) {
-				if (_content[ii] == 0) _content[0] = up[ii] - 1;
+				if (m_vecContent[ii] == 0) m_vecContent[0] = m_vecUp[ii] - 1;
 				else {
-					_content[ii] -= 1;
+					m_vecContent[ii] -= 1;
 					return *this;
 				}
 			}
@@ -315,15 +315,15 @@ namespace ytlib
 		}
 		//是否为0。0为false
 		operator bool() const {
-			size_t len = up.size();
+			size_t len = m_vecUp.size();
 			for (size_t ii = 0; ii < len; ++ii) {
-				if (_content[ii]) return true;
+				if (m_vecContent[ii]) return true;
 			}
 			return false;
 		}
 
-		std::vector<uint32_t> _content;
-		std::vector<uint32_t> up;//进制
+		std::vector<uint32_t> m_vecContent;
+		std::vector<uint32_t> m_vecUp;//进制
 
 	};
 	

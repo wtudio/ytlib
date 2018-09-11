@@ -23,6 +23,33 @@ namespace ytlib
 		return true;
 	}
 
+	bool test_strFuns() {
+		string s = "abc123abc123abc123abc123abc123abc123";
+
+		replaceAll(s, "abc", "yhn");
+		printf("%d\t%d\t%X\t%s\n", s.size(), s.capacity(), s.c_str(), s.c_str());
+
+		replaceAll(s, "123", "45");
+		printf("%d\t%d\t%X\t%s\n", s.size(), s.capacity(), s.c_str(), s.c_str());
+
+		replaceAll(s, "45", "6789000");
+		printf("%d\t%d\t%X\t%s\n", s.size(), s.capacity(), s.c_str(), s.c_str());
+
+		replaceAll(s, "00", "#");
+		printf("%d\t%d\t%X\t%s\n", s.size(), s.capacity(), s.c_str(), s.c_str());
+
+
+
+		string s1 = "&123%$#456%$#7890#$%";
+		vector<string> re = splitAll(s1, "&%$#");
+		for (size_t ii = 0; ii < re.size(); ++ii) {
+			cout << re[ii] << ' ';
+		}
+		cout << endl;
+
+		return true;
+	}
+
 	bool test_lgsswd() {
 		string s = "arabcacfr";
 

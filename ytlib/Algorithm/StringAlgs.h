@@ -2,7 +2,7 @@
 #include <ytlib/Common/Util.h>
 #include <string>
 #include <map>
-
+#include <vector>
 
 //字符串相关算法。此处的算法都只是给出一种可行方案，不代表生产中的最佳方案
 namespace ytlib {
@@ -83,7 +83,62 @@ namespace ytlib {
 	}
 
 
+	//替换所有
+	static void replaceAll(std::string& str, const std::string& oldValue, const std::string& newValue) {
+		std::vector<size_t> vecPos;
+		size_t iPos = 0, oldLen = oldValue.size(), newLen = newValue.size();
+		while (std::string::npos != (iPos = str.find(oldValue, iPos))) {
+			vecPos.push_back(iPos);
+			iPos += oldLen;
+		}
 
+		size_t& vecLen = iPos = vecPos.size();
+		if (vecLen) {
+			if (oldLen == newLen) {
+				for (size_t ii = 0; ii < vecLen; ++ii)
+					memcpy(const_cast<char*>(str.c_str() + vecPos[ii]), newValue.c_str(), newLen);
+			}
+			else if (oldLen > newLen) {
+				char* p = const_cast<char*>(str.c_str()) + vecPos[0];
+				vecPos.push_back(str.size());
+				for (size_t ii = 0; ii < vecLen; ++ii) {
+					memcpy(p, newValue.c_str(), newLen);
+					p += newLen;
+					size_t cplen = vecPos[ii + 1] - vecPos[ii] - oldLen;
+					memmove(p, str.c_str() + vecPos[ii] + oldLen, cplen);
+					p += cplen;
+				}
+				str.resize(p - str.c_str());
+			}
+			else {
+				size_t diff = newLen - oldLen;
+				vecPos.push_back(str.size());
+				str.resize(str.size() + diff * vecLen);
+				char* p = const_cast<char*>(str.c_str()) + str.size();
+				for (size_t ii = vecLen - 1; ii < vecLen; --ii) {
+					size_t cplen = vecPos[ii + 1] - vecPos[ii] - oldLen;
+					p -= cplen;
+					memmove(p, str.c_str() + vecPos[ii] + oldLen, cplen);
+					p -= newLen;
+					memcpy(p, newValue.c_str(), newLen);
+				}
+			}
+		}
+	}
+
+
+	//分割，将str以seperator中所有字符为分割符分割,返回分割结果vector，结果中不包含分隔符
+	static std::vector<std::string> splitAll(const std::string& str, const std::string &seperators) {
+		std::vector<std::string> re;
+		size_t pos1, pos2 = 0;
+		do {
+			pos1 = str.find_first_not_of(seperators, pos2);
+			if (pos1 == std::string::npos) break;
+			pos2 = str.find_first_of(seperators, pos1);
+			re.push_back(str.substr(pos1, pos2 - pos1));
+		} while (pos2 != std::string::npos); 
+		return re;
+	}
 }
 
 

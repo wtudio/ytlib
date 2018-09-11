@@ -178,11 +178,11 @@ namespace ytlib
 		/*----FFT算法----*/
 		int32_t r, la, lb, lc;
 		for (int32_t m = 1; m <= M; ++m) {
-			la = static_cast<int32_t>(pow(2.0, m)); //la=2^m代表第m级每个分组所含节点数
+			la = static_cast<int32_t>(std::pow(2.0, m)); //la=2^m代表第m级每个分组所含节点数
 			lb = la / 2;    //lb代表第m级每个分组所含碟形单元数,同时它也表示每个碟形单元上下节点之间的距离
 							/*----碟形运算----*/
 			for (int32_t l = 1; l <= lb; ++l) {
-				r = (l - 1)* static_cast<int32_t>(pow(2.0, M - m));
+				r = (l - 1)* static_cast<int32_t>(std::pow(2.0, M - m));
 				//遍历每个分组，分组总数为N/la
 				for (int32_t n = l - 1; n < N - 1; n += la) {
 					lc = n + lb;  //n,lc分别代表一个碟形单元的上、下节点编号

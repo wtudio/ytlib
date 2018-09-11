@@ -40,7 +40,7 @@ namespace ytlib
 	static uint32_t find_1_(uint64_t val, uint32_t pos) {
 		assert(pos < 64);
 		if (!val) return 64;
-		while (0 == (val & (1 << pos))) {
+		while (0 == (val & ((uint64_t)1 << pos))) {
 			++pos;
 		}
 		return pos;
@@ -92,9 +92,8 @@ namespace ytlib
 		if (num < 2) return;
 		for (uint64_t ii = 2;  num > 1; ++ii) {
 			while (num%ii == 0) {
-				std::map<uint64_t, uint64_t>::iterator itr = re.find(ii);
-				if (itr == re.end()) re.insert(std::pair<uint64_t, uint64_t>(ii, 1));
-				else ++(itr->second);
+				std::pair<std::map<uint64_t, uint64_t>::iterator, bool> tmp = re.insert(std::pair<uint64_t, uint64_t>(ii, 1));
+				if (!tmp.second) ++(tmp.first->second);
 				num /= ii;
 			}
 		}

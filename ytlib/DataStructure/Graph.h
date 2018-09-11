@@ -101,14 +101,14 @@ namespace ytlib {
 		std::vector<sideType> re;
 
 
-		return std::move(re);
+		return re;
 	}
 	//floyd算法：求所有节点到其他所有节点的最短路径
 	template<typename T, typename sideType = uint32_t>
 	Basic_Matrix<sideType> floyd(const std::vector<Graph<T, sideType>*>& vec) {
 		Basic_Matrix<sideType> M;
 
-		return std::move(M);
+		return M;
 	}
 
 

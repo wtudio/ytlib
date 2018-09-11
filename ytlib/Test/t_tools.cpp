@@ -1,5 +1,6 @@
 #include "t_tools.h"
 #include <ytlib/SupportTools/UUID.h>
+#include <ytlib/SupportTools/UrlEncode.h>
 #include <vector>
 #include <set>
 #include <map>
@@ -55,5 +56,21 @@ namespace ytlib
 
 		return true;
 	}
+
+	bool test_urlencode() {
+		string s2 = "http://abc123.com/aaa/bbbb?qa=1&qb=adf";
+		printf("%d\t%d\t%X\t%s\n", s2.size(), s2.capacity(), s2.c_str(), s2.c_str());
+
+		string s3 = UrlEncode(s2, false);
+		printf("%d\t%d\t%X\t%s\n", s3.size(), s3.capacity(), s3.c_str(), s3.c_str());
+
+		string s4 = UrlDecode(s3);
+		printf("%d\t%d\t%X\t%s\n", s4.size(), s4.capacity(), s4.c_str(), s4.c_str());
+
+
+		return true;
+	}
+
+
 
 }

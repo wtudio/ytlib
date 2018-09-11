@@ -57,12 +57,44 @@ class w2 {
 	char b;
 };
 
+
+class test1 {
+public:
+	test1():ii(10) {
+		YT_DEBUG_PRINTF("construction\n");
+	}
+	test1(const test1& value) {
+		YT_DEBUG_PRINTF("copy construction\n");
+	}
+
+	test1& operator=(const test1& value) {
+		YT_DEBUG_PRINTF("copy\n");
+		return *this;
+	}
+
+	test1(const test1&& value) {
+		YT_DEBUG_PRINTF("move construction\n");
+	}
+	int ii;
+};
+test1 fun1() {
+	test1 tmp;
+	tmp.ii = 100;
+	return tmp;
+}
+
+
 int32_t main(int32_t argc, char** argv) {
 	YT_DEBUG_PRINTF("-------------------start-------------------\n");
 	//tcout输出中文需要设置
 	//建议：最好不要在程序中使用中文！！！
 	//std::locale::global(std::locale(""));
 	//wcout.imbue(locale(""));
+
+	test1 mytest1 = fun1();
+
+	test1 mytest1_2;
+	mytest1_2 = fun1();
 
 	map<int, string> m;
 	m[1] = "111";
@@ -99,6 +131,7 @@ int32_t main(int32_t argc, char** argv) {
 	test_sort();
 	test_kmp();
 	test_strdif();
+	test_strFuns();
 	test_lgsswd();
 
 	test_avlt();
@@ -110,6 +143,8 @@ int32_t main(int32_t argc, char** argv) {
 
 	test_Serialize();
 	test_SysInfoTools();
+	test_stl();
+	test_urlencode();
 	test_NetLog();
 	test_TcpNetAdapter();
 	

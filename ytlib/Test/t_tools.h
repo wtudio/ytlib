@@ -13,7 +13,7 @@ namespace ytlib
 
 
 	bool test_stl();
-
+	bool test_urlencode();
 }
 
 
