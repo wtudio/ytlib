@@ -269,28 +269,34 @@ namespace ytlib
 	bool test_graph() {
 		typedef Graph<uint32_t> myGraph;
 
-		vector<myGraph> myGraphVec;
-		uint32_t num = 10;
+		vector<myGraph*> myGraphVec;
+		uint32_t num = 11;
 		for (uint32_t ii = 0; ii < num; ++ii) {
-			myGraphVec.push_back(myGraph(ii));
+			myGraphVec.push_back(new myGraph(ii));
 		}
 
-		connectGraphNode<uint32_t, uint32_t>(myGraphVec[0], myGraphVec[1], 1);
-		connectGraphNode<uint32_t, uint32_t>(myGraphVec[0], myGraphVec[5], 1);
-		connectGraphNode<uint32_t, uint32_t>(myGraphVec[0], myGraphVec[9], 1);
-		connectGraphNode<uint32_t, uint32_t>(myGraphVec[1], myGraphVec[2], 1);
-		connectGraphNode<uint32_t, uint32_t>(myGraphVec[2], myGraphVec[8], 1);
-		connectGraphNode<uint32_t, uint32_t>(myGraphVec[3], myGraphVec[4], 1);
-		connectGraphNode<uint32_t, uint32_t>(myGraphVec[3], myGraphVec[7], 1);
-		connectGraphNode<uint32_t, uint32_t>(myGraphVec[4], myGraphVec[5], 1);
-		connectGraphNode<uint32_t, uint32_t>(myGraphVec[6], myGraphVec[7], 1);
-		connectGraphNode<uint32_t, uint32_t>(myGraphVec[6], myGraphVec[8], 1);
-		connectGraphNode<uint32_t, uint32_t>(myGraphVec[8], myGraphVec[9], 1);
+		connectGraphNode<uint32_t>(*myGraphVec[0], *myGraphVec[1], 1);
+		connectGraphNode<uint32_t>(*myGraphVec[0], *myGraphVec[5], 2);
+		connectGraphNode<uint32_t>(*myGraphVec[0], *myGraphVec[9], 3);
+		connectGraphNode<uint32_t>(*myGraphVec[1], *myGraphVec[2], 4);
+		connectGraphNode<uint32_t>(*myGraphVec[2], *myGraphVec[8], 5);
+		connectGraphNode<uint32_t>(*myGraphVec[3], *myGraphVec[4], 6);
+		connectGraphNode<uint32_t>(*myGraphVec[3], *myGraphVec[7], 7);
+		connectGraphNode<uint32_t>(*myGraphVec[4], *myGraphVec[5], 8);
+		connectGraphNode<uint32_t>(*myGraphVec[6], *myGraphVec[7], 9);
+		connectGraphNode<uint32_t>(*myGraphVec[6], *myGraphVec[8], 10);
+		connectGraphNode<uint32_t>(*myGraphVec[8], *myGraphVec[9], 11);
+
+		cout << isUndiGraph(myGraphVec) << endl;
+
+		vector<myGraph*> myGraphVec2 = copyGraph(myGraphVec);
+
+		releaseGraphVec(myGraphVec2);
 
 		//dfs
 		vector<myGraph*> vec;
-		for (uint32_t ii = 0; ii < num; ++ii) myGraphVec[ii].visited = false;
-		DFS(myGraphVec[0], vec);
+		clearFlag(myGraphVec);
+		DFS(*myGraphVec[0], vec);
 		for (size_t ii = 0; ii < vec.size(); ++ii) {
 			cout << vec[ii]->obj << " ";
 		}
@@ -298,15 +304,51 @@ namespace ytlib
 
 		//bfs
 		vec.clear();
-		for (uint32_t ii = 0; ii < num; ++ii) myGraphVec[ii].visited = false;
-		BFS(myGraphVec[0], vec);
+		clearFlag(myGraphVec);
+		BFS(*myGraphVec[0], vec);
 		for (size_t ii = 0; ii < vec.size(); ++ii) {
 			cout << vec[ii]->obj << " ";
 		}
 		cout << endl;
 
+		//ÁÚ½Ó¾ØÕó
+		g_sideMatrix M = createAdjMatrix<uint32_t>(myGraphVec);
+	
+		cout << M << endl;
+		cout << endl;
+
+		//dijkstra
+		auto dj = dijkstra(*myGraphVec[0], myGraphVec);
+		for (size_t ii = 0; ii < dj.first.size(); ++ii) {
+			cout << dj.first[ii] << " ";
+		}
+		cout << endl;
+		for (size_t ii = 0; ii < dj.first.size(); ++ii) {
+			cout << dj.second[ii] << " ";
+		}
+		cout << endl;
+
+		vector<int32_t> djpath = dijkstraPath(7, dj.second);
+		for (size_t ii = 0; ii < djpath.size(); ++ii) {
+			cout << myGraphVec[djpath[ii]]->obj << "-";
+		}
+		cout << endl;
+
+		//floyd
+		auto fl = floyd(myGraphVec);
+		cout << fl.first << endl;
+		cout << endl;
+		cout << fl.second << endl;
+		cout << endl << endl;
+
+		vector<int32_t> flpath = floydPath(0,7, fl.second);
+		for (size_t ii = 0; ii < flpath.size(); ++ii) {
+			cout << myGraphVec[flpath[ii]]->obj << "-";
+		}
+		cout << endl;
 
 
+		releaseGraphVec(myGraphVec);
 
 		return true;
 	}

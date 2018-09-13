@@ -606,7 +606,7 @@ namespace ytlib
 				for (int32_t i = 0; i < M.m; ++i) {
 					for (int32_t j = 0; j < M.n; ++j) {
 						out << M.val[i][j];
-						if (j != M.n - 1) out << " | ";
+						if (j != M.n - 1) out << "\t";
 					}
 					if (i < M.m - 1)
 						out << std::endl;
@@ -656,5 +656,6 @@ namespace ytlib
 
 
 	typedef Basic_Matrix<tfloat> Matrix;
+	typedef Basic_Matrix<int32_t> Matrix_i;
 	typedef Basic_Matrix<Complex> Matrix_c;
 }

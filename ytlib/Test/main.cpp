@@ -77,10 +77,12 @@ public:
 	}
 	int ii;
 };
-test1 fun1() {
+std::pair<test1, test1> fun1() {
 	test1 tmp;
 	tmp.ii = 100;
-	return tmp;
+	test1 tmp2;
+	tmp2.ii = 100;
+	return std::pair<test1, test1>(move(tmp), move(tmp2));
 }
 
 
@@ -91,9 +93,9 @@ int32_t main(int32_t argc, char** argv) {
 	//std::locale::global(std::locale(""));
 	//wcout.imbue(locale(""));
 
-	test1 mytest1 = fun1();
+	std::pair<test1, test1> mytest1 = fun1();
 
-	test1 mytest1_2;
+	std::pair<test1, test1> mytest1_2;
 	mytest1_2 = fun1();
 
 	map<int, string> m;
