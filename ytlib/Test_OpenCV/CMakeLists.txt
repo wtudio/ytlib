@@ -14,10 +14,4 @@ add_executable( ytTest_OpenCV
   ${TestCV_Files}
 )
 
-IF(WIN32)
-target_link_libraries(ytTest_OpenCV ${OpenCV_LIBS})
-ELSE(WIN32)
-target_link_libraries(ytTest_OpenCV ${OpenCV_LIBS} -lboost_system -lboost_chrono -lboost_thread -lboost_filesystem -lboost_program_options -lboost_date_time -lboost_serialization -lboost_atomic -lpthread)
-ENDIF(WIN32)
-
-
+target_link_libraries(ytTest_OpenCV ${YTLIB_LIBRARY} )

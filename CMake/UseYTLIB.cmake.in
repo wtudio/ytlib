@@ -9,15 +9,16 @@
 #
 
 # Set all necessary include directories for ytlib
-SET( YTLIB_INCLUDE_DIR @ytlib_SOURCE_DIR@ )
+SET( YTLIB_INCLUDE_DIR "@ytlib_SOURCE_DIR@" )
 INCLUDE_DIRECTORIES( ${YTLIB_INCLUDE_DIR} )
 
 # Set the directory that contains the ytlib libraries,
-SET( YTLIB_LIBRARY_DIR @LIBRARY_OUTPUT_PATH@ )
+SET( YTLIB_LIBRARY_DIR "@LIBRARY_OUTPUT_PATH@" )
 LINK_DIRECTORIES( ${YTLIB_LIBRARY_DIR} )
+
 
 # Set some variables that the user might want to use
 
 # The entire list of all components libraries.
-SET( ELASTIX_ALL_COMPONENT_LIBS @AllComponentLibs@ )
+SET( YTLIB_LIBRARY @YTLIB_LIBRARY@ )
 

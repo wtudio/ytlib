@@ -11,6 +11,9 @@ mark_as_advanced(YTLIB_BUILD_TEST)
 option(YTLIB_BUILD_RPSF_DEMO "build remote plugin service framework project" ON)
 mark_as_advanced(YTLIB_BUILD_RPSF_DEMO)
 
+#链接的库
+set( YTLIB_LIBRARY sqlite sigar)
+
 #依赖库
 find_package( Boost )
 IF ( NOT Boost_FOUND)
@@ -19,20 +22,29 @@ IF ( NOT Boost_FOUND)
 ENDIF()
 include_directories( ${Boost_INCLUDE_DIRS} )
 link_directories( ${Boost_LIBRARY_DIRS} )
+set( YTLIB_LIBRARY ${YTLIB_LIBRARY} ${Boost_LIBRARIES})
 
 #非必需库
+#别的库引用ytlib后，include目录和lib目录都设置好了，可以直接引用、链接相应文件，但是dll还是需要使用者自己设置
+#OpenCV
 find_package( OpenCV QUIET)
 IF ( OpenCV_FOUND)
+	message(STATUS "found OpenCV.")
 	message(STATUS "OpenCV library status:")
 	message(STATUS "    version: ${OpenCV_VERSION}")
 	message(STATUS "    libraries: ${OpenCV_LIBS}")
 	message(STATUS "    include path: ${OpenCV_INCLUDE_DIRS}")
 	include_directories( ${OpenCV_INCLUDE_DIRS} )
-#target_link_libraries( xxx ${OpenCV_LIBS}  )
+	#link_directories()
+	set( YTLIB_LIBRARY ${YTLIB_LIBRARY} ${OpenCV_LIBS})
 ELSE()
 	message(STATUS "OpenCV library is not found.")
 	mark_as_advanced( OpenCV_DIR )
 ENDIF()
+
+
+
+
 
 
 #设置cmake目录（让cmake能够找到自定义cmake函数。如findpackage等）
@@ -98,9 +110,12 @@ endif()
 if ( OpenCV_FOUND)
   add_subdirectory( ytlib/Test_OpenCV )
 endif()
+#基于Armadillo的项目
+if ( ARMADILLO_FOUND)
+  add_subdirectory( ytlib/Test_armadillo )
+endif()
 
 #配置文件config.in
 #提供给使用者的
 
 configure_file( ${ytlib_SOURCE_DIR}/CMake/UseYTLIB.cmake.in  ${ytlib_BINARY_DIR}/UseYTLIB.cmake @ONLY )
-
