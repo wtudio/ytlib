@@ -39,8 +39,7 @@ namespace ytlib
 		}
 		Basic_Matrix(const Basic_Matrix &M) {
 			_allocateMemory(M.m, M.n);
-			for (int32_t i = 0; i < M.m; ++i)
-				memcpy(val[i], M.val[i], M.n * sizeof(T));
+			memcpy(val[0], M.val[0], M.n*M.m * sizeof(T));
 		}
 		~Basic_Matrix() {
 			_releaseMemory();
@@ -51,9 +50,7 @@ namespace ytlib
 					_releaseMemory();
 					_allocateMemory(M.m, M.n);
 				}
-				if (M.n > 0)
-					for (int32_t i = 0; i < M.m; ++i)
-						memcpy(val[i], M.val[i], M.n * sizeof(T));
+				memcpy(val[0], M.val[0], M.n*M.m * sizeof(T));
 			}
 			return *this;
 		}
@@ -608,8 +605,7 @@ namespace ytlib
 						out << M.val[i][j];
 						if (j != M.n - 1) out << "\t";
 					}
-					if (i < M.m - 1)
-						out << std::endl;
+					out << std::endl;
 				}
 			}
 			return out;
@@ -617,12 +613,10 @@ namespace ytlib
 
 	private:
 		void _allocateMemory(const int32_t m_, const int32_t n_) {
-			assert((m_*n_ < MAXSIZE) && (m_ >= 0) && (n_ >= 0));
+			assert((m_*n_ < MAXSIZE) && val == NULL);
 			m = m_; n = n_;
-			if (m == 0 || n == 0) {
-				val = 0;
-				return;
-			}
+			if (m == 0 || n == 0) return;
+
 			val = (T**)malloc(m * sizeof(T*));
 			val[0] = (T*)calloc(m*n, sizeof(T));
 			for (int32_t i = 1; i < m; ++i)
@@ -635,17 +629,6 @@ namespace ytlib
 				free(val);
 			}
 		}
-		/*
-		T pythag(T a, T b) {
-			tfloat absa, absb;
-			absa = abs(a);
-			absb = abs(b);
-			if (absa > absb)
-				return absa*sqrt(1.0 + SQR(absb / absa));
-			else
-				return (absb == 0.0 ? 0.0 : absb*sqrt(1.0 + SQR(absa / absb)));
-		}
-		*/
 
 	};
 

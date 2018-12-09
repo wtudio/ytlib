@@ -8,6 +8,7 @@
 /*
 stl中有很多成熟的算法可以直接调用（stl源码剖析p288）
 此处自己实现的排序算法供学习与改造
+所有排序都是从小到大排列
 */
 
 //模板化的排序相关算法
@@ -99,17 +100,32 @@ namespace ytlib {
 	}
 
 
-	//二分查找。应用于排序好的数组中
+	//二分查找。应用于从小到大排序好的数组中，如有重复则找首先出现的那个
 	template<typename T>
 	size_t binarySearch(T* arr, size_t len,const T& key) {
 		assert(len);
 		size_t low = 0, high = len - 1;
-		while (low <= high) {
+		while (low < high) {
 			size_t mid = low + (high - low) / 2;
-			if (arr[mid] < key) low = mid + 1;
-			else if (arr[mid] > key) high = mid - 1;
-			else return mid;
+			if(arr[mid] < key) low = mid + 1; 
+			else high = mid;
 		}
+		if (arr[low] == key) return low;
+		//没找到，返回len
+		return len;
+	}
+
+	//二分查找。应用于从小到大排序好的数组中，如有重复则找最后出现的那个
+	template<typename T>
+	size_t binarySearchLast(T* arr, size_t len, const T& key) {
+		assert(len);
+		size_t low = 0, high = len - 1;
+		while (low < high) {
+			size_t mid = low + (high - low + 1) / 2;
+			if (arr[mid] <= key) low = mid;
+			else high = mid - 1;
+		}
+		if (arr[high] == key) return high;
 		//没找到，返回len
 		return len;
 	}

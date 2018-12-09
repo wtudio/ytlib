@@ -98,6 +98,16 @@ int32_t main(int32_t argc, char** argv) {
 	std::pair<test1, test1> mytest1_2;
 	mytest1_2 = fun1();
 
+	map<int, int, less<int> > m222;
+	map<int, int, greater<int> > m333;
+	for (int ii = 1; ii < 10; ++ii) {
+		m222.insert(pair<int,int>(ii, 0));
+		m333.insert(pair<int, int>(ii, 0));
+	}
+
+
+
+
 	map<int, string> m;
 	m[1] = "111";
 	m[2] = "222";

@@ -88,6 +88,24 @@ namespace ytlib
 
 		cout << binarySearch(data3, num, 6) << endl;
 
+
+		int data4[10] = { 0,0,1,1,2,2,2,3,3,4 };
+
+		cout << binarySearch(data4, 10, 2) << endl;
+		cout << binarySearch(data4, 10, 1) << endl;
+
+		int data5[10] = { 0,0,0,0,0,0,0,0,0,0 };
+		int data6[10] = { 1,1,1,1,1,1,1,1,1,1 };
+		int data7[10] = { 2,2,2,2,2,2,2,2,2,2 };
+
+		cout << binarySearch(data5, 10, 1) << endl;
+		cout << binarySearch(data6, 10, 1) << endl;
+		cout << binarySearch(data7, 10, 1) << endl;
+
+		cout << binarySearchLast(data5, 10, 1) << endl;
+		cout << binarySearchLast(data6, 10, 1) << endl;
+		cout << binarySearchLast(data7, 10, 1) << endl;
+
 		return true;
 	}
 }
