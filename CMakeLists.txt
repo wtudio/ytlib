@@ -11,8 +11,10 @@ mark_as_advanced(YTLIB_BUILD_TEST)
 option(YTLIB_BUILD_RPSF_DEMO "build remote plugin service framework project" ON)
 mark_as_advanced(YTLIB_BUILD_RPSF_DEMO)
 
-#链接的库
+#要导出的变量
 set( YTLIB_LIBRARY sqlite sigar)
+set( YTLIB_INCLUDE_DIR ${ytlib_SOURCE_DIR})
+set( YTLIB_LIBRARY_DIR )
 
 #依赖库
 find_package( Boost )
@@ -20,9 +22,10 @@ IF ( NOT Boost_FOUND)
 	message(FATAL_ERROR "Cannot find Boost library. please set the boost path")
 	mark_as_advanced( Boost_INCLUDE_DIRS Boost_LIBRARY_DIRS )
 ENDIF()
-include_directories( ${Boost_INCLUDE_DIRS} )
-link_directories( ${Boost_LIBRARY_DIRS} )
 set( YTLIB_LIBRARY ${YTLIB_LIBRARY} ${Boost_LIBRARIES})
+set( YTLIB_INCLUDE_DIR ${YTLIB_INCLUDE_DIR} ${Boost_INCLUDE_DIRS})
+set( YTLIB_LIBRARY_DIR ${YTLIB_LIBRARY_DIR} ${Boost_LIBRARY_DIRS})
+
 
 #非必需库
 #别的库引用ytlib后，include目录和lib目录都设置好了，可以直接引用、链接相应文件，但是dll还是需要使用者自己设置
@@ -34,18 +37,12 @@ IF ( OpenCV_FOUND)
 	message(STATUS "    version: ${OpenCV_VERSION}")
 	message(STATUS "    libraries: ${OpenCV_LIBS}")
 	message(STATUS "    include path: ${OpenCV_INCLUDE_DIRS}")
-	include_directories( ${OpenCV_INCLUDE_DIRS} )
-	#link_directories()
 	set( YTLIB_LIBRARY ${YTLIB_LIBRARY} ${OpenCV_LIBS})
+	set( YTLIB_INCLUDE_DIR ${YTLIB_INCLUDE_DIR} ${OpenCV_INCLUDE_DIRS})
 ELSE()
 	message(STATUS "OpenCV library is not found.")
 	mark_as_advanced( OpenCV_DIR )
 ENDIF()
-
-
-
-
-
 
 #设置cmake目录（让cmake能够找到自定义cmake函数。如findpackage等）
 list( APPEND CMAKE_MODULE_PATH ${ytlib_SOURCE_DIR}/CMake )
@@ -60,6 +57,8 @@ if( NOT EXECUTABLE_OUTPUT_PATH )
     "Single output directory for building all executables." )
 endif()
 mark_as_advanced( LIBRARY_OUTPUT_PATH EXECUTABLE_OUTPUT_PATH )
+set( YTLIB_LIBRARY_DIR ${YTLIB_LIBRARY_DIR} ${LIBRARY_OUTPUT_PATH})
+
 
 #设置ide里文件目录
 set( CMAKE_USE_FOLDERS ON CACHE INTERNAL "Use folder view in IDE" )
@@ -84,10 +83,9 @@ ENDIF()
 option(BUILD_SHARED_LIBS "Build with shared libraries." OFF)
 mark_as_advanced( BUILD_SHARED_LIBS )
 
-
-# Include directories
-include_directories( ${ytlib_SOURCE_DIR} )
-
+#链接设置
+include_directories( ${YTLIB_INCLUDE_DIR} )
+link_directories( ${YTLIB_LIBRARY_DIR} )
 
 #设置下一级目录
 add_subdirectory( sqlite )
@@ -109,10 +107,6 @@ endif()
 #基于opencv的项目
 if ( OpenCV_FOUND)
   add_subdirectory( ytlib/Test_OpenCV )
-endif()
-#基于Armadillo的项目
-if ( ARMADILLO_FOUND)
-  add_subdirectory( ytlib/Test_armadillo )
 endif()
 
 #配置文件config.in

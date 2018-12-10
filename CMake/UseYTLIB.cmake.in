@@ -9,11 +9,11 @@
 #
 
 # Set all necessary include directories for ytlib
-SET( YTLIB_INCLUDE_DIR "@ytlib_SOURCE_DIR@" )
+SET( YTLIB_INCLUDE_DIR "@YTLIB_INCLUDE_DIR@" )
 INCLUDE_DIRECTORIES( ${YTLIB_INCLUDE_DIR} )
 
 # Set the directory that contains the ytlib libraries,
-SET( YTLIB_LIBRARY_DIR "@LIBRARY_OUTPUT_PATH@" )
+SET( YTLIB_LIBRARY_DIR "@YTLIB_LIBRARY_DIR@" )
 LINK_DIRECTORIES( ${YTLIB_LIBRARY_DIR} )
 
 
