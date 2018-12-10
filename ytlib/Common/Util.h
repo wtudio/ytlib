@@ -38,6 +38,9 @@
 #	pragma warning(disable : 4290)
 #	pragma warning(disable : 4819)
 #	pragma warning(disable : 4996)
+
+#define _CRT_SECURE_NO_DEPRECATE
+
 #endif
 
 // 定义NULL

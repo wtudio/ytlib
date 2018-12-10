@@ -26,17 +26,17 @@
 #include <boost/log/sources/record_ostream.hpp>
 
 namespace ytlib {
-	//´ËÈÕÖ¾¹¤¾ßÓÃÓÚÉú²ú»·¾³£¬µ÷ÊÔ»·¾³µÄÈÕÖ¾Êä³ö¼û<ytlib/Common/Util.h>ÖĞµÄYT_DEBUG_PRINTF
+	//æ­¤æ—¥å¿—å·¥å…·ç”¨äºç”Ÿäº§ç¯å¢ƒï¼Œè°ƒè¯•ç¯å¢ƒçš„æ—¥å¿—è¾“å‡ºè§<ytlib/Common/Util.h>ä¸­çš„YT_DEBUG_PRINTF
 	/*
-	ÔÚ¸Õ½¨Á¢Á¬½ÓµÄµÚÒ»°üÖĞ·¢ËÍidµÈhostĞÅÏ¢£¬²¢·¢ËÍÒ»¸ö8×Ö½ÚµÄÊ±¼ä£¨boost::posix_time::ptimeµÄÄÚÈİ£©
-	È»ºóºóĞøÃ¿Ò»°üÖ»·¢ËÍ1byte levelĞÅÏ¢+8byte Ê±¼ä+n byteÈÕÖ¾ĞÅÏ¢£¨²»ÓÃÔöÁ¿ÊÇ·ÀÖ¹ÖĞ¼ä¶ª°ü£©
+	åœ¨åˆšå»ºç«‹è¿æ¥çš„ç¬¬ä¸€åŒ…ä¸­å‘é€idç­‰hostä¿¡æ¯ï¼Œå¹¶å‘é€ä¸€ä¸ª8å­—èŠ‚çš„æ—¶é—´ï¼ˆboost::posix_time::ptimeçš„å†…å®¹ï¼‰
+	ç„¶ååç»­æ¯ä¸€åŒ…åªå‘é€1byte levelä¿¡æ¯+8byte æ—¶é—´+n byteæ—¥å¿—ä¿¡æ¯ï¼ˆä¸ç”¨å¢é‡æ˜¯é˜²æ­¢ä¸­é—´ä¸¢åŒ…ï¼‰
 	*/
 
-	//Í¬²½ºó¶Ë£¬²»ĞèÒª¼ÓËø
+	//åŒæ­¥åç«¯ï¼Œä¸éœ€è¦åŠ é”
 	class NetBackend : public boost::log::sinks::basic_sink_backend<
 		boost::log::sinks::synchronized_feeding> {
 	public:
-		//Ä¿Ç°Ö»Ö§³ÖintĞÍid¡£Èç¹ûÒª¸Ä³ÉstringĞÍidÒ²ºÜ¼òµ¥
+		//ç›®å‰åªæ”¯æŒintå‹idã€‚å¦‚æœè¦æ”¹æˆstringå‹idä¹Ÿå¾ˆç®€å•
 		explicit NetBackend(uint32_t myid_,const TcpEp& logserver_ep_ ):
 			sock(service), LogServerEp(logserver_ep_), ConnectFlag(false), m_bFirstLogFlag(true){
 			header[0] = LogConnection::TCPHEAD1;
@@ -44,7 +44,7 @@ namespace ytlib {
 			header[2] = LogConnection::LOGHEAD1;
 			header[3] = LogConnection::LOGHEAD2;
 			logBuff.push_back(boost::asio::const_buffer(header, HEAD_SIZE));
-			//ÉèÖÃ±¾»úidºÍÈÕÖ¾µÈ¼¶¡£Èç¹ûÒÔºóÒªÌí¼ÓÆäËûĞÅÏ¢Ò²ÔÚ´Ë´¦Ìí¼ÓÍØÕ¹
+			//è®¾ç½®æœ¬æœºidå’Œæ—¥å¿—ç­‰çº§ã€‚å¦‚æœä»¥åè¦æ·»åŠ å…¶ä»–ä¿¡æ¯ä¹Ÿåœ¨æ­¤å¤„æ·»åŠ æ‹“å±•
 			HostInfoSize = 1 + 8 + 4;
 			HostInfoBuff = boost::shared_array<char>(new char[HostInfoSize]);
 			set_buf_from_num(&HostInfoBuff[9], myid_);
@@ -56,7 +56,7 @@ namespace ytlib {
 			logBuff.clear();
 		}
 		void consume(boost::log::record_view const& rec) {
-			//Èç¹ûÓĞÁ¬½Ó²Å·¢ËÍ£¬·ñÔò²»·¢ËÍ
+			//å¦‚æœæœ‰è¿æ¥æ‰å‘é€ï¼Œå¦åˆ™ä¸å‘é€
 			if (connect()) {
 				set_buf_from_num(&header[4], static_cast<uint32_t>(rec[boost::log::expressions::smessage]->size() + HostInfoSize));
 				HostInfoBuff[0] = static_cast<uint8_t>(*rec[boost::log::trivial::severity]);
@@ -73,9 +73,9 @@ namespace ytlib {
 
 				logBuff.push_back(boost::asio::buffer(*rec[boost::log::expressions::smessage]));
 				boost::system::error_code err;
-				//·¢ËÍÊ§°ÜÔò½«ConnectFlagÖÃÎªfalse
+				//å‘é€å¤±è´¥åˆ™å°†ConnectFlagç½®ä¸ºfalse
 				sock.write_some(logBuff, err);
-				logBuff.pop_back();//µ¯³ömsg
+				logBuff.pop_back();//å¼¹å‡ºmsg
 				if (err) {
 					ConnectFlag = false;
 					m_bFirstLogFlag = true;
@@ -83,7 +83,7 @@ namespace ytlib {
 					return;
 				}
 				if (m_bFirstLogFlag) {
-					logBuff.pop_back();//µ¯³öµÚÒ»°üÄÚÈİ
+					logBuff.pop_back();//å¼¹å‡ºç¬¬ä¸€åŒ…å†…å®¹
 					HostInfoSize = 1 + 8;
 					HostInfoBuff = boost::shared_array<char>(new char[HostInfoSize]);
 					logBuff.push_back(boost::asio::const_buffer(HostInfoBuff.get(), HostInfoSize));
@@ -105,7 +105,7 @@ namespace ytlib {
 			return true;
 		}
 
-		boost::asio::io_service service;//È«Í¬²½²Ù×÷£¬ËùÒÔ²»ĞèÒªrun
+		boost::asio::io_service service;//å…¨åŒæ­¥æ“ä½œï¼Œæ‰€ä»¥ä¸éœ€è¦run
 		TcpSocket sock;
 		TcpEp LogServerEp;
 		std::atomic_bool ConnectFlag;
@@ -113,17 +113,17 @@ namespace ytlib {
 		boost::shared_array<char> HostInfoBuff;
 		uint32_t HostInfoSize;
 		static const uint8_t HEAD_SIZE = 8;
-		char header[HEAD_SIZE];//±¨Í·»º´æ
+		char header[HEAD_SIZE];//æŠ¥å¤´ç¼“å­˜
 		bool m_bFirstLogFlag;
 	};
 
-	//ÈÕÖ¾¿ØÖÆÖĞĞÄ¡£Ìá¹©È«¾Öµ¥Àı
+	//æ—¥å¿—æ§åˆ¶ä¸­å¿ƒã€‚æä¾›å…¨å±€å•ä¾‹
 	class LogControlCenter {
 		typedef boost::log::sinks::synchronous_sink<boost::log::sinks::text_ostream_backend> ConSink_t;
 		typedef boost::log::sinks::synchronous_sink<NetBackend> NetSink_t;
 	public:
 		LogControlCenter() {
-			//ÒªÌí¼ÓÊ²Ã´ÊôĞÔÔÚÕâÀïÌí¼Ó
+			//è¦æ·»åŠ ä»€ä¹ˆå±æ€§åœ¨è¿™é‡Œæ·»åŠ 
 			//boost::log::add_common_attributes();
 			(boost::log::core::get())->add_global_attribute(
 				boost::log::aux::default_attribute_names::timestamp(),
@@ -135,7 +135,7 @@ namespace ytlib {
 			boost::shared_ptr<boost::log::sinks::text_ostream_backend> backend = boost::make_shared<boost::log::sinks::text_ostream_backend>();
 			backend->add_stream(boost::shared_ptr<std::ostream>(&std::clog, boost::null_deleter()));
 			ConSink = boost::make_shared<ConSink_t>(backend);
-			//ÉèÖÃ¿ØÖÆÌ¨ÈÕÖ¾¸ñÊ½
+			//è®¾ç½®æ§åˆ¶å°æ—¥å¿—æ ¼å¼
 			ConSink->set_formatter(
 				boost::log::expressions::stream
 				<< "[" << boost::log::expressions::format_date_time< boost::posix_time::ptime >("TimeStamp", "%Y-%m-%d %H:%M:%S.%f")
@@ -169,7 +169,7 @@ namespace ytlib {
 	typedef boost::serialization::singleton<LogControlCenter> SingletonLogControlCenter;
 
 
-	//Ò»Ğ©ºê¶¨Òå
+	//ä¸€äº›å®å®šä¹‰
 #define YT_LOG_TRACE	BOOST_LOG_TRIVIAL(trace)
 #define YT_LOG_DEBUG	BOOST_LOG_TRIVIAL(debug)
 #define YT_LOG_INFO		BOOST_LOG_TRIVIAL(info)
@@ -180,11 +180,11 @@ namespace ytlib {
 
 #define YT_SET_LOG_LEVEL(lvl)  (boost::log::core::get())->set_filter(boost::log::trivial::severity >=  boost::log::trivial::lvl);
 
-	//²»ÒªÖØ¸´init
+	//ä¸è¦é‡å¤init
 	static void InitNetLog(uint32_t myid_, const TcpEp& logserver_ep_) {
 		SingletonLogControlCenter::get_mutable_instance().EnableNetLog(myid_, logserver_ep_);
 		SingletonLogControlCenter::get_mutable_instance().EnableConsoleLog();
-		YT_SET_LOG_LEVEL(info);//Ä¬ÈÏinfo¼¶±ğ
+		YT_SET_LOG_LEVEL(info);//é»˜è®¤infoçº§åˆ«
 	}
 	static void StopNetLog() {
 		SingletonLogControlCenter::get_mutable_instance().DisableNetLog();

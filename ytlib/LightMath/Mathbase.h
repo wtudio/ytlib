@@ -14,15 +14,15 @@ typedef float  tfloat;    // single precision
 
 #define PI 3.1415926535897932384626433832795028841971
 
-//ÅÐ¶Ï¸¡µãÊýÊÇ·ñÏàµÈ
+//åˆ¤æ–­æµ®ç‚¹æ•°æ˜¯å¦ç›¸ç­‰
 #ifndef fequal
 #define fequal(a,b)          (((a-b)>-1e-6)&&((a-b)<1e-6))
 #endif
 
-//Ò»Ð©¹¤¾ß
+//ä¸€äº›å·¥å…·
 namespace ytlib
 {
-	//¼ÆËãÓÐ¶àÉÙ¸ö1
+	//è®¡ç®—æœ‰å¤šå°‘ä¸ª1
 	static uint32_t count_1_(uint64_t n) {
 		uint32_t num = 0;
 		while (n) {
@@ -31,12 +31,12 @@ namespace ytlib
 		}
 		return num;
 	}
-	//¼ÆËãÓÐ¶àÉÙ¸ö0
+	//è®¡ç®—æœ‰å¤šå°‘ä¸ª0
 	static uint32_t count_0_(uint64_t n) {
 		return count_1_(~n);
 	}
 
-	//¼ÆËãÔÚposÖ®Ç°µÄµÚÒ»¸ö1µÄÎ»ÖÃ
+	//è®¡ç®—åœ¨posä¹‹å‰çš„ç¬¬ä¸€ä¸ª1çš„ä½ç½®
 	static uint32_t find_1_(uint64_t val, uint32_t pos) {
 		assert(pos < 64);
 		if (!val) return 64;
@@ -46,22 +46,22 @@ namespace ytlib
 		return pos;
 	}
 
-	//ÅÐ¶ÏÊÇ·ñÊÇÖÊÊý
+	//åˆ¤æ–­æ˜¯å¦æ˜¯è´¨æ•°
 	static bool isPrime(uint64_t num) {
-		//Á½¸ö½ÏÐ¡ÊýÁíÍâ´¦Àí  
+		//ä¸¤ä¸ªè¾ƒå°æ•°å¦å¤–å¤„ç†  
 		if (num == 2 || num == 3) return true;
-		//²»ÔÚ6µÄ±¶ÊýÁ½²àµÄÒ»¶¨²»ÊÇÖÊÊý  
+		//ä¸åœ¨6çš„å€æ•°ä¸¤ä¾§çš„ä¸€å®šä¸æ˜¯è´¨æ•°  
 		if (num % 6 != 1 && num % 6 != 5) return false;
 		uint64_t tmp = uint64_t(std::sqrt(num));
-		//ÔÚ6µÄ±¶ÊýÁ½²àµÄÒ²¿ÉÄÜ²»ÊÇÖÊÊý  
+		//åœ¨6çš„å€æ•°ä¸¤ä¾§çš„ä¹Ÿå¯èƒ½ä¸æ˜¯è´¨æ•°  
 		for (uint64_t i = 5; i <= tmp; i += 6)
 			if (num %i == 0 || num % (i + 2) == 0)
 				return false;
-		//ÅÅ³ýËùÓÐ£¬Ê£ÓàµÄÊÇÖÊÊý  
+		//æŽ’é™¤æ‰€æœ‰ï¼Œå‰©ä½™çš„æ˜¯è´¨æ•°  
 		return true;
 
 	}
-	//Çó×î´ó¹«Ô¼Êý
+	//æ±‚æœ€å¤§å…¬çº¦æ•°
 	static uint64_t gcd(uint64_t num1, uint64_t num2) {
 		if (num1 < num2) std::swap(num1, num2);
 		if (num2 == 0) return num1;
@@ -74,11 +74,11 @@ namespace ytlib
 			return (gcd(num1 >> 1, num2 >> 1) << 1);
 		}
 	}
-	//Çó×îÐ¡¹«±¶Êý£ºnum1*num2/gcd(num1,num2)
+	//æ±‚æœ€å°å…¬å€æ•°ï¼šnum1*num2/gcd(num1,num2)
 	static uint64_t lcm(uint64_t num1, uint64_t num2) {
 		return num1 / gcd(num1, num2) * num2;
 	}
-	//·Ö½âÖÊÒòÊý
+	//åˆ†è§£è´¨å› æ•°
 	static void factoring(uint64_t num, std::vector<uint64_t>& re) {
 		if (num < 2) return;
 		for (uint64_t ii = 2; num > 1; ++ii) {
@@ -98,7 +98,7 @@ namespace ytlib
 			}
 		}
 	}
-	//ÀÛ³Ë£¬Ðè±£Ö¤n>=m£¬ÇÒm!=0
+	//ç´¯ä¹˜ï¼Œéœ€ä¿è¯n>=mï¼Œä¸”m!=0
 	static uint64_t Mul(uint64_t n, uint64_t m = 1) {
 		assert(n >= m && m);
 		uint64_t re = n;
@@ -106,12 +106,12 @@ namespace ytlib
 		return re;
 	}
 
-	//ÅÅÁÐÊý£¬´Ó´Ón¸ö²»Í¬ÔªËØÖÐ£¬ÈÎÈ¡m(m¡Ün,mÓën¾ùÎª×ÔÈ»Êý£©¸öÔªËØ£¬ÆäÅÅÁÐµÄ¸öÊý¡£A(n,m)=n!/(n-m)!
+	//æŽ’åˆ—æ•°ï¼Œä»Žä»Žnä¸ªä¸åŒå…ƒç´ ä¸­ï¼Œä»»å–m(mâ‰¤n,mä¸Žnå‡ä¸ºè‡ªç„¶æ•°ï¼‰ä¸ªå…ƒç´ ï¼Œå…¶æŽ’åˆ—çš„ä¸ªæ•°ã€‚A(n,m)=n!/(n-m)!
 	static uint64_t Arn(uint64_t n, uint64_t m) {
 		assert(n >= m && m);
 		return Mul(n, n - m + 1);
 	}
-	//ÅÅÁÐÊýµÝ¹éÇó½â£¬ÒÑÖªA(n,m_)ÇóA(n,m)
+	//æŽ’åˆ—æ•°é€’å½’æ±‚è§£ï¼Œå·²çŸ¥A(n,m_)æ±‚A(n,m)
 	static uint64_t Arn(uint64_t n, uint64_t m, uint64_t A, uint64_t m_) {
 		assert(n >= m && m && n >= m_ && m_);
 		if (m < m_) return A / Mul(n - m + 2, n - m_ + 1);
@@ -119,13 +119,13 @@ namespace ytlib
 		else return A;
 	}
 
-	//×éºÏÊý£¬C(n,m)=A(n,m)/m!=n!/(m!*(n-m)!)¡£C(n,m)=C(n,n-m)
+	//ç»„åˆæ•°ï¼ŒC(n,m)=A(n,m)/m!=n!/(m!*(n-m)!)ã€‚C(n,m)=C(n,n-m)
 	static uint64_t Crn(uint64_t n, uint64_t m) {
 		assert(n >= m && m);
 		if (n >= (2 * m + 1)) m = n - m;
 		return (n == m) ? 1 : (Mul(n, m + 1) / Mul(n - m));
 	}
-	//×éºÏÊýµÝ¹éÇó½â
+	//ç»„åˆæ•°é€’å½’æ±‚è§£
 	static uint64_t Crn(uint64_t n, uint64_t m, uint64_t C, uint64_t m_) {
 		assert(n >= m && m && n >= m_ && m_);
 		if (n >= (2 * m + 1)) m = n - m;
@@ -134,12 +134,12 @@ namespace ytlib
 		else return C;
 	}
 
-	//µÈ²îÊýÁÐÇóºÍ
+	//ç­‰å·®æ•°åˆ—æ±‚å’Œ
 	static tfloat SumAP(tfloat a1, tfloat d, uint64_t n) {
 		return n * (a1 + d / 2 * (n - 1));
 	}
 
-	//µÈ±ÈÊýÁÐÇóºÍ
+	//ç­‰æ¯”æ•°åˆ—æ±‚å’Œ
 	static tfloat SumGP(tfloat a1, tfloat q, uint64_t n) {
 		assert(q != 0.0);
 		return (q == 1.0) ? (n*a1) : (a1*(1 - std::pow(q, n)) / (1 - q));

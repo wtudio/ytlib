@@ -4,14 +4,14 @@
 #include <map>
 #include <vector>
 
-//×Ö·û´®Ïà¹ØËã·¨¡£´Ë´¦µÄËã·¨¶¼Ö»ÊÇ¸ø³öÒ»ÖÖ¿ÉĞĞ·½°¸£¬²»´ú±íÉú²úÖĞµÄ×î¼Ñ·½°¸
+//å­—ç¬¦ä¸²ç›¸å…³ç®—æ³•ã€‚æ­¤å¤„çš„ç®—æ³•éƒ½åªæ˜¯ç»™å‡ºä¸€ç§å¯è¡Œæ–¹æ¡ˆï¼Œä¸ä»£è¡¨ç”Ÿäº§ä¸­çš„æœ€ä½³æ–¹æ¡ˆ
 namespace ytlib {
 
-	//×Ö·û´®Æ¥ÅäkmsËã·¨¡£Èç¹ûÃ»ÓĞÆ¥Åäµ½Ôò·µ»Øsslen
+	//å­—ç¬¦ä¸²åŒ¹é…kmpç®—æ³•ã€‚å¦‚æœæ²¡æœ‰åŒ¹é…åˆ°åˆ™è¿”å›sslen
 	static size_t KMP(const char* ss, size_t sslen, const char* ps, size_t pslen) {
 		assert(sslen && pslen && ss!=NULL && ps!= NULL);
 		if (pslen > sslen || pslen == 0) return sslen;
-		int32_t *next = new int32_t[pslen];//ÖÆ×÷nextÊı×é
+		int32_t *next = new int32_t[pslen];//åˆ¶ä½œnextæ•°ç»„
 		next[0] = -1;
 		int32_t ii = 0, jj = -1;
 		--pslen;
@@ -32,10 +32,10 @@ namespace ytlib {
 		return KMP(ss.c_str(), ss.length(), ps.c_str(), ps.length());
 	}
 
-	//¼ÆËã×Ö·û´®²îÒì¶È¡£ÓÅ»¯·½°¸Ö»Ê¹ÓÃ2*min(s1len,s2len)µÄÄÚ´æ¶ø²»ÊÇs1len*s2lenµÄÄÚ´æ
+	//è®¡ç®—å­—ç¬¦ä¸²å·®å¼‚åº¦ã€‚ä¼˜åŒ–æ–¹æ¡ˆåªä½¿ç”¨2*min(s1len,s2len)çš„å†…å­˜è€Œä¸æ˜¯s1len*s2lençš„å†…å­˜
 	static size_t StrDif(const char* s1, size_t s1len, const char* s2, size_t s2len) {
 		assert(s1len && s2len && s1 != NULL && s2 != NULL);
-		if (s2len > s1len) return StrDif(s2, s2len, s1, s1len);//Ä¬ÈÏs1len>=s2len
+		if (s2len > s1len) return StrDif(s2, s2len, s1, s1len);//é»˜è®¤s1len>=s2len
 
 		const uint32_t c1 = 1, c2 = 1;//c1: unmatched cost; c2: mismatched cost
 		size_t *M1 = new size_t[s2len], *M2 = new size_t[s2len], *tmpM;
@@ -58,13 +58,13 @@ namespace ytlib {
 		return StrDif(s1.c_str(), s1.length(), s2.c_str(), s2.length());
 	}
 
-	//×î³¤²»ÖØ¸´×Ö´®¡£·µ»ØÆä³öÏÖµÄÎ»ÖÃºÍ³¤¶È
+	//æœ€é•¿ä¸é‡å¤å­—ä¸²ã€‚è¿”å›å…¶å‡ºç°çš„ä½ç½®å’Œé•¿åº¦
 	static std::pair<size_t, size_t> LongestSubStrWithoutDup(const char* s, size_t len) {
 		assert(len && s!=NULL);
-		size_t positions[256];//Ã¿ÖÖ×Ö·ûÉÏÒ»´Î³öÏÖµÄÎ»ÖÃ
-		for (size_t ii = 0; ii < len; ++ii) positions[ii] = len;//³õÊ¼»¯Îªlen£¬±íÊ¾Ã»³öÏÖ
-		size_t maxLen = 0, maxPos = 0;//×î³¤µÄ×Ö´®³¤¶ÈºÍÎ»ÖÃ
-		size_t curLen = 0, curPos = 0;//µ±Ç°²»ÖØ¸´×Ö´®µÄ³¤¶ÈºÍÎ»ÖÃ
+		size_t positions[256];//æ¯ç§å­—ç¬¦ä¸Šä¸€æ¬¡å‡ºç°çš„ä½ç½®
+		for (size_t ii = 0; ii < len; ++ii) positions[ii] = len;//åˆå§‹åŒ–ä¸ºlenï¼Œè¡¨ç¤ºæ²¡å‡ºç°
+		size_t maxLen = 0, maxPos = 0;//æœ€é•¿çš„å­—ä¸²é•¿åº¦å’Œä½ç½®
+		size_t curLen = 0, curPos = 0;//å½“å‰ä¸é‡å¤å­—ä¸²çš„é•¿åº¦å’Œä½ç½®
 		for (size_t ii = 0; ii < len; ++ii) {
 			size_t &prePos = positions[s[ii]];
 			if (prePos == len || (ii - prePos) > curLen) ++curLen;
@@ -83,7 +83,7 @@ namespace ytlib {
 	}
 
 
-	//Ìæ»»ËùÓĞ
+	//æ›¿æ¢æ‰€æœ‰
 	static void replaceAll(std::string& str, const std::string& oldValue, const std::string& newValue) {
 		std::vector<size_t> vecPos;
 		size_t iPos = 0, oldLen = oldValue.size(), newLen = newValue.size();
@@ -127,7 +127,7 @@ namespace ytlib {
 	}
 
 
-	//·Ö¸î£¬½«strÒÔseperatorÖĞËùÓĞ×Ö·ûÎª·Ö¸î·û·Ö¸î,·µ»Ø·Ö¸î½á¹ûvector£¬½á¹ûÖĞ²»°üº¬·Ö¸ô·û
+	//åˆ†å‰²ï¼Œå°†strä»¥seperatorä¸­æ‰€æœ‰å­—ç¬¦ä¸ºåˆ†å‰²ç¬¦åˆ†å‰²,è¿”å›åˆ†å‰²ç»“æœvectorï¼Œç»“æœä¸­ä¸åŒ…å«åˆ†éš”ç¬¦
 	static std::vector<std::string> splitAll(const std::string& str, const std::string &seperators) {
 		std::vector<std::string> re;
 		size_t pos1, pos2 = 0;

@@ -4,17 +4,17 @@
 
 namespace ytlib {
 	/*
-	stlÖĞÓĞ¹ØÓÚheapµÄº¯Êı£º
+	stlä¸­æœ‰å…³äºheapçš„å‡½æ•°ï¼š
 	make_heap/pop_heap/push_heap/sort_heap
-	todo£ºÓÃstlµÄº¯ÊıÊµÏÖÒ»¸ö
+	todoï¼šç”¨stlçš„å‡½æ•°å®ç°ä¸€ä¸ª
 	*/
 #define LEFT_CHILD(x)	((x << 1) + 1)
 #define RIGHT_CHILD(x)	((x << 1) + 2)
 #define PARENT(x)		((x - 1) >> 1)
 
 
-	//¶Ñ¡£type=trueÎª×îĞ¡¶Ñ£¬·ñÔò×î´ó¶Ñ
-	//TĞèÒªÖ§³Ö±È½ÏÔËËã
+	//å †ã€‚type=trueä¸ºæœ€å°å †ï¼Œå¦åˆ™æœ€å¤§å †
+	//Téœ€è¦æ”¯æŒæ¯”è¾ƒè¿ç®—
 	template<typename T>
 	class Heap {
 	public:
@@ -37,13 +37,13 @@ namespace ytlib {
 			adjust();
 		}
 
-		//Ñ¹Èë
+		//å‹å…¥
 		void push(const T& val) {
 			container.push_back(val);
 			adjustUp(container.size() - 1);
 		}
 
-		//µ¯³ö¶Ñ¶¥
+		//å¼¹å‡ºå †é¡¶
 		void pop() {
 			using std::swap;
 			assert(!container.empty());
@@ -52,7 +52,7 @@ namespace ytlib {
 			adjustDown(0);
 		}
 
-		//µ÷ÕûÎª¶Ñ
+		//è°ƒæ•´ä¸ºå †
 		void adjust() {
 			if (container.empty()) return;
 			for (size_t ii = ((container.size() - 2) >> 1); ii > 0; --ii) {
@@ -67,11 +67,11 @@ namespace ytlib {
 			size_t child = LEFT_CHILD(parent);
 			if (len == 0) len = container.size();
 			while (child < len) {
-				//Ñ¡È¡×óÓÒ×Ó½ÚµãÖĞ´ó/Ğ¡µÄ
+				//é€‰å–å·¦å³å­èŠ‚ç‚¹ä¸­å¤§/å°çš„
 				if (((child + 1) < len) && ((container[child + 1] > container[child]) ^ type)) {
 					++child;
 				}
-				//Èç¹û×Ó½Úµã´ó/Ğ¡ÓÚ¸¸½Úµã
+				//å¦‚æœå­èŠ‚ç‚¹å¤§/å°äºçˆ¶èŠ‚ç‚¹
 				if ((container[child] > container[parent]) ^ type) {
 					swap(container[child], container[parent]);
 					parent = child;
@@ -87,7 +87,7 @@ namespace ytlib {
 			size_t &child = index;
 			size_t parent = PARENT(child);
 			while (child > 0) {
-				//Èç¹û×Ó½Úµã´ó/Ğ¡ÓÚ¸¸½Úµã
+				//å¦‚æœå­èŠ‚ç‚¹å¤§/å°äºçˆ¶èŠ‚ç‚¹
 				if ((container[child]>container[parent])^ type) {
 					swap(container[child], container[parent]);
 					child = parent;
@@ -96,18 +96,18 @@ namespace ytlib {
 				else break;
 			}
 		}
-		//¶ÑÅÅĞò¡£×îĞ¡¶Ñµ¹ĞòÅÅ£¬×î´ó¶ÑÕıĞòÅÅ£¬ÅÅÍêĞòÖ®ºó¶ÑÀàĞÍ·´×ª
+		//å †æ’åºã€‚æœ€å°å †å€’åºæ’ï¼Œæœ€å¤§å †æ­£åºæ’ï¼Œæ’å®Œåºä¹‹åå †ç±»å‹åè½¬
 		void sort() {
 			using std::swap;
 			for (size_t ii = container.size() - 1; ii > 0; --ii) {
 				swap(container[0], container[ii]);
 				adjustDown(0, ii);
 			}
-			type = !type; //ÀàĞÍ·´×ª
+			type = !type; //ç±»å‹åè½¬
 		}
 
 		bool type;
-		std::vector<T> container;//¿ÉÒÔÖ±½Ó¹«¿ª·ÃÎÊ
+		std::vector<T> container;//å¯ä»¥ç›´æ¥å…¬å¼€è®¿é—®
 		
 	};
 

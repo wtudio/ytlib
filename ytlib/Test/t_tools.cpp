@@ -42,11 +42,11 @@ namespace ytlib
 		return true;
 	}
 
-	//Õâ¸öº¯ÊıÖ»ÊÇÓÃÓÚÑ§Ï°stl¿âÀïµÄËã·¨
+	//è¿™ä¸ªå‡½æ•°åªæ˜¯ç”¨äºå­¦ä¹ stlåº“é‡Œçš„ç®—æ³•
 	bool test_stl() {
 
 		int re = 0;
-		vector<int> v1{ 5,4,8,2,1,3,9,7,6 };//Î´ÅÅĞòÊı×é1
+		vector<int> v1{ 5,4,8,2,1,3,9,7,6 };//æœªæ’åºæ•°ç»„1
 		
 		re = accumulate(v1.begin(), v1.end(), 0);
 		cout << re << endl;

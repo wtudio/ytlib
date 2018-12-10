@@ -206,7 +206,7 @@ namespace ytlib
 #	define T_TSTRING_TO_STRING
 #endif
 
-//¶ÔQStringµÄÖ§³Ö
+//å¯¹QStringçš„æ”¯æŒ
 #if defined(UNICODE)
 #	define T_QSTRING_TO_TSTRING(STRING) STRING.toStdWString()
 #	define T_TSTRING_TO_QSTRING(STRING) QString::fromStdWString(STRING)

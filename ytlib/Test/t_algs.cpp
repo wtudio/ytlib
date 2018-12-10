@@ -62,7 +62,7 @@ namespace ytlib
 
 	bool test_sort() {
 		const uint32_t num = 10;
-		//Ã°ÅÝ
+		//å†’æ³¡
 		int data1[num] = { 1,4,2,8,5,9,0,7,6,3 };
 		bubbleSort(data1, num);
 		for (uint32_t ii = 0; ii < num; ++ii) {
@@ -70,7 +70,7 @@ namespace ytlib
 		}
 		cout << endl;
 
-		//¹é²¢
+		//å½’å¹¶
 		int data2[num] = { 1,4,2,8,5,9,0,7,6,3 };
 		mergeSort(data2, num);
 		for (uint32_t ii = 0; ii < num; ++ii) {
@@ -78,7 +78,7 @@ namespace ytlib
 		}
 		cout << endl;
 
-		//¿ìÅÅ
+		//å¿«æŽ’
 		int data3[num] = { 1,4,2,8,5,9,0,7,6,3 };
 		quickSort(data3, num);
 		for (uint32_t ii = 0; ii < num; ++ii) {

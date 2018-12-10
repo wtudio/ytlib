@@ -5,10 +5,10 @@
 
 
 namespace ytlib {
-	//¼¸ÖÖÊ÷µÄÀàµÄÊµÏÖ---------------------------------------------------------------------------
-	//È«²¿Ê¹ÓÃÄ£°å»¯¡£ÕâÀï²»ÄÜÊ¹ÓÃ¼Ì³Ğ£¬ÒòÎªÓĞ³ÉÔ±ÊÇ×ÔÉíÀàĞÍµÄÖÇÄÜÖ¸Õë
-	//Ò»¸öBinTreeNodeÊµÀı±íÊ¾Ò»¸ö¶ş²æÊ÷½Úµã£¬Ò²±íÊ¾ÒÔ´Ë½ÚµãÎª¸ù½ÚµãµÄÒ»¿Ã¶ş²æÊ÷
-	//Èç¹û¸ù½Úµã±»Îö¹¹£¬ÄÇÃ´Õû¸öÊ÷ÖĞËùÓĞ×Ó½Úµã½«±»Îö¹¹£¬³ı·Ç×Ó½ÚµãÓĞÁíÍâµÄÖÇÄÜÖ¸ÕëÖ¸×Å
+	//å‡ ç§æ ‘çš„ç±»çš„å®ç°---------------------------------------------------------------------------
+	//å…¨éƒ¨ä½¿ç”¨æ¨¡æ¿åŒ–ã€‚è¿™é‡Œä¸èƒ½ä½¿ç”¨ç»§æ‰¿ï¼Œå› ä¸ºæœ‰æˆå‘˜æ˜¯è‡ªèº«ç±»å‹çš„æ™ºèƒ½æŒ‡é’ˆ
+	//ä¸€ä¸ªBinTreeNodeå®ä¾‹è¡¨ç¤ºä¸€ä¸ªäºŒå‰æ ‘èŠ‚ç‚¹ï¼Œä¹Ÿè¡¨ç¤ºä»¥æ­¤èŠ‚ç‚¹ä¸ºæ ¹èŠ‚ç‚¹çš„ä¸€æ£µäºŒå‰æ ‘
+	//å¦‚æœæ ¹èŠ‚ç‚¹è¢«ææ„ï¼Œé‚£ä¹ˆæ•´ä¸ªæ ‘ä¸­æ‰€æœ‰å­èŠ‚ç‚¹å°†è¢«ææ„ï¼Œé™¤éå­èŠ‚ç‚¹æœ‰å¦å¤–çš„æ™ºèƒ½æŒ‡é’ˆæŒ‡ç€
 	template<typename T>
 	class BinTreeNode {
 	private:
@@ -18,13 +18,13 @@ namespace ytlib {
 		explicit BinTreeNode(const T& _obj) :obj(_obj), pf(NULL) {}
 
 		T obj;
-		BinTreeNode<T>* pf;//¸¸½Úµã¡£¸¸½Úµã²»¿ÉÊ¹ÓÃÖÇÄÜÖ¸Õë£¬·ñÔò»áÔì³ÉÑ­»·ÒıÓÃ
-		nodePtr pl;//×ó×Ó½Úµã
-		nodePtr pr;//ÓÒ×Ó½Úµã
+		BinTreeNode<T>* pf;//çˆ¶èŠ‚ç‚¹ã€‚çˆ¶èŠ‚ç‚¹ä¸å¯ä½¿ç”¨æ™ºèƒ½æŒ‡é’ˆï¼Œå¦åˆ™ä¼šé€ æˆå¾ªç¯å¼•ç”¨
+		nodePtr pl;//å·¦å­èŠ‚ç‚¹
+		nodePtr pr;//å³å­èŠ‚ç‚¹
 
 	};
 
-	//¶ş²æ²éÕÒÊ÷£¬TĞèÒªÖ§³Ö±È½ÏÔËËã
+	//äºŒå‰æŸ¥æ‰¾æ ‘ï¼ŒTéœ€è¦æ”¯æŒæ¯”è¾ƒè¿ç®—
 	template<typename T>
 	class BinSearchTreeNode {
 	private:
@@ -34,11 +34,11 @@ namespace ytlib {
 		explicit BinSearchTreeNode(const T& _obj) :obj(_obj), pf(NULL) {}
 
 		T obj;
-		BinSearchTreeNode<T>* pf;//¸¸½Úµã
-		BSTNodePtr pl;//×ó×Ó½Úµã
-		BSTNodePtr pr;//ÓÒ×Ó½Úµã
+		BinSearchTreeNode<T>* pf;//çˆ¶èŠ‚ç‚¹
+		BSTNodePtr pl;//å·¦å­èŠ‚ç‚¹
+		BSTNodePtr pr;//å³å­èŠ‚ç‚¹
 
-		//Ïòµ±Ç°½ÚµãÎª¸ù½ÚµãµÄ¶ş²æ²éÕÒÊ÷ÖĞ²åÈëÒ»¸ö½Úµã
+		//å‘å½“å‰èŠ‚ç‚¹ä¸ºæ ¹èŠ‚ç‚¹çš„äºŒå‰æŸ¥æ‰¾æ ‘ä¸­æ’å…¥ä¸€ä¸ªèŠ‚ç‚¹
 		void insert(BSTNodePtr& ndptr) {
 			assert(ndptr);
 			if (ndptr->obj < obj) {
@@ -51,10 +51,10 @@ namespace ytlib {
 			}
 		}
 
-		//É¾³ıµ±Ç°½Úµã£¬²¢·µ»ØÌæ´úµÄ½Úµã
+		//åˆ é™¤å½“å‰èŠ‚ç‚¹ï¼Œå¹¶è¿”å›æ›¿ä»£çš„èŠ‚ç‚¹
 		BSTNodePtr erase() {
 			if (!pl && !pr) {
-				//×óÓÒ¶¼Îª¿Õ£¬ÎªÒ¶×Ó½Úµã
+				//å·¦å³éƒ½ä¸ºç©ºï¼Œä¸ºå¶å­èŠ‚ç‚¹
 				if (pf != NULL) {
 					if (getLR(this)) breakLChild(pf);
 					else breakRChild(pf);
@@ -62,7 +62,7 @@ namespace ytlib {
 				return BSTNodePtr();
 			}
 			if (pl && !pr) {
-				//Ö»ÓĞ×ó×ÓÊ÷
+				//åªæœ‰å·¦å­æ ‘
 				BSTNodePtr re = pl;
 				if (pf == NULL) breakLChild(this);
 				else {
@@ -73,7 +73,7 @@ namespace ytlib {
 				return re;
 			}
 			if (!pl && pr) {
-				//Ö»ÓĞÓÒ×ÓÊ÷
+				//åªæœ‰å³å­æ ‘
 				BSTNodePtr re = pr;
 				if (pf == NULL) breakRChild(this);
 				else {
@@ -83,10 +83,10 @@ namespace ytlib {
 				}
 				return re;
 			}
-			//»»×ó×ÓÊ÷µÄÇ°Çı
+			//æ¢å·¦å­æ ‘çš„å‰é©±
 			BSTNodePtr tmp = pl;
 			if (tmp->pr) {
-				//×ó×Ó½ÚµãÓĞÓÒ×ÓÊ÷£¬ÕÒµ½ÆäÇ°Çı
+				//å·¦å­èŠ‚ç‚¹æœ‰å³å­æ ‘ï¼Œæ‰¾åˆ°å…¶å‰é©±
 				while (tmp->pr) tmp = tmp->pr;
 				tmp->pf->pr = tmp->pl;
 				if (tmp->pl) tmp->pl->pf = tmp->pf;
@@ -103,7 +103,7 @@ namespace ytlib {
 		}
 	};
 
-	//AVLÊ÷
+	//AVLæ ‘
 	template<typename T>
 	class AVLTreeNode :public std::enable_shared_from_this<AVLTreeNode<T> > {
 	private:
@@ -113,28 +113,28 @@ namespace ytlib {
 		explicit AVLTreeNode(const T& _obj) :obj(_obj), pf(NULL), hgt(1) {}
 
 		T obj;
-		AVLTreeNode<T>* pf;//¸¸½Úµã
-		AVLTNodePtr pl;//×ó×Ó½Úµã
-		AVLTNodePtr pr;//ÓÒ×Ó½Úµã
-		size_t hgt;//½Úµã¸ß¶È
+		AVLTreeNode<T>* pf;//çˆ¶èŠ‚ç‚¹
+		AVLTNodePtr pl;//å·¦å­èŠ‚ç‚¹
+		AVLTNodePtr pr;//å³å­èŠ‚ç‚¹
+		size_t hgt;//èŠ‚ç‚¹é«˜åº¦
 
 #define HGT(p)	((p)?p->hgt:0)
 
-		//²åÈë£¬ÒòÎª¸ù½Úµã¿ÉÄÜ»á±ä£¬ËùÒÔ·µ»Ø¸ù½Úµã
+		//æ’å…¥ï¼Œå› ä¸ºæ ¹èŠ‚ç‚¹å¯èƒ½ä¼šå˜ï¼Œæ‰€ä»¥è¿”å›æ ¹èŠ‚ç‚¹
 		AVLTNodePtr insert(AVLTNodePtr& ndptr) {
 			assert(ndptr);
-			//ÕÒµ½×îÖÕÒª²åÈëµÄµØ·½µÄ¸¸½Úµã
+			//æ‰¾åˆ°æœ€ç»ˆè¦æ’å…¥çš„åœ°æ–¹çš„çˆ¶èŠ‚ç‚¹
 			AVLTreeNode<T>* pos = this, *tmppos = (ndptr->obj < obj) ? pl.get() : pr.get();
 			while (tmppos != NULL) {
 				pos = tmppos;
 				tmppos = (ndptr->obj < pos->obj) ? pos->pl.get() : pos->pr.get();
 			}
-			if (ndptr->obj == pos->obj) return shared_from_this();//²»ÔÊĞíÖØ¸´
+			if (ndptr->obj == pos->obj) return shared_from_this();//ä¸å…è®¸é‡å¤
 			if (ndptr->obj < pos->obj) setLChild(pos, ndptr);
 			else setRChild(pos, ndptr);
 
 			ndptr->hgt = 1;
-			//¸üĞÂ¸ß¶È£¬½øĞĞĞı×ª
+			//æ›´æ–°é«˜åº¦ï¼Œè¿›è¡Œæ—‹è½¬
 			AVLTNodePtr re;
 			AVLTreeNode<T>* end = pf;
 			while (pos != end) {
@@ -142,7 +142,7 @@ namespace ytlib {
 				size_t curhgt = pos->hgt;
 				size_t lh = HGT(pos->pl), lr = HGT(pos->pr);
 				if (lh >= lr + 2) {
-					//×ó±ß±ÈÓÒ±ß¸ßÁË2
+					//å·¦è¾¹æ¯”å³è¾¹é«˜äº†2
 					if (HGT(pos->pl->pl) >= HGT(pos->pl->pr)) re = pos->rotateL();
 					else {
 						pos->pl->rotateR();
@@ -150,14 +150,14 @@ namespace ytlib {
 					}
 				}
 				else if (lr >= lh + 2) {
-					//ÓÒ±ß±È×ó±ß¸ßÁË2
+					//å³è¾¹æ¯”å·¦è¾¹é«˜äº†2
 					if (HGT(pos->pr->pr) >= HGT(pos->pr->pl)) re = pos->rotateR();
 					else {
 						pos->pr->rotateL();
 						re = pos->rotateR();
 					}
 				}
-				//Èç¹û·¢ÉúĞı×ªÁË£¬ËµÃ÷Ö®Ç°×óÓÒ¸ß¶ÈÏà²î2£¬ËµÃ÷¸Ã½Úµã¸ß¶ÈÒ»¶¨·¢Éú¸Ä±ä
+				//å¦‚æœå‘ç”Ÿæ—‹è½¬äº†ï¼Œè¯´æ˜ä¹‹å‰å·¦å³é«˜åº¦ç›¸å·®2ï¼Œè¯´æ˜è¯¥èŠ‚ç‚¹é«˜åº¦ä¸€å®šå‘ç”Ÿæ”¹å˜
 				size_t cghgt;
 				if (re) {
 					cghgt = re->hgt;
@@ -174,10 +174,10 @@ namespace ytlib {
 			return shared_from_this();
 		}
 
-		//ÔÚµ±Ç°½ÚµãÎª¸ù½ÚµãµÄÊ÷ÖĞÉ¾³ıÒ»¸ö½Úµã£¬²¢·µ»ØÉ¾³ıºóµÄ¸ù½Úµã
+		//åœ¨å½“å‰èŠ‚ç‚¹ä¸ºæ ¹èŠ‚ç‚¹çš„æ ‘ä¸­åˆ é™¤ä¸€ä¸ªèŠ‚ç‚¹ï¼Œå¹¶è¿”å›åˆ é™¤åçš„æ ¹èŠ‚ç‚¹
 		AVLTNodePtr erase(AVLTNodePtr& ndptr) {
 			if (!ndptr) return shared_from_this();
-			//ÏÈÈ·¶¨ÒªÉ¾³ıµÄ½ÚµãÊÇ×Ô¼ºµÄ×Ó½Úµã
+			//å…ˆç¡®å®šè¦åˆ é™¤çš„èŠ‚ç‚¹æ˜¯è‡ªå·±çš„å­èŠ‚ç‚¹
 			AVLTreeNode<T>* pos = ndptr.get();
 			while (pos != NULL) {
 				if (pos == this) break;
@@ -192,25 +192,25 @@ namespace ytlib {
 		}
 
 	private:
-		//¼ÙÈçÓĞÖØ¸´µÄ£¬É¾³ıµÚÒ»¸öÕÒµ½µÄ
+		//å‡å¦‚æœ‰é‡å¤çš„ï¼Œåˆ é™¤ç¬¬ä¸€ä¸ªæ‰¾åˆ°çš„
 		AVLTNodePtr _erase(AVLTNodePtr& ndptr) {
-			assert(pf == NULL);//×ÔÉíĞèÒªÊÇ¸ù½Úµã
+			assert(pf == NULL);//è‡ªèº«éœ€è¦æ˜¯æ ¹èŠ‚ç‚¹
 			if (!ndptr) return shared_from_this();
-			AVLTNodePtr proot = shared_from_this();//Èç¹ûÒªÉ¾³ıµÄÊÇ×ÔÉí£¬ÔòĞèÒªÒ»¸öÖ¸ÕëÀ´±£´æroot½Úµã
+			AVLTNodePtr proot = shared_from_this();//å¦‚æœè¦åˆ é™¤çš„æ˜¯è‡ªèº«ï¼Œåˆ™éœ€è¦ä¸€ä¸ªæŒ‡é’ˆæ¥ä¿å­˜rootèŠ‚ç‚¹
 			AVLTreeNode<T>* pos = ndptr->pf;
 			if (!(ndptr->pl) && !(ndptr->pr)) {
-				//×óÓÒ¶¼Îª¿Õ£¬ÎªÒ¶×Ó½Úµã
+				//å·¦å³éƒ½ä¸ºç©ºï¼Œä¸ºå¶å­èŠ‚ç‚¹
 				if (ndptr->pf != NULL) {
 					if (getLR(ndptr.get())) breakLChild(ndptr->pf);
 					else breakRChild(ndptr->pf);
 				}
 				else {
-					//Õû¸öÊ÷¾ÍÒ»¸öÒªÉ¾³ıµÄ¸ù½Úµã
+					//æ•´ä¸ªæ ‘å°±ä¸€ä¸ªè¦åˆ é™¤çš„æ ¹èŠ‚ç‚¹
 					return AVLTNodePtr();
 				}
 			}
 			else if (ndptr->pl && !(ndptr->pr)) {
-				//Ö»ÓĞ×ó×ÓÊ÷
+				//åªæœ‰å·¦å­æ ‘
 				if (ndptr->pf == NULL) {
 					proot = ndptr->pl;
 					breakLChild(ndptr.get());
@@ -222,7 +222,7 @@ namespace ytlib {
 				}
 			}
 			else if (!(ndptr->pl) && ndptr->pr) {
-				//Ö»ÓĞÓÒ×ÓÊ÷
+				//åªæœ‰å³å­æ ‘
 				if (ndptr->pf == NULL) { 
 					proot = ndptr->pr;
 					breakRChild(ndptr.get());
@@ -234,10 +234,10 @@ namespace ytlib {
 				}
 			}
 			else {
-				//»»×ó×ÓÊ÷µÄÇ°Çı
+				//æ¢å·¦å­æ ‘çš„å‰é©±
 				AVLTNodePtr tmp = ndptr->pl;
 				if (tmp->pr) {
-					//×ó×Ó½ÚµãÓĞÓÒ×ÓÊ÷£¬ÕÒµ½ÆäÇ°Çı
+					//å·¦å­èŠ‚ç‚¹æœ‰å³å­æ ‘ï¼Œæ‰¾åˆ°å…¶å‰é©±
 					while (tmp->pr) tmp = tmp->pr;
 					tmp->pf->pr = tmp->pl;
 					if (tmp->pl) tmp->pl->pf = tmp->pf;
@@ -255,14 +255,14 @@ namespace ytlib {
 				ndptr->pf = NULL; ndptr->pl.reset(); ndptr->pr.reset();
 				tmp->hgt = ndptr->hgt;
 			}
-			//¸üĞÂ¸ß¶È£¬½øĞĞĞı×ª
+			//æ›´æ–°é«˜åº¦ï¼Œè¿›è¡Œæ—‹è½¬
 			AVLTNodePtr re;
 			while (pos != NULL) {
 				re.reset();
 				size_t curhgt = pos->hgt;
 				size_t lh = HGT(pos->pl), lr = HGT(pos->pr);
 				if (lh >= lr + 2) {
-					//×ó±ß±ÈÓÒ±ß¸ßÁË2
+					//å·¦è¾¹æ¯”å³è¾¹é«˜äº†2
 					if (HGT(pos->pl->pl) >= HGT(pos->pl->pr)) re = pos->rotateL();
 					else {
 						pos->pl->rotateR();
@@ -270,14 +270,14 @@ namespace ytlib {
 					}
 				}
 				else if (lr >= lh + 2) {
-					//ÓÒ±ß±È×ó±ß¸ßÁË2
+					//å³è¾¹æ¯”å·¦è¾¹é«˜äº†2
 					if (HGT(pos->pr->pr) >= HGT(pos->pr->pl)) re = pos->rotateR();
 					else {
 						pos->pr->rotateL();
 						re = pos->rotateR();
 					}
 				}
-				//Èç¹û·¢ÉúĞı×ªÁË£¬ËµÃ÷Ö®Ç°×óÓÒ¸ß¶ÈÏà²î2£¬ËµÃ÷¸Ã½Úµã¸ß¶ÈÒ»¶¨·¢Éú¸Ä±ä
+				//å¦‚æœå‘ç”Ÿæ—‹è½¬äº†ï¼Œè¯´æ˜ä¹‹å‰å·¦å³é«˜åº¦ç›¸å·®2ï¼Œè¯´æ˜è¯¥èŠ‚ç‚¹é«˜åº¦ä¸€å®šå‘ç”Ÿæ”¹å˜
 				size_t cghgt;
 				if (re) {
 					cghgt = re->hgt;
@@ -299,7 +299,7 @@ namespace ytlib {
 			return max(lh, lr) + 1;
 		}
 
-		//×óĞı×ª£¬Ë³Ê±Õë
+		//å·¦æ—‹è½¬ï¼Œé¡ºæ—¶é’ˆ
 		AVLTNodePtr rotateL() {
 			AVLTNodePtr re = pl;
 			if (re->pr) re->pr->pf = this;
@@ -321,7 +321,7 @@ namespace ytlib {
 			re->hgt = re->getHgt();
 			return re;
 		}
-		//ÓÒĞı×ª£¬ÄæÊ±Õë
+		//å³æ—‹è½¬ï¼Œé€†æ—¶é’ˆ
 		AVLTNodePtr rotateR() {
 			AVLTNodePtr re = pr;
 			if (re->pl) re->pl->pf = this;
@@ -345,7 +345,7 @@ namespace ytlib {
 		}
 	};
 
-	//ºìºÚÊ÷¡£todo´ıÍêÉÆ
+	//çº¢é»‘æ ‘ã€‚todoå¾…å®Œå–„
 	template<typename T>
 	class BRTreeNode :public std::enable_shared_from_this<BRTreeNode<T> > {
 	private:
@@ -355,25 +355,25 @@ namespace ytlib {
 		explicit BRTreeNode(const T& _obj) :obj(_obj), pf(NULL), color(false) {}
 
 		T obj;
-		BRTreeNode<T>* pf;//¸¸½Úµã
-		BRTreeNodePtr pl;//×ó×Ó½Úµã
-		BRTreeNodePtr pr;//ÓÒ×Ó½Úµã
-		bool color;//ÑÕÉ«£¬trueÎªºì£¬falseÎªºÚ
+		BRTreeNode<T>* pf;//çˆ¶èŠ‚ç‚¹
+		BRTreeNodePtr pl;//å·¦å­èŠ‚ç‚¹
+		BRTreeNodePtr pr;//å³å­èŠ‚ç‚¹
+		bool color;//é¢œè‰²ï¼Œtrueä¸ºçº¢ï¼Œfalseä¸ºé»‘
 
-		//²åÈë£¬ÒòÎª¸ù½Úµã¿ÉÄÜ»á±ä£¬ËùÒÔ·µ»Ø¸ù½Úµã
+		//æ’å…¥ï¼Œå› ä¸ºæ ¹èŠ‚ç‚¹å¯èƒ½ä¼šå˜ï¼Œæ‰€ä»¥è¿”å›æ ¹èŠ‚ç‚¹
 		BRTreeNodePtr insert(BRTreeNodePtr& ndptr) {
 			assert(ndptr && !color);
-			//ÕÒµ½×îÖÕÒª²åÈëµÄµØ·½µÄ¸¸½Úµã
+			//æ‰¾åˆ°æœ€ç»ˆè¦æ’å…¥çš„åœ°æ–¹çš„çˆ¶èŠ‚ç‚¹
 			BRTreeNode<T>* pos = this, *tmppos = (ndptr->obj < obj) ? pl.get() : pr.get();
 			while (tmppos != NULL) {
 				pos = tmppos;
 				tmppos = (ndptr->obj < pos->obj) ? pos->pl.get() : pos->pr.get();
 			}
-			if (ndptr->obj == pos->obj) return shared_from_this();//²»ÔÊĞíÖØ¸´
+			if (ndptr->obj == pos->obj) return shared_from_this();//ä¸å…è®¸é‡å¤
 			if (ndptr->obj < pos->obj) setLChild(pos, ndptr);
 			else setRChild(pos, ndptr);
 
-			//²åÈë½ÚµãµÄÑÕÉ«×ÜÊÇºìÉ«
+			//æ’å…¥èŠ‚ç‚¹çš„é¢œè‰²æ€»æ˜¯çº¢è‰²
 			ndptr->color = true;
 			
 			BRTreeNodePtr re;
@@ -381,46 +381,46 @@ namespace ytlib {
 			tmppos = ndptr.get();
 			while (pos != end) {
 				re.reset();
-				//¸¸½ÚµãÊÇºÚÉ«
+				//çˆ¶èŠ‚ç‚¹æ˜¯é»‘è‰²
 				if (!(pos->color)) {
 					return shared_from_this();
 				}
 				BRTreeNode<T>* uncle = (getLR(pos) ? pos->pf->pr.get() : pos->pf->pl.get());
 				if (uncle!=NULL && uncle->color) {
-					//²åÈë½ÚµãµÄ¸¸½ÚµãºÍÆäÊåÊå½Úµã¾ùÎªºìÉ«µÄ
+					//æ’å…¥èŠ‚ç‚¹çš„çˆ¶èŠ‚ç‚¹å’Œå…¶å”å”èŠ‚ç‚¹å‡ä¸ºçº¢è‰²çš„
 					pos->color = uncle->color = false;
 					pos->pf->color = true;
 					tmppos = pos->pf;
 					pos = tmppos->pf;
 				}
 				else {
-					//²åÈë½ÚµãµÄ¸¸½ÚµãÊÇºìÉ«£¬ÊåÊå½ÚµãÊÇºÚÉ«
+					//æ’å…¥èŠ‚ç‚¹çš„çˆ¶èŠ‚ç‚¹æ˜¯çº¢è‰²ï¼Œå”å”èŠ‚ç‚¹æ˜¯é»‘è‰²
 					if (getLR(pos)) {
-						//¸¸½ÚµãÊÇ×æ¸¸½ÚµãµÄ×óÖ§
+						//çˆ¶èŠ‚ç‚¹æ˜¯ç¥–çˆ¶èŠ‚ç‚¹çš„å·¦æ”¯
 						if (getLR(tmppos)) {
-							//²åÈë½ÚµãÊÇÆä¸¸½ÚµãµÄ×ó×Ó½Úµã
+							//æ’å…¥èŠ‚ç‚¹æ˜¯å…¶çˆ¶èŠ‚ç‚¹çš„å·¦å­èŠ‚ç‚¹
 							pos->color = false;
 							pos->pf->color = true;
 							re = pos->pf->rotateL();
 							break;
 						}
 						else {
-							//²åÈë½ÚµãÊÇÆä¸¸½ÚµãµÄÓÒ×Ó½Úµã
+							//æ’å…¥èŠ‚ç‚¹æ˜¯å…¶çˆ¶èŠ‚ç‚¹çš„å³å­èŠ‚ç‚¹
 							pos->rotateR();
 							tmppos = pos;
 							pos = tmppos->pf;
 						}
 					}
 					else {
-						//¸¸½ÚµãÊÇ×æ¸¸½ÚµãµÄÓÒÖ§
+						//çˆ¶èŠ‚ç‚¹æ˜¯ç¥–çˆ¶èŠ‚ç‚¹çš„å³æ”¯
 						if (getLR(tmppos)) {
-							//²åÈë½ÚµãÊÇÆä¸¸½ÚµãµÄ×ó×Ó½Úµã
+							//æ’å…¥èŠ‚ç‚¹æ˜¯å…¶çˆ¶èŠ‚ç‚¹çš„å·¦å­èŠ‚ç‚¹
 							pos->rotateL();
 							tmppos = pos;
 							pos = tmppos->pf;
 						}
 						else {
-							//²åÈë½ÚµãÊÇÆä¸¸½ÚµãµÄÓÒ×Ó½Úµã
+							//æ’å…¥èŠ‚ç‚¹æ˜¯å…¶çˆ¶èŠ‚ç‚¹çš„å³å­èŠ‚ç‚¹
 							pos->color = false;
 							pos->pf->color = true;
 							re = pos->pf->rotateR();
@@ -435,10 +435,10 @@ namespace ytlib {
 			return shared_from_this();
 		}
 
-		//ÔÚµ±Ç°½ÚµãÎª¸ù½ÚµãµÄÊ÷ÖĞÉ¾³ıÒ»¸ö½Úµã£¬²¢·µ»ØÉ¾³ıºóµÄ¸ù½Úµã
+		//åœ¨å½“å‰èŠ‚ç‚¹ä¸ºæ ¹èŠ‚ç‚¹çš„æ ‘ä¸­åˆ é™¤ä¸€ä¸ªèŠ‚ç‚¹ï¼Œå¹¶è¿”å›åˆ é™¤åçš„æ ¹èŠ‚ç‚¹
 		BRTreeNodePtr erase(BRTreeNodePtr& ndptr) {
 			if (!ndptr) return shared_from_this();
-			//ÏÈÈ·¶¨ÒªÉ¾³ıµÄ½ÚµãÊÇ×Ô¼ºµÄ×Ó½Úµã
+			//å…ˆç¡®å®šè¦åˆ é™¤çš„èŠ‚ç‚¹æ˜¯è‡ªå·±çš„å­èŠ‚ç‚¹
 			BRTreeNode<T>* pos = ndptr.get();
 			while (pos != NULL) {
 				if (pos == this) break;
@@ -453,23 +453,23 @@ namespace ytlib {
 		}
 	private:
 		BRTreeNodePtr _erase(BRTreeNodePtr& ndptr) {
-			assert(pf == NULL);//×ÔÉíĞèÒªÊÇ¸ù½Úµã
+			assert(pf == NULL);//è‡ªèº«éœ€è¦æ˜¯æ ¹èŠ‚ç‚¹
 			if (!ndptr) return shared_from_this();
-			BRTreeNodePtr proot = shared_from_this();//Èç¹ûÒªÉ¾³ıµÄÊÇ×ÔÉí£¬ÔòĞèÒªÒ»¸öÖ¸ÕëÀ´±£´æroot½Úµã
+			BRTreeNodePtr proot = shared_from_this();//å¦‚æœè¦åˆ é™¤çš„æ˜¯è‡ªèº«ï¼Œåˆ™éœ€è¦ä¸€ä¸ªæŒ‡é’ˆæ¥ä¿å­˜rootèŠ‚ç‚¹
 			BRTreeNode<T>* pos = ndptr->pf;
 			if (!(ndptr->pl) && !(ndptr->pr)) {
-				//×óÓÒ¶¼Îª¿Õ£¬ÎªÒ¶×Ó½Úµã
+				//å·¦å³éƒ½ä¸ºç©ºï¼Œä¸ºå¶å­èŠ‚ç‚¹
 				if (ndptr->pf != NULL) {
 					if (getLR(ndptr.get())) breakLChild(ndptr->pf);
 					else breakRChild(ndptr->pf);
 				}
 				else {
-					//Õû¸öÊ÷¾ÍÒ»¸öÒªÉ¾³ıµÄ¸ù½Úµã
+					//æ•´ä¸ªæ ‘å°±ä¸€ä¸ªè¦åˆ é™¤çš„æ ¹èŠ‚ç‚¹
 					return BRTreeNodePtr();
 				}
 			}
 			else if (ndptr->pl && !(ndptr->pr)) {
-				//Ö»ÓĞ×ó×ÓÊ÷
+				//åªæœ‰å·¦å­æ ‘
 				if (ndptr->pf == NULL) {
 					proot = ndptr->pl;
 					breakLChild(ndptr.get());
@@ -481,7 +481,7 @@ namespace ytlib {
 				}
 			}
 			else if (!(ndptr->pl) && ndptr->pr) {
-				//Ö»ÓĞÓÒ×ÓÊ÷
+				//åªæœ‰å³å­æ ‘
 				if (ndptr->pf == NULL) {
 					proot = ndptr->pr;
 					breakRChild(ndptr.get());
@@ -493,10 +493,10 @@ namespace ytlib {
 				}
 			}
 			else {
-				//»»×ó×ÓÊ÷µÄÇ°Çı
+				//æ¢å·¦å­æ ‘çš„å‰é©±
 				BRTreeNodePtr tmp = ndptr->pl;
 				if (tmp->pr) {
-					//×ó×Ó½ÚµãÓĞÓÒ×ÓÊ÷£¬ÕÒµ½ÆäÇ°Çı
+					//å·¦å­èŠ‚ç‚¹æœ‰å³å­æ ‘ï¼Œæ‰¾åˆ°å…¶å‰é©±
 					while (tmp->pr) tmp = tmp->pr;
 					tmp->pf->pr = tmp->pl;
 					if (tmp->pl) tmp->pl->pf = tmp->pf;
@@ -519,7 +519,7 @@ namespace ytlib {
 
 
 		}
-		//×óĞı×ª£¬Ë³Ê±Õë
+		//å·¦æ—‹è½¬ï¼Œé¡ºæ—¶é’ˆ
 		BRTreeNodePtr rotateL() {
 			BRTreeNodePtr re = pl;
 			if (re->pr) re->pr->pf = this;
@@ -539,7 +539,7 @@ namespace ytlib {
 			pf = re.get();
 			return re;
 		}
-		//ÓÒĞı×ª£¬ÄæÊ±Õë
+		//å³æ—‹è½¬ï¼Œé€†æ—¶é’ˆ
 		BRTreeNodePtr rotateR() {
 			BRTreeNodePtr re = pr;
 			if (re->pl) re->pl->pf = this;
@@ -562,9 +562,9 @@ namespace ytlib {
 
 	};
 
-	//Ò»Ğ©ÍâÖÃµÄËã·¨---------------------------------------------------------------------------
+	//ä¸€äº›å¤–ç½®çš„ç®—æ³•---------------------------------------------------------------------------
 
-	//ÔÚ¶ş²æËÑË÷Ê÷ÖĞ½øĞĞ²éÕÒ
+	//åœ¨äºŒå‰æœç´¢æ ‘ä¸­è¿›è¡ŒæŸ¥æ‰¾
 	template<typename NodeType, typename ValType>
 	std::shared_ptr<NodeType> binSearch(const std::shared_ptr<NodeType>& proot, const ValType& val) {
 		std::shared_ptr<NodeType> p = proot;
@@ -576,8 +576,8 @@ namespace ytlib {
 		}
 		return std::shared_ptr<NodeType>();
 	}
-	//todo£ºÊµÏÖÕâĞ©º¯ÊıµÄ·Çµİ¹éĞÎÊ½
-	//ÒÔµ±Ç°½ÚµãÎª¸ù½Úµã£¬Ç°Ğò±éÀú£¬·µ»ØÒ»¸öÖ¸ÕëÊı×é¡£ÒÔµ±Ç°½ÚµãÎª¸ù½Úµã
+	//todoï¼šå®ç°è¿™äº›å‡½æ•°çš„éé€’å½’å½¢å¼
+	//ä»¥å½“å‰èŠ‚ç‚¹ä¸ºæ ¹èŠ‚ç‚¹ï¼Œå‰åºéå†ï¼Œè¿”å›ä¸€ä¸ªæŒ‡é’ˆæ•°ç»„ã€‚ä»¥å½“å‰èŠ‚ç‚¹ä¸ºæ ¹èŠ‚ç‚¹
 	template<typename T>
 	void DLR(std::shared_ptr<T>& nd, std::vector<std::shared_ptr<T> >& vec) {
 		assert(nd);
@@ -585,7 +585,7 @@ namespace ytlib {
 		if (nd->pl) DLR(nd->pl, vec);
 		if (nd->pr) DLR(nd->pr, vec);
 	}
-	//ÖĞĞò±éÀú
+	//ä¸­åºéå†
 	template<typename T>
 	void LDR(std::shared_ptr<T>& nd, std::vector<std::shared_ptr<T> >& vec) {
 		assert(nd);
@@ -593,7 +593,7 @@ namespace ytlib {
 		vec.push_back(nd);
 		if (nd->pr) LDR(nd->pr, vec);
 	}
-	//ºóĞø±éÀú
+	//åç»­éå†
 	template<typename T>
 	void LRD(std::shared_ptr<T>& nd, std::vector<std::shared_ptr<T> >& vec) {
 		assert(nd);
@@ -602,7 +602,7 @@ namespace ytlib {
 		vec.push_back(nd);
 	}
 
-	//»ñÈ¡Éî¶È£¬¸ù½ÚµãÉî¶ÈÎª0
+	//è·å–æ·±åº¦ï¼Œæ ¹èŠ‚ç‚¹æ·±åº¦ä¸º0
 	template<typename T>
 	size_t getDepth(const T* pnode) {
 		assert(pnode != NULL);
@@ -615,7 +615,7 @@ namespace ytlib {
 		return count;
 	}
 
-	//»ñÈ¡¸ß¶È£¬Ò¶×Ó½Úµã¸ß¶ÈÎª1
+	//è·å–é«˜åº¦ï¼Œå¶å­èŠ‚ç‚¹é«˜åº¦ä¸º1
 	template<typename T>
 	size_t getHeight(const T* pnode) {
 		assert(pnode != NULL);
@@ -624,7 +624,7 @@ namespace ytlib {
 		if (pnode->pr) rh = getHeight(pnode->pr.get());
 		return max(lh, rh) + 1;
 	}
-	//»ñÈ¡Ê÷ÖĞ½Úµã¸öÊı
+	//è·å–æ ‘ä¸­èŠ‚ç‚¹ä¸ªæ•°
 	template<typename T>
 	size_t getNodeNum(const T* pnode) {
 		assert(pnode != NULL);
@@ -634,7 +634,7 @@ namespace ytlib {
 		return num;
 	}
 
-	//½«Ò»¸ö½Úµã×÷Îª×ó/ÓÒ×Ó½Úµã£¬ÓëÔ­×ó/ÓÒ×Ó½Úµã¶Ï¿ª¡£²åÈëµÄ½ÚµãÓëÆäÔ­¸¸½Úµã¶Ï¿ª
+	//å°†ä¸€ä¸ªèŠ‚ç‚¹ä½œä¸ºå·¦/å³å­èŠ‚ç‚¹ï¼Œä¸åŸå·¦/å³å­èŠ‚ç‚¹æ–­å¼€ã€‚æ’å…¥çš„èŠ‚ç‚¹ä¸å…¶åŸçˆ¶èŠ‚ç‚¹æ–­å¼€
 	template<typename T>
 	void setLChild(T* pfather,std::shared_ptr<T>& pchild) {
 		assert((pfather!=NULL) && pchild);
@@ -648,7 +648,7 @@ namespace ytlib {
 		pfather->pr = pchild;
 	}
 
-	//Óë×ó/ÓÒ×ÓÊ÷¶Ï¿ª
+	//ä¸å·¦/å³å­æ ‘æ–­å¼€
 	template<typename T>
 	void breakLChild(T* pnode) {
 		assert((pnode != NULL) && pnode->pl);
@@ -662,17 +662,17 @@ namespace ytlib {
 		pnode->pr.reset();
 	}
 
-	//ÅĞ¶ÏÊÇ¸¸½ÚµãµÄ×ó½Úµã»¹ÊÇÓÒ½Úµã¡£true±íÊ¾×ó¡£Ê¹ÓÃÇ°Ó¦¼ì²é¸¸½ÚµãÊÇ·ñÎª¿Õ
+	//åˆ¤æ–­æ˜¯çˆ¶èŠ‚ç‚¹çš„å·¦èŠ‚ç‚¹è¿˜æ˜¯å³èŠ‚ç‚¹ã€‚trueè¡¨ç¤ºå·¦ã€‚ä½¿ç”¨å‰åº”æ£€æŸ¥çˆ¶èŠ‚ç‚¹æ˜¯å¦ä¸ºç©º
 	template<typename T>
 	bool getLR(const T* pnode) {
 		assert(pnode && pnode->pf != NULL);
 		if (pnode == pnode->pf->pl.get()) return true;
 		if (pnode == pnode->pf->pr.get()) return false;
-		assert(0);//²»ÊÇ¸¸½ÚµãµÄ×óÓÒ½Úµã¡£±¨´í
+		assert(0);//ä¸æ˜¯çˆ¶èŠ‚ç‚¹çš„å·¦å³èŠ‚ç‚¹ã€‚æŠ¥é”™
 		return true;
 	}
 
-	//·Ö²ã±éÀú
+	//åˆ†å±‚éå†
 	template<typename T>
 	void traByLevel(std::shared_ptr<T>& nd, std::vector<std::shared_ptr<T> >& vec) {
 		assert(nd);
@@ -688,7 +688,7 @@ namespace ytlib {
 		}
 	}
 
-	//¶ş²æÊ÷µÄĞòÁĞ»¯
+	//äºŒå‰æ ‘çš„åºåˆ—åŒ–
 	template<typename T>
 	void SerializeTree(const std::shared_ptr<T>& proot, std::vector<std::shared_ptr<T> >& vec) {
 		vec.push_back(proot);
@@ -696,7 +696,7 @@ namespace ytlib {
 		SerializeTree(proot->pl, vec);
 		SerializeTree(proot->pr, vec);
 	}
-	//·´ĞòÁĞ»¯
+	//ååºåˆ—åŒ–
 	template<typename T>
 	void DeserializeTree(std::shared_ptr<T>& proot, typename std::vector<std::shared_ptr<T> >::iterator& itr) {
 		if (*itr) {
@@ -705,7 +705,7 @@ namespace ytlib {
 			DeserializeTree(proot->pr, ++itr);
 		}
 	}
-	//Ê÷µÄ¸´ÖÆ
+	//æ ‘çš„å¤åˆ¶
 	template<typename T>
 	std::shared_ptr<T> copyTree(const std::shared_ptr<T>& proot) {
 		std::shared_ptr<T> p = std::make_shared<T>(*proot);

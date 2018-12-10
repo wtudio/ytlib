@@ -2,7 +2,7 @@
 #include <iostream>
 #include <ytlib/LightMath/Mathbase.h>
 
-//ÇáÁ¿¼¶Í¼ÐÎÑ§¹¤¾ß¡£todo´ýÍêÉÆ
+//è½»é‡çº§å›¾å½¢å­¦å·¥å…·ã€‚todoå¾…å®Œå–„
 namespace ytlib
 {
 

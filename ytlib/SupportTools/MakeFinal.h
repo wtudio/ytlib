@@ -3,7 +3,7 @@
 namespace ytlib
 {
 	/*
-	ÖÆ×÷Ò»¸öÎÞ·¨±»¼Ì³ÐµÄÀà£º
+	åˆ¶ä½œä¸€ä¸ªæ— æ³•è¢«ç»§æ‰¿çš„ç±»ï¼š
 	class FinalClass2 : virtual public MakeFinal<FinalClass2>{
 	public :
 		FinalClass2() {}

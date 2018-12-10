@@ -3,7 +3,7 @@
 #include <ytlib/LightMath/Mathbase.h>
 #include <vector>
 
-//´óÕûÊı¹¤¾ß¡£todo´ıÍêÉÆ
+//å¤§æ•´æ•°å·¥å…·ã€‚todoå¾…å®Œå–„
 namespace ytlib
 {
 	class BigNum {
@@ -17,15 +17,15 @@ namespace ytlib
 		}
 
 		BigNum  operator+ (const BigNum &value) const {
-			//ĞèÒªÈ·±£½øÖÆÏàÍ¬
+			//éœ€è¦ç¡®ä¿è¿›åˆ¶ç›¸åŒ
 			assert(up == value.up);
 			const BigNum* pNum1 = this, *pNum2 = &value;
 			size_t len1 = pNum1->_content.size(), len2 = pNum2->_content.size();
 			BigNum re(0, up);
 			if (_symbol^value._symbol) {
-				//Òì·ûºÅÏà¼Ó£¬ÓÃ¾ø¶ÔÖµ´óµÄ¼õĞ¡µÄ£¬·ûºÅÓë´óµÄÏàÍ¬¡£Ä¬ÈÏnum1µÄ¾ø¶ÔÖµ´ó
+				//å¼‚ç¬¦å·ç›¸åŠ ï¼Œç”¨ç»å¯¹å€¼å¤§çš„å‡å°çš„ï¼Œç¬¦å·ä¸å¤§çš„ç›¸åŒã€‚é»˜è®¤num1çš„ç»å¯¹å€¼å¤§
 				if (len1 == len2) {
-					//´Ó¸ßÎ»¿ªÊ¼ÅĞ¶Ï
+					//ä»é«˜ä½å¼€å§‹åˆ¤æ–­
 					for (size_t ii = len1 - 1; ii > 0; --ii) {
 						if (pNum1->_content[ii] > pNum2->_content[ii]) break;
 						else if (pNum1->_content[ii] < pNum2->_content[ii]) {
@@ -40,9 +40,9 @@ namespace ytlib
 					std::swap(pNum1, pNum2);
 				}
 				re._symbol = pNum1->_symbol;
-				bool flag = false;//½èÎ»±êÖ¾
+				bool flag = false;//å€Ÿä½æ ‡å¿—
 				for (size_t ii = 0; ii < len2; ++ii) {
-					//ĞèÒª½èÎ»µÄÇé¿ö
+					//éœ€è¦å€Ÿä½çš„æƒ…å†µ
 					if (flag && pNum1->_content[ii] == 0) {
 						flag = true;
 						re._content[ii] = up - 1 - pNum2->_content[ii];
@@ -70,14 +70,14 @@ namespace ytlib
 				}
 			}
 			else {
-				//Í¬·ûºÅÏà¼Ó
+				//åŒç¬¦å·ç›¸åŠ 
 				re._symbol = _symbol;
-				//±»¼ÓÊınum1µÄÎ»Êı½Ï´ó
+				//è¢«åŠ æ•°num1çš„ä½æ•°è¾ƒå¤§
 				if (len1 < len2) {
 					std::swap(len1, len2);
 					std::swap(pNum1, pNum2);
 				}
-				//´ÓµÍÎ»¿ªÊ¼¼Ó
+				//ä»ä½ä½å¼€å§‹åŠ 
 				for (size_t ii = 0; ii < len2; ++ii) {
 					uint32_t tmp = pNum1->_content[ii] + pNum2->_content[ii] + re._content[ii];
 					if ((up && tmp >= up) || tmp < pNum1->_content[ii] || (tmp == pNum1->_content[ii] && re._content[ii] == 1)) {
@@ -98,7 +98,7 @@ namespace ytlib
 					}
 				}
 			}
-			//È¥³ı×îºó¶ËµÄ0
+			//å»é™¤æœ€åç«¯çš„0
 			while (re._content.size() > 1 && re._content[re._content.size() - 1] == 0) re._content.pop_back();
 			return std::move(re);
 		}
@@ -164,7 +164,7 @@ namespace ytlib
 
 		bool operator==(const BigNum &value) const {
 			assert(up == value.up);
-			//Èç¹û¶¼ÊÇ0
+			//å¦‚æœéƒ½æ˜¯0
 			if (BigNum::operator bool() && value) return true;
 			if (_symbol != value._symbol) return false;
 			if (_content.size() != value._content.size()) return false;
@@ -174,7 +174,7 @@ namespace ytlib
 			}
 			return true;
 		}
-		//ÊÇ·ñÎª0¡£0Îªfalse
+		//æ˜¯å¦ä¸º0ã€‚0ä¸ºfalse
 		operator bool() const {
 			return !((_content.size() == 1) && (_content[0] == 0));
 		}
@@ -190,7 +190,7 @@ namespace ytlib
 			if (_symbol && !(value._symbol)) return false;
 			if (_content.size() != value._content.size()) return _symbol ^ (_content.size() > value._content.size());
 			size_t len = _content.size();
-			//´Ó¸ßÎ»¿ªÊ¼ÅĞ¶Ï
+			//ä»é«˜ä½å¼€å§‹åˆ¤æ–­
 			for (size_t ii = len - 1; ii > 0; --ii) {
 				if (_content[ii] == value._content[ii]) continue;
 				if (_symbol ^ (_content[ii] > value._content[ii])) return true;
@@ -208,7 +208,7 @@ namespace ytlib
 			return BigNum::operator>(value) || BigNum::operator==(value);
 		}
 
-		//ÒÔÊ®½øÖÆĞÎÊ½ÊäÈë
+		//ä»¥åè¿›åˆ¶å½¢å¼è¾“å…¥
 		friend std::istream& operator>>(std::istream& in, BigNum& val) {
 			val._content.clear();
 			val.up = 10;
@@ -218,19 +218,19 @@ namespace ytlib
 		}
 
 		friend std::ostream& operator<< (std::ostream& out, const BigNum& val) {
-			//ÏÈÊä³ö½øÖÆ
+			//å…ˆè¾“å‡ºè¿›åˆ¶
 
-			//·ûºÅÎ»
+			//ç¬¦å·ä½
 			if (!val._symbol && !val) out << '-';
 
 			
 			if (val.up <= 16) {
-				//Èç¹û½øÖÆÔÚ16Ö®ÄÚÔò²ÉÓÃ16½øÖÆµÄ·ûºÅ
+				//å¦‚æœè¿›åˆ¶åœ¨16ä¹‹å†…åˆ™é‡‡ç”¨16è¿›åˆ¶çš„ç¬¦å·
 
 
 			}
 			else {
-				//·ñÔòĞèÒªÔÚ¸÷¸öÎ»Ö®¼ä¿Õ¿ªÒ»¸ñ£¬ÒÔÊ®½øÖÆÊä³öÊı¾İ
+				//å¦åˆ™éœ€è¦åœ¨å„ä¸ªä½ä¹‹é—´ç©ºå¼€ä¸€æ ¼ï¼Œä»¥åè¿›åˆ¶è¾“å‡ºæ•°æ®
 
 
 			}
@@ -241,14 +241,14 @@ namespace ytlib
 			re._symbol = true;
 			return std::move(re);
 		}
-		//³ı£¬Í¬Ê±·µ»Ø½á¹ûºÍÓàÊı
+		//é™¤ï¼ŒåŒæ—¶è¿”å›ç»“æœå’Œä½™æ•°
 		std::pair<BigNum, BigNum> div(const BigNum& val) const {
-			//ÓàÊıÖ»ÓĞÒ»Î»
+			//ä½™æ•°åªæœ‰ä¸€ä½
 
 
 		}
 
-		//¸Ä±ä½øÖÆ
+		//æ”¹å˜è¿›åˆ¶
 		void changeNumSys(uint32_t up_) {
 			assert(up_ != 1);
 			if (up_ == up) return;
@@ -263,14 +263,14 @@ namespace ytlib
 
 	protected:
 
-		bool _symbol;//Õı¸º
-		std::vector<uint32_t> _content;//²ÉÓÃ´ó¶Ë´æ´¢£¬Ô½¸ßÎ»ÔÚÔ½ºóÃæ£¬·½±ãÔö¼ÓÎ»Êı
-		uint32_t up;//½øÖÆ£¬²»ÄÜµÈÓÚ1¡£0±íÊ¾¾ÍÊÇÒÔ2^32Îª½øÖÆ
+		bool _symbol;//æ­£è´Ÿ
+		std::vector<uint32_t> _content;//é‡‡ç”¨å¤§ç«¯å­˜å‚¨ï¼Œè¶Šé«˜ä½åœ¨è¶Šåé¢ï¼Œæ–¹ä¾¿å¢åŠ ä½æ•°
+		uint32_t up;//è¿›åˆ¶ï¼Œä¸èƒ½ç­‰äº1ã€‚0è¡¨ç¤ºå°±æ˜¯ä»¥2^32ä¸ºè¿›åˆ¶
 	};
 	
 	/*
-	»ùÓÚ´óÊı¹¤¾ßµÄÑ­»·¸¨Öú¹¤¾ß¡£¿ÉÒÔÊµÏÖn²ãÑ­»·¡£ËäÈ»Ò»°ã²»Òª³öÏÖn²ãÑ­»·
-	Ê¹ÓÃÊ±£º
+	åŸºäºå¤§æ•°å·¥å…·çš„å¾ªç¯è¾…åŠ©å·¥å…·ã€‚å¯ä»¥å®ç°nå±‚å¾ªç¯ã€‚è™½ç„¶ä¸€èˆ¬ä¸è¦å‡ºç°nå±‚å¾ªç¯
+	ä½¿ç”¨æ—¶ï¼š
 	LoopTool lt;
 	do{
 	...
@@ -287,12 +287,12 @@ namespace ytlib
 			}
 		}
 
-		//×î´óÖ»ÄÜ¼Óµ½up-1
+		//æœ€å¤§åªèƒ½åŠ åˆ°up-1
 		//++i
 		LoopTool& operator++() {
 			size_t len = m_vecUp.size();
 			assert(len);
-			//´ÓµÍÎ»¿ªÊ¼¼Ó
+			//ä»ä½ä½å¼€å§‹åŠ 
 			for (size_t ii = 0; ii < len; ++ii) {
 				m_vecContent[ii] += 1;
 				if (m_vecContent[ii] == m_vecUp[ii]) m_vecContent[0] = 0;
@@ -303,7 +303,7 @@ namespace ytlib
 		LoopTool& operator--() {
 			size_t len = m_vecUp.size();
 			assert(len);
-			//´ÓµÍÎ»¿ªÊ¼¼Ó
+			//ä»ä½ä½å¼€å§‹åŠ 
 			for (size_t ii = 0; ii < len; ++ii) {
 				if (m_vecContent[ii] == 0) m_vecContent[0] = m_vecUp[ii] - 1;
 				else {
@@ -313,7 +313,7 @@ namespace ytlib
 			}
 			return *this;
 		}
-		//ÊÇ·ñÎª0¡£0Îªfalse
+		//æ˜¯å¦ä¸º0ã€‚0ä¸ºfalse
 		operator bool() const {
 			size_t len = m_vecUp.size();
 			for (size_t ii = 0; ii < len; ++ii) {
@@ -323,7 +323,7 @@ namespace ytlib
 		}
 
 		std::vector<uint32_t> m_vecContent;
-		std::vector<uint32_t> m_vecUp;//½øÖÆ
+		std::vector<uint32_t> m_vecUp;//è¿›åˆ¶
 
 	};
 	

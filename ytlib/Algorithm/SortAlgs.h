@@ -6,15 +6,15 @@
 #include <algorithm>
 
 /*
-stlÖĞÓĞºÜ¶à³ÉÊìµÄËã·¨¿ÉÒÔÖ±½Óµ÷ÓÃ£¨stlÔ´ÂëÆÊÎöp288£©
-´Ë´¦×Ô¼ºÊµÏÖµÄÅÅĞòËã·¨¹©Ñ§Ï°Óë¸ÄÔì
-ËùÓĞÅÅĞò¶¼ÊÇ´ÓĞ¡µ½´óÅÅÁĞ
+stlä¸­æœ‰å¾ˆå¤šæˆç†Ÿçš„ç®—æ³•å¯ä»¥ç›´æ¥è°ƒç”¨ï¼ˆstlæºç å‰–æp288ï¼‰
+æ­¤å¤„è‡ªå·±å®ç°çš„æ’åºç®—æ³•ä¾›å­¦ä¹ ä¸æ”¹é€ 
+æ‰€æœ‰æ’åºéƒ½æ˜¯ä»å°åˆ°å¤§æ’åˆ—
 */
 
-//Ä£°å»¯µÄÅÅĞòÏà¹ØËã·¨
+//æ¨¡æ¿åŒ–çš„æ’åºç›¸å…³ç®—æ³•
 namespace ytlib {
 
-	//ÖØÔØÁË±È½Ï·ûºÅµÄÀà
+	//é‡è½½äº†æ¯”è¾ƒç¬¦å·çš„ç±»
 	class sortObj {
 	public:
 		sortObj():key(0){}
@@ -22,7 +22,7 @@ namespace ytlib {
 
 		sortObj(uint32_t k_) :key(k_) {}
 
-		//¹ØÏµÔËËã·ûÖØÔØ
+		//å…³ç³»è¿ç®—ç¬¦é‡è½½
 		bool operator <(const sortObj& val) const {return key < val.key;}
 		bool operator >(const sortObj& val) const {return key > val.key;}
 		bool operator <=(const sortObj& val) const {return key <= val.key;}
@@ -30,13 +30,13 @@ namespace ytlib {
 		bool operator ==(const sortObj& val) const {return key == val.key;}
 
 
-		//³ÉÔ±
+		//æˆå‘˜
 		uint32_t key;
-		//³ÉÔ±Èç¹û½Ï´óµÄ»°ÓÃÖ¸ÕëÖ¸×Å
+		//æˆå‘˜å¦‚æœè¾ƒå¤§çš„è¯ç”¨æŒ‡é’ˆæŒ‡ç€
 
 	};
 
-	//Ã°ÅİÅÅĞò in-place/ÎÈ¶¨
+	//å†’æ³¡æ’åº in-place/ç¨³å®š
 	template<typename T>
 	void bubbleSort(T* arr, size_t len) {
 		if (len < 2) return;
@@ -50,7 +50,7 @@ namespace ytlib {
 		}
 	}
 
-	//¹é²¢ÅÅĞò out-place/ÎÈ¶¨ todo£ºÊµÏÖ·Çµİ¹éĞÎÊ½
+	//å½’å¹¶æ’åº out-place/ç¨³å®š todoï¼šå®ç°éé€’å½’å½¢å¼
 	template<typename T>
 	void mergeSort(T* arr, size_t len) {
 		if (len < 2) return;
@@ -62,7 +62,7 @@ namespace ytlib {
 		size_t middle = len / 2;
 		mergeSort(arr, middle);
 		mergeSort(arr + middle, len - middle);
-		//ÔÚÁíÍâµÄ¿Õ¼äÅÅĞòºÃÁËÔÙ¸´ÖÆ»ØÀ´
+		//åœ¨å¦å¤–çš„ç©ºé—´æ’åºå¥½äº†å†å¤åˆ¶å›æ¥
 		T* tmpArr = new T[len];
 		size_t lc = 0, rc = middle, tc = 0;
 		while ((lc<middle) && (rc<len)) {
@@ -73,7 +73,7 @@ namespace ytlib {
 		delete[] tmpArr;
 	}
 
-	//¿ìËÙÅÅĞò in-place/²»ÎÈ¶¨ todo£ºÊµÏÖ·Çµİ¹éĞÎÊ½
+	//å¿«é€Ÿæ’åº in-place/ä¸ç¨³å®š todoï¼šå®ç°éé€’å½’å½¢å¼
 	template<typename T>
 	void quickSort(T* arr, size_t len) {
 		if (len < 2) return;
@@ -100,7 +100,7 @@ namespace ytlib {
 	}
 
 
-	//¶ş·Ö²éÕÒ¡£Ó¦ÓÃÓÚ´ÓĞ¡µ½´óÅÅĞòºÃµÄÊı×éÖĞ£¬ÈçÓĞÖØ¸´ÔòÕÒÊ×ÏÈ³öÏÖµÄÄÇ¸ö
+	//äºŒåˆ†æŸ¥æ‰¾ã€‚åº”ç”¨äºä»å°åˆ°å¤§æ’åºå¥½çš„æ•°ç»„ä¸­ï¼Œå¦‚æœ‰é‡å¤åˆ™æ‰¾é¦–å…ˆå‡ºç°çš„é‚£ä¸ª
 	template<typename T>
 	size_t binarySearch(T* arr, size_t len,const T& key) {
 		assert(len);
@@ -111,11 +111,11 @@ namespace ytlib {
 			else high = mid;
 		}
 		if (arr[low] == key) return low;
-		//Ã»ÕÒµ½£¬·µ»Ølen
+		//æ²¡æ‰¾åˆ°ï¼Œè¿”å›len
 		return len;
 	}
 
-	//¶ş·Ö²éÕÒ¡£Ó¦ÓÃÓÚ´ÓĞ¡µ½´óÅÅĞòºÃµÄÊı×éÖĞ£¬ÈçÓĞÖØ¸´ÔòÕÒ×îºó³öÏÖµÄÄÇ¸ö
+	//äºŒåˆ†æŸ¥æ‰¾ã€‚åº”ç”¨äºä»å°åˆ°å¤§æ’åºå¥½çš„æ•°ç»„ä¸­ï¼Œå¦‚æœ‰é‡å¤åˆ™æ‰¾æœ€åå‡ºç°çš„é‚£ä¸ª
 	template<typename T>
 	size_t binarySearchLast(T* arr, size_t len, const T& key) {
 		assert(len);
@@ -126,7 +126,7 @@ namespace ytlib {
 			else high = mid - 1;
 		}
 		if (arr[high] == key) return high;
-		//Ã»ÕÒµ½£¬·µ»Ølen
+		//æ²¡æ‰¾åˆ°ï¼Œè¿”å›len
 		return len;
 	}
 

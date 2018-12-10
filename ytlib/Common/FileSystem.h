@@ -15,10 +15,12 @@ namespace ytlib
 	typedef boost::filesystem::wpath tpath;
 	typedef boost::xpressive::wsregex_compiler tsregex_compiler;
 	typedef boost::filesystem::wrecursive_directory_iterator trecursive_directory_iterator;
+	#define T_PATH_TO_TSTRING(PATH) PATH.wstring()
 #else
 	typedef boost::filesystem::path tpath;
 	typedef boost::xpressive::sregex_compiler tsregex_compiler;
 	typedef boost::filesystem::recursive_directory_iterator trecursive_directory_iterator;
+	#define T_PATH_TO_TSTRING(PATH) PATH.string()
 #endif
 
 
@@ -39,13 +41,12 @@ namespace ytlib
 	
 	//获得绝对路径
 	static tpath tGetAbsolutePath(const tpath& p) {
-		if (p.is_absolute())
-			return p;
-		else
-			return (tGetCurrentPath() / p);
+		return (p.is_absolute()) ? p : (tGetCurrentPath() / p);
 	}
-
-
+	//获得文件所在目录
+	static tpath tGetDirectory(const tpath& p) {
+		return tGetAbsolutePath(p).parent_path();
+	}
 
 }
 

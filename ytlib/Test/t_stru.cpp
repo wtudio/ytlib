@@ -71,7 +71,7 @@ namespace ytlib
 		cout << getHeight(rootp.get()) << endl;
 		cout << getDepth(p.get()) << endl;
 
-		//Ç°Ğò±éÀú
+		//å‰åºéå†
 		vector<mybtPtr> vec;
 		DLR(rootp,vec);
 		for (size_t ii = 0; ii < vec.size(); ++ii) {
@@ -79,7 +79,7 @@ namespace ytlib
 		}
 		cout << endl;
 
-		//ÖĞĞò±éÀú
+		//ä¸­åºéå†
 		vec.clear();
 		LDR(rootp,vec);
 		for (size_t ii = 0; ii < vec.size(); ++ii) {
@@ -87,7 +87,7 @@ namespace ytlib
 		}
 		cout << endl;
 
-		//ºóĞø±éÀú
+		//åç»­éå†
 		vec.clear();
 		LRD(rootp,vec);
 		for (size_t ii = 0; ii < vec.size(); ++ii) {
@@ -133,7 +133,7 @@ namespace ytlib
 
 		myavltPtr rootp = make_shared<myavlt>(10);
 
-		//²åÈë
+		//æ’å…¥
 		vector<myavltPtr> vec;
 		for (int ii = 0; ii < 20; ii += 2) {
 			rootp = rootp->insert(make_shared<myavlt>(ii));
@@ -158,7 +158,7 @@ namespace ytlib
 		}
 		cout << endl;
 
-		//·Ö²ã±éÀú
+		//åˆ†å±‚éå†
 		vec.clear();
 		traByLevel(rootp, vec);
 		for (size_t ii = 0; ii < vec.size(); ++ii) {
@@ -166,7 +166,7 @@ namespace ytlib
 		}
 		cout << endl;
 
-		//É¾³ı
+		//åˆ é™¤
 		rootp = rootp->erase(100);
 		vec.clear();
 		DLR(rootp, vec);
@@ -183,7 +183,7 @@ namespace ytlib
 		}
 		cout << endl;
 
-		//É¾³ı¸ù½Úµã
+		//åˆ é™¤æ ¹èŠ‚ç‚¹
 		rootp = rootp->erase(rootp);
 		vec.clear();
 		DLR(rootp, vec);
@@ -200,7 +200,7 @@ namespace ytlib
 		}
 		cout << endl;
 
-		//É¾³ıÓÒ½Úµã
+		//åˆ é™¤å³èŠ‚ç‚¹
 		rootp = rootp->erase(rootp->pr->pr);
 		vec.clear();
 		DLR(rootp, vec);
@@ -213,7 +213,7 @@ namespace ytlib
 
 
 
-		//ĞòÁĞ»¯¡¢·´ĞòÁĞ»¯
+		//åºåˆ—åŒ–ã€ååºåˆ—åŒ–
 		vec.clear();
 		SerializeTree(rootp, vec);
 		for (size_t ii = 0; ii < vec.size(); ++ii) {
@@ -231,7 +231,7 @@ namespace ytlib
 		}
 		cout << endl;
 
-		//Ê÷µÄ¸´ÖÆ
+		//æ ‘çš„å¤åˆ¶
 		myavltPtr rootp3 = copyTree(rootp);
 		vec.clear();
 		traByLevel(rootp3, vec);
@@ -248,7 +248,7 @@ namespace ytlib
 		typedef shared_ptr<mybrt> mybrtPtr;
 
 		mybrtPtr rootp = make_shared<mybrt>(10);
-		//²åÈë
+		//æ’å…¥
 		vector<mybrtPtr> vec;
 		for (int ii = 0; ii < 20; ii += 2) {
 			rootp = rootp->insert(make_shared<mybrt>(ii));
@@ -259,7 +259,7 @@ namespace ytlib
 			}
 			cout << endl;
 		}
-		//É¾³ı
+		//åˆ é™¤
 
 
 		return true;
@@ -311,7 +311,7 @@ namespace ytlib
 		}
 		cout << endl;
 
-		//ÁÚ½Ó¾ØÕó
+		//é‚»æ¥çŸ©é˜µ
 		g_sideMatrix M = createAdjMatrix<uint32_t>(myGraphVec);
 	
 		cout << M << endl;

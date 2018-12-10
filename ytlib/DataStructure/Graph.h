@@ -5,13 +5,13 @@
 #include <list>
 #include <vector>
 
-//todo£º´ıÍêÉÆ
-//Ä£°å»¯µÄÍ¼µÄÒ»Ğ©¹¤¾ß¡£Ö»ÊÇ×÷ÎªÑù°åÑ§Ï°Ö®ÓÃ£¬Êµ¼Ê¹¤³ÌÖĞĞèÒªÊ±¸ù¾İĞèÇó²Î¿¼Ô´Âë½øĞĞ¸Ä¶¯
-//²»ÄÜÊ¹ÓÃÖÇÄÜÖ¸Õë£¬ÒòÎª»áÓĞÏà»¥Ö¸ÒıµÄÇé¿ö
-//Ê¹ÓÃÊ±Ó¦½«ËùÓĞµÄ½ÚµãµÄÖ¸Õë·ÅÈëÒ»¸ölist»òvectorÖĞ
-//Ã¿¸ö½ÚµãÖ¸ÏòÁíÒ»¸ö½Úµã×î¶àÖ»ÓĞÒ»Ìõ±ß
+//todoï¼šå¾…å®Œå–„
+//æ¨¡æ¿åŒ–çš„å›¾çš„ä¸€äº›å·¥å…·ã€‚åªæ˜¯ä½œä¸ºæ ·æ¿å­¦ä¹ ä¹‹ç”¨ï¼Œå®é™…å·¥ç¨‹ä¸­éœ€è¦æ—¶æ ¹æ®éœ€æ±‚å‚è€ƒæºç è¿›è¡Œæ”¹åŠ¨
+//ä¸èƒ½ä½¿ç”¨æ™ºèƒ½æŒ‡é’ˆï¼Œå› ä¸ºä¼šæœ‰ç›¸äº’æŒ‡å¼•çš„æƒ…å†µ
+//ä½¿ç”¨æ—¶åº”å°†æ‰€æœ‰çš„èŠ‚ç‚¹çš„æŒ‡é’ˆæ”¾å…¥ä¸€ä¸ªlistæˆ–vectorä¸­
+//æ¯ä¸ªèŠ‚ç‚¹æŒ‡å‘å¦ä¸€ä¸ªèŠ‚ç‚¹æœ€å¤šåªæœ‰ä¸€æ¡è¾¹
 namespace ytlib {
-	//Ò»¸öÓĞ±ßµÄÈ¨ÖØµÄÓĞÏòÍ¼µÄ½Úµã
+	//ä¸€ä¸ªæœ‰è¾¹çš„æƒé‡çš„æœ‰å‘å›¾çš„èŠ‚ç‚¹
 	typedef double g_sideType;
 	typedef Basic_Matrix<g_sideType> g_sideMatrix;
 
@@ -24,25 +24,25 @@ namespace ytlib {
 		Graph(const T& _obj) :obj(_obj), visited(false) {}
 
 		T obj; 
-		std::map<Graph<T>*, g_sideType> sides;//±ßÒÔ¼°ÆäÈ¨ÖØ¡£È¨ÖØÄ¬ÈÏÎªdouble
-		mutable bool visited;//ÓÃÓÚ±éÀú
+		std::map<Graph<T>*, g_sideType> sides;//è¾¹ä»¥åŠå…¶æƒé‡ã€‚æƒé‡é»˜è®¤ä¸ºdouble
+		mutable bool visited;//ç”¨äºéå†
 	};
-	//Ò»Ğ©¶ÔÍ¼µÄ»ù±¾²Ù×÷
+	//ä¸€äº›å¯¹å›¾çš„åŸºæœ¬æ“ä½œ
 
-	//ÓĞÏòÍ¼µÄ½Úµã²åÈë£¬²ÎÊıÎª£º´ı²åÈë½Úµã¡¢Ä¿±ê½Úµã¡¢±ßÈ¨Öµ
+	//æœ‰å‘å›¾çš„èŠ‚ç‚¹æ’å…¥ï¼Œå‚æ•°ä¸ºï¼šå¾…æ’å…¥èŠ‚ç‚¹ã€ç›®æ ‡èŠ‚ç‚¹ã€è¾¹æƒå€¼
 	template<typename T>
 	void insertGraphNode(Graph<T>& val,Graph<T>& targt, g_sideType side) {
 		val.sides[&targt] = side;
 	} 
 
-	//ÎŞÏòÍ¼µÄ½Úµã²åÈë
+	//æ— å‘å›¾çš„èŠ‚ç‚¹æ’å…¥
 	template<typename T>
 	void connectGraphNode(Graph<T>& val, Graph<T>& targt, g_sideType side) {
 		val.sides[&targt] = side;
 		targt.sides[&val] = side;
 	}
 
-	//ÅĞ¶ÏÊÇ·ñÊÇÎŞÏòÍ¼
+	//åˆ¤æ–­æ˜¯å¦æ˜¯æ— å‘å›¾
 	template<typename T>
 	bool isUndiGraph(const std::vector<Graph<T>*>& vec) {
 		for (uint32_t ii = 0; ii < vec.size(); ++ii) {
@@ -55,9 +55,9 @@ namespace ytlib {
 		return true;
 	}
 
-	//Ò»Ğ©Í¼µÄ»ù±¾Ëã·¨
+	//ä¸€äº›å›¾çš„åŸºæœ¬ç®—æ³•
 
-	//¸¨Öúº¯Êı£¬»ñÈ¡½ÚµãÔÚvectorÖĞµÄÏÂ±ê
+	//è¾…åŠ©å‡½æ•°ï¼Œè·å–èŠ‚ç‚¹åœ¨vectorä¸­çš„ä¸‹æ ‡
 	template<typename T>
 	inline size_t getPos(const Graph<T>* p, const std::vector<Graph<T>*>& vec) {
 		size_t pos = find(vec.begin(), vec.end(), p) - vec.begin();
@@ -65,23 +65,23 @@ namespace ytlib {
 		return pos;
 	}
 
-	//¸¨Öúº¯Êı£¬Çå³ı±êÖ¾Î»
+	//è¾…åŠ©å‡½æ•°ï¼Œæ¸…é™¤æ ‡å¿—ä½
 	template<typename T>
 	inline void clearFlag(const std::vector<Graph<T>*>& vec) {
 		for (uint32_t ii = 0; ii < vec.size(); ++ii) vec[ii]->visited = false;
 	}
-	//¸¨Öúº¯Êı£¬ÊÍ·ÅÄÚ´æ
+	//è¾…åŠ©å‡½æ•°ï¼Œé‡Šæ”¾å†…å­˜
 	template<typename T>
 	inline void releaseGraphVec(std::vector<Graph<T>*>& vec) {
 		for (uint32_t ii = 0; ii < vec.size(); ++ii) delete vec[ii];
 	}
 	
-	//´´½¨ÁÚ½Ó¾ØÕó£¬M.val[i][j]±íÊ¾´Ó¶¥µãvec[i]³ö·¢µ½¶¥µãvec[j]µÄÖ±½Ó¾àÀë£¬-1Öµ±íÊ¾²»Ö±½ÓÁ¬½Ó
+	//åˆ›å»ºé‚»æ¥çŸ©é˜µï¼ŒM.val[i][j]è¡¨ç¤ºä»é¡¶ç‚¹vec[i]å‡ºå‘åˆ°é¡¶ç‚¹vec[j]çš„ç›´æ¥è·ç¦»ï¼Œ-1å€¼è¡¨ç¤ºä¸ç›´æ¥è¿æ¥
 	template<typename T>
 	g_sideMatrix createAdjMatrix(const std::vector<Graph<T>*>& vec) {
 		size_t Vnum = vec.size();
 		g_sideMatrix M(Vnum, Vnum);
-		M.setVal(-1);//-1±íÊ¾²»Á¬½Ó
+		M.setVal(-1);//-1è¡¨ç¤ºä¸è¿æ¥
 		for (size_t ii = 0; ii < Vnum; ++ii) {
 			M.val[ii][ii] = 0;
 			for (auto itr = vec[ii]->sides.begin(); itr != vec[ii]->sides.end(); ++itr) {
@@ -92,7 +92,7 @@ namespace ytlib {
 		return M;
 	}
 
-	//Í¼µÄ¸´ÖÆ
+	//å›¾çš„å¤åˆ¶
 	template<typename T>
 	std::vector<Graph<T>*> copyGraph(const std::vector<Graph<T>*>& vec) {
 		std::vector<Graph<T>*> re;
@@ -110,21 +110,21 @@ namespace ytlib {
 	}
 
 
-	//DFS¡£±éÀúÖ®Ç°Ó¦È·¶¨ËùÓĞ½ÚµãµÄvisitedÒÑ¾­±»ÖØÖÃÎªfalse
+	//DFSã€‚éå†ä¹‹å‰åº”ç¡®å®šæ‰€æœ‰èŠ‚ç‚¹çš„visitedå·²ç»è¢«é‡ç½®ä¸ºfalse
 	template<typename T>
 	void DFS(Graph<T>& val, std::vector<Graph<T>*>& vec) {
-		vec.push_back(&val);//ÓÉÉÏ²ã±£Ö¤´Ë½ÚµãÃ»ÓĞ±éÀú¹ı
+		vec.push_back(&val);//ç”±ä¸Šå±‚ä¿è¯æ­¤èŠ‚ç‚¹æ²¡æœ‰éå†è¿‡
 		val.visited = true;
 		for (auto itr = val.sides.begin(); itr != val.sides.end(); ++itr) {
 			if (!(itr->first->visited)) DFS(*itr->first, vec);
 		}
 	}
 
-	//BFS¡£±éÀúÖ®Ç°Ó¦È·¶¨ËùÓĞ½ÚµãµÄvisitedÒÑ¾­±»ÖØÖÃÎªfalse
+	//BFSã€‚éå†ä¹‹å‰åº”ç¡®å®šæ‰€æœ‰èŠ‚ç‚¹çš„visitedå·²ç»è¢«é‡ç½®ä¸ºfalse
 	template<typename T>
 	void BFS(Graph<T>& val, std::vector<Graph<T>*>& vec) {
 		if (!val.visited) {
-			//³õÊ¼½Úµã
+			//åˆå§‹èŠ‚ç‚¹
 			vec.push_back(&val);
 			val.visited = true;
 		}
@@ -145,7 +145,7 @@ namespace ytlib {
 
 	
 
-	//dijkstraËã·¨£ºÇóÒ»¸ö½Úµãµ½ÆäËû½ÚµãµÄ×î¶ÌÂ·¾¶£¬·µ»Ø¾àÀëÊı×éºÍÂ·¾¶Êı×é¡£½ûÖ¹¸ºÈ¨±ß
+	//dijkstraç®—æ³•ï¼šæ±‚ä¸€ä¸ªèŠ‚ç‚¹åˆ°å…¶ä»–èŠ‚ç‚¹çš„æœ€çŸ­è·¯å¾„ï¼Œè¿”å›è·ç¦»æ•°ç»„å’Œè·¯å¾„æ•°ç»„ã€‚ç¦æ­¢è´Ÿæƒè¾¹
 	template<typename T>
 	std::pair<std::vector<g_sideType>, std::vector<int32_t> > dijkstra(const Graph<T>& beginNode,const std::vector<Graph<T>*>& vec) {
 		size_t len = vec.size();
@@ -179,7 +179,7 @@ namespace ytlib {
 		} while (nextPos != curPos);
 		return std::pair<std::vector<g_sideType>, std::vector<int32_t> >(std::move(re), std::move(path));
 	}
-	//¸ù¾İdijkstra·µ»ØµÄÂ·¾¶Êı×éÇóÌØ¶¨½Úµãµ½ÁíÒ»¸ö½ÚµãµÄ×î¶ÌÂ·¾¶¡£·µ»ØµÄÊÇµ¹ÍÆµÄÂ·¾¶
+	//æ ¹æ®dijkstraè¿”å›çš„è·¯å¾„æ•°ç»„æ±‚ç‰¹å®šèŠ‚ç‚¹åˆ°å¦ä¸€ä¸ªèŠ‚ç‚¹çš„æœ€çŸ­è·¯å¾„ã€‚è¿”å›çš„æ˜¯å€’æ¨çš„è·¯å¾„
 	static std::vector<int32_t> dijkstraPath(int32_t dstIdx,const std::vector<int32_t>& path) {
 		std::vector<int32_t> re;
 		assert(path[dstIdx] >= 0);
@@ -190,7 +190,7 @@ namespace ytlib {
 		return re;
 	}
 
-	//floydËã·¨£ºÇóËùÓĞ½Úµãµ½ÆäËûËùÓĞ½ÚµãµÄ×î¶ÌÂ·¾¶£¬·µ»Ø¾àÀë¾ØÕóºÍÂ·¾¶¾ØÕó
+	//floydç®—æ³•ï¼šæ±‚æ‰€æœ‰èŠ‚ç‚¹åˆ°å…¶ä»–æ‰€æœ‰èŠ‚ç‚¹çš„æœ€çŸ­è·¯å¾„ï¼Œè¿”å›è·ç¦»çŸ©é˜µå’Œè·¯å¾„çŸ©é˜µ
 	template<typename T>
 	std::pair<g_sideMatrix, Matrix_i> floyd(const std::vector<Graph<T>*>& vec) {
 		size_t len = vec.size();
@@ -221,7 +221,7 @@ namespace ytlib {
 		return std::pair<g_sideMatrix, Matrix_i>(std::move(distanceM), std::move(pathM));
 	}
 
-	//¸ù¾İfloyd·µ»ØµÄÂ·¾¶¾ØÕóÇóÒ»¸ö½Úµãµ½ÁíÒ»¸ö½ÚµãµÄ×î¶ÌÂ·¾¶¡£·µ»ØµÄÊÇÕıÍÆµÄÂ·¾¶
+	//æ ¹æ®floydè¿”å›çš„è·¯å¾„çŸ©é˜µæ±‚ä¸€ä¸ªèŠ‚ç‚¹åˆ°å¦ä¸€ä¸ªèŠ‚ç‚¹çš„æœ€çŸ­è·¯å¾„ã€‚è¿”å›çš„æ˜¯æ­£æ¨çš„è·¯å¾„
 	static std::vector<int32_t> floydPath(int32_t srcIdx, int32_t dstIdx, const Matrix_i& path) {
 		std::vector<int32_t> re;
 		assert(path.val[srcIdx][dstIdx]>=0);
@@ -234,7 +234,7 @@ namespace ytlib {
 	}
 
 
-	//×î´óÁ÷¡£±ßÈ¨Öµ×÷ÎªÁ÷Á¿Öµ
+	//æœ€å¤§æµã€‚è¾¹æƒå€¼ä½œä¸ºæµé‡å€¼
 	template<typename T>
 	g_sideType maxFlow(Graph<T>& beginNode, Graph<T>& endNode) {
 		g_sideType re = 0;
@@ -243,14 +243,14 @@ namespace ytlib {
 		return re;
 	}
 
-	//KruskalËã·¨£º×îĞ¡Éú³ÉÊ÷£¬¼Ó±ß·¨¡£½«ÔÚÊäÈëµÄvectorÉÏ½øĞĞĞŞ¸Ä£¬·µ»Ø¸ù½ÚµãµÄÖ¸Õë
+	//Kruskalç®—æ³•ï¼šæœ€å°ç”Ÿæˆæ ‘ï¼ŒåŠ è¾¹æ³•ã€‚å°†åœ¨è¾“å…¥çš„vectorä¸Šè¿›è¡Œä¿®æ”¹ï¼Œè¿”å›æ ¹èŠ‚ç‚¹çš„æŒ‡é’ˆ
 	template<typename T>
 	Graph<T>* kruskal(std::vector<Graph<T>*>& vec) {
 		
 	}
 
 
-	//PrimËã·¨£º×îĞ¡Éú³ÉÊ÷£¬¼Óµã·¨¡£½«ÔÚÊäÈëµÄvectorÉÏ½øĞĞĞŞ¸Ä£¬·µ»Ø¸ù½ÚµãµÄÖ¸Õë
+	//Primç®—æ³•ï¼šæœ€å°ç”Ÿæˆæ ‘ï¼ŒåŠ ç‚¹æ³•ã€‚å°†åœ¨è¾“å…¥çš„vectorä¸Šè¿›è¡Œä¿®æ”¹ï¼Œè¿”å›æ ¹èŠ‚ç‚¹çš„æŒ‡é’ˆ
 	template<typename T>
 	Graph<T>* prim(std::vector<Graph<T>*>& vec) {
 		
