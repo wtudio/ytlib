@@ -162,31 +162,36 @@ namespace ytlib
 	static void fft(int32_t N, Complex f[]) {
 		int32_t k, M = 1;
 		/*----计算分解的级数M=log2(N)----*/
-		for (int32_t i = N; (i /= 2) != 1; ++M);
+		for (int32_t i = N; (i >>= 1) != 1; ++M);
 		/*----按照倒位序重新排列原信号----*/
-		for (int32_t i = 1, j = N / 2; i <= N - 2; ++i) {
+		for (int32_t i = 1, j = N >>1 ; i <= N - 2; ++i) {
 			if (i < j) {
 				f[j].swap(f[i]);
 			}
-			k = N / 2;
+			k = N >>1 ;
 			while (k <= j) {
 				j -= k;
-				k /= 2;
+				k >>= 1;
 			}
 			j += k;
 		}
 		/*----FFT算法----*/
 		int32_t r, la, lb, lc;
 		for (int32_t m = 1; m <= M; ++m) {
-			la = static_cast<int32_t>(std::pow(2.0, m)); //la=2^m代表第m级每个分组所含节点数
-			lb = la / 2;    //lb代表第m级每个分组所含碟形单元数,同时它也表示每个碟形单元上下节点之间的距离
+			//la = static_cast<int32_t>(std::pow(2.0, m)); 
+			la=1<<m;
+			//la=2^m代表第m级每个分组所含节点数
+			//lb = la / 2;   
+			lb=la>>1;//lb代表第m级每个分组所含碟形单元数,同时它也表示每个碟形单元上下节点之间的距离
 							/*----碟形运算----*/
-			for (int32_t l = 1; l <= lb; ++l) {
-				r = (l - 1)* static_cast<int32_t>(std::pow(2.0, M - m));
+			for (int32_t l = 0; l < lb; ++l) {
+				//r = (l - 1)* static_cast<int32_t>(std::pow(2.0, M - m));
+				r=l<<(M-m);
+				Complex tmp(cos(2 * PI*r / N), -sin(2 * PI*r / N));
 				//遍历每个分组，分组总数为N/la
-				for (int32_t n = l - 1; n < N - 1; n += la) {
+				for (int32_t n = l; n < N - 1; n += la) {
 					lc = n + lb;  //n,lc分别代表一个碟形单元的上、下节点编号
-					Complex t(f[lc] * Complex(cos(2 * PI*r / N), -sin(2 * PI*r / N)));
+					Complex t(f[lc] * tmp);
 					f[lc] = f[n] - t;
 					f[n] += t;
 				}

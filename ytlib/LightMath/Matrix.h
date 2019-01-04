@@ -8,7 +8,7 @@
 #include <ytlib/LightMath/complex.h>
 
 
-#define MAXSIZE 100000
+#define MAXSIZE 268435456
 
 
 namespace ytlib
@@ -20,13 +20,13 @@ namespace ytlib
 	public:
 		// direct data access
 		T   **val;
-		int32_t   m, n;//m行n列
+		int32_t   m, n;//m行n列。每行的数据是连续的，应尽量使行号为索引
 
-		Basic_Matrix() :m(0), n(0), val(0) {}
-		Basic_Matrix(const int32_t m_, const int32_t n_) {
+		Basic_Matrix() :m(0), n(0), val(NULL) {}
+		Basic_Matrix(const int32_t m_, const int32_t n_):val(NULL) {
 			_allocateMemory(m_, n_);
 		}
-		Basic_Matrix(const int32_t m_, const int32_t n_, const T* val_,int32_t N_=0) {
+		Basic_Matrix(const int32_t m_, const int32_t n_, const T* val_,int32_t N_=0) :val(NULL) {
 			_allocateMemory(m_, n_);
 			if (N_ == 0) N_ = m*n;
 			int32_t k = 0;
@@ -37,7 +37,7 @@ namespace ytlib
 				}
 					
 		}
-		Basic_Matrix(const Basic_Matrix &M) {
+		Basic_Matrix(const Basic_Matrix &M) :val(NULL) {
 			_allocateMemory(M.m, M.n);
 			memcpy(val[0], M.val[0], M.n*M.m * sizeof(T));
 		}
@@ -491,28 +491,7 @@ namespace ytlib
 			c.val[2][0] = a.val[0][0] * b.val[1][0] - a.val[1][0] * b.val[0][0];
 			return c;
 		}
-		// invert matrix M
-		static Basic_Matrix inv(const Basic_Matrix &M) {
-			if (M.m != M.n) {
-				std::cerr << "ERROR: Trying to invert matrix of size (" << M.m << "x" << M.n << ")" << std::endl;
-				exit(0);
-			}
-			Basic_Matrix A(M);
-			Basic_Matrix B = eye(M.m);
-			B.solve(A);
-			return B;
-		}
-		// invert this matrix
-		bool   inv() const {
-			if (m != n) {
-				std::cerr << "ERROR: Trying to invert matrix of size (" << m << "x" << n << ")" << std::endl;
-				exit(0);
-			}
-			Basic_Matrix A(*this);
-			eye();
-			solve(A);
-			return true;
-		}
+		
 		// returns determinant of matrix
 		T  det() const {
 
