@@ -8,4 +8,3 @@ ytlib经过测试可以在windows(win10)和linux(debian9)上编译使用。未�
 除了boost，还使用的其他第三方开源库：
 1、sigar：跨平台系统数据监测库
 2、sqlite3：轻型数据库
-
