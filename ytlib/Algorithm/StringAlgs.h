@@ -7,7 +7,7 @@
 //字符串相关算法。此处的算法都只是给出一种可行方案，不代表生产中的最佳方案
 namespace ytlib {
 
-	//字符串匹配kmp算法。如果没有匹配到则返回sslen
+	//字符串匹配kmp算法。如果没有匹配到则返回sslen。实际使用中应根据情况先做好next字典
 	static size_t KMP(const char* ss, size_t sslen, const char* ps, size_t pslen) {
 		assert(sslen && pslen && ss!=NULL && ps!= NULL);
 		if (pslen > sslen || pslen == 0) return sslen;
