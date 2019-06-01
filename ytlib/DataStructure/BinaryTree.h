@@ -576,7 +576,7 @@ namespace ytlib {
 		}
 		return std::shared_ptr<NodeType>();
 	}
-	//todo：实现这些函数的非递归形式
+
 	//以当前节点为根节点，前序遍历，返回一个指针数组。以当前节点为根节点
 	template<typename T>
 	void DLR(std::shared_ptr<T>& nd, std::vector<std::shared_ptr<T> >& vec) {

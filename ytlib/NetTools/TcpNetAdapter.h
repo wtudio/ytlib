@@ -40,8 +40,6 @@ namespace ytlib {
 	o+v:结束符
 	*/
 
-	//todo：需要对比一下异步接收与同步接收的快慢差异。异步接收多出了一些线程创建的性能消耗，同步接收多出了一些线程保持的性能消耗
-
 	//T需要能boost序列化
 	template<class T>
 	class DataPackage {
@@ -224,7 +222,7 @@ namespace ytlib {
 			if (read_get_err(err)) return;
 			do_read_head(RData_);
 			RData_->pdata->quick_data.buf = buff_;
-			RData_->pdata->quick_data.buf_size = read_bytes;
+			RData_->pdata->quick_data.buf_size = (uint32_t)read_bytes;
 		}
 		void on_read_data_tips(RecvDataPtr& RData_, boost::shared_array<char>& buff_, const boost::system::error_code & err, size_t read_bytes) {
 			if (read_get_err(err)) return;

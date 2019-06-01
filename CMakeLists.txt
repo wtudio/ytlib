@@ -4,6 +4,27 @@ cmake_minimum_required(VERSION 3.1)#最低版本要求
 project( ytlib )#工程名称
 
 #定义变量，添加宏定义
+option(YTLIB_UNICODE "build ytlib with unicode" OFF)
+mark_as_advanced(YTLIB_UNICODE)
+IF (YTLIB_UNICODE)
+	ADD_DEFINITIONS(-DUNICODE)
+ENDIF()
+
+option(YTLIB_DOUBLE_PRECISION "build ytlib with double precision" ON)
+mark_as_advanced(YTLIB_DOUBLE_PRECISION)
+IF (YTLIB_DOUBLE_PRECISION)
+	ADD_DEFINITIONS(-DUSE_DOUBLE_PRECISION)
+ENDIF()
+
+#判断大小端
+include (TestBigEndian)
+TEST_BIG_ENDIAN(IS_BIG_ENDIAN)
+if(IS_BIG_ENDIAN)
+	message(STATUS "BIG_ENDIAN")
+	ADD_DEFINITIONS(-DBIG_ENDIAN)
+else()
+	message(STATUS "LITTLE_ENDIAN")
+endif()
 
 #要导出的变量
 set( YTLIB_LIBRARY )

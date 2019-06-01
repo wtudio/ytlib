@@ -78,6 +78,15 @@ namespace ytlib
 		}
 		cout << endl;
 
+		//归并，非递归
+		int data2_2[num] = { 1,4,2,8,5,9,0,7,6,3 };
+		mergeSort2(data2_2, num);
+		for (uint32_t ii = 0; ii < num; ++ii) {
+			cout << data2_2[ii] << " ";
+		}
+		cout << endl;
+
+
 		//快排
 		int data3[num] = { 1,4,2,8,5,9,0,7,6,3 };
 		quickSort(data3, num);

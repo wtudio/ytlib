@@ -183,6 +183,19 @@ namespace ytlib
 		BigNum b(123456789123456789);
 		BigNum c = a + b;
 		c += b;
+
+
+
+
+		LoopTool lt(vector<uint32_t>{2,3,3});
+		do {
+			for (uint32_t ii = lt.m_vecContent.size() - 1; ii > 0; --ii) {
+				cout << lt.m_vecContent[ii] << '-';
+			}
+			cout << lt.m_vecContent[0] << endl;
+
+		} while (++lt);
+
 		return true;
 	}
 }

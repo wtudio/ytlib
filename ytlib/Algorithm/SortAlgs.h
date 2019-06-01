@@ -50,7 +50,7 @@ namespace ytlib {
 		}
 	}
 
-	//归并排序 out-place/稳定 todo：实现非递归形式
+	//归并排序 out-place/稳定
 	template<typename T>
 	void mergeSort(T* arr, size_t len) {
 		if (len < 2) return;
@@ -68,12 +68,56 @@ namespace ytlib {
 		while ((lc<middle) && (rc<len)) {
 			tmpArr[tc++] = (arr[lc] < arr[rc]) ? arr[lc++] : arr[rc++];
 		}
-		if (lc < middle && rc == len) memcpy(arr + len - middle + lc, arr + lc, (middle - lc) * sizeof(T));
+		if (rc == len) memcpy(arr + tc, arr + lc, (middle - lc) * sizeof(T));
 		memcpy(arr, tmpArr, tc * sizeof(T));
 		delete[] tmpArr;
 	}
 
-	//快速排序 in-place/不稳定 todo：实现非递归形式
+	//归并排序 out-place/稳定，非递归形式，空间复杂度O(n)
+	template<typename T>
+	void mergeSort2(T* arr, size_t len) {
+		if (len < 2) return;
+		using std::swap;
+		if (len == 2) {
+			if (arr[0] > arr[1]) swap(arr[0], arr[1]);
+			return;
+		}
+
+		T *tmpArr1 = new T[len], *tmpArr0 = arr;
+		for (size_t ii = 1; ii < len; ii <<= 1) {
+			size_t jj = 0;
+			while (jj + ii < len) {
+				size_t lc = jj, rc = jj + ii, tc = jj, middle = jj + ii, last = jj + 2 * ii;
+				if (last > len) last = len;
+
+				while ((lc < middle) && (rc < last)) {
+					tmpArr1[tc++] = (tmpArr0[lc] < tmpArr0[rc]) ? tmpArr0[lc++] : tmpArr0[rc++];
+				}
+				if (rc == last) memcpy(tmpArr1 + tc, tmpArr0 + lc, (middle - lc) * sizeof(T));
+				else if (lc == middle) memcpy(tmpArr1 + tc, tmpArr0 + rc, (last - rc) * sizeof(T));
+
+				if (last == len) {
+					jj = len;
+					break;
+				}
+				jj += 2 * ii;
+			}
+			if (jj < len) {
+				memcpy(tmpArr1 + jj, tmpArr0 + jj, (len - jj) * sizeof(T));
+			}
+			swap(tmpArr1, tmpArr0);
+		}
+		if (tmpArr0 != arr) {
+			memcpy(arr, tmpArr0, len * sizeof(T));
+			delete[] tmpArr0;
+		}
+		else {
+			delete[] tmpArr1;
+		}
+
+	}
+
+	//快速排序 in-place/不稳定
 	template<typename T>
 	void quickSort(T* arr, size_t len) {
 		if (len < 2) return;
@@ -98,7 +142,6 @@ namespace ytlib {
 		quickSort(arr, cur);
 		quickSort(arr + cur + 1, len - cur - 1);
 	}
-
 
 	//二分查找。应用于从小到大排序好的数组中，如有重复则找首先出现的那个
 	template<typename T>

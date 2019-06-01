@@ -619,5 +619,6 @@ namespace ytlib
 
 	typedef Basic_Matrix<tfloat> Matrix;
 	typedef Basic_Matrix<int32_t> Matrix_i;
+	typedef Basic_Matrix<uint32_t> Matrix_u;
 	typedef Basic_Matrix<Complex> Matrix_c;
 }

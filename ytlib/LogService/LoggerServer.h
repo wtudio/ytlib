@@ -74,30 +74,30 @@ namespace ytlib {
 					uint8_t lglvl = static_cast<uint8_t>(buff_.buf[0]);
 
 					//提取该条日志的时间
-					uint64_t &&logTime = get_num_from_buf_64bit(&(buff_.buf[1]));
 					boost::posix_time::ptime pt;
-					memcpy(&pt, &logTime, 8);
-					std::string slogTime = boost::posix_time::to_iso_string(pt);
-
+					transEndian((char*)&pt, &(buff_.buf[1]), 8);
 					uint32_t msgpos = 9;
 					//检查是否是此连接第一条日志
 					if (m_bFirstLogFlag) {
 						if (buff_.buf_size < 14) return;
 						//建立文件夹
 						uint32_t clientID = get_num_from_buf(&buff_.buf[9]);
-						std::string dbname(std::to_string(clientID) + '(' + sock.remote_endpoint().address().to_string() + ')');
+						tstring dbname = to_tstring(clientID) + T_TEXT('(') + T_STRING_TO_TSTRING(sock.remote_endpoint().address().to_string()) + T_TEXT(')');
 						tpath curLogPath = (*plogPath) / dbname;
 						boost::filesystem::create_directories(curLogPath);
 
 						//新建数据库
-						curLogPath = curLogPath / (dbname + '_' + slogTime + ".txt");
+						tstring slogTime = boost::posix_time::to_iso_string_type<tchar>(pt);
+						curLogPath = curLogPath / (dbname + T_TEXT('_') + slogTime + T_TEXT(".txt"));
 						lgfile.open(curLogPath.c_str(), std::ios::trunc);
 						msgpos += 4;
 						m_bFirstLogFlag = false;
 					}
 
-					//将日志写入日志文件
-					lgfile << '[' << pt << "]<" << (boost::log::trivial::severity_level)(lglvl) << ">:" << std::string(&(buff_.buf[msgpos]), buff_.buf_size - msgpos) << std::endl;
+					//将日志写入日志文件。这里buf最后不知道为什么没有传\0过来，因此需要手动一下
+					char tmpc = buff_.buf[buff_.buf_size - 1];
+					buff_.buf[buff_.buf_size - 1] = '\0';
+					lgfile << '[' << pt << "]<" << (boost::log::trivial::severity_level)(lglvl) << ">:" << &(buff_.buf[msgpos]) << tmpc << std::endl;
 				}
 			}	
 			if(!m_bFirstLogFlag) lgfile.close();

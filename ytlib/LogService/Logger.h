@@ -60,17 +60,8 @@ namespace ytlib {
 			if (connect()) {
 				set_buf_from_num(&header[4], static_cast<uint32_t>(rec[boost::log::expressions::smessage]->size() + HostInfoSize));
 				HostInfoBuff[0] = static_cast<uint8_t>(*rec[boost::log::trivial::severity]);
-
 				const boost::posix_time::ptime* tnow = (rec[boost::log::aux::default_attribute_names::timestamp()].extract<boost::posix_time::ptime>()).get_ptr();
-				
-#ifdef _MSC_VER
-				memcpy(&HostInfoBuff[1], tnow, 8);
-#else
-				uint64_t logTime;
-				memcpy(&logTime, tnow, 8);
-				set_buf_from_num_64bit(&HostInfoBuff[1], logTime);
-#endif // _MSC_VER
-
+				transEndian(&HostInfoBuff[1], (char*)tnow, 8);
 				logBuff.push_back(boost::asio::buffer(*rec[boost::log::expressions::smessage]));
 				boost::system::error_code err;
 				//发送失败则将ConnectFlag置为false

@@ -4,8 +4,6 @@
 #include <vector>
 #include <map>
 
-#define USE_DOUBLE_PRECISION
-
 #if defined(USE_DOUBLE_PRECISION)
 typedef double tfloat;      // double precision
 #else 

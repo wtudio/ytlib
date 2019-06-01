@@ -291,21 +291,19 @@ namespace ytlib
 		//++i
 		LoopTool& operator++() {
 			size_t len = m_vecUp.size();
-			assert(len);
 			//从低位开始加
 			for (size_t ii = 0; ii < len; ++ii) {
 				m_vecContent[ii] += 1;
-				if (m_vecContent[ii] == m_vecUp[ii]) m_vecContent[0] = 0;
+				if (m_vecContent[ii] == m_vecUp[ii]) m_vecContent[ii] = 0;
 				else return *this;
 			}
 			return *this;
 		}
 		LoopTool& operator--() {
 			size_t len = m_vecUp.size();
-			assert(len);
-			//从低位开始加
+			//从低位开始减
 			for (size_t ii = 0; ii < len; ++ii) {
-				if (m_vecContent[ii] == 0) m_vecContent[0] = m_vecUp[ii] - 1;
+				if (m_vecContent[ii] == 0) m_vecContent[ii] = m_vecUp[ii] - 1;
 				else {
 					m_vecContent[ii] -= 1;
 					return *this;

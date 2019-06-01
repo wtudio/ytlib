@@ -80,7 +80,7 @@ namespace ytlib {
 	template<typename T>
 	g_sideMatrix createAdjMatrix(const std::vector<Graph<T>*>& vec) {
 		size_t Vnum = vec.size();
-		g_sideMatrix M(Vnum, Vnum);
+		g_sideMatrix M((int32_t)Vnum, (int32_t)Vnum);
 		M.setVal(-1);//-1表示不连接
 		for (size_t ii = 0; ii < Vnum; ++ii) {
 			M.val[ii][ii] = 0;
@@ -155,7 +155,7 @@ namespace ytlib {
 
 		size_t curPos = getPos(&beginNode, vec), nextPos = curPos;
 		re[curPos] = 0;
-		path[curPos] = curPos;
+		path[curPos] = (int32_t)curPos;
 		do {
 			curPos = nextPos;
 			flag[curPos] = 1;
@@ -165,7 +165,7 @@ namespace ytlib {
 					g_sideType sideLen = ((re[curPos] < 0) ? 0 : re[curPos]) + itr->second;
 					if (re[pos] < 0 || re[pos]>sideLen) {
 						re[pos] = sideLen;
-						path[pos] = curPos;
+						path[pos] = (int32_t)curPos;
 					}
 				}
 			}
@@ -195,12 +195,12 @@ namespace ytlib {
 	std::pair<g_sideMatrix, Matrix_i> floyd(const std::vector<Graph<T>*>& vec) {
 		size_t len = vec.size();
 		g_sideMatrix distanceM = createAdjMatrix(vec);
-		Matrix_i pathM(len, len);
+		Matrix_i pathM((int32_t)len, (int32_t)len);
 		pathM.setVal(-1);
 		
 		for (size_t ii = 0; ii < len; ++ii) {
 			for (size_t jj = 0; jj < len; ++jj) {
-				if (distanceM.val[ii][jj] >= 0)	pathM.val[ii][jj] = ii;
+				if (distanceM.val[ii][jj] >= 0)	pathM.val[ii][jj] = (int32_t)ii;
 			}
 		}		
 		for (size_t kk = 0; kk < len; ++kk) {
@@ -212,7 +212,7 @@ namespace ytlib {
 						g_sideType d = distanceM.val[ii][kk] + distanceM.val[kk][jj];
 						if (distanceM.val[ii][jj]<0 || distanceM.val[ii][jj]>d) {
 							distanceM.val[ii][jj] = d;
-							pathM.val[ii][jj] = kk;
+							pathM.val[ii][jj] = (int32_t)kk;
 						}
 					}
 				}

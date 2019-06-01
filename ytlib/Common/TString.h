@@ -38,9 +38,11 @@ namespace ytlib
 #if defined(UNICODE) 
 #	define tcout std::wcout
 #	define tcerr std::wcerr
+#	define to_tstring std::to_wstring
 #else
 #	define tcout std::cout
 #	define tcerr std::cerr
+#	define to_tstring std::to_string
 #endif // UNICODE
 
 #if defined(UNICODE)
