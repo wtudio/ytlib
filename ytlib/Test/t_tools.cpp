@@ -64,6 +64,17 @@ namespace ytlib
 		return true;
 	}
 
+	bool test_LoopTool() {
+		LoopTool lt(vector<uint32_t>{2, 3, 3});
+		do {
+			for (uint32_t ii = lt.m_vecContent.size() - 1; ii > 0; --ii) {
+				cout << lt.m_vecContent[ii] << '-';
+			}
+			cout << lt.m_vecContent[0] << endl;
 
+		} while (++lt);
+		return true;
+
+	}
 
 }

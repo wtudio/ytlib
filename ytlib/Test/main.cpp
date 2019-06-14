@@ -156,6 +156,7 @@ int32_t main(int32_t argc, char** argv) {
 	test_Serialize();
 	test_stl();
 	test_urlencode();
+	test_LoopTool();
 	test_NetLog();
 	test_TcpNetAdapter();
 	

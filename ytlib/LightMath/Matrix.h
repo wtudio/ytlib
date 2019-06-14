@@ -277,95 +277,80 @@ namespace ytlib
 			return R;
 		}
 
-
-		/////todo:测试到这。还需要添加随机矩阵生成方法。再看看matlab里还有什么常用矩阵
-
 		// simple arithmetic operations
 		// add matrix
-		Basic_Matrix  operator+ (const Basic_Matrix &M) const {
-			const Basic_Matrix &A = *this;
-			const Basic_Matrix &B = M;
-			if (A.m != B.m || A.n != B.n) {
-				std::cerr << "ERROR: Trying to add matrices of size (" << A.m << "x" << A.n <<
+		Basic_Matrix  operator+ (const Basic_Matrix &B) const {
+			if (m != B.m || n != B.n) {
+				std::cerr << "ERROR: Trying to add matrices of size (" << m << "x" << n <<
 					") and (" << B.m << "x" << B.n << ")" << std::endl;
-				exit(0);
+				return Basic_Matrix();
 			}
-			Basic_Matrix C(A.m, A.n);
+			Basic_Matrix C(m, n);
 			for (int32_t i = 0; i < m; ++i)
 				for (int32_t j = 0; j < n; ++j)
-					C.val[i][j] = A.val[i][j] + B.val[i][j];
+					C.val[i][j] = val[i][j] + B.val[i][j];
 			return C;
 		}
-		Basic_Matrix&  operator+= (const Basic_Matrix &M) {
-			const Basic_Matrix &A = *this;
-			const Basic_Matrix &B = M;
-			if (A.m != B.m || A.n != B.n) {
-				std::cerr << "ERROR: Trying to add matrices of size (" << A.m << "x" << A.n <<
+		Basic_Matrix&  operator+= (const Basic_Matrix &B) {
+			if (m != B.m || n != B.n) {
+				std::cerr << "ERROR: Trying to add matrices of size (" << m << "x" << n <<
 					") and (" << B.m << "x" << B.n << ")" << std::endl;
-				exit(0);
+				return Basic_Matrix();
 			}
 			for (int32_t i = 0; i < m; ++i)
 				for (int32_t j = 0; j < n; ++j)
-					A.val[i][j] += B.val[i][j];
+					val[i][j] += B.val[i][j];
 			return *this;
 		}
 		// subtract matrix
-		Basic_Matrix  operator- (const Basic_Matrix &M) const {
-			const Basic_Matrix &A = *this;
-			const Basic_Matrix &B = M;
-			if (A.m != B.m || A.n != B.n) {
-				std::cerr << "ERROR: Trying to subtract matrices of size (" << A.m << "x" << A.n <<
+		Basic_Matrix  operator- (const Basic_Matrix &B) const {
+			if (m != B.m || n != B.n) {
+				std::cerr << "ERROR: Trying to subtract matrices of size (" << m << "x" << n <<
 					") and (" << B.m << "x" << B.n << ")" << std::endl;
-				exit(0);
+				return Basic_Matrix();
 			}
-			Basic_Matrix C(A.m, A.n);
+			Basic_Matrix C(m, n);
 			for (int32_t i = 0; i < m; ++i)
 				for (int32_t j = 0; j < n; ++j)
-					C.val[i][j] = A.val[i][j] - B.val[i][j];
+					C.val[i][j] = val[i][j] - B.val[i][j];
 			return C;
 		}
-		Basic_Matrix&  operator-= (const Basic_Matrix &M) {
-			const Basic_Matrix &A = *this;
-			const Basic_Matrix &B = M;
-			if (A.m != B.m || A.n != B.n) {
-				std::cerr << "ERROR: Trying to subtract matrices of size (" << A.m << "x" << A.n <<
+		Basic_Matrix&  operator-= (const Basic_Matrix &B) {
+			if (m != B.m || n != B.n) {
+				std::cerr << "ERROR: Trying to subtract matrices of size (" << m << "x" << n <<
 					") and (" << B.m << "x" << B.n << ")" << std::endl;
-				exit(0);
+				return Basic_Matrix();
 			}
 			for (int32_t i = 0; i < m; ++i)
 				for (int32_t j = 0; j < n; ++j)
-					A.val[i][j] -= B.val[i][j];
+					val[i][j] -= B.val[i][j];
 			return *this;
 		}
 		// multiply with matrix
-		Basic_Matrix  operator* (const Basic_Matrix &M) const {
-			const Basic_Matrix &A = *this;
-			const Basic_Matrix &B = M;
-			if (A.n != B.m) {
-				std::cerr << "ERROR: Trying to multiply matrices of size (" << A.m << "x" << A.n <<
+		Basic_Matrix  operator* (const Basic_Matrix &B) const {
+			if (n != B.m) {
+				std::cerr << "ERROR: Trying to multiply matrices of size (" << m << "x" << n <<
 					") and (" << B.m << "x" << B.n << ")" << std::endl;
-				exit(0);
+				return Basic_Matrix();
 			}
-			Basic_Matrix C(A.m, B.n);
-			for (int32_t i = 0; i < A.m; ++i)
+			Basic_Matrix C(m, B.n);
+			for (int32_t i = 0; i < m; ++i)
 				for (int32_t j = 0; j < B.n; ++j)
-					for (int32_t k = 0; k < A.n; ++k)
-						C.val[i][j] += A.val[i][k] * B.val[k][j];
+					for (int32_t k = 0; k < n; ++k)
+						C.val[i][j] += val[i][k] * B.val[k][j];
 			return C;
 		}
-		Basic_Matrix&  operator*= (const Basic_Matrix &M) {
-			const Basic_Matrix &A = *this;
-			const Basic_Matrix &B = M;
-			if (A.n != B.m) {
-				std::cerr << "ERROR: Trying to multiply matrices of size (" << A.m << "x" << A.n <<
+		Basic_Matrix&  operator*= (const Basic_Matrix &B) {
+			if (n != B.m) {
+				std::cerr << "ERROR: Trying to multiply matrices of size (" << m << "x" << n <<
 					") and (" << B.m << "x" << B.n << ")" << std::endl;
-				exit(0);
+				return Basic_Matrix();
 			}
-			Basic_Matrix C(A.m, B.n);
-			for (int32_t i = 0; i < A.m; ++i)
+			Basic_Matrix C(m, B.n);
+			for (int32_t i = 0; i < m; ++i)
 				for (int32_t j = 0; j < B.n; ++j)
-					for (int32_t k = 0; k < A.n; ++k)
-						C.val[i][j] += A.val[i][k] * B.val[k][j];
+					for (int32_t k = 0; k < n; ++k)
+						C.val[i][j] += val[i][k] * B.val[k][j];
 
 			return this->swap(C);
 		}
@@ -383,57 +368,21 @@ namespace ytlib
 					val[i][j] *= s;
 			return *this;
 		}
-		// divide elementwise by matrix (or vector)
-		Basic_Matrix  operator/ (const Basic_Matrix &M) const {
-			const Basic_Matrix &A = *this;
-			const Basic_Matrix &B = M;
-
-			if (A.m == B.m && A.n == B.n) {
-				Basic_Matrix C(A.m, A.n);
-				for (int32_t i = 0; i < A.m; ++i)
-					for (int32_t j = 0; j < A.n; ++j)
-						if (B.val[i][j] != 0)
-							C.val[i][j] = A.val[i][j] / B.val[i][j];
-				return C;
-
-			}
-			else if (A.m == B.m && B.n == 1) {
-				Basic_Matrix C(A.m, A.n);
-				for (int32_t i = 0; i < A.m; ++i)
-					for (int32_t j = 0; j < A.n; ++j)
-						if (B.val[i][0] != 0)
-							C.val[i][j] = A.val[i][j] / B.val[i][0];
-				return C;
-
-			}
-			else if (A.n == B.n && B.m == 1) {
-				Basic_Matrix C(A.m, A.n);
-				for (int32_t i = 0; i < A.m; ++i)
-					for (int32_t j = 0; j < A.n; ++j)
-						if (B.val[0][j] != 0)
-							C.val[i][j] = A.val[i][j] / B.val[0][j];
-				return C;
-
-			}
-			else {
-				std::cerr << "ERROR: Trying to divide matrices of size (" << A.m << "x" << A.n <<
-					") and (" << B.m << "x" << B.n << ")" << std::endl;
-				exit(0);
-			}
-		}
-		// divide by scalar
+		
+		// divide by scalar, make sure s!=0
 		Basic_Matrix  operator/ (const T &s) const {
-			if (abs(s) < 1e-20) {
-				std::cerr << "ERROR: Trying to divide by zero!" << std::endl;
-				exit(0);
-			}
 			Basic_Matrix C(m, n);
 			for (int32_t i = 0; i < m; ++i)
 				for (int32_t j = 0; j < n; ++j)
 					C.val[i][j] = val[i][j] / s;
 			return C;
 		}
-
+		Basic_Matrix& operator/= (const T& s) {
+			for (int32_t i = 0; i < m; ++i)
+				for (int32_t j = 0; j < n; ++j)
+					val[i][j] /= s;
+			return *this;
+		}
 		// negative matrix
 		Basic_Matrix  operator- () const {
 			Basic_Matrix C(m, n);
@@ -461,118 +410,7 @@ namespace ytlib
 			}
 			return re;
 		}
-		// euclidean norm (vectors) / frobenius norm (matrices)
-		T   l2norm() const {
-			T norm = 0;
-			for (int32_t i = 0; i < m; ++i)
-				for (int32_t j = 0; j < n; ++j)
-					norm += val[i][j] * val[i][j];
-			return sqrt(norm);
-		}
-		// mean of all elements in matrix
-		T   mean() const {
-			T mean = 0;
-			for (int32_t i = 0; i < m; ++i)
-				for (int32_t j = 0; j < n; ++j)
-					mean += val[i][j];
-			return mean / (tfloat)(m*n);
-		}
 
-		// complex arithmetic operations
-		// cross product of two vectors
-		static Basic_Matrix cross(const Basic_Matrix &a, const Basic_Matrix &b) {
-			if (a.m != 3 || a.n != 1 || b.m != 3 || b.n != 1) {
-				std::cerr << "ERROR: Cross product vectors must be of size (3x1)" << std::endl;
-				exit(0);
-			}
-			Basic_Matrix c(3, 1);
-			c.val[0][0] = a.val[1][0] * b.val[2][0] - a.val[2][0] * b.val[1][0];
-			c.val[1][0] = a.val[2][0] * b.val[0][0] - a.val[0][0] * b.val[2][0];
-			c.val[2][0] = a.val[0][0] * b.val[1][0] - a.val[1][0] * b.val[0][0];
-			return c;
-		}
-		
-		// returns determinant of matrix
-		T  det() const {
-
-			if (m != n) {
-				std::cerr << "ERROR: Trying to compute determinant of a matrix of size (" << m << "x" << n << ")" << std::endl;
-				exit(0);
-			}
-
-			Basic_Matrix A(*this);
-			int32_t *idx = (int32_t*)malloc(m * sizeof(int32_t));
-			T d;
-			A.lu(idx, d);
-			for (int32_t i = 0; i < m; ++i)
-				d *= A.val[i][i];
-			free(idx);
-			return d;
-		}
-		
-		// replace *this by lower upper decomposition
-		bool   lu(int32_t *idx, tfloat &d, tfloat eps = 1e-20) const {
-
-			if (m != n) {
-				std::cerr << "ERROR: Trying to LU decompose a matrix of size (" << m << "x" << n << ")" << std::endl;
-				exit(0);
-			}
-
-			int32_t i, imax, j, k;
-			tfloat   big, dum, sum, temp;
-			tfloat* vv = (tfloat*)malloc(n * sizeof(tfloat)); // vv stores the implicit scaling of each row.
-			d = 1.0;
-			for (i = 0; i < n; ++i) { // Loop over rows to get the implicit scaling information.
-				big = 0.0;
-				for (j = 0; j < n; ++j)
-					if ((temp = abs(val[i][j])) > big)
-						big = temp;
-				if (big == 0.0) { // No nonzero largest element.
-					free(vv);
-					return false;
-				}
-				vv[i] = 1.0 / big; // Save the scaling.
-			}
-			for (j = 0; j < n; ++j) { // This is the loop over columns of Crout’s method.
-				for (i = 0; i < j; ++i) { // This is equation (2.3.12) except for i = j.
-					sum = val[i][j];
-					for (k = 0; k < i; ++k)
-						sum -= val[i][k] * val[k][j];
-					val[i][j] = sum;
-				}
-				big = 0.0; // Initialize the search for largest pivot element.
-				for (i = j; i < n; ++i) {
-					sum = val[i][j];
-					for (k = 0; k < j; ++k)
-						sum -= val[i][k] * val[k][j];
-					val[i][j] = sum;
-					if ((dum = vv[i] * std::abs(sum)) >= big) {
-						big = dum;
-						imax = i;
-					}
-				}
-				if (j != imax) { // Do we need to interchange rows?
-					for (k = 0; k < n; ++k) { // Yes, do so...
-						dum = val[imax][k];
-						val[imax][k] = val[j][k];
-						val[j][k] = dum;
-					}
-					d = -d;     // ...and change the parity of d.
-					vv[imax] = vv[j]; // Also interchange the scale factor.
-				}
-				idx[j] = imax;
-				if (j != n - 1) { // Now, finally, divide by the pivot element.
-					dum = 1.0 / val[j][j];
-					for (i = j + 1; i < n; ++i)
-						val[i][j] *= dum;
-				}
-			} // Go back for the next column in the reduction.
-
-			  // success
-			free(vv);
-			return true;
-		}
-		
 		// print matrix to stream
 		friend std::ostream& operator<< (std::ostream& out, const Basic_Matrix& M) {
 			if (M.m == 0 || M.n == 0) {
@@ -615,7 +453,6 @@ namespace ytlib
 	void swap(Basic_Matrix<T>& a, Basic_Matrix<T>& b) {
 		a.swap(b);
 	}
-
 
 	typedef Basic_Matrix<tfloat> Matrix;
 	typedef Basic_Matrix<int32_t> Matrix_i;

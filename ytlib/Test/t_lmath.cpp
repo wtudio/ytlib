@@ -136,8 +136,43 @@ namespace ytlib
 		cout << Matrix::rotMatZ(0.5) << endll;
 
 		Matrix m10 = Matrix::ones(4, 4);
-		m10 = Matrix::pow(m10, 10);
+		m10 = Matrix::pow(m10, 3);
 		cout << m10 << endll;
+
+		Matrix m11 = Matrix::ones(4, 4);
+		cout << m11 << endll;
+
+		cout << m11 + m10 << endl;
+		m11 += m10;
+		cout << m11 << endll;
+
+		cout << m11 - m10 << endl;
+		m11 -= m10;
+		cout << m11 << endll;
+
+		cout << m11 * 3 << endl;
+		m11 *=3;
+		cout << m11 << endll;
+
+		cout << m11 / 3 << endl;
+		m11 /= 3;
+		cout << m11 << endll;
+
+		cout << -m11 << endll;
+
+
+		Matrix m12 = Matrix::ones(2, 3);
+		cout << m12 << endll;
+		Matrix m13 = Matrix::ones(3, 4);
+		cout << m13 << endll;
+
+		cout << m12 * m13 << endl;
+
+		m12 *= m13;
+		cout << m12 << endll;
+
+		cout << ~m12 << endll;
+
 
 
 		delete[] f;
@@ -179,22 +214,38 @@ namespace ytlib
 		return true;
 	}
 	bool test_bignum() {
-		BigNum a(987654321987654321);
-		BigNum b(123456789123456789);
-		BigNum c = a + b;
-		c += b;
+
+		BigNum a((int64_t(1) << 32) + 1);
+		cout << a << endl;
+		BigNum b((int64_t(1) << 32)+ 1, 10);
+		cout << b << endl;
+
+		BigNum c("123456789ABCDEF");
+		cout << c << endl;
+
+		BigNum d("123456789123456789", 10);
+		cout << d << endl;
 
 
+		BigNum e("-123456789123456789", 10);
+		cout << e << endl;
+
+		BigNum f = e + d;
+		cout << f << endl;
+		
+		BigNum g("9999", 10);
+		BigNum h("111", 10);
+		cout << g + h << endl;
+
+		BigNum g1("10000", 10);
+		BigNum h1("-111", 10);
+		cout << g1 + h1 << endl;
+
+		cout << g * h << endl;
+		g *= h;
+		cout << g << endl;
 
 
-		LoopTool lt(vector<uint32_t>{2,3,3});
-		do {
-			for (uint32_t ii = lt.m_vecContent.size() - 1; ii > 0; --ii) {
-				cout << lt.m_vecContent[ii] << '-';
-			}
-			cout << lt.m_vecContent[0] << endl;
-
-		} while (++lt);
 
 		return true;
 	}
