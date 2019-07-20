@@ -18,7 +18,10 @@ namespace ytlib {
 		int32_t ii = 0, jj = -1;
 		--pslen;
 		while (ii < pslen) {
-			if (jj == -1 || ps[ii] == ps[jj]) next[ii] = (ps[++ii] == ps[++jj]) ? next[jj] : jj;
+			if (jj == -1 || ps[ii] == ps[jj]) {
+				++ii; ++jj;
+				next[ii] = (ps[ii] == ps[jj]) ? next[jj] : jj;
+			}
 			else jj = next[jj];
 		}
 		++pslen;

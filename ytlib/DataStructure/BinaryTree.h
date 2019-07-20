@@ -39,7 +39,7 @@ namespace ytlib {
 		BSTNodePtr pr;//右子节点
 
 		//向当前节点为根节点的二叉查找树中插入一个节点
-		void insert(BSTNodePtr& ndptr) {
+		void insert(BSTNodePtr ndptr) {
 			assert(ndptr);
 			if (ndptr->obj < obj) {
 				if (pl) pl->insert(ndptr);
@@ -134,7 +134,7 @@ namespace ytlib {
 #define HGT(p)	((p)?p->hgt:0)
 
 		//插入，因为根节点可能会变，所以返回根节点
-		AVLTNodePtr insert(AVLTNodePtr& ndptr) {
+		AVLTNodePtr insert(AVLTNodePtr ndptr) {
 			assert(ndptr);
 			//找到最终要插入的地方的父节点
 			AVLTreeNode<T>* pos = this, *tmppos = (ndptr->obj < obj) ? pl.get() : pr.get();
@@ -188,7 +188,7 @@ namespace ytlib {
 		}
 
 		//在当前节点为根节点的树中删除一个节点，并返回删除后的根节点
-		AVLTNodePtr erase(AVLTNodePtr& ndptr) {
+		AVLTNodePtr erase(AVLTNodePtr ndptr) {
 			if (!ndptr) return this->shared_from_this();
 			//先确定要删除的节点是自己的子节点
 			AVLTreeNode<T>* pos = ndptr.get();
@@ -206,7 +206,7 @@ namespace ytlib {
 
 	private:
 		//假如有重复的，删除第一个找到的
-		AVLTNodePtr _erase(AVLTNodePtr& ndptr) {
+		AVLTNodePtr _erase(AVLTNodePtr ndptr) {
 			assert(pf == NULL);//自身需要是根节点
 			if (!ndptr) return this->shared_from_this();
 			AVLTNodePtr proot = this->shared_from_this();//如果要删除的是自身，则需要一个指针来保存root节点
@@ -374,7 +374,7 @@ namespace ytlib {
 		bool color;//颜色，true为红，false为黑
 
 		//插入，因为根节点可能会变，所以返回根节点
-		BRTreeNodePtr insert(BRTreeNodePtr& ndptr) {
+		BRTreeNodePtr insert(BRTreeNodePtr ndptr) {
 			assert(ndptr && !color);
 			//找到最终要插入的地方的父节点
 			BRTreeNode<T>* pos = this, *tmppos = (ndptr->obj < obj) ? pl.get() : pr.get();
@@ -449,7 +449,7 @@ namespace ytlib {
 		}
 
 		//在当前节点为根节点的树中删除一个节点，并返回删除后的根节点
-		BRTreeNodePtr erase(BRTreeNodePtr& ndptr) {
+		BRTreeNodePtr erase(BRTreeNodePtr ndptr) {
 			if (!ndptr) return this->shared_from_this();
 			//先确定要删除的节点是自己的子节点
 			BRTreeNode<T>* pos = ndptr.get();
@@ -465,7 +465,7 @@ namespace ytlib {
 			return _erase(binSearch<BRTreeNode<T>, T>(this->shared_from_this(), val));
 		}
 	private:
-		BRTreeNodePtr _erase(BRTreeNodePtr& ndptr) {
+		BRTreeNodePtr _erase(BRTreeNodePtr ndptr) {
 			assert(pf == NULL);//自身需要是根节点
 			if (!ndptr) return this->shared_from_this();
 			BRTreeNodePtr proot = this->shared_from_this();//如果要删除的是自身，则需要一个指针来保存root节点
@@ -580,7 +580,7 @@ namespace ytlib {
 
 	//以当前节点为根节点，前序遍历，返回一个指针数组。以当前节点为根节点
 	template<typename T>
-	void DLR(std::shared_ptr<T>& nd, std::vector<std::shared_ptr<T> >& vec) {
+	void DLR(std::shared_ptr<T> nd, std::vector<std::shared_ptr<T> >& vec) {
 		assert(nd);
 		vec.push_back(nd);
 		if (nd->pl) DLR(nd->pl, vec);
@@ -588,7 +588,7 @@ namespace ytlib {
 	}
 	//中序遍历
 	template<typename T>
-	void LDR(std::shared_ptr<T>& nd, std::vector<std::shared_ptr<T> >& vec) {
+	void LDR(std::shared_ptr<T> nd, std::vector<std::shared_ptr<T> >& vec) {
 		assert(nd);
 		if (nd->pl) LDR(nd->pl, vec);
 		vec.push_back(nd);
@@ -596,7 +596,7 @@ namespace ytlib {
 	}
 	//后续遍历
 	template<typename T>
-	void LRD(std::shared_ptr<T>& nd, std::vector<std::shared_ptr<T> >& vec) {
+	void LRD(std::shared_ptr<T> nd, std::vector<std::shared_ptr<T> >& vec) {
 		assert(nd);
 		if (nd->pl) LRD(nd->pl, vec);
 		if (nd->pr) LRD(nd->pr, vec);
@@ -637,13 +637,13 @@ namespace ytlib {
 
 	//将一个节点作为左/右子节点，与原左/右子节点断开。插入的节点与其原父节点断开
 	template<typename T>
-	void setLChild(T* pfather,std::shared_ptr<T>& pchild) {
+	void setLChild(T* pfather,std::shared_ptr<T> pchild) {
 		assert((pfather!=NULL) && pchild);
 		pchild->pf = pfather;
 		pfather->pl = pchild;
 	}
 	template<typename T>
-	void setRChild(T* pfather, std::shared_ptr<T>& pchild) {
+	void setRChild(T* pfather, std::shared_ptr<T> pchild) {
 		assert((pfather != NULL) && pchild);
 		pchild->pf = pfather;
 		pfather->pr = pchild;
@@ -675,7 +675,7 @@ namespace ytlib {
 
 	//分层遍历
 	template<typename T>
-	void traByLevel(std::shared_ptr<T>& nd, std::vector<std::shared_ptr<T> >& vec) {
+	void traByLevel(std::shared_ptr<T> nd, std::vector<std::shared_ptr<T> >& vec) {
 		assert(nd);
 		size_t pos1 = vec.size(),pos2;
 		vec.push_back(nd);
@@ -699,7 +699,7 @@ namespace ytlib {
 	}
 	//反序列化
 	template<typename T>
-	void DeserializeTree(std::shared_ptr<T>& proot, typename std::vector<std::shared_ptr<T> >::iterator& itr) {
+	void DeserializeTree(std::shared_ptr<T>& proot, typename std::vector<std::shared_ptr<T> >::const_iterator itr) {
 		if (*itr) {
 			proot = *itr;
 			DeserializeTree(proot->pl, ++itr);

@@ -8,6 +8,7 @@
 #include <ytlib/NetTools/SharedBuf.h>
 #include <boost/log/trivial.hpp>
 #include <fstream>
+#include <thread>
 
 namespace ytlib {
 	/*

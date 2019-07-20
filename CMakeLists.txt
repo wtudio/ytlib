@@ -26,13 +26,20 @@ else()
 	message(STATUS "LITTLE_ENDIAN")
 endif()
 
+#平台特化
+IF(WIN32)
+
+ELSE(WIN32)
+set( CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-std=c++1z" )
+ENDIF(WIN32)
+
 #要导出的变量
 set( YTLIB_LIBRARY )
 set( YTLIB_INCLUDE_DIR ${ytlib_SOURCE_DIR})
 set( YTLIB_LIBRARY_DIR )
 
 #依赖库
-find_package( Boost )
+find_package( Boost COMPONENTS system date_time filesystem thread log serialization)
 IF ( NOT Boost_FOUND)
 	message(FATAL_ERROR "Cannot find Boost library. please set the boost path")
 	mark_as_advanced( Boost_INCLUDE_DIRS Boost_LIBRARY_DIRS )
@@ -40,7 +47,7 @@ ENDIF()
 set( YTLIB_LIBRARY ${YTLIB_LIBRARY} ${Boost_LIBRARIES})
 set( YTLIB_INCLUDE_DIR ${YTLIB_INCLUDE_DIR} ${Boost_INCLUDE_DIRS})
 set( YTLIB_LIBRARY_DIR ${YTLIB_LIBRARY_DIR} ${Boost_LIBRARY_DIRS})
-
+message( STATUS "${YTLIB_LIBRARY}")
 #设置cmake目录（让cmake能够找到自定义cmake函数。如findpackage等）
 list( APPEND CMAKE_MODULE_PATH ${ytlib_SOURCE_DIR}/CMake )
 
