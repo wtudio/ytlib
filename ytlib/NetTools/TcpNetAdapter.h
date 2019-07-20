@@ -332,7 +332,7 @@ namespace ytlib {
 			if (Tdata_->map_datas.size() > 255 || Tdata_->map_files.size() > 255) return false;//最大支持255个数据包/文件
 			std::vector<TcpEp> vec_hosts;
 			std::shared_lock<std::shared_mutex> lck(m_hostInfoMutex);
-			for (std::set<ID_Type>::const_iterator itr = dst_.begin(); itr != dst_.end(); ++itr) {
+			for (typename std::set<ID_Type>::const_iterator itr = dst_.begin(); itr != dst_.end(); ++itr) {
 				if (*itr == m_myid) return false;//不能发给自己。上层做好检查
 				typename std::map<ID_Type, TcpEp>::const_iterator itr1 = m_mapHostInfo.find(*itr);
 				if (itr1 == m_mapHostInfo.end()) return false;

@@ -76,6 +76,7 @@ namespace ytlib
 		return true;
 	}
 
+/* 
 	static bool readSettings(const tptree& pt, std::map<std::string, std::string>& inputmap_) {
 		try {
 			boost::optional<const tptree&> ptSettings = pt.get_child_optional(T_TEXT("Settings"));
@@ -92,7 +93,7 @@ namespace ytlib
 		}
 		return true;
 	}
-
+*/
 	//添加settings节点
 	static bool writeSettings(const std::map<ytlib::tstring, ytlib::tstring>& inputmap_, tptree& pt ) {
 		try {
@@ -112,6 +113,9 @@ namespace ytlib
 		}
 		return true;
 	}
+
+/*
+	
 	static bool writeSettings(const std::map<std::string, std::string>& inputmap_, tptree& pt) {
 		try {
 			if (inputmap_.size() == 0) return true;
@@ -130,5 +134,5 @@ namespace ytlib
 		}
 		return true;
 	}
-
+*/
 }

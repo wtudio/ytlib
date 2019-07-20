@@ -5,7 +5,7 @@
 #include <cstring>
 
 #include <ytlib/LightMath/Mathbase.h>
-#include <ytlib/LightMath/complex.h>
+#include <ytlib/LightMath/Complex.h>
 
 
 #define MAXSIZE 268435456
@@ -141,8 +141,8 @@ namespace ytlib
 
 		// set (part of) diagonal to scalar, -1 as end replaces whole diagonal
 		void setDiag(const T& s, int32_t i1 = 0, int32_t i2 = -1) {
-			if (i2 == -1) i2 = min(m, n) - 1;
-			if (i1 < 0 || i2 >= min(m, n)) {
+			if (i2 == -1) i2 = std::min(m, n) - 1;
+			if (i1 < 0 || i2 >= std::min(m, n)) {
 				std::cerr << "Index exceeds matrix dimensions." << std::endl;
 				return;
 			}
@@ -196,7 +196,7 @@ namespace ytlib
 
 		void eye() {
 			zero();
-			int32_t min_d = min(m, n);
+			int32_t min_d = std::min(m, n);
 			for (int32_t i = 0; i < min_d; ++i)
 				val[i][i] = T(1);
 		}

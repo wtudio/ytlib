@@ -1,6 +1,7 @@
 #pragma once
 #include <ytlib/Common/Util.h>
 #include <string>
+#include <cstring>
 #include <map>
 #include <vector>
 
@@ -45,7 +46,8 @@ namespace ytlib {
 				if (jj == 0) M2[0] = ii*c1;
 				else {
 					size_t val1 = ((s1[ii] == s2[jj]) ? 0 : c2) + M1[jj - 1];
-					M2[jj]= min(val1, min(M1[jj], M2[jj - 1]) + c1);
+					size_t val2 = std::min(M1[jj], M2[jj - 1]) + c1;
+					M2[jj]= std::min(val1,val2);
 				}
 			}
 			tmpM = M1; M1 = M2; M2 = tmpM;

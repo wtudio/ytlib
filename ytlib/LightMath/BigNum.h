@@ -2,6 +2,7 @@
 #include <iostream>
 #include <ytlib/LightMath/Mathbase.h>
 #include <vector>
+#include <algorithm>
 
 //大整数工具。todo待完善
 namespace ytlib
@@ -48,7 +49,7 @@ namespace ytlib
 				else break;
 			}
 			assert(_content.size());
-			reverse(_content.begin(), _content.end());
+			std::reverse(_content.begin(), _content.end());
 		}
 
 		BigNum  operator+ (const BigNum &value) const {
