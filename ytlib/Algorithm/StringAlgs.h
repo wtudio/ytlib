@@ -4,6 +4,7 @@
 #include <cstring>
 #include <map>
 #include <vector>
+#include <algorithm>
 
 //字符串相关算法。此处的算法都只是给出一种可行方案，不代表生产中的最佳方案
 namespace ytlib {

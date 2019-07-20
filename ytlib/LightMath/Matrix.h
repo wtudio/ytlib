@@ -75,14 +75,7 @@ namespace ytlib
 		void getData(T* val_, int32_t i1 = 0, int32_t j1 = 0, int32_t i2 = -1, int32_t j2 = -1, int32_t N_ = 0) const {
 			if (i2 == -1) i2 = m - 1;
 			if (j2 == -1) j2 = n - 1;
-			if (i1 < 0 || i2 >= m || j1 < 0 || j2 >= n) {
-				std::cerr << "Index exceeds matrix dimensions." << std::endl;
-				return;
-			}
-			if (i2 < i1 || j2 < j1) {
-				std::cerr << "Invalid Input Range." << std::endl;
-				return;
-			}
+			assert(i1 >= 0 && i2 < m && j1 >= 0 && j2 < n && i2 >= i1 && j2 >= j1);
 			if (N_ == 0) N_ = (i2 - i1 + 1)*(j2 - j1 + 1);
 			int32_t k = 0;
 			for (int32_t i = i1; i <= i2; ++i)
@@ -97,14 +90,7 @@ namespace ytlib
 		Basic_Matrix getMat(int32_t i1, int32_t j1, int32_t i2 = -1, int32_t j2 = -1) const {
 			if (i2 == -1) i2 = m - 1;
 			if (j2 == -1) j2 = n - 1;
-			if (i1 < 0 || i2 >= m || j1 < 0 || j2 >= n) {
-				std::cerr << "Index exceeds matrix dimensions." << std::endl;
-				return Basic_Matrix();
-			}
-			if (i2 < i1 || j2 < j1) {
-				std::cerr << "Invalid Input Range." << std::endl;
-				return Basic_Matrix();
-			}
+			assert(i1 >= 0 && i2 < m && j1 >= 0 && j2 < n && i2 >= i1 && j2 >= j1);
 			Basic_Matrix M(i2 - i1 + 1, j2 - j1 + 1);
 			for (int32_t i = 0; i < M.m; ++i)
 				for (int32_t j = 0; j < M.n; ++j)
@@ -113,10 +99,7 @@ namespace ytlib
 		}
 
 		void setMat(const Basic_Matrix &M, const int32_t i1=0, const int32_t j1=0) {
-			if (i1<0 || j1<0 || (i1 + M.m)>m || (j1 + M.n)>n) {
-				std::cerr << "Index exceeds matrix dimensions." << std::endl;
-				return;
-			}
+			assert(i1 >= 0 && j1 >= 0 && (i1 + M.m) <= m && (j1 + M.n) <= n);
 			for (int32_t i = 0; i < M.m; ++i)
 				for (int32_t j = 0; j < M.n; ++j)
 					val[i1 + i][j1 + j] = M.val[i][j];
@@ -126,14 +109,7 @@ namespace ytlib
 		void setVal(const T& s, int32_t i1 = 0, int32_t j1 = 0, int32_t i2 = -1, int32_t j2 = -1) {
 			if (i2 == -1) i2 = m - 1;
 			if (j2 == -1) j2 = n - 1;
-			if (i1 < 0 || i2 >= m || j1 < 0 || j2 >= n) {
-				std::cerr << "Index exceeds matrix dimensions." << std::endl;
-				return;
-			}
-			if (i2 < i1 || j2 < j1) {
-				std::cerr << "Invalid Input Range." << std::endl;
-				return;
-			}
+			assert(i1 >= 0 && i2 < m && j1 >= 0 && j2 < n && i2 >= i1 && j2 >= j1);
 			for (int32_t i = i1; i <= i2; ++i)
 				for (int32_t j = j1; j <= j2; ++j)
 					val[i][j] = s;
@@ -142,14 +118,7 @@ namespace ytlib
 		// set (part of) diagonal to scalar, -1 as end replaces whole diagonal
 		void setDiag(const T& s, int32_t i1 = 0, int32_t i2 = -1) {
 			if (i2 == -1) i2 = std::min(m, n) - 1;
-			if (i1 < 0 || i2 >= std::min(m, n)) {
-				std::cerr << "Index exceeds matrix dimensions." << std::endl;
-				return;
-			}
-			if (i2 < i1) {
-				std::cerr << "Invalid Input Range." << std::endl;
-				return;
-			}
+			assert(i1 >= 0 && i2 < std::min(m, n) && i2 >= i1);
 			for (int32_t i = i1; i <= i2; ++i)
 				val[i][i] = s;
 		}
@@ -174,16 +143,11 @@ namespace ytlib
 		// extract columns with given index
 		Basic_Matrix extractCols(const int32_t* idx,const int32_t N_) const {
 			Basic_Matrix M(m, N_);
-			for (int32_t j = 0; j < N_; ++j)
-				if ((idx[j] < n) && (idx[j] > 0)) {
-					for (int32_t i = 0; i < m; ++i)
-						M.val[i][j] = val[i][idx[j]];
-				}
-				else {
-					std::cerr << "Index exceeds matrix dimensions." << std::endl;
-					return Basic_Matrix();
-				}
-					
+			for (int32_t j = 0; j < N_; ++j) {
+				assert((idx[j] < n) && (idx[j] >= 0));
+				for (int32_t i = 0; i < m; ++i)
+					M.val[i][j] = val[i][idx[j]];
+			}	
 			return M;
 		}
 		// create identity matrix
@@ -211,29 +175,24 @@ namespace ytlib
 		}
 		// create diagonal matrix with nx1 or 1xn matrix M as elements
 		static Basic_Matrix diag(const Basic_Matrix &M) {
-			if (M.m > 1 && M.n == 1) {
+			assert((M.m > 1 && M.n == 1) || (M.m == 1 && M.n > 1));
+			if (M.n == 1) {
 				Basic_Matrix D(M.m, M.m);
 				for (int32_t i = 0; i < M.m; ++i)
 					D.val[i][i] = M.val[i][0];
 				return D;
 			}
-			else if (M.m == 1 && M.n > 1) {
+			else {
 				Basic_Matrix D(M.n, M.n);
 				for (int32_t i = 0; i < M.n; ++i)
 					D.val[i][i] = M.val[0][i];
 				return D;
 			}
-			std::cerr << "ERROR: Trying to create diagonal matrix from vector of size (" << M.m << "x" << M.n << ")" << std::endl;
-			return Basic_Matrix();
 		}
 
 		// returns the m-by-n matrix whose elements are taken column-wise from M
 		static Basic_Matrix reshape(const Basic_Matrix &M, const int32_t m_, const int32_t n_) {
-			if (M.m*M.n != m_*n_) {
-				std::cerr << "ERROR: Trying to reshape a matrix of size (" << M.m << "x" << M.n <<
-					") to size (" << m_ << "x" << n_ << ")" << std::endl;
-				return Basic_Matrix();
-			}
+			assert(M.m*M.n == m_ * n_);
 			Basic_Matrix M2(m_, n_);
 			int32_t size_ = m_*n_;
 			for (int32_t k = 0; k < size_; ++k) {
@@ -280,11 +239,7 @@ namespace ytlib
 		// simple arithmetic operations
 		// add matrix
 		Basic_Matrix  operator+ (const Basic_Matrix &B) const {
-			if (m != B.m || n != B.n) {
-				std::cerr << "ERROR: Trying to add matrices of size (" << m << "x" << n <<
-					") and (" << B.m << "x" << B.n << ")" << std::endl;
-				return Basic_Matrix();
-			}
+			assert(m == B.m && n == B.n);
 			Basic_Matrix C(m, n);
 			for (int32_t i = 0; i < m; ++i)
 				for (int32_t j = 0; j < n; ++j)
@@ -292,11 +247,7 @@ namespace ytlib
 			return C;
 		}
 		Basic_Matrix&  operator+= (const Basic_Matrix &B) {
-			if (m != B.m || n != B.n) {
-				std::cerr << "ERROR: Trying to add matrices of size (" << m << "x" << n <<
-					") and (" << B.m << "x" << B.n << ")" << std::endl;
-				return Basic_Matrix();
-			}
+			assert(m == B.m && n == B.n);
 			for (int32_t i = 0; i < m; ++i)
 				for (int32_t j = 0; j < n; ++j)
 					val[i][j] += B.val[i][j];
@@ -304,11 +255,7 @@ namespace ytlib
 		}
 		// subtract matrix
 		Basic_Matrix  operator- (const Basic_Matrix &B) const {
-			if (m != B.m || n != B.n) {
-				std::cerr << "ERROR: Trying to subtract matrices of size (" << m << "x" << n <<
-					") and (" << B.m << "x" << B.n << ")" << std::endl;
-				return Basic_Matrix();
-			}
+			assert(m == B.m && n == B.n);
 			Basic_Matrix C(m, n);
 			for (int32_t i = 0; i < m; ++i)
 				for (int32_t j = 0; j < n; ++j)
@@ -316,11 +263,7 @@ namespace ytlib
 			return C;
 		}
 		Basic_Matrix&  operator-= (const Basic_Matrix &B) {
-			if (m != B.m || n != B.n) {
-				std::cerr << "ERROR: Trying to subtract matrices of size (" << m << "x" << n <<
-					") and (" << B.m << "x" << B.n << ")" << std::endl;
-				return Basic_Matrix();
-			}
+			assert(m == B.m && n == B.n);
 			for (int32_t i = 0; i < m; ++i)
 				for (int32_t j = 0; j < n; ++j)
 					val[i][j] -= B.val[i][j];
@@ -328,11 +271,7 @@ namespace ytlib
 		}
 		// multiply with matrix
 		Basic_Matrix  operator* (const Basic_Matrix &B) const {
-			if (n != B.m) {
-				std::cerr << "ERROR: Trying to multiply matrices of size (" << m << "x" << n <<
-					") and (" << B.m << "x" << B.n << ")" << std::endl;
-				return Basic_Matrix();
-			}
+			assert(n == B.m);
 			Basic_Matrix C(m, B.n);
 			for (int32_t i = 0; i < m; ++i)
 				for (int32_t j = 0; j < B.n; ++j)
@@ -341,11 +280,7 @@ namespace ytlib
 			return C;
 		}
 		Basic_Matrix&  operator*= (const Basic_Matrix &B) {
-			if (n != B.m) {
-				std::cerr << "ERROR: Trying to multiply matrices of size (" << m << "x" << n <<
-					") and (" << B.m << "x" << B.n << ")" << std::endl;
-				return Basic_Matrix();
-			}
+			assert(n == B.m);
 			Basic_Matrix C(m, B.n);
 			for (int32_t i = 0; i < m; ++i)
 				for (int32_t j = 0; j < B.n; ++j)

@@ -13,6 +13,7 @@
 
 // 包含特定头文件
 #if defined(_WIN32)
+#   define NOMINMAX
 #	include <WinSock2.h>
 #	include <Windows.h>
 #	include <Shlwapi.h>

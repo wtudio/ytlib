@@ -94,9 +94,7 @@ namespace ytlib
 		Matrix m5(5, 6);
 		m5.setMat(m4);
 		cout << m5 << endll;
-		m5.setMat(m4,2,2);
-		cout << m5 << endll;
-		m5.setMat(m4, 4, 4);
+		m5.setMat(m4, 2, 2);
 		cout << m5 << endll;
 
 		m5.setVal(55.5, 4, 4);

@@ -2,7 +2,7 @@
 #include <ytlib/Common/Util.h>
 #include <memory>
 #include <vector>
-
+#include <algorithm>
 
 namespace ytlib {
 	//几种树的类的实现---------------------------------------------------------------------------
@@ -142,7 +142,7 @@ namespace ytlib {
 				pos = tmppos;
 				tmppos = (ndptr->obj < pos->obj) ? pos->pl.get() : pos->pr.get();
 			}
-			if (ndptr->obj == pos->obj) return this.shared_from_this();//不允许重复
+			if (ndptr->obj == pos->obj) return this->shared_from_this();//不允许重复
 			if (ndptr->obj < pos->obj) setLChild(pos, ndptr);
 			else setRChild(pos, ndptr);
 
@@ -178,18 +178,18 @@ namespace ytlib {
 				}
 				else {
 					cghgt = pos->hgt = std::max(lh, lr) + 1;
-					if (curhgt == cghgt) return this.shared_from_this();
+					if (curhgt == cghgt) return this->shared_from_this();
 					pos = pos->pf;
 				}
 				
 			}
 			if (re) return re;
-			return this.shared_from_this();
+			return this->shared_from_this();
 		}
 
 		//在当前节点为根节点的树中删除一个节点，并返回删除后的根节点
 		AVLTNodePtr erase(AVLTNodePtr& ndptr) {
-			if (!ndptr) return this.shared_from_this();
+			if (!ndptr) return this->shared_from_this();
 			//先确定要删除的节点是自己的子节点
 			AVLTreeNode<T>* pos = ndptr.get();
 			while (pos != NULL) {
@@ -197,19 +197,19 @@ namespace ytlib {
 				pos = pos->pf;
 			}
 			if (pos == this) return _erase(ndptr);
-			return this.shared_from_this();
+			return this->shared_from_this();
 		}
 
 		AVLTNodePtr erase(const T& val) {
-			return _erase(binSearch<AVLTreeNode<T>, T>(this.shared_from_this(), val));
+			return _erase(binSearch<AVLTreeNode<T>, T>(this->shared_from_this(), val));
 		}
 
 	private:
 		//假如有重复的，删除第一个找到的
 		AVLTNodePtr _erase(AVLTNodePtr& ndptr) {
 			assert(pf == NULL);//自身需要是根节点
-			if (!ndptr) return this.shared_from_this();
-			AVLTNodePtr proot = this.shared_from_this();//如果要删除的是自身，则需要一个指针来保存root节点
+			if (!ndptr) return this->shared_from_this();
+			AVLTNodePtr proot = this->shared_from_this();//如果要删除的是自身，则需要一个指针来保存root节点
 			AVLTreeNode<T>* pos = ndptr->pf;
 			if (!(ndptr->pl) && !(ndptr->pr)) {
 				//左右都为空，为叶子节点
@@ -317,7 +317,7 @@ namespace ytlib {
 			AVLTNodePtr re = pl;
 			if (re->pr) re->pr->pf = this;
 			pl = re->pr;
-			if (pf == NULL) re->pr = this.shared_from_this();
+			if (pf == NULL) re->pr = this->shared_from_this();
 			else {
 				if (getLR(this)) {
 					re->pr = pf->pl;
@@ -339,7 +339,7 @@ namespace ytlib {
 			AVLTNodePtr re = pr;
 			if (re->pl) re->pl->pf = this;
 			pr = re->pl;
-			if (pf == NULL) re->pl = this.shared_from_this();
+			if (pf == NULL) re->pl = this->shared_from_this();
 			else {
 				if (getLR(this)) {
 					re->pl = pf->pl;
@@ -382,7 +382,7 @@ namespace ytlib {
 				pos = tmppos;
 				tmppos = (ndptr->obj < pos->obj) ? pos->pl.get() : pos->pr.get();
 			}
-			if (ndptr->obj == pos->obj) return this.shared_from_this();//不允许重复
+			if (ndptr->obj == pos->obj) return this->shared_from_this();//不允许重复
 			if (ndptr->obj < pos->obj) setLChild(pos, ndptr);
 			else setRChild(pos, ndptr);
 
@@ -396,7 +396,7 @@ namespace ytlib {
 				re.reset();
 				//父节点是黑色
 				if (!(pos->color)) {
-					return this.shared_from_this();
+					return this->shared_from_this();
 				}
 				BRTreeNode<T>* uncle = (getLR(pos) ? pos->pf->pr.get() : pos->pf->pl.get());
 				if (uncle!=NULL && uncle->color) {
@@ -445,12 +445,12 @@ namespace ytlib {
 			}
 			if (pos == end) tmppos->color = false;
 			if (re && (re->pf == end)) return re;
-			return this.shared_from_this();
+			return this->shared_from_this();
 		}
 
 		//在当前节点为根节点的树中删除一个节点，并返回删除后的根节点
 		BRTreeNodePtr erase(BRTreeNodePtr& ndptr) {
-			if (!ndptr) return this.shared_from_this();
+			if (!ndptr) return this->shared_from_this();
 			//先确定要删除的节点是自己的子节点
 			BRTreeNode<T>* pos = ndptr.get();
 			while (pos != NULL) {
@@ -458,17 +458,17 @@ namespace ytlib {
 				pos = pos->pf;
 			}
 			if (pos == this) return _erase(ndptr);
-			return this.shared_from_this();
+			return this->shared_from_this();
 		}
 
 		BRTreeNodePtr erase(const T& val) {
-			return _erase(binSearch<BRTreeNode<T>, T>(this.shared_from_this(), val));
+			return _erase(binSearch<BRTreeNode<T>, T>(this->shared_from_this(), val));
 		}
 	private:
 		BRTreeNodePtr _erase(BRTreeNodePtr& ndptr) {
 			assert(pf == NULL);//自身需要是根节点
-			if (!ndptr) return this.shared_from_this();
-			BRTreeNodePtr proot = this.shared_from_this();//如果要删除的是自身，则需要一个指针来保存root节点
+			if (!ndptr) return this->shared_from_this();
+			BRTreeNodePtr proot = this->shared_from_this();//如果要删除的是自身，则需要一个指针来保存root节点
 			BRTreeNode<T>* pos = ndptr->pf;
 			if (!(ndptr->pl) && !(ndptr->pr)) {
 				//左右都为空，为叶子节点
@@ -537,7 +537,7 @@ namespace ytlib {
 			BRTreeNodePtr re = pl;
 			if (re->pr) re->pr->pf = this;
 			pl = re->pr;
-			if (pf == NULL) re->pr = this.shared_from_this();
+			if (pf == NULL) re->pr = this->shared_from_this();
 			else {
 				if (getLR(this)) {
 					re->pr = pf->pl;
@@ -557,7 +557,7 @@ namespace ytlib {
 			BRTreeNodePtr re = pr;
 			if (re->pl) re->pl->pf = this;
 			pr = re->pl;
-			if (pf == NULL) re->pl = this.shared_from_this();
+			if (pf == NULL) re->pl = this->shared_from_this();
 			else {
 				if (getLR(this)) {
 					re->pl = pf->pl;
