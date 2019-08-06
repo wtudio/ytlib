@@ -1,3 +1,11 @@
+/**
+ * @file UrlEncode.h
+ * @brief Url±à½âÂë
+ * @details UrlEncode¡¢UrlDecode
+ * @author WT
+ * @email 905976782@qq.com
+ * @date 2019-07-26
+ */
 #pragma once
 
 #include <ytlib/Common/Util.h>

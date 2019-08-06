@@ -1,3 +1,11 @@
+/**
+ * @file XMLFile.h
+ * @brief 使用XML的文件类
+ * @details 使用XML的文件类，封装了xml解析
+ * @author WT
+ * @email 905976782@qq.com
+ * @date 2019-07-26
+ */
 #pragma once
 #include <ytlib/FileManager/FileBase.h>
 #include <ytlib/SupportTools/XMLTools.h>

@@ -1,3 +1,11 @@
+/**
+ * @file FileBase.h
+ * @brief 文件基础类
+ * @details 文件基础类，制定了文件相关操作的接口，包括Open、New、Save
+ * @author WT
+ * @email 905976782@qq.com
+ * @date 2019-07-26
+ */
 #pragma once
 
 #include <ytlib/Common/FileSystem.h>

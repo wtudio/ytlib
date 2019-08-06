@@ -1,3 +1,11 @@
+/**
+ * @file PrjBase.h
+ * @brief 项目管理型文件
+ * @details 基于xml格式，制定通用的项目管理型文件
+ * @author WT
+ * @email 905976782@qq.com
+ * @date 2019-07-26
+ */
 #pragma once
 #include <ytlib/FileManager/FileBase.h>
 #include <ytlib/SupportTools/XMLTools.h>

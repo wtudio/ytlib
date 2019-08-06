@@ -1,3 +1,11 @@
+/**
+ * @file SortAlgs.h
+ * @brief 常用排序算法
+ * @details 模板化的排序相关算法，包括冒泡、归并、快排等
+ * @author WT
+ * @email 905976782@qq.com
+ * @date 2019-07-26
+ */
 #pragma once
 #include <ytlib/Common/Util.h>
 #include <vector>

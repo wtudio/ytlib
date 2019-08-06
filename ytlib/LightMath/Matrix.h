@@ -1,3 +1,11 @@
+/**
+ * @file Matrix.h
+ * @brief 矩阵类
+ * @details 基于模板的简易矩阵类型
+ * @author WT
+ * @email 905976782@qq.com
+ * @date 2019-07-26
+ */
 #pragma once
 
 #include <string>

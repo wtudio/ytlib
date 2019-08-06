@@ -1,3 +1,11 @@
+/**
+ * @file SerializeFile.h
+ * @brief 使用boost序列化的文件
+ * @details 使用boost序列化的文件，支持boost序列化的类即可使用
+ * @author WT
+ * @email 905976782@qq.com
+ * @date 2019-07-26
+ */
 #pragma once
 
 #include <ytlib/FileManager/FileBase.h>

@@ -1,3 +1,11 @@
+/**
+ * @file Serialize.h
+ * @brief 基于boost的序列化
+ * @details 基于boost的序列化与反序列化工具
+ * @author WT
+ * @email 905976782@qq.com
+ * @date 2019-07-26
+ */
 #pragma once
 
 #include <ytlib/Common/Util.h>

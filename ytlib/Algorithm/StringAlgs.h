@@ -1,3 +1,11 @@
+/**
+ * @file StringAlgs.h
+ * @brief 常用字符串算法
+ * @details 常用字符串算法，包括kmp、差异度计算、最长不重复字串、替换、分割等
+ * @author WT
+ * @email 905976782@qq.com
+ * @date 2019-07-26
+ */
 #pragma once
 #include <ytlib/Common/Util.h>
 #include <string>

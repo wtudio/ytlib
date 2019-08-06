@@ -1,3 +1,11 @@
+/**
+ * @file Graph.h
+ * @brief 图
+ * @details 提供模板化的图的实现和相关的算法，包括有向图/无向图、BFS/DFS、dijkstra、floyd等
+ * @author WT
+ * @email 905976782@qq.com
+ * @date 2019-07-26
+ */
 #pragma once
 #include <ytlib/Common/Util.h>
 #include <ytlib/LightMath/Matrix.h>

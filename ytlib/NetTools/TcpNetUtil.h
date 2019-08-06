@@ -1,3 +1,11 @@
+/**
+ * @file TcpNetUtil.h
+ * @brief 网络基础模块
+ * @details 一些网络基础工具，如大小端转换、端口检查等
+ * @author WT
+ * @email 905976782@qq.com
+ * @date 2019-07-26
+ */
 #pragma once
 #include <boost/asio.hpp>
 

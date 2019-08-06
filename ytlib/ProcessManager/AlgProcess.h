@@ -1,3 +1,11 @@
+/**
+ * @file AlgProcess.h
+ * @brief 算法过程
+ * @details 定义了基本的算法过程
+ * @author WT
+ * @email 905976782@qq.com
+ * @date 2019-07-26
+ */
 #pragma once
 #include <ytlib/ProcessManager/ProcessBase.h>
 #include <sstream>

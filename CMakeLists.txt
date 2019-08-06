@@ -28,9 +28,10 @@ endif()
 
 #平台特化
 IF(WIN32)
-
+set( BOOST_COMPONENTS )
 ELSE(WIN32)
 set( CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-std=c++1z" )
+set( BOOST_COMPONENTS system date_time filesystem thread log serialization)
 ENDIF(WIN32)
 
 #要导出的变量
@@ -39,7 +40,7 @@ set( YTLIB_INCLUDE_DIR ${ytlib_SOURCE_DIR})
 set( YTLIB_LIBRARY_DIR )
 
 #依赖库
-find_package( Boost COMPONENTS system date_time filesystem thread log serialization)
+find_package( Boost COMPONENTS ${BOOST_COMPONENTS})
 IF ( NOT Boost_FOUND)
 	message(FATAL_ERROR "Cannot find Boost library. please set the boost path")
 	mark_as_advanced( Boost_INCLUDE_DIRS Boost_LIBRARY_DIRS )

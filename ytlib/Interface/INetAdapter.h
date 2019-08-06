@@ -1,3 +1,11 @@
+/**
+ * @file INetAdapter.h
+ * @brief 网络适配器的接口
+ * @details 定义了网络适配器应遵循的接口
+ * @author WT
+ * @email 905976782@qq.com
+ * @date 2019-07-26
+ */
 #pragma once
 
 #include <ytlib/Common/TString.h>

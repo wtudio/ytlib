@@ -1,3 +1,11 @@
+/**
+ * @file Util.h
+ * @brief 基础头文件
+ * @details ytlib基础头文件，提供一些基础工具与常用宏定义
+ * @author WT
+ * @email 905976782@qq.com
+ * @date 2019-07-26
+ */
 #pragma once
 
 // 默认windows下使用unicode，其他平台不使用。在这里添加要使用unicode的平台宏定义

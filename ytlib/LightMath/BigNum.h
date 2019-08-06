@@ -1,3 +1,11 @@
+/**
+ * @file BigNum.h
+ * @brief 大数
+ * @details 可转换进制的大数类
+ * @author WT
+ * @email 905976782@qq.com
+ * @date 2019-07-26
+ */
 #pragma once
 #include <iostream>
 #include <ytlib/LightMath/Mathbase.h>

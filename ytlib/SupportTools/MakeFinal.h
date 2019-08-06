@@ -1,3 +1,11 @@
+/**
+ * @file MakeFinal.h
+ * @brief 无法被继承的类
+ * @details 制作一个无法被继承的类
+ * @author WT
+ * @email 905976782@qq.com
+ * @date 2019-07-26
+ */
 #pragma once
 
 namespace ytlib

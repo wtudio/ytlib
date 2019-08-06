@@ -1,3 +1,11 @@
+/**
+ * @file Error.h
+ * @brief 基础错误、异常
+ * @details ytlib中基础的错误、异常枚举
+ * @author WT
+ * @email 905976782@qq.com
+ * @date 2019-07-26
+ */
 #pragma once
 
 #include <ytlib/Common/Util.h>

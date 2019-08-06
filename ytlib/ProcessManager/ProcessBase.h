@@ -1,3 +1,11 @@
+/**
+ * @file ProcessBase.h
+ * @brief 过程基础类
+ * @details 定义了基本的过程概念
+ * @author WT
+ * @email 905976782@qq.com
+ * @date 2019-07-26
+ */
 #pragma once
 #include <ytlib/Common/TString.h>
 #include <functional>  

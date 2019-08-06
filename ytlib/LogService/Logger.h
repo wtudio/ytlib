@@ -1,3 +1,11 @@
+/**
+ * @file Logger.h
+ * @brief 基于boost.log的日志
+ * @details 基于boost.log的日志，封装了本地日志和远程日志
+ * @author WT
+ * @email 905976782@qq.com
+ * @date 2019-07-26
+ */
 #pragma once
 #include <ytlib/NetTools/TcpNetUtil.h>
 #include <ytlib/Common/Util.h>

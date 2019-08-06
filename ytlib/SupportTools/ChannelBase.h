@@ -1,3 +1,11 @@
+/**
+ * @file ChannelBase.h
+ * @brief 基本通道
+ * @details 基于生产者消费者模型的线程安全的通道基类
+ * @author WT
+ * @email 905976782@qq.com
+ * @date 2019-07-26
+ */
 #pragma once
 
 #include <ytlib/SupportTools/QueueBase.h>

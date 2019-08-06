@@ -1,3 +1,11 @@
+/**
+ * @file KeyValueFile.h
+ * @brief k-v形式文件
+ * @details 将key-value型文件与map<string, string>关联
+ * @author WT
+ * @email 905976782@qq.com
+ * @date 2019-07-26
+ */
 #pragma once
 #include <ytlib/FileManager/FileBase.h>
 #include <map>

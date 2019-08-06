@@ -1,3 +1,11 @@
+/**
+ * @file QueueBase.h
+ * @brief 线程安全队列
+ * @details 简单的多线程环境下线程安全的队列
+ * @author WT
+ * @email 905976782@qq.com
+ * @date 2019-07-26
+ */
 #pragma once
 
 #include <queue>

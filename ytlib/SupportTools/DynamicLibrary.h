@@ -1,3 +1,11 @@
+/**
+ * @file DynamicLibrary.h
+ * @brief 动态库加载工具
+ * @details 平台无关的动态库加载工具
+ * @author WT
+ * @email 905976782@qq.com
+ * @date 2019-07-26
+ */
 #pragma once
 
 #include <ytlib/Common/Util.h>

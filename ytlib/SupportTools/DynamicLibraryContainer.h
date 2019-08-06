@@ -1,3 +1,11 @@
+/**
+ * @file DynamicLibraryContainer.h
+ * @brief 动态库容器
+ * @details 管理加载的动态库，形成动态库池
+ * @author WT
+ * @email 905976782@qq.com
+ * @date 2019-07-26
+ */
 #pragma once
 #include <ytlib/SupportTools/DynamicLibrary.h>
 #include <boost/serialization/singleton.hpp>

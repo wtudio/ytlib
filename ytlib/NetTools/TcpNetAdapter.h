@@ -1,3 +1,11 @@
+/**
+ * @file TcpNetAdapter.h
+ * @brief TCP网络适配器
+ * @details 基于TcpConnectionPool的简易网络适配器
+ * @author WT
+ * @email 905976782@qq.com
+ * @date 2019-07-26
+ */
 #pragma once
 #include <ytlib/SupportTools/Serialize.h>
 #include <ytlib/Common/FileSystem.h>

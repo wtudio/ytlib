@@ -1,3 +1,11 @@
+/**
+ * @file LightSignal.h
+ * @brief 轻量级信号量
+ * @details 轻量级信号量和相关操作
+ * @author WT
+ * @email 905976782@qq.com
+ * @date 2019-07-26
+ */
 #pragma once
 #include <mutex>
 #include <condition_variable>

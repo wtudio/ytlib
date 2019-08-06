@@ -1,3 +1,11 @@
+/**
+ * @file TcpConnectionPool.h
+ * @brief TCP连接池
+ * @details 基于boost.asio的tcp连接类和连接池
+ * @author WT
+ * @email 905976782@qq.com
+ * @date 2019-07-26
+ */
 #pragma once
 #include <ytlib/NetTools/TcpNetUtil.h>
 #include <ytlib/Common/Util.h>

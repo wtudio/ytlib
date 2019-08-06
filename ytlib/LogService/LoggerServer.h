@@ -1,3 +1,11 @@
+/**
+ * @file LoggerServer.h
+ * @brief 基于boost.log的远程日志服务器
+ * @details 基于boost.log的远程日志服务器，提供日志存档、判断大小自动新建等功能
+ * @author WT
+ * @email 905976782@qq.com
+ * @date 2019-07-26
+ */
 #pragma once
 #include <ytlib/Common/Util.h>
 #include <ytlib/Common/FileSystem.h>

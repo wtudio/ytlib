@@ -1,3 +1,11 @@
+/**
+ * @file BinaryTree.h
+ * @brief 二叉树
+ * @details 提供模板化的一些树的实现和相关的算法，包括AVL树、红黑树
+ * @author WT
+ * @email 905976782@qq.com
+ * @date 2019-07-26
+ */
 #pragma once
 #include <ytlib/Common/Util.h>
 #include <memory>

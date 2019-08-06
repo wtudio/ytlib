@@ -1,3 +1,11 @@
+/**
+ * @file XMLTools.h
+ * @brief XML工具
+ * @details 基于boost的XML解析写入工具
+ * @author WT
+ * @email 905976782@qq.com
+ * @date 2019-07-26
+ */
 #pragma once
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>

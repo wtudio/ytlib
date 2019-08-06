@@ -1,3 +1,11 @@
+/**
+ * @file LoopTool.h
+ * @brief 多层循环工具
+ * @details 多层循环时的工具，但尽量不要用到
+ * @author WT
+ * @email 905976782@qq.com
+ * @date 2019-07-26
+ */
 #pragma once
 #include <vector>
 

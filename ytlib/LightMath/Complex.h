@@ -1,3 +1,11 @@
+/**
+ * @file Complex.h
+ * @brief 复数
+ * @details 复数和相关运算
+ * @author WT
+ * @email 905976782@qq.com
+ * @date 2019-07-26
+ */
 #pragma once
 
 #include <iostream>
@@ -178,14 +186,11 @@ namespace ytlib
 		/*----FFT算法----*/
 		int32_t r, la, lb, lc;
 		for (int32_t m = 1; m <= M; ++m) {
-			//la = static_cast<int32_t>(std::pow(2.0, m)); 
 			la=1<<m;
 			//la=2^m代表第m级每个分组所含节点数
-			//lb = la / 2;   
 			lb=la>>1;//lb代表第m级每个分组所含碟形单元数,同时它也表示每个碟形单元上下节点之间的距离
-							/*----碟形运算----*/
+			//----碟形运算----
 			for (int32_t l = 0; l < lb; ++l) {
-				//r = (l - 1)* static_cast<int32_t>(std::pow(2.0, M - m));
 				r=l<<(M-m);
 				Complex tmp(cos(2 * PI*r / N), -sin(2 * PI*r / N));
 				//遍历每个分组，分组总数为N/la

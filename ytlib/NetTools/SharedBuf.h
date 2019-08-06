@@ -1,3 +1,11 @@
+/**
+ * @file SharedBuf.h
+ * @brief 智能buffer
+ * @details 基于boost::shared_array的智能buffer，当没有人引用时自动销毁
+ * @author WT
+ * @email 905976782@qq.com
+ * @date 2019-07-26
+ */
 #pragma once
 #include <boost/shared_array.hpp>
 #include <string>

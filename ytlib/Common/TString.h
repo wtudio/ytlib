@@ -1,3 +1,11 @@
+/**
+ * @file TString.h
+ * @brief 提供对wchar_t的相关支持
+ * @details 提供对wchar_t的相关支持，与UNICODE宏定义绑定
+ * @author WT
+ * @email 905976782@qq.com
+ * @date 2019-07-26
+ */
 #pragma once
 
 #include <ytlib/Common/Util.h>
