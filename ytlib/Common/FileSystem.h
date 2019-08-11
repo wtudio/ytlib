@@ -1,7 +1,7 @@
 /**
  * @file FileSystem.h
  * @brief 文件相关操作
- * @details 基于boost库的一些基础文件操作
+ * @details 基于boost库的一些基础文件操作。封装了一些boost库不直接提供的。boost库有的直接调用boost库的
  * @author WT
  * @email 905976782@qq.com
  * @date 2019-07-26
@@ -18,7 +18,6 @@
 
 namespace ytlib
 {
-	//封装了一些boost库不直接提供的。boost库有的直接调用boost库的
 #if defined(UNICODE)
 	typedef boost::filesystem::wpath tpath;
 	typedef boost::xpressive::wsregex_compiler tsregex_compiler;
@@ -32,7 +31,7 @@ namespace ytlib
 #endif
 
 
-	//获得当前路径（可执行文件所在目录）
+	///获得当前路径（可执行文件所在目录）
 	static tpath tGetCurrentPath(void) {
 #if defined(_WIN32)
 
@@ -47,11 +46,11 @@ namespace ytlib
 #endif
 	}
 	
-	//获得绝对路径
+	///获得绝对路径
 	static tpath tGetAbsolutePath(const tpath& p) {
 		return (p.is_absolute()) ? p : (tGetCurrentPath() / p);
 	}
-	//获得文件所在目录
+	///获得文件所在目录
 	static tpath tGetDirectory(const tpath& p) {
 		return tGetAbsolutePath(p).parent_path();
 	}

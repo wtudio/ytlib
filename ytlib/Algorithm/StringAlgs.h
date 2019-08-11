@@ -1,7 +1,8 @@
 /**
  * @file StringAlgs.h
  * @brief 常用字符串算法
- * @details 常用字符串算法，包括kmp、差异度计算、最长不重复字串、替换、分割等
+ * @details 常用字符串算法，包括kmp、差异度计算、最长不重复字串、替换、分割等。
+ 此处的算法都只是给出一种可行方案，不代表生产中的最佳方案
  * @author WT
  * @email 905976782@qq.com
  * @date 2019-07-26
@@ -14,10 +15,16 @@
 #include <vector>
 #include <algorithm>
 
-//字符串相关算法。此处的算法都只是给出一种可行方案，不代表生产中的最佳方案
 namespace ytlib {
-
-	//字符串匹配kmp算法。如果没有匹配到则返回sslen。实际使用中应根据情况先做好next字典
+	/**
+	 * @brief 字符串匹配kmp算法
+	 * @details 如果没有匹配到则返回sslen。实际使用中应根据情况先做好next字典
+	 * @param ss 要被匹配的长字符串
+	 * @param sslen 字符串ss长度
+	 * @param ps 要匹配的短字符串
+	 * @param pslen 字符串ps的长度
+	 * @return 字符串ps首次出现在ss中的位置，如果未出现则返回sslen
+	 */
 	static size_t KMP(const char* ss, size_t sslen, const char* ps, size_t pslen) {
 		assert(sslen && pslen && ss!=NULL && ps!= NULL);
 		if (pslen > sslen || pslen == 0) return sslen;
@@ -41,11 +48,26 @@ namespace ytlib {
 		delete[] next;
 		return (jj == pslen) ? (ii - jj) : sslen;
 	}
+	/**
+	 * @brief 字符串匹配kmp算法（std::string形式）
+	 * @details 调用了char数组形式kmp
+	 * @param ss 要被匹配的长字符串
+	 * @param ps 要匹配的短字符串
+	 * @return 字符串ps首次出现在ss中的位置，如果未出现则返回ss.length()
+	 */
 	static size_t KMP(const std::string& ss, const std::string& ps) {
 		return KMP(ss.c_str(), ss.length(), ps.c_str(), ps.length());
 	}
 
-	//计算字符串差异度。优化方案只使用2*min(s1len,s2len)的内存而不是s1len*s2len的内存
+	/**
+	 * @brief 计算字符串差异度
+	 * @details 优化方案只使用2*min(s1len,s2len)的内存而不是s1len*s2len的内存
+	 * @param s1 字符串1
+	 * @param s1len 字符串1长度
+	 * @param s2 字符串2
+	 * @param s2len 字符串2长度
+	 * @return 字符串1和字符串2的差异度
+	 */
 	static size_t StrDif(const char* s1, size_t s1len, const char* s2, size_t s2len) {
 		assert(s1len && s2len && s1 != NULL && s2 != NULL);
 		if (s2len > s1len) return StrDif(s2, s2len, s1, s1len);//默认s1len>=s2len
@@ -68,11 +90,24 @@ namespace ytlib {
 		delete[] M1, M2;
 		return re;
 	}
+	/**
+	 * @brief 计算字符串差异度（std::string形式）
+	 * @details 调用char数组形式StrDif
+	 * @param s1 字符串1
+	 * @param s2 字符串2
+	 * @return 字符串1和字符串2的差异度
+	 */
 	static size_t StrDif(const std::string& s1, const std::string& s2) {
 		return StrDif(s1.c_str(), s1.length(), s2.c_str(), s2.length());
 	}
 
-	//最长不重复字串。返回其出现的位置和长度
+	/**
+	 * @brief 最长不重复子串
+	 * @details 计算最长的不含有重复字符的子串。返回其出现的位置和长度
+	 * @param s 字符串
+	 * @param len 字符串长度
+	 * @return 最长不重复子串出现的位置和长度
+	 */
 	static std::pair<size_t, size_t> LongestSubStrWithoutDup(const char* s, size_t len) {
 		assert(len && s!=NULL);
 		size_t positions[256];//每种字符上一次出现的位置
@@ -96,8 +131,14 @@ namespace ytlib {
 		return LongestSubStrWithoutDup(s.c_str(), s.length());
 	}
 
-
-	//替换所有
+	/**
+	 * @brief 替换所有
+	 * @details 将一个字符串中指定字符串str1换为字符串str2
+	 * @param str 待处理字符串
+	 * @param oldValue 要被替换的字符串
+	 * @param newValue 要替换成的字符串
+	 * @return 无
+	 */
 	static void replaceAll(std::string& str, const std::string& oldValue, const std::string& newValue) {
 		std::vector<size_t> vecPos;
 		size_t iPos = 0, oldLen = oldValue.size(), newLen = newValue.size();
@@ -140,8 +181,13 @@ namespace ytlib {
 		}
 	}
 
-
-	//分割，将str以seperator中所有字符为分割符分割,返回分割结果vector，结果中不包含分隔符
+	/**
+	 * @brief 分割
+	 * @details 将str以seperator中所有字符为分割符分割,返回分割结果vector，结果中不包含分隔符
+	 * @param str 待处理字符串
+	 * @param seperators 分割字符
+	 * @return 分割结果vector
+	 */
 	static std::vector<std::string> splitAll(const std::string& str, const std::string &seperators) {
 		std::vector<std::string> re;
 		size_t pos1, pos2 = 0;

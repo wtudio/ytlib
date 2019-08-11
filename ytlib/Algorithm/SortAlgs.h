@@ -1,7 +1,8 @@
 /**
  * @file SortAlgs.h
  * @brief 常用排序算法
- * @details 模板化的排序相关算法，包括冒泡、归并、快排等
+ * @details 模板化的排序相关算法，包括冒泡、归并、快排等，所有排序都是从小到大排列。
+ stl中有很多成熟的算法可以直接调用（stl源码剖析p288），此处自己实现的排序算法供学习与改造。
  * @author WT
  * @email 905976782@qq.com
  * @date 2019-07-26
@@ -13,16 +14,12 @@
 #include <map>
 #include <algorithm>
 
-/*
-stl中有很多成熟的算法可以直接调用（stl源码剖析p288）
-此处自己实现的排序算法供学习与改造
-所有排序都是从小到大排列
-*/
-
-//模板化的排序相关算法
 namespace ytlib {
 
-	//重载了比较符号的类
+	/**
+	* @brief 排序工具类
+	* 重载了比较符号的类，可以继承或改造它来实现自定义类型的排序
+	*/
 	class sortObj {
 	public:
 		sortObj():key(0){}
@@ -44,7 +41,14 @@ namespace ytlib {
 
 	};
 
-	//冒泡排序 in-place/稳定
+	/**
+	 * @brief 冒泡排序
+	 * @details in-place/稳定
+	 * @param T 模板参数，待排序数据类型，要保证有大小比较函数
+	 * @param arr 待排序数组头指针
+	 * @param len 待排序数组大小
+	 * @return 无
+	 */
 	template<typename T>
 	void bubbleSort(T* arr, size_t len) {
 		if (len < 2) return;
@@ -58,7 +62,14 @@ namespace ytlib {
 		}
 	}
 
-	//归并排序 out-place/稳定
+	/**
+	 * @brief 归并排序
+	 * @details out-place/稳定
+	 * @param T 模板参数，待排序数据类型，要保证有大小比较函数
+	 * @param arr 待排序数组头指针
+	 * @param len 待排序数组大小
+	 * @return 无
+	 */
 	template<typename T>
 	void mergeSort(T* arr, size_t len) {
 		if (len < 2) return;
@@ -81,7 +92,14 @@ namespace ytlib {
 		delete[] tmpArr;
 	}
 
-	//归并排序 out-place/稳定，非递归形式，空间复杂度O(n)
+	/**
+	 * @brief 归并排序
+	 * @details out-place/稳定，非递归形式，空间复杂度O(n)
+	 * @param T 模板参数，待排序数据类型，要保证有大小比较函数
+	 * @param arr 待排序数组头指针
+	 * @param len 待排序数组大小
+	 * @return 无
+	 */
 	template<typename T>
 	void mergeSort2(T* arr, size_t len) {
 		if (len < 2) return;
@@ -124,8 +142,14 @@ namespace ytlib {
 		}
 
 	}
-
-	//快速排序 in-place/不稳定
+	/**
+	 * @brief 快速排序
+	 * @details in-place/不稳定
+	 * @param T 模板参数，待排序数据类型，要保证有大小比较函数
+	 * @param arr 待排序数组头指针
+	 * @param len 待排序数组大小
+	 * @return 无
+	 */
 	template<typename T>
 	void quickSort(T* arr, size_t len) {
 		if (len < 2) return;
@@ -151,7 +175,15 @@ namespace ytlib {
 		quickSort(arr + cur + 1, len - cur - 1);
 	}
 
-	//二分查找。应用于从小到大排序好的数组中，如有重复则找首先出现的那个
+	/**
+	 * @brief 二分查找
+	 * @details 应用于从小到大排序好的数组中，如有重复则找首先出现的那个
+	 * @param T 模板参数，待查找数据类型，要保证有大小比较函数
+	 * @param arr 待查找数组头指针，需保证已经从小到大排序
+	 * @param len 待查找数组大小
+	 * @param key 待查找数据
+	 * @return 数据key在数组arr中首次出现的位置，没找到则返回len
+	 */
 	template<typename T>
 	size_t binarySearch(T* arr, size_t len,const T& key) {
 		assert(len);
@@ -162,11 +194,17 @@ namespace ytlib {
 			else high = mid;
 		}
 		if (arr[low] == key) return low;
-		//没找到，返回len
-		return len;
+		return len;//没找到，返回len
 	}
-
-	//二分查找。应用于从小到大排序好的数组中，如有重复则找最后出现的那个
+	/**
+	 * @brief 二分查找
+	 * @details 应用于从小到大排序好的数组中，如有重复则找最后出现的那个
+	 * @param T 模板参数，待查找数据类型，要保证有大小比较函数
+	 * @param arr 待查找数组头指针，需保证已经从小到大排序
+	 * @param len 待查找数组大小
+	 * @param key 待查找数据
+	 * @return 数据key在数组arr中首次出现的位置，没找到则返回len
+	 */
 	template<typename T>
 	size_t binarySearchLast(T* arr, size_t len, const T& key) {
 		assert(len);
@@ -177,8 +215,7 @@ namespace ytlib {
 			else high = mid - 1;
 		}
 		if (arr[high] == key) return high;
-		//没找到，返回len
-		return len;
+		return len;//没找到，返回len
 	}
 
 }

@@ -1,7 +1,7 @@
 /**
  * @file BinaryTree.h
  * @brief 二叉树
- * @details 提供模板化的一些树的实现和相关的算法，包括AVL树、红黑树
+ * @details 提供模板化的一些树的实现和相关的算法，包括AVL树、红黑树。不能使用继承，因为有成员是自身类型的智能指针
  * @author WT
  * @email 905976782@qq.com
  * @date 2019-07-26
@@ -13,10 +13,13 @@
 #include <algorithm>
 
 namespace ytlib {
-	//几种树的类的实现---------------------------------------------------------------------------
-	//全部使用模板化。这里不能使用继承，因为有成员是自身类型的智能指针
-	//一个BinTreeNode实例表示一个二叉树节点，也表示以此节点为根节点的一棵二叉树
-	//如果根节点被析构，那么整个树中所有子节点将被析构，除非子节点有另外的智能指针指着
+
+	/**
+	* @brief 二叉树
+	* 模板参数T为实际节点值
+	* 一个BinTreeNode实例表示一个二叉树节点，也表示以此节点为根节点的一棵二叉树。
+	* 如果根节点被析构，那么整个树中所有子节点将被析构，除非子节点有另外的智能指针指着
+	*/
 	template<typename T>
 	class BinTreeNode {
 	private:
@@ -25,14 +28,16 @@ namespace ytlib {
 		BinTreeNode():pf(NULL){}
 		explicit BinTreeNode(const T& _obj) :obj(_obj), pf(NULL) {}
 
-		T obj;
-		BinTreeNode<T>* pf;//父节点。父节点不可使用智能指针，否则会造成循环引用
-		nodePtr pl;//左子节点
-		nodePtr pr;//右子节点
+		T obj;///<实际节点值
+		BinTreeNode<T>* pf;///<父节点。父节点不可使用智能指针，否则会造成循环引用
+		nodePtr pl;///<左子节点
+		nodePtr pr;///<右子节点
 
 	};
-
-	//二叉查找树，T需要支持比较运算
+	/**
+	* @brief 二叉查找树
+	* 与BinTreeNode类似，但模板参数T需要支持比较运算
+	*/
 	template<typename T>
 	class BinSearchTreeNode {
 	private:
@@ -41,12 +46,12 @@ namespace ytlib {
 		BinSearchTreeNode() :pf(NULL) {}
 		explicit BinSearchTreeNode(const T& _obj) :obj(_obj), pf(NULL) {}
 
-		T obj;
-		BinSearchTreeNode<T>* pf;//父节点
-		BSTNodePtr pl;//左子节点
-		BSTNodePtr pr;//右子节点
+		T obj;///<实际节点值
+		BinSearchTreeNode<T>* pf;///<父节点。父节点不可使用智能指针，否则会造成循环引用
+		BSTNodePtr pl;///<左子节点
+		BSTNodePtr pr;///<右子节点
 
-		//向当前节点为根节点的二叉查找树中插入一个节点
+		///向当前节点为根节点的二叉查找树中插入一个节点
 		void insert(BSTNodePtr ndptr) {
 			assert(ndptr);
 			if (ndptr->obj < obj) {
@@ -59,7 +64,7 @@ namespace ytlib {
 			}
 		}
 
-		//删除当前节点，并返回替代的节点
+		///删除当前节点，并返回替代的节点
 		BSTNodePtr erase() {
 			if (!pl && !pr) {
 				//左右都为空，为叶子节点
@@ -111,7 +116,13 @@ namespace ytlib {
 		}
 	};
 
-	//在二叉搜索树中进行查找
+	/**
+	 * @brief 在二叉搜索树中进行查找
+	 * @details 使用递归方法
+	 * @param NodeType 模板参数，节点类型
+	 * @param ValType 模板参数，节点obj类型
+	 * @return 查找到的节点的智能指针，若没有查到则返回空智能指针
+	 */
 	template<typename NodeType, typename ValType>
 	std::shared_ptr<NodeType> binSearch(const std::shared_ptr<NodeType>& proot, const ValType& val) {
 		std::shared_ptr<NodeType> p = proot;
@@ -124,7 +135,10 @@ namespace ytlib {
 		return std::shared_ptr<NodeType>();
 	}
 
-	//AVL树
+	/**
+	* @brief AVL树
+	* 二叉平衡树。模板参数T需要支持比较运算
+	*/
 	template<typename T>
 	class AVLTreeNode :public std::enable_shared_from_this<AVLTreeNode<T> > {
 	private:
@@ -133,15 +147,15 @@ namespace ytlib {
 		AVLTreeNode() :pf(NULL), hgt(1){}
 		explicit AVLTreeNode(const T& _obj) :obj(_obj), pf(NULL), hgt(1) {}
 
-		T obj;
-		AVLTreeNode<T>* pf;//父节点
-		AVLTNodePtr pl;//左子节点
-		AVLTNodePtr pr;//右子节点
-		size_t hgt;//节点高度
+		T obj;///<实际节点值
+		AVLTreeNode<T>* pf;///<父节点
+		AVLTNodePtr pl;///<左子节点
+		AVLTNodePtr pr;///<右子节点
+		size_t hgt;///<节点高度
 
 #define HGT(p)	((p)?p->hgt:0)
 
-		//插入，因为根节点可能会变，所以返回根节点
+		///插入，因为根节点可能会变，所以返回根节点
 		AVLTNodePtr insert(AVLTNodePtr ndptr) {
 			assert(ndptr);
 			//找到最终要插入的地方的父节点
@@ -195,7 +209,7 @@ namespace ytlib {
 			return this->shared_from_this();
 		}
 
-		//在当前节点为根节点的树中删除一个节点，并返回删除后的根节点
+		///在当前节点为根节点的树中删除一个节点，并返回删除后的根节点
 		AVLTNodePtr erase(AVLTNodePtr ndptr) {
 			if (!ndptr) return this->shared_from_this();
 			//先确定要删除的节点是自己的子节点
@@ -207,13 +221,13 @@ namespace ytlib {
 			if (pos == this) return _erase(ndptr);
 			return this->shared_from_this();
 		}
-
+		///在当前节点中删除节点值为val的节点。会先搜索再删除
 		AVLTNodePtr erase(const T& val) {
 			return _erase(binSearch<AVLTreeNode<T>, T>(this->shared_from_this(), val));
 		}
 
 	private:
-		//假如有重复的，删除第一个找到的
+		///假如有重复的，删除第一个找到的
 		AVLTNodePtr _erase(AVLTNodePtr ndptr) {
 			assert(pf == NULL);//自身需要是根节点
 			if (!ndptr) return this->shared_from_this();
@@ -313,14 +327,14 @@ namespace ytlib {
 			if (re) return re;
 			return proot;
 		}
-
+		///获取当前节点高度
 		inline size_t getHgt() {
 			size_t lh = (pl) ? pl->hgt : 0;
 			size_t lr = (pr) ? pr->hgt : 0;
 			return std::max(lh, lr) + 1;
 		}
 
-		//左旋转，顺时针
+		///左旋转，顺时针
 		AVLTNodePtr rotateL() {
 			AVLTNodePtr re = pl;
 			if (re->pr) re->pr->pf = this;
@@ -342,7 +356,7 @@ namespace ytlib {
 			re->hgt = re->getHgt();
 			return re;
 		}
-		//右旋转，逆时针
+		///右旋转，逆时针
 		AVLTNodePtr rotateR() {
 			AVLTNodePtr re = pr;
 			if (re->pl) re->pl->pf = this;
@@ -365,8 +379,11 @@ namespace ytlib {
 			return re;
 		}
 	};
-
-	//红黑树。todo待完善
+	/**
+	* @brief 红黑树
+	* 二叉平衡树。模板参数T需要支持比较运算
+	* todo待完善
+	*/
 	template<typename T>
 	class BRTreeNode :public std::enable_shared_from_this<BRTreeNode<T> > {
 	private:
@@ -375,13 +392,13 @@ namespace ytlib {
 		BRTreeNode() :pf(NULL), color(false){}
 		explicit BRTreeNode(const T& _obj) :obj(_obj), pf(NULL), color(false) {}
 
-		T obj;
-		BRTreeNode<T>* pf;//父节点
-		BRTreeNodePtr pl;//左子节点
-		BRTreeNodePtr pr;//右子节点
-		bool color;//颜色，true为红，false为黑
+		T obj;///<实际节点值
+		BRTreeNode<T>* pf;///<父节点
+		BRTreeNodePtr pl;///<左子节点
+		BRTreeNodePtr pr;///<右子节点
+		bool color;///<颜色，true为红，false为黑
 
-		//插入，因为根节点可能会变，所以返回根节点
+		///插入，因为根节点可能会变，所以返回根节点
 		BRTreeNodePtr insert(BRTreeNodePtr ndptr) {
 			assert(ndptr && !color);
 			//找到最终要插入的地方的父节点
@@ -456,7 +473,7 @@ namespace ytlib {
 			return this->shared_from_this();
 		}
 
-		//在当前节点为根节点的树中删除一个节点，并返回删除后的根节点
+		///在当前节点为根节点的树中删除一个节点，并返回删除后的根节点
 		BRTreeNodePtr erase(BRTreeNodePtr ndptr) {
 			if (!ndptr) return this->shared_from_this();
 			//先确定要删除的节点是自己的子节点
@@ -468,7 +485,7 @@ namespace ytlib {
 			if (pos == this) return _erase(ndptr);
 			return this->shared_from_this();
 		}
-
+		///在当前节点中删除节点值为val的节点。会先搜索再删除
 		BRTreeNodePtr erase(const T& val) {
 			return _erase(binSearch<BRTreeNode<T>, T>(this->shared_from_this(), val));
 		}
@@ -540,7 +557,7 @@ namespace ytlib {
 
 
 		}
-		//左旋转，顺时针
+		///<左旋转，顺时针
 		BRTreeNodePtr rotateL() {
 			BRTreeNodePtr re = pl;
 			if (re->pr) re->pr->pf = this;
@@ -560,7 +577,7 @@ namespace ytlib {
 			pf = re.get();
 			return re;
 		}
-		//右旋转，逆时针
+		///<右旋转，逆时针
 		BRTreeNodePtr rotateR() {
 			BRTreeNodePtr re = pr;
 			if (re->pl) re->pl->pf = this;
@@ -582,9 +599,6 @@ namespace ytlib {
 		}
 
 	};
-
-	//一些外置的算法---------------------------------------------------------------------------
-
 
 	//以当前节点为根节点，前序遍历，返回一个指针数组。以当前节点为根节点
 	template<typename T>

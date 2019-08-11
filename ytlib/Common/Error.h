@@ -12,6 +12,8 @@
 
 namespace ytlib
 {
+	
+	///ytlib中的一些错误枚举值
 	enum Error
 	{
 		ER_SUCCESS = 0,
@@ -34,6 +36,7 @@ namespace ytlib
 
 		ER_ERROR_COUNT
 	};
+	///错误枚举值对应的错误信息
 	static const char* gErrorMessages[ER_ERROR_COUNT] =
 	{
 		"successful.",
@@ -48,7 +51,7 @@ namespace ytlib
 		"parse file failed.",
 		"save file failed."
 	};
-
+	///根据err返回错误信息
 	static const char* GetErrorMessage(Error err0) {
 		
 		uint32_t err = static_cast<uint32_t>(err0);
@@ -57,6 +60,10 @@ namespace ytlib
 		assert(msg && msg[0]);
 		return msg;
 	}
+	/**
+	* @brief ytlib异常类
+	* 重载了std::exception
+	*/
 	class Exception : public std::exception	{
 	public:
 
