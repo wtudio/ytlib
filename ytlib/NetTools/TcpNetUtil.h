@@ -24,7 +24,7 @@ namespace ytlib
 	typedef boost::asio::ip::tcp::endpoint TcpEp;//28个字节
 	typedef boost::asio::ip::tcp::socket TcpSocket;
 
-	//大小端转换，将ps中的数据转换到pd中
+	///大小端转换，将ps中的数据转换到pd中
 	static void transEndian(char* pd, const char* ps, size_t len) {
 #ifdef BIG_ENDIAN
 		memcpy(pd, ps, len);
@@ -58,7 +58,7 @@ namespace ytlib
 		return n;
 	}
 
-	//检查端口是否可用。true说明可用
+	///检查端口是否可用。true说明可用
 	static bool checkPort(uint16_t port_) {
 		boost::asio::io_service io;
 		TcpSocket sk(io);
@@ -69,7 +69,7 @@ namespace ytlib
 		sk.close();//否则说明已经被占用了
 		return false;
 	}
-
+	///获取一个未被占用的端口号
 	static uint16_t getUsablePort(uint16_t start_=60000) {
 		for (uint16_t ii = start_; ii < 65535; ii++) {
 			if (checkPort(ii)) return ii;

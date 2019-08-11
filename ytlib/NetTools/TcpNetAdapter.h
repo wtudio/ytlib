@@ -1,7 +1,7 @@
 /**
  * @file TcpNetAdapter.h
  * @brief TCP网络适配器
- * @details 基于TcpConnectionPool的简易网络适配器
+ * @details 使用boost.asio，基于TcpConnectionPool的简易网络适配器
  * @author WT
  * @email 905976782@qq.com
  * @date 2019-07-26
@@ -48,7 +48,11 @@ namespace ytlib {
 	o+v:结束符
 	*/
 
-	//T需要能boost序列化
+
+	/**
+	* @brief 基础数据包类型
+	* T需要能boost序列化
+	*/
 	template<class T>
 	class DataPackage {
 	public:
@@ -59,14 +63,17 @@ namespace ytlib {
 		std::map<std::string, std::string> map_files;//文件,最大支持255个
 	};
 
-	//子类：sock连接，为网络适配器定制准备，只能主动发起同步写，读取是异步自动的
+	/**
+	* @brief tcp连接类
+	* 为网络适配器定制准备，只能主动发起同步写，读取是异步自动的
+	*/
 	template<class T>
 	class TcpConnection :public ConnectionBase {
 		typedef std::shared_ptr<boost::asio::streambuf> buff_Ptr;
 		typedef std::shared_ptr<DataPackage<T> > dataPtr;
 		struct RecvDataPackage {
 			dataPtr pdata;
-			bool complete_flag;//接收完成flag
+			bool complete_flag;///<接收完成flag
 			LightSignal* p_s;
 		};
 		typedef std::shared_ptr<RecvDataPackage> RecvDataPtr;
@@ -94,7 +101,7 @@ namespace ytlib {
 			m_queueThread.join();
 		}
 
-		//用于主动连接
+		///用于主动连接
 		bool connect(const TcpEp& ep_, uint16_t port_ = 0) {
 			sock.open(boost::asio::ip::tcp::v4());
 			boost::system::error_code err;
@@ -115,7 +122,7 @@ namespace ytlib {
 			remote_ep = ep_;
 			return true;
 		}
-		//同步发送，加锁
+		///同步发送，加锁
 		bool write(const std::shared_ptr<std::vector<boost::asio::const_buffer> > & data_) {
 			boost::system::error_code err;
 			write_mutex.lock();
@@ -148,7 +155,7 @@ namespace ytlib {
 				delete p_s;
 			}
 		}
-		//使用智能指针的删除器来判断数据是否准备好并进行回调
+		///使用智能指针的删除器来判断数据是否准备好并进行回调
 		void on_data_ready(RecvDataPackage * p) {
 			LightSignal* p_s = p->p_s;
 			if (p->complete_flag) {
@@ -157,7 +164,7 @@ namespace ytlib {
 			p_s->notify();
 			delete p;
 		}
-		//读取解析报头，缓存跟着回调走
+		///读取解析报头，缓存跟着回调走
 		void on_read_head(RecvDataPtr& RData_, const boost::system::error_code & err, size_t read_bytes) {
 			if (read_get_err(err)) return;
 			if (header[0] == TCPHEAD1 && header[1] == TCPHEAD2 && read_bytes == HEAD_SIZE) {
@@ -297,13 +304,16 @@ namespace ytlib {
 
 		std::mutex write_mutex;
 		std::function<void(dataPtr &)> m_recv_callback;
-		tpath const *p_RecvPath;//接收文件路径
+		tpath const *p_RecvPath;///<接收文件路径
 
 		QueueBase<RecvDataPtr> m_DataQueue;
 		std::thread m_queueThread;
 	};
 
-	//默认使用uint32_t作为id形式。也可以改为std::string之类的可以作为map容器的key的类型
+	/**
+	* @brief tcp网络适配器
+	* 默认使用uint32_t作为id形式。也可以改为std::string之类的可以作为map容器的key的类型
+	*/
 	template<class T,class ID_Type = uint32_t>
 	class TcpNetAdapter : public TcpConnectionPool<TcpConnection<T> > {
 	private:
@@ -332,7 +342,7 @@ namespace ytlib {
 		inline bool Send(const dataPtr & Tdata_, const ID_Type& dst_ ,bool delfiles=false) {
 			return Send(Tdata_, std::vector<ID_Type>{dst_}, delfiles);
 		}
-		//不重复发送的接口
+		///不重复发送的接口
 		bool Send(const dataPtr & Tdata_, const std::set<ID_Type>& dst_, bool delfiles = false) {
 			//做一些检查
 			if (BaseClass::stopflag) return false;
@@ -350,7 +360,7 @@ namespace ytlib {
 			return _Send(Tdata_, vec_hosts, delfiles);
 		}
 
-		//使用vector作为地址容器，允许重复地址（重复地址意味着重复发送）
+		///使用vector作为地址容器，允许重复地址（重复地址意味着重复发送）
 		bool Send(const dataPtr & Tdata_, const std::vector<ID_Type>& dst_, bool delfiles = false) {
 			//做一些检查
 			if (BaseClass::stopflag) return false;
@@ -369,7 +379,7 @@ namespace ytlib {
 			return _Send(Tdata_, vec_hosts, delfiles);
 		}
 
-		//hostinfo操作，主要是对外提供。只可添加或修改，不可移除
+		///hostinfo操作，主要是对外提供。只可添加或修改，不可移除
 		inline TcpEp GetMyHostInfo() {
 			std::shared_lock<std::shared_mutex> lck(m_hostInfoMutex);
 			return m_mapHostInfo[m_myid];
@@ -378,7 +388,7 @@ namespace ytlib {
 			std::shared_lock<std::shared_mutex> lck(m_hostInfoMutex);
 			return m_mapHostInfo;
 		}
-		//设置主机info，有则覆盖，无责添加
+		///设置主机info，有则覆盖，无责添加
 		bool SetHost(const ID_Type& hostid_, const TcpEp & hostInfo_) {
 			std::unique_lock<std::shared_mutex> lck(m_hostInfoMutex);
 			m_mapHostInfo[hostid_] = hostInfo_;
@@ -413,7 +423,7 @@ namespace ytlib {
 			return pc->write(Tdata_);
 		}
 
-		//获取连接
+		///获取连接
 		TcpConnectionPtr getTcpConnectionPtr(const TcpEp& ep) {
 			//先在map里找，没有就直接去连接一个
 			{
@@ -565,14 +575,14 @@ namespace ytlib {
 		}
 
 
-		std::function<void(dataPtr &)> m_receiveCallBack;//接收回调
-		tpath m_RecvPath;//接收文件路径
-		tpath m_SendPath;//发送文件路径
+		std::function<void(dataPtr &)> m_receiveCallBack;///<接收回调
+		tpath m_RecvPath;///<接收文件路径
+		tpath m_SendPath;///<发送文件路径
 
-		std::map<ID_Type, TcpEp> m_mapHostInfo;//主机列表：id-info
-		std::shared_mutex m_hostInfoMutex;//主机列表的读写锁
+		std::map<ID_Type, TcpEp> m_mapHostInfo;///<主机列表：id-info
+		std::shared_mutex m_hostInfoMutex;///<主机列表的读写锁
 
-		const ID_Type m_myid;//自身id，构造之后无法修改
+		const ID_Type m_myid;///<自身id，构造之后无法修改
 	};
 
 }

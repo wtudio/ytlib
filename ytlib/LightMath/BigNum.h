@@ -12,12 +12,15 @@
 #include <vector>
 #include <algorithm>
 
-//大整数工具。todo待完善
 namespace ytlib
 {
+	/**
+	* @brief 大整数工具
+	* todo待完善
+	*/
 	class BigNum {
 	public:
-		//从一个int64_t初始化，默认进制2^32,_up：进制，order：指数，最终val=num*（up^order）
+		///从一个int64_t初始化，默认进制2^32,_up：进制，order：指数，最终val=num*（up^order）
 		explicit BigNum(int64_t num = 0, uint32_t _up = 0, uint32_t order = 0) :_symbol(num >= 0), up(_up) {
 			assert(_up != 1);
 			num = std::abs(num);
@@ -35,7 +38,7 @@ namespace ytlib
 				} while (num);
 			}
 		}
-		//从一个string初始化，进制大于1小于等于16，默认进制16
+		///从一个string初始化，进制大于1小于等于16，默认进制16
 		explicit BigNum(std::string s, uint32_t _up = 16) :_symbol(true), up(_up) {
 			assert(!s.empty());
 			assert(_up > 1 && _up <= 16);

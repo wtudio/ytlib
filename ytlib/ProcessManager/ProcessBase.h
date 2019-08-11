@@ -14,8 +14,11 @@ namespace ytlib
 {
 	//日志回调
 	typedef std::function<void(const tstring &)> LogCallback;
-	//一般过程型程序的类模板。供参考，实际使用时可以参照着写，不一定要继承它
-	//非线程安全，不要并发操作
+
+	/**
+	* @brief 一般过程型程序的类模板
+	* 供参考，实际使用时可以参照着写，不一定要继承它。非线程安全，不要并发操作
+	*/
 	class ProcessBase
 	{
 	public:
@@ -83,7 +86,7 @@ namespace ytlib
 		}
 
 	protected:
-		//简单日志功能
+		///简单日志功能
 		void defLogCallback(const tstring & s) {
 			tcout << s << std::endl;
 		}

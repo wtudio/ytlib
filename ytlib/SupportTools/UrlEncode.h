@@ -1,7 +1,7 @@
 /**
  * @file UrlEncode.h
- * @brief Url�����
- * @details UrlEncode��UrlDecode
+ * @brief Url编解码
+ * @details UrlEncode、UrlDecode
  * @author WT
  * @email 905976782@qq.com
  * @date 2019-07-26
@@ -9,7 +9,6 @@
 #pragma once
 
 #include <ytlib/Common/Util.h>
-
 
 namespace ytlib
 {
@@ -25,7 +24,12 @@ namespace ytlib
 		else assert(0);
 		return y;
 	}
-
+	/**
+	 * @brief UrlEncode
+	 * @param str 待编码字符串
+	 * @param up 是否转码为大写字符
+	 * @return 转码后的结果字符串
+	 */
 	static std::string UrlEncode(const std::string& str, bool up = true) {
 		std::string strTemp;
 		size_t length = str.length();
@@ -43,7 +47,11 @@ namespace ytlib
 		}
 		return strTemp;
 	}
-
+	/**
+	 * @brief UrlDecode
+	 * @param str 待解码字符串
+	 * @return 解码后的结果字符串
+	 */
 	static std::string UrlDecode(const std::string& str) {
 		std::string strTemp;
 		size_t length = str.length();
@@ -59,10 +67,7 @@ namespace ytlib
 		}
 		return strTemp;
 	}
-
-
-
-
+	
 }
 
   

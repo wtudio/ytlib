@@ -96,3 +96,11 @@ add_subdirectory( ytlib/Test )
 
 #提供给使用者的配置文件config.in
 configure_file( ${ytlib_SOURCE_DIR}/CMake/UseYTLIB.cmake.in  ${ytlib_BINARY_DIR}/UseYTLIB.cmake @ONLY )
+
+#导出文档
+set( ytlib_DOC_DIR ${ytlib_SOURCE_DIR}/doc )
+IF(WIN32)
+execute_process(COMMAND ${ytlib_DOC_DIR}/buildDoc.bat ${ytlib_DOC_DIR} WORKING_DIRECTORY ${ytlib_DOC_DIR})
+ELSE(WIN32)
+execute_process(COMMAND ${ytlib_DOC_DIR}/buildDoc.sh ${ytlib_DOC_DIR} WORKING_DIRECTORY ${ytlib_DOC_DIR})
+ENDIF(WIN32)

@@ -43,7 +43,7 @@ namespace ytlib
 		TextType,
 		BinaryType
 	};
-//侵入式序列化类头
+///侵入式序列化类头
 #define T_CLASS_SERIALIZE(Members) \
 	friend class boost::serialization::access; \
 	template<class Archive> \
@@ -51,7 +51,15 @@ namespace ytlib
 	{ ar Members; }
 	
 
-	//提供的函数仅适用于序列化规模较小，需要直接转化为string或存储成文件，不太考虑性能的场合
+	/**
+	 * @brief 序列化到字符串
+	 * @details 基于boost的序列化，仅适用于序列化规模较小，需要直接转化为string、不太考虑性能的场合
+	 * @param T 模板参数，待序列化的类型，需要在类开头添加侵入式序列化类头
+	 * @param obj 待序列化的实例
+	 * @param data 存储序列化结果的字符串
+	 * @param Type 序列化类型：文本型/二进制型
+	 * @return 是否序列化成功
+	 */
 	template<class T>
 	bool Serialize(const T& obj, std::string &data, SerializeType Type = TextType) {
 		try {
@@ -72,7 +80,15 @@ namespace ytlib
 			return false;
 		}
 	}
-
+	/**
+	 * @brief 从字符串反序列化
+	 * @details 基于boost的反序列化，仅适用于序列化规模较小，需要直接转化为string、不太考虑性能的场合
+	 * @param T 模板参数，待反序列化的类型，需要在类开头添加侵入式序列化类头
+	 * @param obj 待被反序列化的实例
+	 * @param data 待反序列化的字符串
+	 * @param Type 反序列化类型：文本型/二进制型
+	 * @return 是否反序列化成功
+	 */
 	template<class T>
 	bool Deserialize(T& obj, const std::string &data, SerializeType Type = TextType) {
 		try {
@@ -92,7 +108,15 @@ namespace ytlib
 			return false;
 		}
 	}
-
+	/**
+	 * @brief 序列化并存储到文件
+	 * @details 基于boost的序列化，仅适用于序列化规模较小，需要直接存储到文件、不太考虑性能的场合
+	 * @param T 模板参数，待序列化的类型，需要在类开头添加侵入式序列化类头
+	 * @param obj 待序列化的实例
+	 * @param filepath 存储序列化结果的文件路径
+	 * @param Type 序列化类型：文本型/二进制型
+	 * @return 是否序列化成功
+	 */
 	template<class T>
 	bool Serialize_f(const T & obj, const tstring & filepath, SerializeType Type = TextType) {
 		try {
@@ -114,7 +138,15 @@ namespace ytlib
 			return false;
 		}
 	}
-
+	/**
+	 * @brief 从文件反序列化
+	 * @details 基于boost的反序列化，仅适用于序列化规模较小，需要直接存储到文件、不太考虑性能的场合
+	 * @param T 模板参数，待反序列化的类型，需要在类开头添加侵入式序列化类头
+	 * @param obj 待被反序列化的实例
+	 * @param filepath 存储待反序列化数据的文件路径
+	 * @param Type 反序列化类型：文本型/二进制型
+	 * @return 是否反序列化成功
+	 */
 	template<class T>
 	bool Deserialize_f(T& obj, const tstring & filepath, SerializeType Type = TextType) {
 		try {
@@ -137,14 +169,8 @@ namespace ytlib
 		}
 	}
 
-	//高性能序列化宏定义，线程不安全，脱离当前作用域p和len就会失效
-	//先SERIALIZE_INIT，在SERIALIZE_INIT所在作用域内SERIALIZE和其产生的p和len有效
-	//后一次SERIALIZE时将清空前一次SERIALIZE的结果
+	//宏定义形式的高性能序列化、反序列化操作。用户也可以参考这些宏来定制自己的序列化反序列化操作
 
-	//高性能反序列化宏定义
-	//先DESERIALIZE_INIT，在DESERIALIZE_INIT所在作用域内DESERIALIZE有效
-	//安全性存疑，可能会发生析构时内存错误（待测试）
-	//默认使用二进制方式序列化
 	class mystreambuf :public std::basic_stringbuf<char, std::char_traits<char>, std::allocator<char> >
 	{
 		friend class myostringstream;
@@ -184,7 +210,12 @@ namespace ytlib
 		mystreambuf _mybuf;
 	};
 
-	//用户也可以参考这些宏来定制自己的序列化反序列化操作
+	/*
+		高性能序列化宏定义，线程不安全，脱离当前作用域p和len就会失效
+		先SERIALIZE_INIT，在SERIALIZE_INIT所在作用域内SERIALIZE和其产生的p和len有效
+		后一次SERIALIZE时将清空前一次SERIALIZE的结果
+		默认使用二进制方式序列化
+	*/
 #define SERIALIZE_INIT \
 	ytlib::myostringstream myostringstream_tmp(std::ios_base::binary); \
 	std::shared_ptr<boost::archive::binary_oarchive> oar_tmp;
@@ -195,6 +226,13 @@ namespace ytlib
 	*oar_tmp << obj; \
 	myostringstream_tmp.getPoint(p, len);
 
+
+	/*
+		高性能反序列化宏定义
+		先DESERIALIZE_INIT，在DESERIALIZE_INIT所在作用域内DESERIALIZE有效
+		安全性存疑，可能会发生析构时内存错误（待测试）
+		默认使用二进制方式序列化
+	*/
 #define DESERIALIZE_INIT \
 	ytlib::myistringstream myistringstream_tmp(std::ios_base::binary); \
 	std::shared_ptr<boost::archive::binary_iarchive> iar_tmp;

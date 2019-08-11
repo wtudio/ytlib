@@ -13,14 +13,17 @@
 
 namespace ytlib
 {
-	//使用map格式。涉及到存储的都弄成string
+	/**
+	* @brief k-v形式文件类
+	* 使用map格式。涉及到存储的都弄成string
+	*/
 	class KeyValueFile :public FileBase<std::map<std::string, std::string> >
 	{
 	public:
 		KeyValueFile() :FileBase() {}
 		virtual ~KeyValueFile() {}
 	protected:
-		//从打开的文件中解析获取文件内容结构体
+		///从打开的文件中解析获取文件内容结构体
 		virtual bool GetFileObj() {
 			if (!CreateFileObj()) return false;
 			tpath path = tGetAbsolutePath(m_filepath);
@@ -44,7 +47,7 @@ namespace ytlib
 			}
 			return false;
 		}
-		//将当前的文件内容结构体保存为文件
+		///将当前的文件内容结构体保存为文件
 		virtual bool SaveFileObj() {
 			std::ofstream ofile(m_filepath.c_str(), std::ios::trunc);
 			if (ofile) {

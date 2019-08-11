@@ -9,7 +9,7 @@ namespace ytlib
 		string ps = "abcdabd";
 
 		cout << KMP(ss, ps) << endl;
-
+		BOOST_TEST_EQ(1, 2);
 		return true;
 	}
 

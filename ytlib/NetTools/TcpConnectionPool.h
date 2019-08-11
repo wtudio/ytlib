@@ -14,7 +14,10 @@
 
 namespace ytlib
 {
-	//管理单个sock连接。提供一个默认的基类。子类需要重载一些函数以实现具体功能
+	/**
+	* @brief 网络连接基类
+	* 管理单个sock连接。提供一个默认的基类，子类需要重载一些函数以实现具体功能
+	*/
 	class ConnectionBase :boost::noncopyable {
 	public:
 		enum {
@@ -65,12 +68,14 @@ namespace ytlib
 			return;
 		}
 		std::atomic_bool stopflag;
-		std::function<void(const TcpEp &)> err_CallBack;//发生错误时的回调。一旦读/写出错，就关闭连接并调用回调告知上层
-		char header[HEAD_SIZE];//接收缓存
+		std::function<void(const TcpEp &)> err_CallBack;///<发生错误时的回调。一旦读/写出错，就关闭连接并调用回调告知上层
+		char header[HEAD_SIZE];///<接收缓存
 	};
 
-
-	//tcp连接池。需要继承重载getNewTcpConnectionPtr才能使用。只能用来被动监听连接
+	/**
+	* @brief tcp连接池基类
+	* 需要继承重载getNewTcpConnectionPtr才能使用。只能用来被动监听连接
+	*/
 	template<class T_Connection>
 	class TcpConnectionPool {
 	protected:

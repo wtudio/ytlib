@@ -1,7 +1,9 @@
 /**
  * @file Graph.h
  * @brief 图
- * @details 提供模板化的图的实现和相关的算法，包括有向图/无向图、BFS/DFS、dijkstra、floyd等
+ * @details 提供模板化的图的实现和相关的算法，包括有向图/无向图、BFS/DFS、dijkstra、floyd等。
+ * 只是作为样板学习之用，实际工程中需要时根据需求参考源码进行改动。
+ * todo：待完善
  * @author WT
  * @email 905976782@qq.com
  * @date 2019-07-26
@@ -13,44 +15,55 @@
 #include <list>
 #include <vector>
 
-//todo：待完善
-//模板化的图的一些工具。只是作为样板学习之用，实际工程中需要时根据需求参考源码进行改动
-//不能使用智能指针，因为会有相互指引的情况
-//使用时应将所有的节点的指针放入一个list或vector中
-//每个节点指向另一个节点最多只有一条边
 namespace ytlib {
-	//一个有边的权重的有向图的节点
 	typedef double g_sideType;
 	typedef Basic_Matrix<g_sideType> g_sideMatrix;
-
+	/**
+	* @brief 一个有边权重的有向图的节点
+	* 每个节点指向另一个节点最多只有一条边。使用时应将所有的节点的指针放入一个list或vector中。不能使用智能指针，因为会有相互指引的情况。
+	*/
 	template<typename T>
 	class Graph {
 	public:
-		
 		Graph():visited(false){}
 		~Graph() {}
 		Graph(const T& _obj) :obj(_obj), visited(false) {}
 
-		T obj; 
-		std::map<Graph<T>*, g_sideType> sides;//边以及其权重。权重默认为double
-		mutable bool visited;//用于遍历
+		T obj; ///<实际节点值
+		std::map<Graph<T>*, g_sideType> sides;///<边以及其权重。权重默认为double
+		mutable bool visited;///<用于遍历
 	};
-	//一些对图的基本操作
-
-	//有向图的节点插入，参数为：待插入节点、目标节点、边权值
+	/**
+	 * @brief 有向图的节点插入
+	 * @param T 模板参数，节点类型
+	 * @param val 箭头起始的待被插入节点
+	 * @param targt 箭头指向的目标节点
+	 * @param side 边权值
+	 * @return 无
+	 */
 	template<typename T>
 	void insertGraphNode(Graph<T>& val,Graph<T>& targt, g_sideType side) {
 		val.sides[&targt] = side;
 	} 
-
-	//无向图的节点插入
+	/**
+	 * @brief 无向图的节点连接
+	 * @param T 模板参数，节点类型
+	 * @param val1 待被连接的节点1
+	 * @param val2 待被连接的节点2
+	 * @param side 边权值
+	 * @return 无
+	 */
 	template<typename T>
-	void connectGraphNode(Graph<T>& val, Graph<T>& targt, g_sideType side) {
-		val.sides[&targt] = side;
-		targt.sides[&val] = side;
+	void connectGraphNode(Graph<T>& val1, Graph<T>& val2, g_sideType side) {
+		val1.sides[&val2] = side;
+		val2.sides[&val1] = side;
 	}
-
-	//判断是否是无向图
+	/**
+	 * @brief 判断是否是无向图
+	 * @param T 模板参数，节点类型
+	 * @param vec 存放待判断的图的节点的vector
+	 * @return 是否为无向图。true表示是无向图，false表示有向图
+	 */
 	template<typename T>
 	bool isUndiGraph(const std::vector<Graph<T>*>& vec) {
 		for (uint32_t ii = 0; ii < vec.size(); ++ii) {
@@ -63,9 +76,7 @@ namespace ytlib {
 		return true;
 	}
 
-	//一些图的基本算法
-
-	//辅助函数，获取节点在vector中的下标
+	///辅助函数，获取节点在vector中的下标，上层需保证节点在p在vec中
 	template<typename T>
 	inline size_t getPos(const Graph<T>* p, const std::vector<Graph<T>*>& vec) {
 		size_t pos = find(vec.begin(), vec.end(), p) - vec.begin();
@@ -73,18 +84,23 @@ namespace ytlib {
 		return pos;
 	}
 
-	//辅助函数，清除标志位
+	///辅助函数，清除标志位
 	template<typename T>
 	inline void clearFlag(const std::vector<Graph<T>*>& vec) {
 		for (uint32_t ii = 0; ii < vec.size(); ++ii) vec[ii]->visited = false;
 	}
-	//辅助函数，释放内存
+	///辅助函数，释放内存
 	template<typename T>
 	inline void releaseGraphVec(std::vector<Graph<T>*>& vec) {
 		for (uint32_t ii = 0; ii < vec.size(); ++ii) delete vec[ii];
 	}
-	
-	//创建邻接矩阵，M.val[i][j]表示从顶点vec[i]出发到顶点vec[j]的直接距离，-1值表示不直接连接
+	/**
+	 * @brief 创建邻接矩阵
+	 * @details M.val[i][j]表示从顶点vec[i]出发到顶点vec[j]的直接距离，-1值表示不直接连接
+	 * @param T 模板参数，节点类型
+	 * @param vec 存放待创建邻接矩阵的图的节点的vector
+	 * @return 邻接矩阵
+	 */
 	template<typename T>
 	g_sideMatrix createAdjMatrix(const std::vector<Graph<T>*>& vec) {
 		size_t Vnum = vec.size();
@@ -99,8 +115,13 @@ namespace ytlib {
 		}
 		return M;
 	}
-
-	//图的复制
+	/**
+	 * @brief 图的深拷贝
+	 * @details 深拷贝一个图
+	 * @param T 模板参数，节点类型
+	 * @param vec 存放待深拷贝的图的节点的vector
+	 * @return 存放深拷贝结果的图的节点的vector
+	 */
 	template<typename T>
 	std::vector<Graph<T>*> copyGraph(const std::vector<Graph<T>*>& vec) {
 		std::vector<Graph<T>*> re;
@@ -116,9 +137,14 @@ namespace ytlib {
 		}
 		return re;
 	}
-
-
-	//DFS。遍历之前应确定所有节点的visited已经被重置为false
+	/**
+	 * @brief DFS
+	 * @details 图的深度优先遍历。遍历之前应确定所有节点的visited已经被重置为false
+	 * @param T 模板参数，节点类型
+	 * @param val 待DFS的节点
+	 * @param vec 存放DFS结果的vector
+	 * @return 无
+	 */
 	template<typename T>
 	void DFS(Graph<T>& val, std::vector<Graph<T>*>& vec) {
 		vec.push_back(&val);//由上层保证此节点没有遍历过
@@ -127,8 +153,14 @@ namespace ytlib {
 			if (!(itr->first->visited)) DFS(*itr->first, vec);
 		}
 	}
-
-	//BFS。遍历之前应确定所有节点的visited已经被重置为false
+	/**
+	 * @brief BFS
+	 * @details 图的广度优先遍历。遍历之前应确定所有节点的visited已经被重置为false
+	 * @param T 模板参数，节点类型
+	 * @param val 待BFS的节点
+	 * @param vec 存放BFS结果的vector
+	 * @return 无
+	 */
 	template<typename T>
 	void BFS(Graph<T>& val, std::vector<Graph<T>*>& vec) {
 		if (!val.visited) {
@@ -151,9 +183,14 @@ namespace ytlib {
 
 	}
 
-	
-
-	//dijkstra算法：求一个节点到其他节点的最短路径，返回距离数组和路径数组。禁止负权边
+	/**
+	 * @brief dijkstra算法
+	 * @details 求一个节点到其他节点的最短路径，返回距离数组和路径数组。禁止负权边
+	 * @param T 模板参数，节点类型
+	 * @param beginNode 源节点
+	 * @param vec 存放目标节点的vector
+	 * @return 距离数组和路径数组
+	 */
 	template<typename T>
 	std::pair<std::vector<g_sideType>, std::vector<int32_t> > dijkstra(const Graph<T>& beginNode,const std::vector<Graph<T>*>& vec) {
 		size_t len = vec.size();
@@ -187,7 +224,13 @@ namespace ytlib {
 		} while (nextPos != curPos);
 		return std::pair<std::vector<g_sideType>, std::vector<int32_t> >(std::move(re), std::move(path));
 	}
-	//根据dijkstra返回的路径数组求特定节点到另一个节点的最短路径。返回的是倒推的路径
+	/**
+	 * @brief dijkstra算法求特定节点到另一个节点的最短路径
+	 * @details 根据dijkstra返回的路径数组求特定节点到另一个节点的最短路径。返回的是倒推的路径
+	 * @param dstIdx 目标节点在vec中的index
+	 * @param path dijkstra函数返回的路径数组
+	 * @return 倒推的路径
+	 */
 	static std::vector<int32_t> dijkstraPath(int32_t dstIdx,const std::vector<int32_t>& path) {
 		std::vector<int32_t> re;
 		assert(path[dstIdx] >= 0);
@@ -197,8 +240,13 @@ namespace ytlib {
 		} while (dstIdx != path[dstIdx]);
 		return re;
 	}
-
-	//floyd算法：求所有节点到其他所有节点的最短路径，返回距离矩阵和路径矩阵
+	/**
+	 * @brief floyd算法
+	 * @details 求所有节点到其他所有节点的最短路径，返回距离矩阵和路径矩阵
+	 * @param T 模板参数，节点类型
+	 * @param vec 存放目标节点的vector
+	 * @return 距离矩阵和路径矩阵
+	 */
 	template<typename T>
 	std::pair<g_sideMatrix, Matrix_i> floyd(const std::vector<Graph<T>*>& vec) {
 		size_t len = vec.size();
@@ -228,8 +276,14 @@ namespace ytlib {
 		}
 		return std::pair<g_sideMatrix, Matrix_i>(std::move(distanceM), std::move(pathM));
 	}
-
-	//根据floyd返回的路径矩阵求一个节点到另一个节点的最短路径。返回的是正推的路径
+	/**
+	 * @brief floyd算法求特定节点到另一个节点的最短路径
+	 * @details 根据floyd返回的路径矩阵求一个节点到另一个节点的最短路径。返回的是正推的路径
+	 * @param srcIdx 源节点在vec中的index
+	 * @param dstIdx 目标节点在vec中的index
+	 * @param path floyd函数返回的路径矩阵
+	 * @return 正推的路径
+	 */
 	static std::vector<int32_t> floydPath(int32_t srcIdx, int32_t dstIdx, const Matrix_i& path) {
 		std::vector<int32_t> re;
 		assert(path.val[srcIdx][dstIdx]>=0);

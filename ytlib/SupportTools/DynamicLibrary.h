@@ -1,7 +1,10 @@
 /**
  * @file DynamicLibrary.h
  * @brief 动态库加载工具
- * @details 平台无关的动态库加载工具
+ * @details 平台无关的动态库加载工具。
+ * 动态库运行时链接有两种方式：
+ * 1、用的时候链接，用完即free：单纯使用DynamicLibrary类即可。
+ * 2、类似于插件一样，一直保存着句柄，随时要用：使用DynamicLibraryContainer类。
  * @author WT
  * @email 905976782@qq.com
  * @date 2019-07-26
@@ -15,18 +18,17 @@
 
 namespace ytlib
 {
-	/*
-	动态库运行时链接有两种方式：
-	1、用的时候链接，用完即free：单纯使用DynamicLibrary类即可
-	2、类似于插件一样，一直保存着句柄，随时要用：使用DynamicLibraryContainer类
-	*/
+
 #if defined(_WIN32)
 	typedef FARPROC SYMBOL_TYPE;
 #else
 	typedef void* SYMBOL_TYPE;
 #endif
 
-	//动态链接库封装类,提供动态加载释放动态链接库并获取函数地址的能力
+	/**
+	* @brief 动态链接库封装类
+	* 提供动态加载释放动态链接库并获取函数地址的能力
+	*/
 	class DynamicLibrary
 	{
 	public:
@@ -40,7 +42,7 @@ namespace ytlib
 		operator bool() {
 			return (NULL != m_hnd);
 		}
-		// 获取函数地址
+		/// 获取函数地址
 		SYMBOL_TYPE GetSymbol(const tstring& name) {
 			assert(NULL != m_hnd);
 
@@ -51,10 +53,10 @@ namespace ytlib
 #endif
 			return symbol;
 		}
-		//获取动态链接库名称
+		///获取动态链接库名称
 		const tstring& GetLibraryName(void) const{ return m_libname; }
 
-		//根据名称加载动态链接库
+		///根据名称加载动态链接库
 		bool Load(const tstring& libname) {
 			m_libname = libname;
 			Free();
@@ -80,7 +82,7 @@ namespace ytlib
 #endif
 			return (NULL != m_hnd);
 		}
-		//释放动态链接库
+		///释放动态链接库
 		void Free(void) {
 			if (NULL != m_hnd) {
 #if defined(_WIN32)
@@ -94,11 +96,11 @@ namespace ytlib
 
 	private:
 #if defined(_WIN32)
-		HINSTANCE m_hnd;							// Windows平台的动态链接库句柄
+		HINSTANCE m_hnd;							///< Windows平台的动态链接库句柄
 #else
-		void* m_hnd;								// 类Unix平台的动态链接库指针
+		void* m_hnd;								///< 类Unix平台的动态链接库指针
 #endif
-		tstring m_libname;							// 动态链接库名称
+		tstring m_libname;							///< 动态链接库名称
 	};
 
 	

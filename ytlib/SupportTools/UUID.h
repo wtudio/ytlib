@@ -16,7 +16,7 @@
 
 namespace ytlib
 {
-	//生成UUID
+	///生成UUID
 	static tstring GenerateUUID(void) {
 		boost::uuids::random_generator rgen;
 #ifdef UNICODE

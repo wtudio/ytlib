@@ -35,7 +35,10 @@ namespace ytlib
 
 	//进度回调
 	typedef std::function<void(int32_t)> ScheCallback;
-	//算法类Process：开启一个线程来进行算法计算
+	/**
+	* @brief 算法类Process
+	* 开启一个线程来进行算法计算
+	*/
 	class AlgProcess : public ProcessBase
 	{
 	public:
@@ -53,7 +56,7 @@ namespace ytlib
 			return ProcessBase::init();
 		}
 
-		//主要起示例作用，默认异步运行
+		///主要起示例作用，默认异步运行
 		bool start(AlgRunType type_= AlgRunType::ALG_ASYNC) {
 			if (!ProcessBase::start()) return false;
 			if (type_ == AlgRunType::ALG_ASYNC) {
@@ -64,7 +67,7 @@ namespace ytlib
 			}
 			return true;
 		}
-		//仅在异步模式下有用
+		///仅在异步模式下有用
 		bool stop(int32_t waittime=1000) {
 			if (!ProcessBase::stop()) return false;
 			//等待 waittime ms，如果还不行就返回false

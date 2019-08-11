@@ -11,13 +11,15 @@
 
 namespace ytlib
 {
-	/*
-		循环辅助工具。可以实现n层循环。虽然一般不要出现n层循环
-		使用时：
-		LoopTool lt;
-		do{
-		...
-		}while(--lt);
+
+	/**
+	* @brief 循环辅助工具
+	* 可以实现n层循环。虽然一般不要出现n层循环
+	* 使用时：
+	*	LoopTool lt;
+	*	do{
+	*	...
+	*	}while(--lt);
 	*/
 	class LoopTool {
 	public:
@@ -30,7 +32,7 @@ namespace ytlib
 			}
 		}
 
-		//++i
+		///++i
 		LoopTool& operator++() {
 			size_t len = m_vecUp.size();
 			//从低位开始加
@@ -41,7 +43,7 @@ namespace ytlib
 			}
 			return *this;
 		}
-		//--i
+		///--i
 		LoopTool& operator--() {
 			size_t len = m_vecUp.size();
 			//从低位开始减
@@ -54,7 +56,7 @@ namespace ytlib
 			}
 			return *this;
 		}
-		//是否为0。0为false
+		///是否为0。0为false
 		operator bool() const {
 			size_t len = m_vecUp.size();
 			for (size_t ii = 0; ii < len; ++ii) {
@@ -64,7 +66,7 @@ namespace ytlib
 		}
 
 		std::vector<uint32_t> m_vecContent;
-		std::vector<uint32_t> m_vecUp;//进制
+		std::vector<uint32_t> m_vecUp;///<进制
 
 	};
 

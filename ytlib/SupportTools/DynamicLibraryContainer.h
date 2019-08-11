@@ -13,7 +13,9 @@
 
 namespace ytlib
 {
-	//动态链接库容器
+	/**
+	* @brief 动态链接库容器
+	*/
 	class DynamicLibraryContainer
 	{
 	public:
@@ -22,7 +24,7 @@ namespace ytlib
 			m_mapLibraries.clear();
 		}
 
-		//根据名称获取动态链接库对象，并返回是否已经加载，true表示已经加载
+		///根据名称获取动态链接库对象，并返回是否已经加载，true表示已经加载
 		std::pair<std::shared_ptr<DynamicLibrary>,bool> GetLibrary(const tstring& libname) {
 			std::lock_guard<std::mutex> lck(m_mapLibrariesMutex);
 			std::map<tstring, std::shared_ptr<DynamicLibrary> >::iterator iter = m_mapLibraries.find(libname);
@@ -41,6 +43,7 @@ namespace ytlib
 				return std::pair<std::shared_ptr<DynamicLibrary>, bool>(iter->second, true);
 			}
 		}
+		///根据名称移除动态链接库对象
 		bool RemoveLibrary(const tstring& libname) {
 			std::lock_guard<std::mutex> lck(m_mapLibrariesMutex);
 			std::map<tstring, std::shared_ptr<DynamicLibrary> >::iterator iter = m_mapLibraries.find(libname);
@@ -55,7 +58,7 @@ namespace ytlib
 		std::mutex m_mapLibrariesMutex;
 		std::map<tstring, std::shared_ptr<DynamicLibrary> > m_mapLibraries;
 	};
-
+	///动态链接库容器的全局单例
 	typedef boost::serialization::singleton<DynamicLibraryContainer> SingletonDynamicLibraryContainer;
 
 #define GET_LIB(libname)	ytlib::SingletonDynamicLibraryContainer::get_mutable_instance().GetLibrary(libname)

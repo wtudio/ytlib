@@ -19,15 +19,16 @@
 #include <thread>
 
 namespace ytlib {
-	/*
-	目前版本日志服务器以目标机器id+ip:port为标签建立table
-	日志内容只有time、level、msg
-	初始化时给定一个路径，日志服务器每新连接一个客户机就在此目录下建立id_ip_port路径
-	并以time_ip_id.txt的名称建立日志文件。time为日志文件建立的时间
-	当满足一定条件（达到某个时间点、日志文件大小过大）时新建一个数据库
-	*/
 
-	//连接类。tag始终为 LG
+	/**
+	* @brief 网络日志连接类
+	* tag始终为 LG。
+	* 目前版本日志服务器以目标机器id+ip:port为标签建立table。
+	* 日志内容只有time、level、msg。
+	* 初始化时给定一个路径，日志服务器每新连接一个客户机就在此目录下建立id_ip_port路径。
+	* 并以time_ip_id.txt的名称建立日志文件。time为日志文件建立的时间。
+	* 当满足一定条件（达到某个时间点、日志文件大小过大）时新建一个数据库。
+	*/
 	class LogConnection :public ConnectionBase {
 	public:
 		enum {
@@ -118,7 +119,9 @@ namespace ytlib {
 		bool m_bFirstLogFlag;
 	};
 	
-
+	/**
+	* @brief 网络日志服务器
+	*/
 	class LoggerServer : public TcpConnectionPool<LogConnection>{
 	public:
 		LoggerServer(uint16_t port_,const tstring& path_= T_TEXT(""), uint32_t threadSize_ = 10):

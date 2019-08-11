@@ -1,6 +1,7 @@
 #pragma once
 #include <ytlib/Algorithm/StringAlgs.h>
 #include <ytlib/Algorithm/SortAlgs.h>
+#include <boost/core/lightweight_test.hpp>
 
 namespace ytlib
 {

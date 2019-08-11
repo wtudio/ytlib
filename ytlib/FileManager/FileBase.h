@@ -16,7 +16,10 @@
 
 namespace ytlib
 {
-	//默认为txt后缀
+	/**
+	* @brief 文件基础类
+	* 制定了文件相关操作的接口，包括Open、New、Save。默认为txt后缀
+	*/
 	template <class T>
 	class FileBase
 	{
@@ -24,9 +27,7 @@ namespace ytlib
 		tstring m_filepath;
 		bool m_bInitialized;
 
-		
-
-		//检查文件名称正确性。如果子类需要检查文件名则重载此函数
+		///检查文件名称正确性。如果子类需要检查文件名则重载此函数
 		virtual bool CheckFileName(const tstring& filename) const {
 			//一般就是检查后缀名
 			/*
@@ -37,23 +38,23 @@ namespace ytlib
 			*/
 			return true;
 		}
-		//新建一个文件内容结构体。做一些初始化的工作
+		///新建一个文件内容结构体。做一些初始化的工作
 		virtual bool CreateFileObj() {
 			m_fileobj = std::make_shared<T>();
 			return true;
 		}
-		//从打开的文件中解析获取文件内容结构体
+		///从打开的文件中解析获取文件内容结构体
 		virtual bool GetFileObj() = 0;
-		//将当前的文件内容结构体保存为文件
+		///将当前的文件内容结构体保存为文件
 		virtual bool SaveFileObj() = 0;
 	public:
 		FileBase(): m_bInitialized(false), m_fileobj(std::make_shared<T>()){}
 		virtual ~FileBase() {}
 
-		//文件内容解析后的结构体。提供直接访问
+		///文件内容解析后的结构体。提供直接访问
 		std::shared_ptr<T> m_fileobj;
 
-		//子类在open成功后解析文件获得结构体，最终成功才返回success
+		///子类在open成功后解析文件获得结构体，最终成功才返回success
 		void OpenFile(const tstring& path) {
 			//检查文件名称与路径
 			if (!CheckFileName(path)) {
@@ -73,7 +74,7 @@ namespace ytlib
 			m_bInitialized = true;
 		}
 
-		//子类在新建结构体成功后才返回success
+		///子类在新建结构体成功后才返回success
 		void NewFile() {
 			m_filepath.clear();
 			if (!CreateFileObj()) {
@@ -81,7 +82,7 @@ namespace ytlib
 			}
 			m_bInitialized = true;
 		}
-		//新建结构体并保存到path下
+		///新建结构体并保存到path下
 		void NewFile(const tstring& path) {
 			//检查文件名称与路径
 			if (!CheckFileName(path)) {
@@ -95,7 +96,7 @@ namespace ytlib
 			m_bInitialized = true;
 			return(SaveFile());
 		}
-		//子类在保存成功，将结构体写成文件后才返回success
+		///子类在保存成功，将结构体写成文件后才返回success
 		void SaveFile() {
 			if ((m_filepath.empty()) || (!m_bInitialized)) {
 				throw Exception(Error::ER_ERROR_INVALID_SAVE);
@@ -109,7 +110,7 @@ namespace ytlib
 			}
 		}
 
-		//子类在另存为成功，将结构体写成文件后才返回success
+		///子类在另存为成功，将结构体写成文件后才返回success
 		void SaveFile(const tstring& path) {
 			if (!m_bInitialized) {
 				throw Exception(Error::ER_ERROR_INVALID_SAVE);
@@ -136,7 +137,7 @@ namespace ytlib
 		inline tstring GetFilePath() const {
 			return m_filepath;
 		}
-		//去掉后缀
+		///获取去掉文件名后缀的名称
 		tstring GetFileName() const {
 			if (m_filepath.empty())	return T_TEXT("");
 			tpath filepath = tGetAbsolutePath(m_filepath);
@@ -147,6 +148,7 @@ namespace ytlib
 			}
 			return fname;
 		}
+		///获取上级目录
 		tstring GetFileParentPath() const {
 			if (m_filepath.empty()) return T_TEXT("");
 			tpath filepath = tGetAbsolutePath(m_filepath);

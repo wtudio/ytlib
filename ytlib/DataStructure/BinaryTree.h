@@ -599,8 +599,14 @@ namespace ytlib {
 		}
 
 	};
-
-	//以当前节点为根节点，前序遍历，返回一个指针数组。以当前节点为根节点
+	/**
+	 * @brief 前序遍历
+	 * @details 以当前节点为根节点，递归前序遍历，返回一个指针数组。中-左-右
+	 * @param T 模板参数，节点类型
+	 * @param nd 要前序遍历的根节点
+	 * @param vec 指针数组，要返回的遍历结果
+	 * @return 无
+	 */
 	template<typename T>
 	void DLR(std::shared_ptr<T> nd, std::vector<std::shared_ptr<T> >& vec) {
 		assert(nd);
@@ -608,7 +614,14 @@ namespace ytlib {
 		if (nd->pl) DLR(nd->pl, vec);
 		if (nd->pr) DLR(nd->pr, vec);
 	}
-	//中序遍历
+	/**
+	 * @brief 中序遍历
+	 * @details 以当前节点为根节点，递归中序遍历，返回一个指针数组。左-中-右
+	 * @param T 模板参数，节点类型
+	 * @param nd 要前序遍历的根节点
+	 * @param vec 指针数组，要返回的遍历结果
+	 * @return 无
+	 */
 	template<typename T>
 	void LDR(std::shared_ptr<T> nd, std::vector<std::shared_ptr<T> >& vec) {
 		assert(nd);
@@ -616,7 +629,14 @@ namespace ytlib {
 		vec.push_back(nd);
 		if (nd->pr) LDR(nd->pr, vec);
 	}
-	//后续遍历
+	/**
+	 * @brief 后序遍历
+	 * @details 以当前节点为根节点，递归后序遍历，返回一个指针数组。左-右-中
+	 * @param T 模板参数，节点类型
+	 * @param nd 要前序遍历的根节点
+	 * @param vec 指针数组，要返回的遍历结果
+	 * @return 无
+	 */
 	template<typename T>
 	void LRD(std::shared_ptr<T> nd, std::vector<std::shared_ptr<T> >& vec) {
 		assert(nd);
@@ -624,8 +644,13 @@ namespace ytlib {
 		if (nd->pr) LRD(nd->pr, vec);
 		vec.push_back(nd);
 	}
-
-	//获取深度，根节点深度为0
+	/**
+	 * @brief 获取深度
+	 * @details 获取深度，根节点深度为0
+	 * @param T 模板参数，节点类型
+	 * @param pnode 要获取深度的节点
+	 * @return 节点深度
+	 */
 	template<typename T>
 	size_t getDepth(const T* pnode) {
 		assert(pnode != NULL);
@@ -637,8 +662,13 @@ namespace ytlib {
 		}
 		return count;
 	}
-
-	//获取高度，叶子节点高度为1
+	/**
+	 * @brief 获取高度
+	 * @details 获取高度，叶子节点高度为1
+	 * @param T 模板参数，节点类型
+	 * @param pnode 要获取高度的节点
+	 * @return 节点高度
+	 */
 	template<typename T>
 	size_t getHeight(const T* pnode) {
 		assert(pnode != NULL);
@@ -647,7 +677,13 @@ namespace ytlib {
 		if (pnode->pr) rh = getHeight(pnode->pr.get());
 		return std::max(lh, rh) + 1;
 	}
-	//获取树中节点个数
+	/**
+	 * @brief 获取树中节点个数
+	 * @details 获取树中节点个数
+	 * @param T 模板参数，节点类型
+	 * @param pnode 要获取节点个数的树的根节点
+	 * @return 节点个数
+	 */
 	template<typename T>
 	size_t getNodeNum(const T* pnode) {
 		assert(pnode != NULL);
@@ -656,36 +692,67 @@ namespace ytlib {
 		if (pnode->pr) num += getNodeNum(pnode->pr.get());
 		return num;
 	}
-
-	//将一个节点作为左/右子节点，与原左/右子节点断开。插入的节点与其原父节点断开
+	/**
+	 * @brief 设置子节点
+	 * @details 将一个节点作为左子节点，与原左子节点断开。插入的节点与其原父节点断开
+	 * @param T 模板参数，节点类型
+	 * @param pfather 父节点
+	 * @param pchild 子节点
+	 * @return 无
+	 */
 	template<typename T>
 	void setLChild(T* pfather,std::shared_ptr<T> pchild) {
 		assert((pfather!=NULL) && pchild);
 		pchild->pf = pfather;
 		pfather->pl = pchild;
 	}
+	/**
+	 * @brief 设置子节点
+	 * @details 将一个节点作为右子节点，与原右子节点断开。插入的节点与其原父节点断开
+	 * @param T 模板参数，节点类型
+	 * @param pfather 父节点
+	 * @param pchild 子节点
+	 * @return 无
+	 */
 	template<typename T>
 	void setRChild(T* pfather, std::shared_ptr<T> pchild) {
 		assert((pfather != NULL) && pchild);
 		pchild->pf = pfather;
 		pfather->pr = pchild;
 	}
-
-	//与左/右子树断开
+	/**
+	 * @brief 与左子树断开
+	 * @details 与左子树断开
+	 * @param T 模板参数，节点类型
+	 * @param pnode 待处理节点
+	 * @return 无
+	 */
 	template<typename T>
 	void breakLChild(T* pnode) {
 		assert((pnode != NULL) && pnode->pl);
 		pnode->pl->pf = NULL;
 		pnode->pl.reset();
 	}
+	/**
+	 * @brief 与右子树断开
+	 * @details 与右子树断开
+	 * @param T 模板参数，节点类型
+	 * @param pnode 待处理节点
+	 * @return 无
+	 */
 	template<typename T>
 	void breakRChild(T* pnode) {
 		assert((pnode != NULL) && pnode->pr);
 		pnode->pr->pf = NULL;
 		pnode->pr.reset();
 	}
-
-	//判断是父节点的左节点还是右节点。true表示左。使用前应检查父节点是否为空
+	/**
+	 * @brief 判断是否为父节点的左节点
+	 * @details 判断是父节点的左节点还是右节点。true表示左。使用前应检查父节点是否为空
+	 * @param T 模板参数，节点类型
+	 * @param pnode 待处理节点
+	 * @return 无
+	 */
 	template<typename T>
 	bool getLR(const T* pnode) {
 		assert(pnode && pnode->pf != NULL);
@@ -694,8 +761,14 @@ namespace ytlib {
 		assert(0);//不是父节点的左右节点。报错
 		return true;
 	}
-
-	//分层遍历
+	/**
+	 * @brief 分层遍历
+	 * @details 分层遍历二叉树，将结果输出到vector数组中
+	 * @param T 模板参数，节点类型
+	 * @param nd 待分层遍历的树的根节点
+	 * @param vec 要返回的遍历结果
+	 * @return 无
+	 */
 	template<typename T>
 	void traByLevel(std::shared_ptr<T> nd, std::vector<std::shared_ptr<T> >& vec) {
 		assert(nd);
@@ -710,8 +783,14 @@ namespace ytlib {
 			}
 		}
 	}
-
-	//二叉树的序列化
+	/**
+	 * @brief 二叉树序列化
+	 * @details 根据前序遍历进行的二叉树序列化
+	 * @param T 模板参数，节点类型
+	 * @param proot 待序列化的树的根节点
+	 * @param vec 要返回的序列化结果
+	 * @return 无
+	 */
 	template<typename T>
 	void SerializeTree(const std::shared_ptr<T>& proot, std::vector<std::shared_ptr<T> >& vec) {
 		vec.push_back(proot);
@@ -719,7 +798,14 @@ namespace ytlib {
 		SerializeTree(proot->pl, vec);
 		SerializeTree(proot->pr, vec);
 	}
-	//反序列化
+	/**
+	 * @brief 二叉树反序列化
+	 * @details 根据前序遍历进行的二叉树反序列化
+	 * @param T 模板参数，节点类型
+	 * @param proot 待存放反序列化结果的树的根节点
+	 * @param itr 要进行反序列化的vector迭代器
+	 * @return 无
+	 */
 	template<typename T>
 	void DeserializeTree(std::shared_ptr<T>& proot, typename std::vector<std::shared_ptr<T> >::const_iterator itr) {
 		if (*itr) {
@@ -728,7 +814,13 @@ namespace ytlib {
 			DeserializeTree(proot->pr, ++itr);
 		}
 	}
-	//树的复制
+	/**
+	 * @brief 二叉树深拷贝
+	 * @details 对二叉树进行深拷贝
+	 * @param T 模板参数，节点类型
+	 * @param proot 待拷贝的树的根节点
+	 * @return 深拷贝结果
+	 */
 	template<typename T>
 	std::shared_ptr<T> copyTree(const std::shared_ptr<T>& proot) {
 		std::shared_ptr<T> p = std::make_shared<T>(*proot);

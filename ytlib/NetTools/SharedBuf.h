@@ -12,11 +12,14 @@
 
 namespace ytlib
 {
-	//通用buff
+	/**
+	* @brief 通用buff
+	* 基于boost::shared_array的智能buffer，当没有人引用时自动销毁
+	*/
 	class sharedBuf {
 	public:
-		uint32_t buf_size;
-		boost::shared_array<char> buf;
+		uint32_t buf_size;///<buf大小
+		boost::shared_array<char> buf;///<buf智能指针
 
 		sharedBuf():buf_size(0){}
 		sharedBuf(const boost::shared_array<char>& buf_, uint32_t buf_size_):buf(buf_), buf_size(buf_size_){}

@@ -15,14 +15,14 @@
 #include <ytlib/LightMath/Mathbase.h>
 #include <ytlib/LightMath/Complex.h>
 
-
 #define MAXSIZE 268435456
-
 
 namespace ytlib
 {
-
-	//改造成模板形式，可以放复数、int、float、double等等
+	/**
+	* @brief 简易矩阵类
+	* 模板形式的简易矩阵类，可以放复数、int、float、double、自定义类型等等
+	*/
 	template <typename T>
 	class Basic_Matrix {
 	public:
@@ -79,7 +79,7 @@ namespace ytlib
 			return *this;
 		}
 
-		// copies submatrix of M into array 'val', default values copy whole row/column/matrix
+		/// copies submatrix of M into array 'val', default values copy whole row/column/matrix
 		void getData(T* val_, int32_t i1 = 0, int32_t j1 = 0, int32_t i2 = -1, int32_t j2 = -1, int32_t N_ = 0) const {
 			if (i2 == -1) i2 = m - 1;
 			if (j2 == -1) j2 = n - 1;
@@ -94,7 +94,7 @@ namespace ytlib
 					
 		}
 
-		// set or get submatrices of current matrix
+		/// set or get submatrices of current matrix
 		Basic_Matrix getMat(int32_t i1, int32_t j1, int32_t i2 = -1, int32_t j2 = -1) const {
 			if (i2 == -1) i2 = m - 1;
 			if (j2 == -1) j2 = n - 1;
@@ -113,7 +113,7 @@ namespace ytlib
 					val[i1 + i][j1 + j] = M.val[i][j];
 		}
 
-		// set sub-matrix to scalar (default 0), -1 as end replaces whole row/column/matrix
+		/// set sub-matrix to scalar (default 0), -1 as end replaces whole row/column/matrix
 		void setVal(const T& s, int32_t i1 = 0, int32_t j1 = 0, int32_t i2 = -1, int32_t j2 = -1) {
 			if (i2 == -1) i2 = m - 1;
 			if (j2 == -1) j2 = n - 1;
@@ -123,7 +123,7 @@ namespace ytlib
 					val[i][j] = s;
 		}
 
-		// set (part of) diagonal to scalar, -1 as end replaces whole diagonal
+		/// set (part of) diagonal to scalar, -1 as end replaces whole diagonal
 		void setDiag(const T& s, int32_t i1 = 0, int32_t i2 = -1) {
 			if (i2 == -1) i2 = std::min(m, n) - 1;
 			assert(i1 >= 0 && i2 < std::min(m, n) && i2 >= i1);
@@ -131,7 +131,7 @@ namespace ytlib
 				val[i][i] = s;
 		}
 
-		// clear matrix
+		/// clear matrix
 		void zero() {
 			for (int32_t i = 0; i < m; ++i)
 				for (int32_t j = 0; j < n; ++j)
@@ -148,7 +148,7 @@ namespace ytlib
 			}
 			return *this;
 		}
-		// extract columns with given index
+		/// extract columns with given index
 		Basic_Matrix extractCols(const int32_t* idx,const int32_t N_) const {
 			Basic_Matrix M(m, N_);
 			for (int32_t j = 0; j < N_; ++j) {
@@ -158,7 +158,7 @@ namespace ytlib
 			}	
 			return M;
 		}
-		// create identity matrix
+		/// create identity matrix
 		static Basic_Matrix eye(const int32_t m) {
 			Basic_Matrix M(m, m);
 			for (int32_t i = 0; i < m; ++i)
@@ -173,7 +173,7 @@ namespace ytlib
 				val[i][i] = T(1);
 		}
 
-		// create matrix with ones
+		/// create matrix with ones
 		static Basic_Matrix ones(const int32_t m, const int32_t n) {
 			Basic_Matrix M(m, n);
 			for (int32_t i = 0; i < m; ++i)
@@ -181,7 +181,7 @@ namespace ytlib
 					M.val[i][j] = T(1);
 			return M;
 		}
-		// create diagonal matrix with nx1 or 1xn matrix M as elements
+		/// create diagonal matrix with nx1 or 1xn matrix M as elements
 		static Basic_Matrix diag(const Basic_Matrix &M) {
 			assert((M.m > 1 && M.n == 1) || (M.m == 1 && M.n > 1));
 			if (M.n == 1) {
@@ -198,7 +198,7 @@ namespace ytlib
 			}
 		}
 
-		// returns the m-by-n matrix whose elements are taken column-wise from M
+		/// returns the m-by-n matrix whose elements are taken column-wise from M
 		static Basic_Matrix reshape(const Basic_Matrix &M, const int32_t m_, const int32_t n_) {
 			assert(M.m*M.n == m_ * n_);
 			Basic_Matrix M2(m_, n_);
@@ -209,7 +209,7 @@ namespace ytlib
 			return M2;
 		}
 
-		// create 3x3 rotation matrices (convention: http://en.wikipedia.org/wiki/Rotation_matrix)
+		/// create 3x3 rotation matrices (convention: http://en.wikipedia.org/wiki/Rotation_matrix)
 		static Basic_Matrix rotMatX(const tfloat angle) {
 			tfloat s = sin(angle);
 			tfloat c = cos(angle);
@@ -244,8 +244,6 @@ namespace ytlib
 			return R;
 		}
 
-		// simple arithmetic operations
-		// add matrix
 		Basic_Matrix  operator+ (const Basic_Matrix &B) const {
 			assert(m == B.m && n == B.n);
 			Basic_Matrix C(m, n);
@@ -261,7 +259,7 @@ namespace ytlib
 					val[i][j] += B.val[i][j];
 			return *this;
 		}
-		// subtract matrix
+
 		Basic_Matrix  operator- (const Basic_Matrix &B) const {
 			assert(m == B.m && n == B.n);
 			Basic_Matrix C(m, n);
@@ -277,7 +275,7 @@ namespace ytlib
 					val[i][j] -= B.val[i][j];
 			return *this;
 		}
-		// multiply with matrix
+
 		Basic_Matrix  operator* (const Basic_Matrix &B) const {
 			assert(n == B.m);
 			Basic_Matrix C(m, B.n);
@@ -297,7 +295,7 @@ namespace ytlib
 
 			return this->swap(C);
 		}
-		// multiply with scalar
+
 		Basic_Matrix  operator* (const T &s) const {
 			Basic_Matrix C(m, n);
 			for (int32_t i = 0; i < m; ++i)
@@ -312,7 +310,7 @@ namespace ytlib
 			return *this;
 		}
 		
-		// divide by scalar, make sure s!=0
+		/// divide by scalar, make sure s!=0
 		Basic_Matrix  operator/ (const T &s) const {
 			Basic_Matrix C(m, n);
 			for (int32_t i = 0; i < m; ++i)
@@ -326,7 +324,7 @@ namespace ytlib
 					val[i][j] /= s;
 			return *this;
 		}
-		// negative matrix
+		/// negative matrix
 		Basic_Matrix  operator- () const {
 			Basic_Matrix C(m, n);
 			for (int32_t i = 0; i < m; ++i)
@@ -334,7 +332,7 @@ namespace ytlib
 					C.val[i][j] = -val[i][j];
 			return C;
 		}
-		// transpose
+		/// transpose
 		Basic_Matrix  operator~ () const {
 			Basic_Matrix C(n, m);
 			for (int32_t i = 0; i < m; ++i)
@@ -342,7 +340,7 @@ namespace ytlib
 					C.val[j][i] = val[i][j];
 			return C;
 		}
-		// pow
+		/// pow
 		static Basic_Matrix pow(const Basic_Matrix &value, uint32_t n) {
 			Basic_Matrix tmp = value, re(value.m, value.n);
 			re.eye();
@@ -354,7 +352,7 @@ namespace ytlib
 			return re;
 		}
 
-		// print matrix to stream
+		/// print matrix to stream
 		friend std::ostream& operator<< (std::ostream& out, const Basic_Matrix& M) {
 			if (M.m == 0 || M.n == 0) {
 				out << "[empty matrix]";

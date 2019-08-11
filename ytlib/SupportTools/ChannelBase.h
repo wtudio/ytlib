@@ -13,14 +13,24 @@
 #include <vector>
 
 namespace ytlib {
-	//单队列，异步添加，可以多线程处理数据的通道
-	//从进入通道到取出通道数据会经过复制操作。因此建议始终传递share_ptr一类的指针
-	//使用阻塞取出，无法暂停，一旦开启将一直取出数据进行处理，直到无数据可取时阻塞
+
+	/**
+	* @brief 基本通道类
+	* 单队列，异步添加，可以多线程处理数据的通道。
+	* 从进入通道到取出通道数据会经过复制操作。因此建议始终传递share_ptr一类的指针。
+	* 使用阻塞取出，无法暂停，一旦开启将一直取出数据进行处理，直到无数据可取时阻塞
+	*/
 	template<class T,
 	class _Queue = QueueBase<T> >
 	class ChannelBase {
 	public:
-		//单处理线程的通道适用于顺序数据处理，多处理线程的通道适用于并行处理
+		/**
+		 * @brief 通道构造函数
+		 * @details 构造之后即初始化，创建处理线程。单处理线程的通道适用于顺序数据处理，多处理线程的通道适用于并行处理
+		 * @param f_ 处理内容的函数。参数推荐使用（智能）指针
+		 * @param thCount_ 消费者线程数
+		 * @param queueSize_ 阻塞队列容量
+		 */
 		ChannelBase(std::function<void(T&)> f_, uint32_t thCount_ = 1, uint32_t queueSize_ = 1000) :
 			m_processFun(f_),
 			m_bRunning(true),
@@ -46,7 +56,7 @@ namespace ytlib {
 		inline void Clear() {m_queue.Clear();}
 		inline double GetUsagePercentage() {return (double)(m_queue.Count()) / (double)(m_queue.GetMaxCount());	}
 	private:
-		//线程运行函数
+		///线程运行函数
 		void Run() {
 			while (m_bRunning) {
 				T item_;
@@ -60,7 +70,7 @@ namespace ytlib {
 		std::atomic_bool m_bRunning;
 		boost::thread_group m_Threads;
 		_Queue m_queue;
-		std::function<void(T&)> m_processFun;//处理内容函数。参数推荐使用（智能）指针
+		std::function<void(T&)> m_processFun;///<处理内容函数。参数推荐使用（智能）指针
 		
 	};
 

@@ -13,8 +13,10 @@
 
 namespace ytlib
 {
-	//使用boost序列化的文件类
-	//T需要支持序列化
+	/**
+	* @brief 使用boost序列化的文件类
+	* T需要支持序列化
+	*/
 	template <class T>
 	class SerializeFile :public FileBase<T> {
 	public:

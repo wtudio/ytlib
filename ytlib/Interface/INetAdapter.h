@@ -28,7 +28,9 @@ namespace ytlib {
 		bool delFileFlag;// 发送完成,是否删除数据文件
 	};
 
-	//比较通用的网络适配器接口
+	/**
+	* @brief 一种比较通用的网络适配器接口
+	*/
 	class INetAdapter {
 	public:
 		INetAdapter(){}

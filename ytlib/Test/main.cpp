@@ -17,6 +17,7 @@
 #include "t_stru.h"
 #include "t_algs.h"
 
+#include <boost/core/lightweight_test.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>  
 #include <vector>
 #include <map>
@@ -24,11 +25,12 @@
 using namespace std;
 using namespace ytlib;
 
+//测试运行时间小工具
 boost::posix_time::ptime ticTime_global;
 void setTime(){ ticTime_global = boost::posix_time::microsec_clock::universal_time(); }
-void getTime() {
+string getTime() {
 	boost::posix_time::ptime tocTime_global = boost::posix_time::microsec_clock::universal_time();
-	cout << (tocTime_global - ticTime_global).ticks() << "us" << endl;
+	return to_string((tocTime_global - ticTime_global).ticks()) + "us";
 }
 
 int32_t main(int32_t argc, char** argv) {
@@ -38,9 +40,8 @@ int32_t main(int32_t argc, char** argv) {
 	//std::locale::global(std::locale(""));
 	//wcout.imbue(locale(""));
 
-	//for time test
 	setTime();
-	getTime();
+	cout << getTime() << endl;
 
 	test_bignum();
 	test_graph();
@@ -78,7 +79,6 @@ int32_t main(int32_t argc, char** argv) {
 
 	test_QueueProcess();
 	
-	printf("******************end*******************\n");
-	getchar();
-	
+	YT_DEBUG_PRINTF("******************end*******************\n");
+	return boost::report_errors();
 }

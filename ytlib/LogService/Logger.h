@@ -34,13 +34,14 @@
 #include <boost/log/sources/record_ostream.hpp>
 
 namespace ytlib {
-	//此日志工具用于生产环境，调试环境的日志输出见<ytlib/Common/Util.h>中的YT_DEBUG_PRINTF
-	/*
-	在刚建立连接的第一包中发送id等host信息，并发送一个8字节的时间（boost::posix_time::ptime的内容）
-	然后后续每一包只发送1byte level信息+8byte 时间+n byte日志信息（不用增量是防止中间丢包）
-	*/
 
-	//同步后端，不需要加锁
+	/**
+	* @brief 基于boost.log的网络日志后端
+	* 此日志工具用于生产环境，调试环境的日志输出见<ytlib/Common/Util.h>中的YT_DEBUG_PRINTF。
+	* 在刚建立连接的第一包中发送id等host信息，并发送一个8字节的时间（boost::posix_time::ptime的内容）。
+	* 然后后续每一包只发送1byte level信息+8byte 时间+n byte日志信息（不用增量是防止中间丢包）
+	* 同步后端，不需要加锁
+	*/
 	class NetBackend : public boost::log::sinks::basic_sink_backend<
 		boost::log::sinks::synchronized_feeding> {
 	public:
@@ -116,7 +117,10 @@ namespace ytlib {
 		bool m_bFirstLogFlag;
 	};
 
-	//日志控制中心。提供全局单例
+	/**
+	* @brief 日志控制中心
+	* 提供全局单例
+	*/
 	class LogControlCenter {
 		typedef boost::log::sinks::synchronous_sink<boost::log::sinks::text_ostream_backend> ConSink_t;
 		typedef boost::log::sinks::synchronous_sink<NetBackend> NetSink_t;
@@ -168,7 +172,7 @@ namespace ytlib {
 	typedef boost::serialization::singleton<LogControlCenter> SingletonLogControlCenter;
 
 
-	//一些宏定义
+	//日志宏定义
 #define YT_LOG_TRACE	BOOST_LOG_TRIVIAL(trace)
 #define YT_LOG_DEBUG	BOOST_LOG_TRIVIAL(debug)
 #define YT_LOG_INFO		BOOST_LOG_TRIVIAL(info)
@@ -179,12 +183,13 @@ namespace ytlib {
 
 #define YT_SET_LOG_LEVEL(lvl)  (boost::log::core::get())->set_filter(boost::log::trivial::severity >=  boost::log::trivial::lvl);
 
-	//不要重复init
+	///网络日志初始化。不要重复init
 	static void InitNetLog(uint32_t myid_, const TcpEp& logserver_ep_) {
 		SingletonLogControlCenter::get_mutable_instance().EnableNetLog(myid_, logserver_ep_);
 		SingletonLogControlCenter::get_mutable_instance().EnableConsoleLog();
 		YT_SET_LOG_LEVEL(info);//默认info级别
 	}
+	///关闭网络日志
 	static void StopNetLog() {
 		SingletonLogControlCenter::get_mutable_instance().DisableNetLog();
 		SingletonLogControlCenter::get_mutable_instance().DisableConsoleLog();

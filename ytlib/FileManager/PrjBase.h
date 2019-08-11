@@ -13,10 +13,6 @@
 namespace ytlib
 {
 
-	//root节点：工程名称、版本、settings节点，item节点（多个）
-	//settings节点：key-value对
-	//item节点:名称、类型，settings节点。名称即为路径。
-
 	/*
 	示例xml：
 <?xml version="1.0" encoding="utf-8"?>
@@ -53,8 +49,13 @@ namespace ytlib
 		std::map<tstring, tstring> m_PrjSettings;//key-value
 		std::map<tstring, ItemInfo> m_PrjItems;//path-obj
 	};
-
-	//使用xml格式
+	/**
+	* @brief 项目管理型文件类
+	* 基于xml格式，制定通用的项目管理型文件。
+	* root节点：工程名称、版本、settings节点，item节点（多个）。
+	* settings节点：key-value对。
+	* item节点:名称、类型，settings节点。名称即为路径。
+	*/
 	class PrjFile :public FileBase<PrjObj>
 	{
 	public:
