@@ -5,13 +5,13 @@
 
 namespace ytlib
 {
-	bool test_heap();
-	bool test_bintree();
-	bool test_bst();
-	bool test_avlt();
-	bool test_brt();
+	void test_heap();
+	void test_bintree();
+	void test_bst();
+	void test_avlt();
+	void test_brt();
 
-	bool test_graph();
+	void test_graph();
 
 }
 

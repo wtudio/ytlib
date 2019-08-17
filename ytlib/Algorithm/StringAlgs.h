@@ -103,7 +103,7 @@ namespace ytlib {
 
 	/**
 	 * @brief 最长不重复子串
-	 * @details 计算最长的不含有重复字符的子串。返回其出现的位置和长度
+	 * @details 计算最先出现的最长的不含有重复字符的子串。返回其出现的位置和长度
 	 * @param s 字符串
 	 * @param len 字符串长度
 	 * @return 最长不重复子串出现的位置和长度
@@ -134,6 +134,7 @@ namespace ytlib {
 	/**
 	 * @brief 替换所有
 	 * @details 将一个字符串中指定字符串str1换为字符串str2
+	 * 如果str1长度小于等于str2，则在原字符串基础上修改，否则会复制到新内存中
 	 * @param str 待处理字符串
 	 * @param oldValue 要被替换的字符串
 	 * @param newValue 要替换成的字符串
@@ -183,7 +184,7 @@ namespace ytlib {
 
 	/**
 	 * @brief 分割
-	 * @details 将str以seperator中所有字符为分割符分割,返回分割结果vector，结果中不包含分隔符
+	 * @details 将str以seperator中所有字符为分割符分割,返回分割结果vector，结果中不包含分隔符（boost中有）
 	 * @param str 待处理字符串
 	 * @param seperators 分割字符
 	 * @return 分割结果vector

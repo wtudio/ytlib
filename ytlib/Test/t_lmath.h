@@ -5,10 +5,10 @@
 
 namespace ytlib
 {
-	bool test_Complex();
-	bool test_Matrix();
-	bool test_Matrix_c();
-	bool test_tools();
-	bool test_bignum();
+	void test_Complex();
+	void test_Matrix();
+	void test_Matrix_c();
+	void test_tools();
+	void test_bignum();
 }
 

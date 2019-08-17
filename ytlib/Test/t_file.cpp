@@ -3,7 +3,7 @@
 namespace ytlib
 {
 
-	bool test_KeyValueFile() {
+	void test_KeyValueFile() {
 
 		KeyValueFile f1;
 		f1.NewFile(T_TEXT("t_file/testfile3.txt"));
@@ -26,7 +26,7 @@ namespace ytlib
 		f2.SaveFile(T_TEXT("t_file/testfile4.txt"));
 		
 
-		return true;
+		
 	}
 
 	class SFTestObj {
@@ -39,7 +39,7 @@ namespace ytlib
 	};
 	typedef SerializeFile<SFTestObj> SFTestFile;
 
-	bool test_SerializeFile() {
+	void test_SerializeFile() {
 		SFTestFile f1;
 		f1.NewFile(T_TEXT("t_file/testfile.txt"));
 		std::shared_ptr<SFTestObj> o = f1.m_fileobj;
@@ -55,22 +55,22 @@ namespace ytlib
 		f2.OpenFile(T_TEXT("t_file/testfile.txt"));
 		f2.SaveFile(T_TEXT("t_file/testfile2.txt"));
 		
-		return true;
+		
 	}
-	bool test_XMLFile() {
+	void test_XMLFile() {
 		XMLFile f1;
 		f1.NewFile();
 
 		f1.SaveFile(T_TEXT("t_file/TrunkCenter2.xml"));
-		return true;
+		
 	}
-	bool test_PrjBase() {
+	void test_PrjBase() {
 
 		PrjFile f1;
 		f1.NewFile();
 		f1.setPrjName(T_TEXT("testprj2"));
 		f1.SaveFile(T_TEXT("t_file/testprj2.prj"));
 
-		return true;
+		
 	}
 }

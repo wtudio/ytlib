@@ -4,7 +4,7 @@
 
 namespace ytlib
 {
-	bool test_TcpNetAdapter();
+	void test_TcpNetAdapter();
 
 
 }

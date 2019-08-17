@@ -34,23 +34,29 @@ string getTime() {
 }
 
 int32_t main(int32_t argc, char** argv) {
-	YT_DEBUG_PRINTF("-------------------start-------------------\n");
+	YT_DEBUG_PRINTF("-------------------start test-------------------\n");
 	//tcout输出中文需要设置
 	//建议：最好不要在程序中使用中文！！！
 	//std::locale::global(std::locale(""));
 	//wcout.imbue(locale(""));
 
-	setTime();
-	cout << getTime() << endl;
+	//单元测试区
 
+	//Algorithm
+	test_sortAlgs();
+	test_stringAlgs();
+
+	//DataStructure
+
+
+
+	//网络测试区
+
+	//其他测试区
+	/*
 	test_bignum();
 	test_graph();
 
-	test_sort();
-	test_kmp();
-	test_strdif();
-	test_strFuns();
-	test_lgsswd();
 
 	test_avlt();
 	test_brt();
@@ -65,7 +71,7 @@ int32_t main(int32_t argc, char** argv) {
 	test_LoopTool();
 	test_NetLog();
 	test_TcpNetAdapter();
-	
+
 
 	test_Complex();
 	test_Matrix();
@@ -78,7 +84,9 @@ int32_t main(int32_t argc, char** argv) {
 	test_PrjBase();
 
 	test_QueueProcess();
-	
-	YT_DEBUG_PRINTF("******************end*******************\n");
+
+	*/
+
+	YT_DEBUG_PRINTF("********************end test*******************\n");
 	return boost::report_errors();
 }

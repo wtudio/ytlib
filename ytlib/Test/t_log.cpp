@@ -3,7 +3,7 @@
 
 namespace ytlib
 {
-	bool test_NetLog() {
+	void test_NetLog() {
 		LoggerServer l(55555);
 		l.start();
 
@@ -24,7 +24,7 @@ namespace ytlib
 
 		getchar();
 		StopNetLog();
-		return true;
+
 	}
 	
 }

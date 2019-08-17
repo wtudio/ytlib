@@ -8,8 +8,8 @@
 
 namespace ytlib
 {
-	bool test_KeyValueFile();
-	bool test_SerializeFile();
-	bool test_XMLFile();
-	bool test_PrjBase();
+	void test_KeyValueFile();
+	void test_SerializeFile();
+	void test_XMLFile();
+	void test_PrjBase();
 }

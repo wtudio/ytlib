@@ -3,13 +3,13 @@
 namespace ytlib
 {
 
-	bool test_ProcessBase() {
+	void test_ProcessBase() {
 
-		return true;
+		
 	}
-	bool test_AlgProcess() {
+	void test_AlgProcess() {
 
-		return true;
+		
 	}
 
 	class testmsg {
@@ -30,7 +30,7 @@ namespace ytlib
 		}
 	};
 
-	bool test_QueueProcess() {
+	void test_QueueProcess() {
 	
 		testQueueProcess testprocess;
 		testprocess.init();
@@ -56,6 +56,6 @@ namespace ytlib
 			testprocess.Add(std::shared_ptr<testmsg>(new testmsg(ii)));
 		}
 		testprocess.stop();
-		return true;
+		
 	}
 }

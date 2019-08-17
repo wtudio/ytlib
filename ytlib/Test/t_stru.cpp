@@ -4,7 +4,7 @@
 using namespace std;
 namespace ytlib
 {
-	bool test_heap() {
+	void test_heap() {
 
 		int data[10] = { 7,9,2,6,4,8,1,3,10,5 };
 		Heap<int> h1(data, 10);
@@ -46,10 +46,10 @@ namespace ytlib
 
 
 
-		return true;
+		
 	}
 
-	bool test_bintree() {
+	void test_bintree() {
 		typedef BinTreeNode<int> mybt;
 		typedef shared_ptr<mybt> mybtPtr;
 		mybtPtr rootp = make_shared<mybt>(10);
@@ -97,10 +97,10 @@ namespace ytlib
 
 
 
-		return true;
+		
 	}
 
-	bool test_bst() {
+	void test_bst() {
 		typedef BinSearchTreeNode<int> mybst;
 		typedef shared_ptr<mybst> mybstPtr;
 
@@ -124,10 +124,10 @@ namespace ytlib
 		}
 		cout << endl;
 
-		return true;
+		
 	}
 
-	bool test_avlt() {
+	void test_avlt() {
 		typedef AVLTreeNode<int> myavlt;
 		typedef shared_ptr<myavlt> myavltPtr;
 
@@ -240,10 +240,10 @@ namespace ytlib
 		}
 		cout << endl;
 
-		return true;
+		
 	}
 
-	bool test_brt() {
+	void test_brt() {
 		typedef BRTreeNode<int> mybrt;
 		typedef shared_ptr<mybrt> mybrtPtr;
 
@@ -262,11 +262,11 @@ namespace ytlib
 		//删除
 
 
-		return true;
+		
 	}
 
 
-	bool test_graph() {
+	void test_graph() {
 		typedef Graph<uint32_t> myGraph;
 
 		vector<myGraph*> myGraphVec;
@@ -350,6 +350,6 @@ namespace ytlib
 
 		releaseGraphVec(myGraphVec);
 
-		return true;
+		
 	}
 }

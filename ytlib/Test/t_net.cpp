@@ -99,7 +99,7 @@ namespace ytlib
 	}
 
 
-	bool test_TcpNetAdapter() {
+	void test_TcpNetAdapter() {
 		if (true) {
 
 			boost::posix_time::ptime ticTime_global, tocTime_global;
@@ -166,7 +166,7 @@ namespace ytlib
 		if (!iserr) {
 			printf("get err!!!\n");
 		}
-		return iserr;
+		//return iserr;
 	}
 	
 }

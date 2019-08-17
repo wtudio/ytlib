@@ -4,7 +4,7 @@
 
 namespace ytlib
 {
-	bool test_NetLog();
+	void test_NetLog();
 
 
 }

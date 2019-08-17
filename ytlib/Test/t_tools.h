@@ -6,12 +6,12 @@
 namespace ytlib
 {
 
-	bool test_Serialize();
+	void test_Serialize();
 
 
-	bool test_stl();
-	bool test_urlencode();
-	bool test_LoopTool();
+	void test_stl();
+	void test_urlencode();
+	void test_LoopTool();
 }
 
 

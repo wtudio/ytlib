@@ -6,9 +6,9 @@
 
 namespace ytlib
 {
-	bool test_ProcessBase();
-	bool test_AlgProcess();
-	bool test_QueueProcess();
+	void test_ProcessBase();
+	void test_AlgProcess();
+	void test_QueueProcess();
 }
 
 

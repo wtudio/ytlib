@@ -22,7 +22,7 @@ namespace ytlib
 	};
 
 
-	bool test_Serialize() {
+	void test_Serialize() {
 		test_a obj1;
 		obj1.s = "dddd";
 		obj1.a = 100;
@@ -32,11 +32,11 @@ namespace ytlib
 		test_a obj2;
 		Deserialize(obj2, re, SerializeType::BinaryType);
 
-		return true;
+		
 	}
 
 	//这个函数只是用于学习stl库里的算法
-	bool test_stl() {
+	void test_stl() {
 
 		int re = 0;
 		vector<int> v1{ 5,4,8,2,1,3,9,7,6 };//未排序数组1
@@ -47,10 +47,10 @@ namespace ytlib
 
 
 
-		return true;
+		
 	}
 
-	bool test_urlencode() {
+	void test_urlencode() {
 		string s2 = "http://abc123.com/aaa/bbbb?qa=1&qb=adf";
 		printf("%d\t%d\t%X\t%s\n", s2.size(), s2.capacity(), s2.c_str(), s2.c_str());
 
@@ -61,10 +61,10 @@ namespace ytlib
 		printf("%d\t%d\t%X\t%s\n", s4.size(), s4.capacity(), s4.c_str(), s4.c_str());
 
 
-		return true;
+		
 	}
 
-	bool test_LoopTool() {
+	void test_LoopTool() {
 		LoopTool lt(vector<uint32_t>{2, 3, 3});
 		do {
 			for (uint32_t ii = lt.m_vecContent.size() - 1; ii > 0; --ii) {
@@ -73,7 +73,7 @@ namespace ytlib
 			cout << lt.m_vecContent[0] << endl;
 
 		} while (++lt);
-		return true;
+		
 
 	}
 

@@ -3,7 +3,7 @@
 using namespace std;
 namespace ytlib
 {
-	bool test_Complex() {
+	void test_Complex() {
 		Complex c;
 		Complex c1(0.5, 6.3);
 		Complex c2(c1);
@@ -60,10 +60,10 @@ namespace ytlib
 		delete[] cc;
 		delete[] cc0;
 
-		return true;
+		
 	}
 
-	bool test_Matrix() {
+	void test_Matrix() {
 		int32_t count = 9;
 		Matrix m;
 		cout << m << endll;
@@ -175,13 +175,13 @@ namespace ytlib
 
 		delete[] f;
 		delete[] f2;
-		return true;
+		
 	}
-	bool test_Matrix_c() {
+	void test_Matrix_c() {
 
-		return true;
+		
 	}
-	bool test_tools() {
+	void test_tools() {
 		cout << gcd(42, 30) << endl;
 		cout << gcd(770, 26) << endl;
 		cout << gcd(121, 132) << endl;
@@ -209,9 +209,9 @@ namespace ytlib
 		cout << SumGP(2.0, 1.0, 10) << endl;//20
 		cout << SumGP(2.0, 3.0, 4) << endl;//80
 
-		return true;
+		
 	}
-	bool test_bignum() {
+	void test_bignum() {
 
 		BigNum a((int64_t(1) << 32) + 1);
 		cout << a << endl;
@@ -245,6 +245,6 @@ namespace ytlib
 
 
 
-		return true;
+		
 	}
 }
