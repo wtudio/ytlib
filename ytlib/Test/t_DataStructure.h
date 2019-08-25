@@ -6,13 +6,8 @@
 namespace ytlib
 {
 	void test_BinaryTree();
-
-
-	void test_heap();
-	void test_brt();
-
-	void test_graph();
-
+	void test_Graph();
+	void test_Heap();
 }
 
 

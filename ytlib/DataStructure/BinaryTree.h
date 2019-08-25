@@ -645,8 +645,8 @@ namespace ytlib {
 		vec.push_back(nd);
 	}
 	/**
-	 * @brief 获取深度
-	 * @details 获取深度，根节点深度为0
+	 * @brief 获取一个节点的深度
+	 * @details 获取一个节点的深度，根节点深度为0
 	 * @param T 模板参数，节点类型
 	 * @param pnode 要获取深度的节点
 	 * @return 节点深度
@@ -663,8 +663,8 @@ namespace ytlib {
 		return count;
 	}
 	/**
-	 * @brief 获取高度
-	 * @details 获取高度，叶子节点高度为1
+	 * @brief 获取一个节点的高度
+	 * @details 获取一个节点的高度，叶子节点高度为1
 	 * @param T 模板参数，节点类型
 	 * @param pnode 要获取高度的节点
 	 * @return 节点高度
@@ -676,6 +676,32 @@ namespace ytlib {
 		if (pnode->pl) lh = getHeight(pnode->pl.get());
 		if (pnode->pr) rh = getHeight(pnode->pr.get());
 		return std::max(lh, rh) + 1;
+	}
+	/**
+	 * @brief 获取一个树中最长根-叶链长度
+	 * @details 获取一个树中从根节点到叶子节点的最长节点个数。实际调用getHeight
+	 * @param T 模板参数，节点类型
+	 * @param pnode 要获取最长链长度的树的根节点
+	 * @return 最长链长度
+	 */
+	template<typename T>
+	size_t getMaxChain(const T* pnode) {
+		return getHeight(pnode);
+	}
+	/**
+	 * @brief 获取一个树中最短根-叶链长度
+	 * @details 获取一个树中从根节点到叶子节点的最短节点个数
+	 * @param T 模板参数，节点类型
+	 * @param pnode 要获取最短链长度的树的根节点
+	 * @return 最短链长度
+	 */
+	template<typename T>
+	size_t getMinChain(const T* pnode) {
+		assert(pnode != NULL);
+		size_t lh = 0, rh = 0;
+		if (pnode->pl) lh = getHeight(pnode->pl.get());
+		if (pnode->pr) rh = getHeight(pnode->pr.get());
+		return std::min(lh, rh) + 1;
 	}
 	/**
 	 * @brief 获取树中节点个数
@@ -864,11 +890,11 @@ namespace ytlib {
 		if (proot) {
 			if (proot->pl) {
 				if (proot->pl->pf != proot.get()) return false;
-				if (!checkTree(proot->pl)) return false;
+				if (!checkBinTree(proot->pl)) return false;
 			}
 			if (proot->pr) {
 				if (proot->pr->pf != proot.get()) return false;
-				if (!checkTree(proot->pr)) return false;
+				if (!checkBinTree(proot->pr)) return false;
 			}
 		}
 		return true;
@@ -883,6 +909,18 @@ namespace ytlib {
 	 */
 	template<typename T>
 	bool checkBinSearchTree(const std::shared_ptr<T>& proot) {
+		if (proot) {
+			if (proot->pl) {
+				if (proot->pl->pf != proot.get()) return false;
+				if (proot->pl->obj >= proot->obj) return false;
+				if (!checkBinSearchTree(proot->pl)) return false;
+			}
+			if (proot->pr) {
+				if (proot->pr->pf != proot.get()) return false;
+				if (proot->pr->obj < proot->obj) return false;
+				if (!checkBinSearchTree(proot->pr)) return false;
+			}
+		}
 		return true;
 	}
 	/**
@@ -894,6 +932,8 @@ namespace ytlib {
 	 */
 	template<typename T>
 	bool checkAVLTree(const std::shared_ptr<T>& proot) {
+		if (!checkBinSearchTree(proot)) return false;
+		if (getMaxChain(proot.get()) > getMinChain(proot.get()) + 1) return false;
 		return true;
 	}
 	/**
@@ -905,6 +945,10 @@ namespace ytlib {
 	 */
 	template<typename T>
 	bool checkBRTree(const std::shared_ptr<T>& proot) {
+		if (!checkBinSearchTree(proot)) return false;
+		if (proot->color != false) return false;//根节点要为黑
+
+
 		return true;
 	}
 }

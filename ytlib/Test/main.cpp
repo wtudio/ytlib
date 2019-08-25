@@ -47,21 +47,20 @@ int32_t main(int32_t argc, char** argv) {
 
 	//DataStructure
 	test_BinaryTree();
+	test_Graph();
+	test_Heap();
+
+
 
 
 	//网络测试区
 
 	//其他测试区
+
+
 	/*
 	test_bignum();
-	test_graph();
-
-
-	test_avlt();
-	test_brt();
-	test_heap();
-
-
+	
 	test_Serialize();
 	test_stl();
 	test_urlencode();

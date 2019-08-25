@@ -65,7 +65,7 @@ namespace ytlib {
 	 * @return 是否为无向图。true表示是无向图，false表示有向图
 	 */
 	template<typename T>
-	bool isUndiGraph(const std::vector<Graph<T>*>& vec) {
+	bool isUndirGraph(const std::vector<Graph<T>*>& vec) {
 		for (uint32_t ii = 0; ii < vec.size(); ++ii) {
 			for (auto itr = vec[ii]->sides.begin(); itr != vec[ii]->sides.end(); ++itr) {
 				auto itr2 = itr->first->sides.find(vec[ii]);

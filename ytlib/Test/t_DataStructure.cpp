@@ -144,18 +144,18 @@ namespace ytlib
 			for (int ii = 0; ii < 20; ii += 2) {
 				rootp->insert(make_shared<mybst>(ii));
 			}
-			BOOST_TEST(checkBinTree(rootp));
+			BOOST_TEST(checkBinSearchTree(rootp));
 
 			vector<mybstPtr> vec;
 			vector<int> answerDLR = { 10,0,2,4,6,8,10,12,14,16,18 };
 			DLR(rootp, vec);
-			BOOST_TEST(checkBinTree(rootp));
+			BOOST_TEST(checkBinSearchTree(rootp));
 			BOOST_TEST_ALL_WITH(vec.begin(), vec.end(), answerDLR.begin(), answerDLR.end(), [](mybstPtr re, int an) {return re->obj == an; });
 
 			vec.clear();
 			vector<int> answerTbl = { 10,0,10,2,12,4,14,6,16,8,18 };
 			traByLevel(rootp, vec);
-			BOOST_TEST(checkBinTree(rootp));
+			BOOST_TEST(checkBinSearchTree(rootp));
 			BOOST_TEST_ALL_WITH(vec.begin(), vec.end(), answerTbl.begin(), answerTbl.end(), [](mybstPtr re, int an) {return re->obj == an; });
 
 
@@ -181,35 +181,35 @@ namespace ytlib
 			for (int ii = 0; ii < 20; ii += 2) {
 				rootp = rootp->insert(make_shared<myavlt>(ii));
 			}
-			BOOST_TEST(checkBinTree(rootp));
+			BOOST_TEST(checkAVLTree(rootp));
 
 			vector<myavltPtr> vec;
 			vector<int> answerLDR = { 0,2,4,6,8,10,12,14,16,18 };
 			LDR(rootp, vec);
-			BOOST_TEST(checkBinTree(rootp));
+			BOOST_TEST(checkAVLTree(rootp));
 			BOOST_TEST_ALL_WITH(vec.begin(), vec.end(), answerLDR.begin(), answerLDR.end(), [](myavltPtr re, int an) {return re->obj == an; });
 
 			vec.clear();
 			vector<int> answerDLR = { 6,2,0,4,14,10,8,12,16,18 };
 			DLR(rootp, vec);
-			BOOST_TEST(checkBinTree(rootp));
+			BOOST_TEST(checkAVLTree(rootp));
 			BOOST_TEST_ALL_WITH(vec.begin(), vec.end(), answerDLR.begin(), answerDLR.end(), [](myavltPtr re, int an) {return re->obj == an; });
 
 			vec.clear();
 			vector<int> answerTbl = { 6,2,14,0,4,10,16,8,12,18 };
 			traByLevel(rootp, vec);
-			BOOST_TEST(checkBinTree(rootp));
+			BOOST_TEST(checkAVLTree(rootp));
 			BOOST_TEST_ALL_WITH(vec.begin(), vec.end(), answerTbl.begin(), answerTbl.end(), [](myavltPtr re, int an) {return re->obj == an; });
 
 			//删除
 			rootp = rootp->erase(100);
-			BOOST_TEST(checkBinTree(rootp));
+			BOOST_TEST(checkAVLTree(rootp));
 			vec.clear();
 			DLR(rootp, vec);
 			BOOST_TEST_ALL_WITH(vec.begin(), vec.end(), answerDLR.begin(), answerDLR.end(), [](myavltPtr re, int an) {return re->obj == an; });
 
 			rootp = rootp->erase(14);
-			BOOST_TEST(checkBinTree(rootp));
+			BOOST_TEST(checkAVLTree(rootp));
 			vector<int> answerDLR2 = { 6,2,0,4,12,10,8,16,18 };
 			vec.clear();
 			DLR(rootp, vec);
@@ -217,114 +217,56 @@ namespace ytlib
 
 			//删除根节点
 			rootp = rootp->erase(rootp);
-			BOOST_TEST(checkBinTree(rootp));
+			BOOST_TEST(checkAVLTree(rootp));
 			vector<int> answerDLR3 = { 4,2,0,12,10,8,16,18 };
 			vec.clear();
 			DLR(rootp, vec);
 			BOOST_TEST_ALL_WITH(vec.begin(), vec.end(), answerDLR3.begin(), answerDLR3.end(), [](myavltPtr re, int an) {return re->obj == an; });
 
 			rootp = rootp->erase(0);
-			BOOST_TEST(checkBinTree(rootp));
+			BOOST_TEST(checkAVLTree(rootp));
 			vector<int> answerDLR4 = { 12,4,2,10,8,16,18 };
 			vec.clear();
 			DLR(rootp, vec);
 			BOOST_TEST_ALL_WITH(vec.begin(), vec.end(), answerDLR4.begin(), answerDLR4.end(), [](myavltPtr re, int an) {return re->obj == an; });
 
 			rootp = rootp->erase(rootp->pr->pr);
-			BOOST_TEST(checkBinTree(rootp));
+			BOOST_TEST(checkAVLTree(rootp));
 			vector<int> answerDLR5 = { 10,4,2,8,12,16 };
 			vec.clear();
 			DLR(rootp, vec);
 			BOOST_TEST_ALL_WITH(vec.begin(), vec.end(), answerDLR5.begin(), answerDLR5.end(), [](myavltPtr re, int an) {return re->obj == an; });
 
 		}
-		YT_DEBUG_PRINTF("test BRTreeNode\n");
+		YT_DEBUG_PRINTF("test BRTreeNode\n");//todo 未完成
 		{
 			//红黑树
-
-		}
-
-
-	}
-
-
-	void test_heap() {
-
-		int data[10] = { 7,9,2,6,4,8,1,3,10,5 };
-		Heap<int> h1(data, 10);
-		for (int ii = 0; ii < 10; ++ii) {
-			cout << h1.container[ii] << " ";
-		}
-		cout << endl;
-
-		h1.sort();
-		for (int ii = 0; ii < 10; ++ii) {
-			cout << h1.container[ii] << " ";
-		}
-		cout << endl;
-
-
-		int data2[15] = { 7,-5,9,-7,2,6,-6,4,8,1,3,-8,10,5, -9};
-		h1.assign(data2, 15);
-		h1.sort();
-
-		for (int ii = 0; ii < 15; ++ii) {
-			cout << h1.container[ii] << " ";
-		}
-		cout << endl;
-
-		h1.push(-3);
-		h1.push(-10);
-		h1.push(11);
-		for (int ii = 0; ii < 18; ++ii) {
-			cout << h1.container[ii] << " ";
-		}
-
-		h1.pop();
-		h1.pop();
-		h1.pop();
-		for (int ii = 0; ii < 15; ++ii) {
-			cout << h1.container[ii] << " ";
-		}
-		cout << endl;
-
-
-
-		
-	}
-
-	void test_brt() {
-		typedef BRTreeNode<int> mybrt;
-		typedef shared_ptr<mybrt> mybrtPtr;
-
-		mybrtPtr rootp = make_shared<mybrt>(10);
-		//插入
-		vector<mybrtPtr> vec;
-		for (int ii = 0; ii < 20; ii += 2) {
-			rootp = rootp->insert(make_shared<mybrt>(ii));
-			vec.clear();
-			DLR(rootp, vec);
-			for (size_t ii = 0; ii < vec.size(); ++ii) {
-				cout << vec[ii]->obj << "(" << vec[ii]->color << ") ";
+			typedef BRTreeNode<int> mybrt;
+			typedef shared_ptr<mybrt> mybrtPtr;
+			mybrtPtr rootp = make_shared<mybrt>(10);
+			//插入
+			
+			for (int ii = 0; ii < 20; ii += 2) {
+				rootp = rootp->insert(make_shared<mybrt>(ii));
 			}
-			cout << endl;
+			BOOST_TEST(checkBRTree(rootp));
+
+			//删除
+
 		}
-		//删除
 
 
-		
 	}
 
-
-	void test_graph() {
+	void test_Graph() {
+		YT_DEBUG_PRINTF("test Graph\n");//todo 未完成
 		typedef Graph<uint32_t> myGraph;
 
 		vector<myGraph*> myGraphVec;
-		uint32_t num = 11;
+		uint32_t num = 10;
 		for (uint32_t ii = 0; ii < num; ++ii) {
 			myGraphVec.push_back(new myGraph(ii));
 		}
-
 		connectGraphNode<uint32_t>(*myGraphVec[0], *myGraphVec[1], 1);
 		connectGraphNode<uint32_t>(*myGraphVec[0], *myGraphVec[5], 2);
 		connectGraphNode<uint32_t>(*myGraphVec[0], *myGraphVec[9], 3);
@@ -337,33 +279,27 @@ namespace ytlib
 		connectGraphNode<uint32_t>(*myGraphVec[6], *myGraphVec[8], 10);
 		connectGraphNode<uint32_t>(*myGraphVec[8], *myGraphVec[9], 11);
 
-		cout << isUndiGraph(myGraphVec) << endl;
+		BOOST_TEST(isUndirGraph(myGraphVec));
 
 		vector<myGraph*> myGraphVec2 = copyGraph(myGraphVec);
+		BOOST_TEST_ALL_WITH(myGraphVec.begin(), myGraphVec.end(), myGraphVec2.begin(), myGraphVec2.end(), [](myGraph* val1, myGraph* val2) {return (val1 != val2) && (val1->obj == val2->obj); });
 
 		releaseGraphVec(myGraphVec2);
+
 
 		//dfs
 		vector<myGraph*> vec;
 		clearFlag(myGraphVec);
 		DFS(*myGraphVec[0], vec);
-		for (size_t ii = 0; ii < vec.size(); ++ii) {
-			cout << vec[ii]->obj << " ";
-		}
-		cout << endl;
 
 		//bfs
 		vec.clear();
 		clearFlag(myGraphVec);
 		BFS(*myGraphVec[0], vec);
-		for (size_t ii = 0; ii < vec.size(); ++ii) {
-			cout << vec[ii]->obj << " ";
-		}
-		cout << endl;
 
 		//邻接矩阵
 		g_sideMatrix M = createAdjMatrix<uint32_t>(myGraphVec);
-	
+
 		cout << M << endl;
 		cout << endl;
 
@@ -391,7 +327,7 @@ namespace ytlib
 		cout << fl.second << endl;
 		cout << endl << endl;
 
-		vector<int32_t> flpath = floydPath(0,7, fl.second);
+		vector<int32_t> flpath = floydPath(0, 7, fl.second);
 		for (size_t ii = 0; ii < flpath.size(); ++ii) {
 			cout << myGraphVec[flpath[ii]]->obj << "-";
 		}
@@ -400,6 +336,51 @@ namespace ytlib
 
 		releaseGraphVec(myGraphVec);
 
-		
+	}
+
+
+	void test_Heap() {
+
+		int data[10] = { 7,9,2,6,4,8,1,3,10,5 };
+		Heap<int> h1(data, 10);
+		for (int ii = 0; ii < 10; ++ii) {
+			cout << h1.container[ii] << " ";
+		}
+		cout << endl;
+
+		h1.sort();
+		for (int ii = 0; ii < 10; ++ii) {
+			cout << h1.container[ii] << " ";
+		}
+		cout << endl;
+
+
+		int data2[15] = { 7,-5,9,-7,2,6,-6,4,8,1,3,-8,10,5, -9 };
+		h1.assign(data2, 15);
+		h1.sort();
+
+		for (int ii = 0; ii < 15; ++ii) {
+			cout << h1.container[ii] << " ";
+		}
+		cout << endl;
+
+		h1.push(-3);
+		h1.push(-10);
+		h1.push(11);
+		for (int ii = 0; ii < 18; ++ii) {
+			cout << h1.container[ii] << " ";
+		}
+
+		h1.pop();
+		h1.pop();
+		h1.pop();
+		for (int ii = 0; ii < 15; ++ii) {
+			cout << h1.container[ii] << " ";
+		}
+		cout << endl;
+
+
+
+
 	}
 }
