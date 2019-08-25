@@ -1,4 +1,4 @@
-#include "t_lmath.h"
+#include "t_LightMath.h"
 
 using namespace std;
 namespace ytlib

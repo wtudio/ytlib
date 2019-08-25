@@ -16,7 +16,7 @@ namespace ytlib {
 
 	/**
 	* @brief 二叉树
-	* 模板参数T为实际节点值
+	* 模板参数T为实际节点值。
 	* 一个BinTreeNode实例表示一个二叉树节点，也表示以此节点为根节点的一棵二叉树。
 	* 如果根节点被析构，那么整个树中所有子节点将被析构，除非子节点有另外的智能指针指着
 	*/
@@ -704,6 +704,7 @@ namespace ytlib {
 	void setLChild(T* pfather,std::shared_ptr<T> pchild) {
 		assert((pfather!=NULL) && pchild);
 		pchild->pf = pfather;
+		if (pfather->pl) pfather->pl->pf = NULL;
 		pfather->pl = pchild;
 	}
 	/**
@@ -718,6 +719,7 @@ namespace ytlib {
 	void setRChild(T* pfather, std::shared_ptr<T> pchild) {
 		assert((pfather != NULL) && pchild);
 		pchild->pf = pfather;
+		if (pfather->pr) pfather->pr->pf = NULL;
 		pfather->pr = pchild;
 	}
 	/**
@@ -785,33 +787,54 @@ namespace ytlib {
 	}
 	/**
 	 * @brief 二叉树序列化
-	 * @details 根据前序遍历进行的二叉树序列化
-	 * @param T 模板参数，节点类型
+	 * @details 根据前序遍历进行的二叉树序列化，存储为vector<pair<bool,T> >
+	 * @param NodeType 模板参数，节点类型
+	 * @param ValType 模板参数，节点obj类型
 	 * @param proot 待序列化的树的根节点
 	 * @param vec 要返回的序列化结果
 	 * @return 无
 	 */
-	template<typename T>
-	void SerializeTree(const std::shared_ptr<T>& proot, std::vector<std::shared_ptr<T> >& vec) {
-		vec.push_back(proot);
-		if (!proot)	return;
-		SerializeTree(proot->pl, vec);
-		SerializeTree(proot->pr, vec);
+	template<typename NodeType, typename ValType>
+	void SerializeTree(const std::shared_ptr<NodeType>& proot, std::vector<std::pair<bool, ValType> >& vec) {
+		if (proot) {
+			vec.push_back(std::pair<bool, ValType>(true, proot->obj));
+			SerializeTree(proot->pl, vec);
+			SerializeTree(proot->pr, vec);
+		}
+		else {
+			vec.push_back(std::pair<bool, ValType>(false, ValType()));
+		}
 	}
 	/**
 	 * @brief 二叉树反序列化
-	 * @details 根据前序遍历进行的二叉树反序列化
-	 * @param T 模板参数，节点类型
+	 * @details 根据前序遍历进行的二叉树反序列化，根据vector<pair<bool,T> >反序列化
+	 * @param NodeType 模板参数，节点类型
+	 * @param ValType 模板参数，节点obj类型
 	 * @param proot 待存放反序列化结果的树的根节点
-	 * @param itr 要进行反序列化的vector迭代器
+	 * @param vec 根据其存储的数据进行反序列化
 	 * @return 无
 	 */
-	template<typename T>
-	void DeserializeTree(std::shared_ptr<T>& proot, typename std::vector<std::shared_ptr<T> >::const_iterator itr) {
-		if (*itr) {
-			proot = *itr;
-			DeserializeTree(proot->pl, ++itr);
-			DeserializeTree(proot->pr, ++itr);
+	template<typename NodeType, typename ValType>
+	void DeserializeTree(std::shared_ptr<NodeType>& proot, const std::vector<std::pair<bool, ValType> >& vec) {
+		DeserializeTree<NodeType, ValType>(proot, vec.begin());
+	}
+	/**
+	 * @brief 二叉树反序列化
+	 * @details 根据前序遍历进行的二叉树反序列化，根据vector<pair<bool,T> >::const_iterator反序列化
+	 * @param NodeType 模板参数，节点类型
+	 * @param ValType 模板参数，节点obj类型
+	 * @param proot 待存放反序列化结果的树的根节点
+	 * @param itr 指向要进行反序列化的vector开头的迭代器
+	 * @return 无
+	 */
+	template<typename NodeType, typename ValType>
+	void DeserializeTree(std::shared_ptr<NodeType>& proot, typename std::vector<std::pair<bool, ValType> >::const_iterator& itr) {
+		if (itr->first) {
+			proot = std::make_shared<NodeType>(itr->second);
+			DeserializeTree<NodeType, ValType>(proot->pl, ++itr);
+			if(proot->pl) proot->pl->pf = proot.get();
+			DeserializeTree<NodeType, ValType>(proot->pr, ++itr);
+			if (proot->pr) proot->pr->pf = proot.get();
 		}
 	}
 	/**
@@ -823,13 +846,67 @@ namespace ytlib {
 	 */
 	template<typename T>
 	std::shared_ptr<T> copyTree(const std::shared_ptr<T>& proot) {
-		std::shared_ptr<T> p = std::make_shared<T>(*proot);
+		std::shared_ptr<T> p = std::make_shared<T>(T(proot->obj));
 		if (proot->pl) setLChild(p.get(), copyTree(proot->pl));
 		if (proot->pr) setRChild(p.get(), copyTree(proot->pr));
 		return p;
 	}
 
+	/**
+	 * @brief 检查是否为二叉树
+	 * @details 检查一颗二叉树是否合法，子节点、父节点是否对应相连
+	 * @param T 模板参数，节点类型
+	 * @param proot 待检查的树的根节点
+	 * @return 二叉树是否合法
+	 */
+	template<typename T>
+	bool checkBinTree(const std::shared_ptr<T>& proot) {
+		if (proot) {
+			if (proot->pl) {
+				if (proot->pl->pf != proot.get()) return false;
+				if (!checkTree(proot->pl)) return false;
+			}
+			if (proot->pr) {
+				if (proot->pr->pf != proot.get()) return false;
+				if (!checkTree(proot->pr)) return false;
+			}
+		}
+		return true;
+	}
 
+	/**
+	 * @brief 检查是否为搜索二叉树
+	 * @details 检查一颗二叉树是否为搜索二叉树，要求左<中<=右
+	 * @param T 模板参数，节点类型
+	 * @param proot 待检查的树的根节点
+	 * @return 是否为搜索二叉树
+	 */
+	template<typename T>
+	bool checkBinSearchTree(const std::shared_ptr<T>& proot) {
+		return true;
+	}
+	/**
+	 * @brief 检查是否为AVL树
+	 * @details 检查一颗二叉树是否为AVL树，要求各叶子节点深度相差<=1
+	 * @param T 模板参数，节点类型
+	 * @param proot 待检查的树的根节点
+	 * @return 是否为AVL树
+	 */
+	template<typename T>
+	bool checkAVLTree(const std::shared_ptr<T>& proot) {
+		return true;
+	}
+	/**
+	 * @brief 检查是否为红黑树
+	 * @details 检查一颗二叉树是否为红黑树，要求根节点黑、没有连续红节点、所有路径有相同数目黑节点
+	 * @param T 模板参数，节点类型
+	 * @param proot 待检查的树的根节点
+	 * @return 是否为红黑树
+	 */
+	template<typename T>
+	bool checkBRTree(const std::shared_ptr<T>& proot) {
+		return true;
+	}
 }
 
 

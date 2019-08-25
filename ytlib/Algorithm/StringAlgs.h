@@ -133,7 +133,7 @@ namespace ytlib {
 
 	/**
 	 * @brief 替换所有
-	 * @details 将一个字符串中指定字符串str1换为字符串str2
+	 * @details 将一个字符串中指定字符串str1换为字符串str2。
 	 * 如果str1长度小于等于str2，则在原字符串基础上修改，否则会复制到新内存中
 	 * @param str 待处理字符串
 	 * @param oldValue 要被替换的字符串

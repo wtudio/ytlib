@@ -5,10 +5,10 @@
 
 namespace ytlib
 {
+	void test_BinaryTree();
+
+
 	void test_heap();
-	void test_bintree();
-	void test_bst();
-	void test_avlt();
 	void test_brt();
 
 	void test_graph();

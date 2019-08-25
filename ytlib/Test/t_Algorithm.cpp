@@ -1,11 +1,13 @@
-#include "t_algs.h"
+#include "t_Algorithm.h"
 #include <iostream>
 #include <boost/core/lightweight_test.hpp>
 
 using namespace std;
 namespace ytlib
 {
-	void test_sortAlgs() {
+	///测试SortAlgs
+	void test_SortAlgs() {
+		YT_DEBUG_PRINTF("test SortAlgs\n");
 		const uint32_t num = 10;
 		int answer[num] = { 0,1,2,3,4,5,6,7,8,9 };
 		//冒泡
@@ -51,7 +53,9 @@ namespace ytlib
 
 	}
 
-	void test_stringAlgs() {
+	///测试StringAlgs
+	void test_StringAlgs() {
+		YT_DEBUG_PRINTF("test StringAlgs\n");
 		//kmp
 		string ss = "abcdef abcdefg abcdefgh";
 		BOOST_TEST_EQ(KMP(ss, "abcdef"), 0);

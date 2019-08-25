@@ -6,8 +6,8 @@
 namespace ytlib
 {
 
-	void test_sortAlgs();
-	void test_stringAlgs();
+	void test_SortAlgs();
+	void test_StringAlgs();
 	
 }
 

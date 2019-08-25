@@ -8,14 +8,14 @@
  */
 #include <ytlib/Common/Util.h>
 
-#include "t_lmath.h"
-#include "t_file.h"
-#include "t_process.h"
-#include "t_net.h"
-#include "t_log.h"
-#include "t_tools.h"
-#include "t_stru.h"
-#include "t_algs.h"
+#include "t_Algorithm.h"
+#include "t_DataStructure.h"
+#include "t_FileManager.h"
+#include "t_LightMath.h"
+#include "t_LogService.h"
+#include "t_NetTools.h"
+#include "t_ProcessManager.h"
+#include "t_SupportTools.h"
 
 #include <boost/core/lightweight_test.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>  
@@ -41,13 +41,12 @@ int32_t main(int32_t argc, char** argv) {
 	//wcout.imbue(locale(""));
 
 	//单元测试区
-
 	//Algorithm
-	test_sortAlgs();
-	test_stringAlgs();
+	test_SortAlgs();
+	test_StringAlgs();
 
 	//DataStructure
-
+	test_BinaryTree();
 
 
 	//网络测试区
@@ -60,8 +59,6 @@ int32_t main(int32_t argc, char** argv) {
 
 	test_avlt();
 	test_brt();
-	test_bst();
-	test_bintree();
 	test_heap();
 
 
