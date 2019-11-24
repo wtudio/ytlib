@@ -1,5 +1,5 @@
 #include "t_LightMath.h"
-
+#include <ytlib/Common/Util.h>
 using namespace std;
 namespace ytlib
 {

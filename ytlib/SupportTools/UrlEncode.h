@@ -30,7 +30,7 @@ namespace ytlib
 	 * @param up 是否转码为大写字符
 	 * @return 转码后的结果字符串
 	 */
-	static std::string UrlEncode(const std::string& str, bool up = true) {
+	inline std::string UrlEncode(const std::string& str, bool up = true) {
 		std::string strTemp;
 		size_t length = str.length();
 		strTemp.reserve(length << 1);
@@ -52,7 +52,7 @@ namespace ytlib
 	 * @param str 待解码字符串
 	 * @return 解码后的结果字符串
 	 */
-	static std::string UrlDecode(const std::string& str) {
+	inline std::string UrlDecode(const std::string& str) {
 		std::string strTemp;
 		size_t length = str.length();
 		strTemp.reserve(length);

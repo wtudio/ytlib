@@ -7,8 +7,8 @@
  * @date 2019-07-26
  */
 #pragma once
-#include <ytlib/Common/Util.h>
 #include <vector>
+#include <cassert>
 
 namespace ytlib {
 

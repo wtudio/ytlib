@@ -151,26 +151,26 @@ namespace ytlib
 	};
 
 	///将实数数组扩展成复数数组
-	static void get_complex(int32_t n, tfloat in[], Complex out[]) {
+	inline void get_complex(int32_t n, tfloat in[], Complex out[]) {
 		for (int32_t i = 0; i < n; ++i) {
 			out[i].real = in[i];
 			out[i].imag = 0;
 		}
 	}
 	///取共轭
-	static void conjugate_complex(int32_t n, Complex in[]) {
+	inline void conjugate_complex(int32_t n, Complex in[]) {
 		for (int32_t i = 0; i < n; ++i) {
 			in[i].imag = -in[i].imag;
 		}
 	}
 	///复数数组取模
-	static void c_abs(int32_t n, Complex f[], tfloat out[]) {
+	inline void c_abs(int32_t n, Complex f[], tfloat out[]) {
 		for (int32_t i = 0; i < n; ++i) {
 			out[i] = Complex::abs(f[i]);
 		}
 	}
 	///傅立叶变换 输出也存在数组f中
-	static void fft(int32_t N, Complex f[]) {
+	inline void fft(int32_t N, Complex f[]) {
 		int32_t k, M = 1;
 		/*----计算分解的级数M=log2(N)----*/
 		for (int32_t i = N; (i >>= 1) != 1; ++M);
@@ -207,7 +207,7 @@ namespace ytlib
 		}
 	}
 	/// 傅里叶逆变换
-	static void ifft(int32_t N, Complex f[]) {
+	inline void ifft(int32_t N, Complex f[]) {
 		conjugate_complex(N, f);
 		fft(N, f);
 		conjugate_complex(N, f);
@@ -216,7 +216,7 @@ namespace ytlib
 		}
 	}
 	/// fftshift
-	static void fftshift(int32_t len, Complex f[]) {
+	inline void fftshift(int32_t len, Complex f[]) {
 		len /= 2;
 		for (int32_t i = 0; i<len; ++i) {
 			f[i + len].swap(f[i]);

@@ -184,13 +184,13 @@ namespace ytlib {
 #define YT_SET_LOG_LEVEL(lvl)  (boost::log::core::get())->set_filter(boost::log::trivial::severity >=  boost::log::trivial::lvl);
 
 	///网络日志初始化。不要重复init
-	static void InitNetLog(uint32_t myid_, const TcpEp& logserver_ep_) {
+	inline void InitNetLog(uint32_t myid_, const TcpEp& logserver_ep_) {
 		SingletonLogControlCenter::get_mutable_instance().EnableNetLog(myid_, logserver_ep_);
 		SingletonLogControlCenter::get_mutable_instance().EnableConsoleLog();
 		YT_SET_LOG_LEVEL(info);//默认info级别
 	}
 	///关闭网络日志
-	static void StopNetLog() {
+	inline void StopNetLog() {
 		SingletonLogControlCenter::get_mutable_instance().DisableNetLog();
 		SingletonLogControlCenter::get_mutable_instance().DisableConsoleLog();
 	}

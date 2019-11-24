@@ -52,7 +52,7 @@ namespace ytlib
 		"save file failed."
 	};
 	///根据err返回错误信息
-	static const char* GetErrorMessage(Error err0) {
+	inline const char* GetErrorMessage(Error err0) {
 		
 		uint32_t err = static_cast<uint32_t>(err0);
 		assert(err >= 0 && err < ER_ERROR_COUNT);

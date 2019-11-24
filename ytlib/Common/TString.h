@@ -55,11 +55,11 @@ namespace ytlib
 
 #if defined(UNICODE)
 
-	static void clear_mbstate(std::mbstate_t& mbs) {
+	inline void clear_mbstate(std::mbstate_t& mbs) {
 		std::memset(&mbs, 0, sizeof(std::mbstate_t));
 	}
 
-	static void tostring_internal(std::string & outstr, const wchar_t * src, std::size_t size, std::locale const & loc) {
+	inline void tostring_internal(std::string & outstr, const wchar_t * src, std::size_t size, std::locale const & loc) {
 		if (size == 0) {
 			outstr.clear();
 			return;
@@ -119,7 +119,7 @@ namespace ytlib
 		outstr.assign(dest.begin(), dest.begin() + converted);
 }
 
-	static void towstring_internal(std::wstring& outstr, const char* src, std::size_t size, std::locale const& loc) {
+	inline void towstring_internal(std::wstring& outstr, const char* src, std::size_t size, std::locale const& loc) {
 		if (size == 0) {
 			outstr.clear();
 			return;
@@ -182,13 +182,13 @@ namespace ytlib
 		outstr.assign(dest.begin(), dest.begin() + converted);
 	}
 
-	static std::string ToString(const std::wstring& str) {
+	inline std::string ToString(const std::wstring& str) {
 		std::string ret;
 		tostring_internal(ret, str.c_str(), str.size(), std::locale());
 		return ret;
 	}
 
-	static std::string ToString(wchar_t const* str) {
+	inline std::string ToString(wchar_t const* str) {
 		std::string ret;
 		tostring_internal(ret, str, std::wcslen(str), std::locale());
 		return ret;
@@ -196,13 +196,13 @@ namespace ytlib
 
 
 
-	static std::wstring ToWString(const std::string& str) {
+	inline std::wstring ToWString(const std::string& str) {
 		std::wstring ret;
 		towstring_internal(ret, str.c_str(), str.size(), std::locale());
 		return ret;
 	}
 
-	static std::wstring ToWString(char const* str) {
+	inline std::wstring ToWString(char const* str) {
 		std::wstring ret;
 		towstring_internal(ret, str, std::strlen(str), std::locale());
 		return ret;

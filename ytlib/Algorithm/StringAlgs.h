@@ -8,12 +8,12 @@
  * @date 2019-07-26
  */
 #pragma once
-#include <ytlib/Common/Util.h>
 #include <string>
 #include <cstring>
 #include <map>
 #include <vector>
 #include <algorithm>
+#include <cassert>
 
 namespace ytlib {
 	/**
@@ -25,7 +25,7 @@ namespace ytlib {
 	 * @param pslen 字符串ps的长度
 	 * @return 字符串ps首次出现在ss中的位置，如果未出现则返回sslen
 	 */
-	static size_t KMP(const char* ss, size_t sslen, const char* ps, size_t pslen) {
+	inline size_t KMP(const char* ss, size_t sslen, const char* ps, size_t pslen) {
 		assert(sslen && pslen && ss!=NULL && ps!= NULL);
 		if (pslen > sslen || pslen == 0) return sslen;
 		int32_t *next = new int32_t[pslen];//制作next数组
@@ -55,7 +55,7 @@ namespace ytlib {
 	 * @param ps 要匹配的短字符串
 	 * @return 字符串ps首次出现在ss中的位置，如果未出现则返回ss.length()
 	 */
-	static size_t KMP(const std::string& ss, const std::string& ps) {
+	inline size_t KMP(const std::string& ss, const std::string& ps) {
 		return KMP(ss.c_str(), ss.length(), ps.c_str(), ps.length());
 	}
 
@@ -68,7 +68,7 @@ namespace ytlib {
 	 * @param s2len 字符串2长度
 	 * @return 字符串1和字符串2的差异度
 	 */
-	static size_t StrDif(const char* s1, size_t s1len, const char* s2, size_t s2len) {
+	inline size_t StrDif(const char* s1, size_t s1len, const char* s2, size_t s2len) {
 		assert(s1len && s2len && s1 != NULL && s2 != NULL);
 		if (s2len > s1len) return StrDif(s2, s2len, s1, s1len);//默认s1len>=s2len
 
@@ -97,7 +97,7 @@ namespace ytlib {
 	 * @param s2 字符串2
 	 * @return 字符串1和字符串2的差异度
 	 */
-	static size_t StrDif(const std::string& s1, const std::string& s2) {
+	inline size_t StrDif(const std::string& s1, const std::string& s2) {
 		return StrDif(s1.c_str(), s1.length(), s2.c_str(), s2.length());
 	}
 
@@ -108,7 +108,7 @@ namespace ytlib {
 	 * @param len 字符串长度
 	 * @return 最长不重复子串出现的位置和长度
 	 */
-	static std::pair<size_t, size_t> LongestSubStrWithoutDup(const char* s, size_t len) {
+	inline std::pair<size_t, size_t> LongestSubStrWithoutDup(const char* s, size_t len) {
 		assert(len && s!=NULL);
 		size_t positions[256];//每种字符上一次出现的位置
 		for (size_t ii = 0; ii < len; ++ii) positions[ii] = len;//初始化为len，表示没出现
@@ -127,7 +127,7 @@ namespace ytlib {
 		if (curLen > maxLen) { maxLen = curLen;	maxPos = curPos; }
 		return std::pair<size_t, size_t>(maxPos, maxLen);
 	}
-	static std::pair<size_t, size_t> LongestSubStrWithoutDup(const std::string& s) {
+	inline std::pair<size_t, size_t> LongestSubStrWithoutDup(const std::string& s) {
 		return LongestSubStrWithoutDup(s.c_str(), s.length());
 	}
 
@@ -140,7 +140,7 @@ namespace ytlib {
 	 * @param newValue 要替换成的字符串
 	 * @return 无
 	 */
-	static void replaceAll(std::string& str, const std::string& oldValue, const std::string& newValue) {
+	inline void replaceAll(std::string& str, const std::string& oldValue, const std::string& newValue) {
 		std::vector<size_t> vecPos;
 		size_t iPos = 0, oldLen = oldValue.size(), newLen = newValue.size();
 		while (std::string::npos != (iPos = str.find(oldValue, iPos))) {
@@ -189,7 +189,7 @@ namespace ytlib {
 	 * @param seperators 分割字符
 	 * @return 分割结果vector
 	 */
-	static std::vector<std::string> splitAll(const std::string& str, const std::string &seperators) {
+	inline std::vector<std::string> splitAll(const std::string& str, const std::string &seperators) {
 		std::vector<std::string> re;
 		size_t pos1, pos2 = 0;
 		do {

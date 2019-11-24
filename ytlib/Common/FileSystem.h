@@ -32,7 +32,7 @@ namespace ytlib
 
 
 	///获得当前路径（可执行文件所在目录）
-	static tpath tGetCurrentPath(void) {
+	inline tpath tGetCurrentPath(void) {
 #if defined(_WIN32)
 
 #include <shlwapi.h>
@@ -47,11 +47,11 @@ namespace ytlib
 	}
 	
 	///获得绝对路径
-	static tpath tGetAbsolutePath(const tpath& p) {
+	inline tpath tGetAbsolutePath(const tpath& p) {
 		return (p.is_absolute()) ? p : (tGetCurrentPath() / p);
 	}
 	///获得文件所在目录
-	static tpath tGetDirectory(const tpath& p) {
+	inline tpath tGetDirectory(const tpath& p) {
 		return tGetAbsolutePath(p).parent_path();
 	}
 

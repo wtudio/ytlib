@@ -9,7 +9,6 @@
  * @date 2019-07-26
  */
 #pragma once
-#include <ytlib/Common/Util.h>
 #include <ytlib/LightMath/Matrix.h>
 #include <map>
 #include <list>
@@ -231,7 +230,7 @@ namespace ytlib {
 	 * @param path dijkstra函数返回的路径数组
 	 * @return 倒推的路径
 	 */
-	static std::vector<int32_t> dijkstraPath(int32_t dstIdx,const std::vector<int32_t>& path) {
+	inline std::vector<int32_t> dijkstraPath(int32_t dstIdx,const std::vector<int32_t>& path) {
 		std::vector<int32_t> re;
 		assert(path[dstIdx] >= 0);
 		do {
@@ -284,7 +283,7 @@ namespace ytlib {
 	 * @param path floyd函数返回的路径矩阵
 	 * @return 正推的路径
 	 */
-	static std::vector<int32_t> floydPath(int32_t srcIdx, int32_t dstIdx, const Matrix_i& path) {
+	inline std::vector<int32_t> floydPath(int32_t srcIdx, int32_t dstIdx, const Matrix_i& path) {
 		std::vector<int32_t> re;
 		assert(path.val[srcIdx][dstIdx]>=0);
 		re.push_back(srcIdx);

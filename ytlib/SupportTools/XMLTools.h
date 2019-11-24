@@ -22,7 +22,7 @@ namespace ytlib
 	typedef boost::property_tree::ptree tptree;
 #endif
 
-	static bool realXml(const tstring& filepath, tptree& ptProfile){
+	inline bool realXml(const tstring& filepath, tptree& ptProfile){
 		tpath path = tGetAbsolutePath(filepath);
 #if defined(UNICODE)
 		std::locale xml_locale(std::locale(""), new boost::program_options::detail::utf8_codecvt_facet());
@@ -41,7 +41,7 @@ namespace ytlib
 	}
 
 
-	static bool writeXml(const tstring& filepath,const tptree& ptProfile) {
+	inline bool writeXml(const tstring& filepath,const tptree& ptProfile) {
 
 		tpath path = tGetAbsolutePath(filepath);
 #if defined(UNICODE)
@@ -68,7 +68,7 @@ namespace ytlib
 		<setting key="key3" value="value3" />
 	</Settings>
 	*/
-	static bool readSettings(const tptree& pt, std::map<ytlib::tstring, ytlib::tstring>& inputmap_) {
+	inline bool readSettings(const tptree& pt, std::map<ytlib::tstring, ytlib::tstring>& inputmap_) {
 		try {
 			boost::optional<const tptree&> ptSettings = pt.get_child_optional(T_TEXT("Settings"));
 			if (ptSettings) {
@@ -85,7 +85,7 @@ namespace ytlib
 	}
 
 /* 
-	static bool readSettings(const tptree& pt, std::map<std::string, std::string>& inputmap_) {
+	inline bool readSettings(const tptree& pt, std::map<std::string, std::string>& inputmap_) {
 		try {
 			boost::optional<const tptree&> ptSettings = pt.get_child_optional(T_TEXT("Settings"));
 			if (ptSettings) {
@@ -103,7 +103,7 @@ namespace ytlib
 	}
 */
 	//添加settings节点
-	static bool writeSettings(const std::map<ytlib::tstring, ytlib::tstring>& inputmap_, tptree& pt ) {
+	inline bool writeSettings(const std::map<ytlib::tstring, ytlib::tstring>& inputmap_, tptree& pt ) {
 		try {
 			if (inputmap_.size() == 0) return true;
 			tptree ptSettings;
@@ -124,7 +124,7 @@ namespace ytlib
 
 /*
 	
-	static bool writeSettings(const std::map<std::string, std::string>& inputmap_, tptree& pt) {
+	inline bool writeSettings(const std::map<std::string, std::string>& inputmap_, tptree& pt) {
 		try {
 			if (inputmap_.size() == 0) return true;
 			tptree ptSettings;

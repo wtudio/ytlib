@@ -25,7 +25,7 @@ namespace ytlib
 	typedef boost::asio::ip::tcp::socket TcpSocket;
 
 	///大小端转换，将ps中的数据转换到pd中
-	static void transEndian(char* pd, const char* ps, size_t len) {
+	inline void transEndian(char* pd, const char* ps, size_t len) {
 #ifdef BIG_ENDIAN
 		memcpy(pd, ps, len);
 #else
@@ -34,7 +34,7 @@ namespace ytlib
 #endif 
 	}
 
-	static void set_buf_from_num(char* p, uint32_t n) {
+	inline void set_buf_from_num(char* p, uint32_t n) {
 #ifdef BIG_ENDIAN
 		memcpy(p, &n, 4);
 #else
@@ -45,7 +45,7 @@ namespace ytlib
 #endif 
 	}
 
-	static uint32_t get_num_from_buf(char* p) {
+	inline uint32_t get_num_from_buf(char* p) {
 		uint32_t n;
 #ifdef BIG_ENDIAN
 		memcpy(&n, p, 4); 
@@ -59,7 +59,7 @@ namespace ytlib
 	}
 
 	///检查端口是否可用。true说明可用
-	static bool checkPort(uint16_t port_) {
+	inline bool checkPort(uint16_t port_) {
 		boost::asio::io_service io;
 		TcpSocket sk(io);
 		sk.open(boost::asio::ip::tcp::v4());
@@ -70,7 +70,7 @@ namespace ytlib
 		return false;
 	}
 	///获取一个未被占用的端口号
-	static uint16_t getUsablePort(uint16_t start_=60000) {
+	inline uint16_t getUsablePort(uint16_t start_=60000) {
 		for (uint16_t ii = start_; ii < 65535; ii++) {
 			if (checkPort(ii)) return ii;
 		}

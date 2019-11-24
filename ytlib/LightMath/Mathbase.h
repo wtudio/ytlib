@@ -7,10 +7,10 @@
  * @date 2019-07-26
  */
 #pragma once
-#include <ytlib/Common/Util.h>
 #include <cmath>
 #include <vector>
 #include <map>
+#include <cassert>
 
 #if defined(USE_DOUBLE_PRECISION)
 typedef double tfloat;      // double precision
@@ -29,7 +29,7 @@ typedef float  tfloat;    // single precision
 namespace ytlib
 {
 	//计算有多少个1
-	static uint32_t count_1_(uint64_t n) {
+	inline uint32_t count_1_(uint64_t n) {
 		uint32_t num = 0;
 		while (n) {
 			n &= (n - 1);
@@ -38,12 +38,12 @@ namespace ytlib
 		return num;
 	}
 	//计算有多少个0
-	static uint32_t count_0_(uint64_t n) {
+	inline uint32_t count_0_(uint64_t n) {
 		return count_1_(~n);
 	}
 
 	//计算在pos之前的第一个1的位置
-	static uint32_t find_1_(uint64_t val, uint32_t pos) {
+	inline uint32_t find_1_(uint64_t val, uint32_t pos) {
 		assert(pos < 64);
 		if (!val) return 64;
 		while (0 == (val & ((uint64_t)1 << pos))) {
@@ -53,7 +53,7 @@ namespace ytlib
 	}
 
 	//判断是否是质数
-	static bool isPrime(uint64_t num) {
+	inline bool isPrime(uint64_t num) {
 		//两个较小数另外处理  
 		if (num == 2 || num == 3) return true;
 		//不在6的倍数两侧的一定不是质数  
@@ -68,7 +68,7 @@ namespace ytlib
 
 	}
 	//求最大公约数
-	static uint64_t gcd(uint64_t num1, uint64_t num2) {
+	inline uint64_t gcd(uint64_t num1, uint64_t num2) {
 		if (num1 < num2) std::swap(num1, num2);
 		if (num2 == 0) return num1;
 		if (num1 & 1) {
@@ -81,11 +81,11 @@ namespace ytlib
 		}
 	}
 	//求最小公倍数：num1*num2/gcd(num1,num2)
-	static uint64_t lcm(uint64_t num1, uint64_t num2) {
+	inline uint64_t lcm(uint64_t num1, uint64_t num2) {
 		return num1 / gcd(num1, num2) * num2;
 	}
 	//分解质因数
-	static void factoring(uint64_t num, std::vector<uint64_t>& re) {
+	inline void factoring(uint64_t num, std::vector<uint64_t>& re) {
 		if (num < 2) return;
 		for (uint64_t ii = 2; num > 1; ++ii) {
 			while (num%ii == 0) {
@@ -94,7 +94,7 @@ namespace ytlib
 			}
 		}
 	}
-	static void factoring(uint64_t num, std::map<uint64_t, uint64_t>& re) {
+	inline void factoring(uint64_t num, std::map<uint64_t, uint64_t>& re) {
 		if (num < 2) return;
 		for (uint64_t ii = 2;  num > 1; ++ii) {
 			while (num%ii == 0) {
@@ -105,7 +105,7 @@ namespace ytlib
 		}
 	}
 	//累乘，需保证n>=m，且m!=0
-	static uint64_t Mul(uint64_t n, uint64_t m = 1) {
+	inline uint64_t Mul(uint64_t n, uint64_t m = 1) {
 		assert(n >= m && m);
 		uint64_t re = n;
 		while ((--n) >= m) re *= n;
@@ -113,12 +113,12 @@ namespace ytlib
 	}
 
 	//排列数，从从n个不同元素中，任取m(m≤n,m与n均为自然数）个元素，其排列的个数。A(n,m)=n!/(n-m)!
-	static uint64_t Arn(uint64_t n, uint64_t m) {
+	inline uint64_t Arn(uint64_t n, uint64_t m) {
 		assert(n >= m && m);
 		return Mul(n, n - m + 1);
 	}
 	//排列数递归求解，已知A(n,m_)求A(n,m)
-	static uint64_t Arn(uint64_t n, uint64_t m, uint64_t A, uint64_t m_) {
+	inline uint64_t Arn(uint64_t n, uint64_t m, uint64_t A, uint64_t m_) {
 		assert(n >= m && m && n >= m_ && m_);
 		if (m < m_) return A / Mul(n - m + 2, n - m_ + 1);
 		else if (m > m_) return A * Mul(n - m_ + 2, n - m + 1);
@@ -126,13 +126,13 @@ namespace ytlib
 	}
 
 	//组合数，C(n,m)=A(n,m)/m!=n!/(m!*(n-m)!)。C(n,m)=C(n,n-m)
-	static uint64_t Crn(uint64_t n, uint64_t m) {
+	inline uint64_t Crn(uint64_t n, uint64_t m) {
 		assert(n >= m && m);
 		if (n >= (2 * m + 1)) m = n - m;
 		return (n == m) ? 1 : (Mul(n, m + 1) / Mul(n - m));
 	}
 	//组合数递归求解
-	static uint64_t Crn(uint64_t n, uint64_t m, uint64_t C, uint64_t m_) {
+	inline uint64_t Crn(uint64_t n, uint64_t m, uint64_t C, uint64_t m_) {
 		assert(n >= m && m && n >= m_ && m_);
 		if (n >= (2 * m + 1)) m = n - m;
 		if (m < m_) return C*Mul(m_, m + 1) / Mul(n - m, n - m_ + 1);
@@ -141,18 +141,18 @@ namespace ytlib
 	}
 
 	//等差数列求和
-	static tfloat SumAP(tfloat a1, tfloat d, uint64_t n) {
+	inline tfloat SumAP(tfloat a1, tfloat d, uint64_t n) {
 		return n * (a1 + d / 2 * (n - 1));
 	}
 
 	//等比数列求和
-	static tfloat SumGP(tfloat a1, tfloat q, uint64_t n) {
+	inline tfloat SumGP(tfloat a1, tfloat q, uint64_t n) {
 		assert(q != 0.0);
 		return (q == 1.0) ? (n*a1) : (a1*(1 - std::pow(q, n)) / (1 - q));
 	}
 
 	// pow
-	static uint64_t pow(uint64_t value, uint64_t n) {
+	inline uint64_t pow(uint64_t value, uint64_t n) {
 		uint64_t re = 1;
 		for (; n; n >>= 1) {
 			if (n & 1)
