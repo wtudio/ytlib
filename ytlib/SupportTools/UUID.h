@@ -8,27 +8,21 @@
  */
 #pragma once
 
-#include <ytlib/Common/Util.h>
 #include <ytlib/Common/TString.h>
+#include <ytlib/Common/Util.h>
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid_io.hpp>
 
-namespace ytlib
-{
-	///生成UUID
-	static tstring GenerateUUID(void) {
-		boost::uuids::random_generator rgen;
+namespace ytlib {
+///生成UUID
+inline tstring GenerateUUID(void) {
+  boost::uuids::random_generator rgen;
 #ifdef UNICODE
-		return boost::uuids::to_wstring(rgen());
+  return boost::uuids::to_wstring(rgen());
 #else
-		return boost::uuids::to_string(rgen());
-#endif // UNICODE
-
-	}
-
-
-
+  return boost::uuids::to_string(rgen());
+#endif  // UNICODE
 }
 
-  
+}  // namespace ytlib

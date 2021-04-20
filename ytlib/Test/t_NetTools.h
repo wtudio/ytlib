@@ -2,11 +2,7 @@
 
 #include <ytlib/NetTools/TcpNetAdapter.h>
 
-namespace ytlib
-{
-	void test_TcpNetAdapter();
-
+namespace ytlib {
+void test_TcpNetAdapter();
 
 }
-
-

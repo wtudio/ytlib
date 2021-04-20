@@ -1,12 +1,8 @@
 #pragma once
-#include <ytlib/LogService/LoggerServer.h>
 #include <ytlib/LogService/Logger.h>
+#include <ytlib/LogService/LoggerServer.h>
 
-namespace ytlib
-{
-	void test_NetLog();
-
+namespace ytlib {
+void test_NetLog();
 
 }
-
-
