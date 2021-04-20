@@ -11,6 +11,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cstring>
 #include <map>
 #include <set>
 #include <vector>

@@ -9,6 +9,7 @@
 #pragma once
 
 #include <cassert>
+#include <cstdint>
 #include <vector>
 
 namespace ytlib {

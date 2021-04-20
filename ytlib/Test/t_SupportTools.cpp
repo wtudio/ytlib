@@ -6,7 +6,9 @@
 #include <numeric>
 #include <set>
 #include <vector>
+
 using namespace std;
+
 namespace ytlib {
 
 class test_a {
@@ -50,7 +52,8 @@ void test_urlencode() {
 }
 
 void test_LoopTool() {
-  LoopTool lt(vector<uint32_t>{2, 3, 3});
+  vector<uint32_t> vec{2, 3, 3};
+  LoopTool lt(vec);
   do {
     for (uint32_t ii = lt.m_vecContent.size() - 1; ii > 0; --ii) {
       cout << lt.m_vecContent[ii] << '-';

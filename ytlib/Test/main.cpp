@@ -54,16 +54,15 @@ int32_t main(int32_t argc, char** argv) {
 
   //其他测试区
 
-  /*
+/*
   test_bignum();
-  
+
   test_Serialize();
   test_stl();
   test_urlencode();
   test_LoopTool();
   test_NetLog();
   test_TcpNetAdapter();
-
 
   test_Complex();
   test_Matrix();
@@ -76,9 +75,7 @@ int32_t main(int32_t argc, char** argv) {
   test_PrjBase();
 
   test_QueueProcess();
-
- */
-
+*/
   YT_DEBUG_PRINTF("********************end test*******************\n");
   return boost::report_errors();
 }
