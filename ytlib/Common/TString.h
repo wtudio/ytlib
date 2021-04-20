@@ -20,9 +20,9 @@
 
 namespace ytlib {
 #if defined(UNICODE)
-#define T_TEXT(STRING) L##STRING
+  #define T_TEXT(STRING) L##STRING
 #else
-#define T_TEXT(STRING) STRING
+  #define T_TEXT(STRING) STRING
 #endif
 
 #if defined(UNICODE)
@@ -41,13 +41,13 @@ typedef std::basic_ifstream<tchar> tifstream;
 typedef std::basic_ofstream<tchar> tofstream;
 
 #if defined(UNICODE)
-#define tcout std::wcout
-#define tcerr std::wcerr
-#define to_tstring std::to_wstring
+  #define tcout std::wcout
+  #define tcerr std::wcerr
+  #define to_tstring std::to_wstring
 #else
-#define tcout std::cout
-#define tcerr std::cerr
-#define to_tstring std::to_string
+  #define tcout std::cout
+  #define tcerr std::cerr
+  #define to_tstring std::to_string
 #endif  // UNICODE
 
 #if defined(UNICODE)
@@ -196,20 +196,20 @@ inline std::wstring ToWString(char const* str) {
   return ret;
 }
 
-#define T_STRING_TO_TSTRING(STRING) ytlib::ToWString(STRING)
-#define T_TSTRING_TO_STRING(STRING) ytlib::ToString(STRING)
+  #define T_STRING_TO_TSTRING(STRING) ytlib::ToWString(STRING)
+  #define T_TSTRING_TO_STRING(STRING) ytlib::ToString(STRING)
 #else
-#define T_STRING_TO_TSTRING
-#define T_TSTRING_TO_STRING
+  #define T_STRING_TO_TSTRING
+  #define T_TSTRING_TO_STRING
 #endif
 
 //对QString的支持
 #if defined(UNICODE)
-#define T_QSTRING_TO_TSTRING(STRING) STRING.toStdWString()
-#define T_TSTRING_TO_QSTRING(STRING) QString::fromStdWString(STRING)
+  #define T_QSTRING_TO_TSTRING(STRING) STRING.toStdWString()
+  #define T_TSTRING_TO_QSTRING(STRING) QString::fromStdWString(STRING)
 #else
-#define T_QSTRING_TO_TSTRING(STRING) STRING.toStdString()
-#define T_TSTRING_TO_QSTRING(STRING) QString::fromStdString(STRING)
+  #define T_QSTRING_TO_TSTRING(STRING) STRING.toStdString()
+  #define T_TSTRING_TO_QSTRING(STRING) QString::fromStdString(STRING)
 #endif
 
 }  // namespace ytlib

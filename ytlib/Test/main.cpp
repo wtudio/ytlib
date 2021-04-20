@@ -40,6 +40,8 @@ int32_t main(int32_t argc, char** argv) {
   //std::locale::global(std::locale(""));
   //wcout.imbue(locale(""));
 
+  // return 0;
+
   //单元测试区
   //Algorithm
   test_SortAlgs();
@@ -54,7 +56,7 @@ int32_t main(int32_t argc, char** argv) {
 
   //其他测试区
 
-/*
+  /*
   test_bignum();
 
   test_Serialize();

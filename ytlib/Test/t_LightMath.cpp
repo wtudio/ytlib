@@ -63,21 +63,21 @@ void test_Complex() {
 void test_Matrix() {
   int32_t count = 9;
   Matrix m;
-  cout << m << endll;
+  cout << m << endl;
   Matrix m1(3, 2);
-  cout << m1 << endll;
+  cout << m1 << endl;
   tfloat *f = new tfloat[count];
   for (int32_t ii = 0; ii < count; ++ii) {
     f[ii] = ii * ii;
   }
 
   Matrix m2(3, 3, f);
-  cout << m2 << endll;
+  cout << m2 << endl;
   Matrix m3(m2);
-  cout << m3 << endll;
+  cout << m3 << endl;
 
   m = m3;
-  cout << m << endll;
+  cout << m << endl;
 
   tfloat *f2 = new tfloat[count];
   m3.getData(f2, 1, 1, 1, 2);
@@ -86,84 +86,84 @@ void test_Matrix() {
   }
 
   Matrix m4 = m3.getMat(0, 0);
-  cout << m4 << endll;
+  cout << m4 << endl;
 
   Matrix m5(5, 6);
   m5.setMat(m4);
-  cout << m5 << endll;
+  cout << m5 << endl;
   m5.setMat(m4, 2, 2);
-  cout << m5 << endll;
+  cout << m5 << endl;
 
   m5.setVal(55.5, 4, 4);
-  cout << m5 << endll;
+  cout << m5 << endl;
 
   m5.setDiag(77.5);
-  cout << m5 << endll;
+  cout << m5 << endl;
 
-  cout << m << endll;
+  cout << m << endl;
   std::swap(m5, m);
-  cout << m5 << endll;
-  cout << m << endll;
+  cout << m5 << endl;
+  cout << m << endl;
 
   int32_t ii[3] = {1, 2, 3};
   Matrix m6 = m.extractCols(ii, 3);
-  cout << m6 << endll;
+  cout << m6 << endl;
 
   m5.zero();
-  cout << m5 << endll;
+  cout << m5 << endl;
 
   Matrix m7 = Matrix::eye(5);
-  cout << m7 << endll;
+  cout << m7 << endl;
 
   m.eye();
-  cout << m << endll;
+  cout << m << endl;
 
   Matrix m8 = Matrix::ones(6, 7);
-  cout << m8 << endll;
+  cout << m8 << endl;
 
   Matrix m9 = Matrix::reshape(m, 6, 5);
-  cout << m9 << endll;
+  cout << m9 << endl;
 
-  cout << Matrix::rotMatX(0.5) << endll;
-  cout << Matrix::rotMatY(0.5) << endll;
-  cout << Matrix::rotMatZ(0.5) << endll;
+  cout << Matrix::rotMatX(0.5) << endl;
+  cout << Matrix::rotMatY(0.5) << endl;
+  cout << Matrix::rotMatZ(0.5) << endl;
 
   Matrix m10 = Matrix::ones(4, 4);
   m10 = Matrix::pow(m10, 3);
-  cout << m10 << endll;
+  cout << m10 << endl;
 
   Matrix m11 = Matrix::ones(4, 4);
-  cout << m11 << endll;
+  cout << m11 << endl;
 
   cout << m11 + m10 << endl;
   m11 += m10;
-  cout << m11 << endll;
+  cout << m11 << endl;
 
   cout << m11 - m10 << endl;
   m11 -= m10;
-  cout << m11 << endll;
+  cout << m11 << endl;
 
   cout << m11 * 3 << endl;
   m11 *= 3;
-  cout << m11 << endll;
+  cout << m11 << endl;
 
   cout << m11 / 3 << endl;
   m11 /= 3;
-  cout << m11 << endll;
+  cout << m11 << endl;
 
-  cout << -m11 << endll;
+  cout << -m11 << endl;
 
   Matrix m12 = Matrix::ones(2, 3);
-  cout << m12 << endll;
+  cout << m12 << endl;
   Matrix m13 = Matrix::ones(3, 4);
-  cout << m13 << endll;
+  cout << m13 << endl;
 
   cout << m12 * m13 << endl;
 
   m12 *= m13;
-  cout << m12 << endll;
+  cout << m12 << endl;
 
-  cout << ~m12 << endll;
+  cout << ~m12 << endl;
 
   delete[] f;
   delete[] f2;

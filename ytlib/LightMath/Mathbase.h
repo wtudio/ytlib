@@ -23,7 +23,7 @@ typedef float tfloat;  // single precision
 
 //判断浮点数是否相等
 #ifndef fequal
-#define fequal(a, b) (((a - b) > -1e-6) && ((a - b) < 1e-6))
+  #define fequal(a, b) (((a - b) > -1e-6) && ((a - b) < 1e-6))
 #endif
 
 //一些工具
