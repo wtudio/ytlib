@@ -1,14 +1,10 @@
 #pragma once
-#include <ytlib/Algorithm/StringAlgs.h>
 #include <ytlib/Algorithm/SortAlgs.h>
+#include <ytlib/Algorithm/StringAlgs.h>
 
+namespace ytlib {
 
-namespace ytlib
-{
+void test_SortAlgs();
+void test_StringAlgs();
 
-	void test_SortAlgs();
-	void test_StringAlgs();
-	
-}
-
-
+}  // namespace ytlib
