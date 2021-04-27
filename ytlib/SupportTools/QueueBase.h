@@ -24,32 +24,36 @@ class QueueBase {
  public:
   explicit QueueBase(size_t n_) : m_maxcount(n_), stopflag(false) {}
   virtual ~QueueBase() { Stop(); }
-  inline size_t GetMaxCount() { return m_maxcount; }
-  inline size_t Count() {
+
+  size_t GetMaxCount() { return m_maxcount; }
+  size_t Count() {
     std::lock_guard<std::mutex> lck(m_mutex);
     return m_queue.size();
   }
-  inline void Clear() {
+
+  void Clear() {
     std::lock_guard<std::mutex> lck(m_mutex);
-    while (m_queue.size()) {
+    while (!m_queue.empty())
       m_queue.pop();
-    }
   }
-  inline void Stop() {
+
+  void Stop() {
     stopflag = true;
     Clear();
     m_cond.notify_all();
   }
+
   ///添加元素。一般情况下只添加指针
   bool Enqueue(const T &item) {
     std::lock_guard<std::mutex> lck(m_mutex);
     if (m_queue.size() < m_maxcount) {
-      m_queue.push(item);
+      m_queue.emplace(item);
       m_cond.notify_one();
       return true;
     }
     return false;
   }
+
   ///取出元素
   bool Dequeue(T &item) {
     std::lock_guard<std::mutex> lck(m_mutex);

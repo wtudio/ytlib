@@ -59,4 +59,5 @@ add_executable( ytTest
   ${Test_Files}
 )
 
+define_filename_macro(ytTest)
 target_link_libraries(ytTest ${YTLIB_LIBRARY} )

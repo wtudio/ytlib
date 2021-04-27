@@ -31,18 +31,18 @@ class ChannelBase {
    * @param thCount_ 消费者线程数
    * @param queueSize_ 阻塞队列容量
    */
-  ChannelBase(std::function<void(T &)> f_, uint32_t thCount_ = 1, uint32_t queueSize_ = 1000) : m_processFun(f_),
-                                                                                                m_bRunning(true),
-                                                                                                m_queue(queueSize_) {
-    for (uint32_t ii = 0; ii < thCount_; ++ii) {
+  ChannelBase(std::function<void(T &)> f_,
+              uint32_t thCount_ = 1, uint32_t queueSize_ = 1000) : m_processFun(f_),
+                                                                   m_bRunning(true),
+                                                                   m_queue(queueSize_) {
+    for (uint32_t ii = 0; ii < thCount_; ++ii)
       m_Threads.create_thread(std::bind(&ChannelBase::Run, this));
-    }
   }
   virtual ~ChannelBase(void) {
     //结束线程，禁止添加
     Stop();
   }
-  inline bool Add(const T &item_) {
+  bool Add(const T &item_) {
     return m_queue.Enqueue(item_);
   }
   void Stop() {
@@ -52,8 +52,8 @@ class ChannelBase {
       m_Threads.join_all();
     }
   }
-  inline void Clear() { m_queue.Clear(); }
-  inline double GetUsagePercentage() { return (double)(m_queue.Count()) / (double)(m_queue.GetMaxCount()); }
+  void Clear() { m_queue.Clear(); }
+  double GetUsagePercentage() { return (double)(m_queue.Count()) / (double)(m_queue.GetMaxCount()); }
 
  private:
   ///线程运行函数

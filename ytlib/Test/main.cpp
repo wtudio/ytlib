@@ -19,7 +19,9 @@
 
 #include <boost/core/lightweight_test.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <cstdarg>
 #include <map>
+#include <stack>
 #include <vector>
 
 using namespace std;
@@ -34,13 +36,11 @@ string getTime() {
 }
 
 int32_t main(int32_t argc, char** argv) {
-  YT_DEBUG_PRINTF("-------------------start test-------------------\n");
+  YT_DEBUG_PRINTF("-------------------start test-------------------");
   //tcout输出中文需要设置
   //建议：最好不要在程序中使用中文！！！
   //std::locale::global(std::locale(""));
   //wcout.imbue(locale(""));
-
-  // return 0;
 
   //单元测试区
   //Algorithm

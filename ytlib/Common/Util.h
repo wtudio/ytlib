@@ -64,13 +64,17 @@
 
 //debug 调试
 #ifdef DEBUG
-  #ifdef _MSC_VER
-    #define YT_DEBUG_PRINTF(_arg_, ...) printf_s((std::string("[%s:%d]") + _arg_).c_str(), __FILE__, __LINE__, ##__VA_ARGS__)
-  #else
-    #define YT_DEBUG_PRINTF(_arg_, ...) printf((std::string("[%s:%d]") + _arg_).c_str(), __FILE__, __LINE__, ##__VA_ARGS__)
+  #if !defined(__FILENAME__)
+    #define __FILENAME__ __FILE__
   #endif
+
+  #define _STRING(x) #x
+  #define STRING(x) _STRING(x)
+  #define __FFL__ "[" __FILENAME__ ":" STRING(__LINE__) "@" __FUNCTION__ "]"
+
+  #define YT_DEBUG_PRINTF(fmt, ...) printf(__FFL__ fmt "\n", ##__VA_ARGS__)
 #else
-  #define YT_DEBUG_PRINTF(_arg_, ...)
+  #define YT_DEBUG_PRINTF(fmt, ...)
 #endif  // DEBUG
 
 // 导出定义

@@ -37,7 +37,12 @@ class LogConnection : public ConnectionBase {
     LOGHEAD2 = 'G'
   };
 
-  LogConnection(boost::asio::io_service& io_, std::function<void(const TcpEp&)> errcb_, tpath const* plogPath_) : ConnectionBase(io_, errcb_), plogPath(plogPath_), m_bFirstLogFlag(true), m_logQueue(1000), m_handleThread(std::bind(&LogConnection::logHandel, this)) {
+  LogConnection(boost::asio::io_service& io_,
+                std::function<void(const TcpEp&)> errcb_, tpath const* plogPath_) : ConnectionBase(io_, errcb_),
+                                                                                    plogPath(plogPath_),
+                                                                                    m_bFirstLogFlag(true),
+                                                                                    m_logQueue(1000),
+                                                                                    m_handleThread(std::bind(&LogConnection::logHandel, this)) {
   }
   virtual ~LogConnection() {
     stopflag = true;

@@ -3,6 +3,8 @@ cmake_minimum_required(VERSION 3.1)#最低版本要求
 
 project( ytlib )#工程名称
 
+include( ${ytlib_SOURCE_DIR}/CMake/util.cmake )
+
 #定义变量，添加宏定义
 option(YTLIB_UNICODE "build ytlib with unicode" OFF)
 mark_as_advanced(YTLIB_UNICODE)
