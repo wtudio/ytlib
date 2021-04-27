@@ -105,17 +105,20 @@ class TcpConnection : public ConnectionBase {
     sock.open(boost::asio::ip::tcp::v4());
     boost::system::error_code err;
     if (port_) {
+      //如果指定端口了，则绑定到指定端口
       sock.set_option(TcpSocket::reuse_address(true));
-      sock.bind(TcpEp(boost::asio::ip::tcp::v4(), port_), err);  //如果指定端口了，则绑定到指定端口
-                                                                 //if (err) {
-                                                                 //  YT_DEBUG_PRINTF("connect failed : %s\n", err.message().c_str());
-                                                                 //  return false;
-                                                                 //}
+      sock.bind(TcpEp(boost::asio::ip::tcp::v4(), port_), err);
+      /*
+      if (err) {
+        YT_DEBUG_PRINTF("connect failed : %s", err.message().c_str());
+        return false;
+      }
+      */
     }
 
     sock.connect(ep_, err);
     if (err) {
-      YT_DEBUG_PRINTF("connect failed : %s\n", err.message().c_str());
+      YT_DEBUG_PRINTF("connect failed : %s", err.message().c_str());
       return false;
     }
     remote_ep = ep_;
@@ -129,7 +132,7 @@ class TcpConnection : public ConnectionBase {
     write_mutex.unlock();
     if (err) {
       if (stopflag) return false;
-      YT_DEBUG_PRINTF("write failed : %s\n", err.message().c_str());
+      YT_DEBUG_PRINTF("write failed : %s", err.message().c_str());
       err_CallBack(remote_ep);
       return false;
     }
@@ -220,7 +223,7 @@ class TcpConnection : public ConnectionBase {
       }
     }
     stopflag = true;
-    YT_DEBUG_PRINTF("read failed : recv an invalid header : %c %c %c %d %d\n", header[0], header[1], header[2], header[3], get_num_from_buf(&header[4]));
+    YT_DEBUG_PRINTF("read failed : recv an invalid header : %c %c %c %d %d", header[0], header[1], header[2], header[3], get_num_from_buf(&header[4]));
     err_CallBack(remote_ep);
     return;
   }
@@ -432,7 +435,7 @@ class TcpNetAdapter : public TcpConnectionPool<TcpConnection<T>> {
     //同步连接
     TcpConnectionPtr pConnection = getNewTcpConnectionPtr();
     if (pConnection->connect(ep, BaseClass::myport)) {
-      YT_DEBUG_PRINTF("connect to %s:%d successful\n", ep.address().to_string().c_str(), ep.port());
+      YT_DEBUG_PRINTF("connect to %s:%d successful", ep.address().to_string().c_str(), ep.port());
       BaseClass::m_TcpConnectionMutex.lock();
       BaseClass::m_mapTcpConnection[ep] = pConnection;
       BaseClass::m_TcpConnectionMutex.unlock();
@@ -446,7 +449,7 @@ class TcpNetAdapter : public TcpConnectionPool<TcpConnection<T>> {
         return itr->second;
       }
     }
-    YT_DEBUG_PRINTF("connect to %s:%d failed\n", ep.address().to_string().c_str(), ep.port());
+    YT_DEBUG_PRINTF("connect to %s:%d failed", ep.address().to_string().c_str(), ep.port());
     return TcpConnectionPtr();
   }
 
@@ -509,7 +512,7 @@ class TcpNetAdapter : public TcpConnectionPool<TcpConnection<T>> {
           if (delfiles) {
             boost::system::error_code ec;
             boost::filesystem::remove(file_path, ec);
-            if (ec) YT_DEBUG_PRINTF("delete file %s failed: %s\n", file_path.string().c_str(), ec.message().c_str());
+            if (ec) YT_DEBUG_PRINTF("delete file %s failed: %s", file_path.string().c_str(), ec.message().c_str());
           }
           buffersPtr->push_back(boost::asio::const_buffer(&f_head_buff[cur_offerset], HEAD_SIZE));
           buffersPtr->push_back(boost::asio::const_buffer(file_buf.get(), length));

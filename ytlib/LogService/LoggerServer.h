@@ -66,7 +66,7 @@ class LogConnection : public ConnectionBase {
       return;
     }
     stopflag = true;
-    YT_DEBUG_PRINTF("read failed : recv an invalid header : %c %c %c %d %d\n",
+    YT_DEBUG_PRINTF("read failed : recv an invalid header : %c %c %c %d %d",
                     header[0], header[1], header[2], header[3], get_num_from_buf(&header[4]));
     err_CallBack(remote_ep);
     return;

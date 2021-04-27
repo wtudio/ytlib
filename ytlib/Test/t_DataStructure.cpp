@@ -6,7 +6,7 @@ using namespace std;
 namespace ytlib {
 ///测试二叉树
 void test_BinaryTree() {
-  YT_DEBUG_PRINTF("test BinTreeNode\n");
+  YT_DEBUG_PRINTF("test BinTreeNode");
   {
     //BinTreeNode及基本节点操作
     typedef BinTreeNode<int> mybt;
@@ -132,7 +132,7 @@ void test_BinaryTree() {
     BOOST_TEST_EQ(p->pf, nullptr);
     BOOST_TEST_NOT(rootp->pr);
   }
-  YT_DEBUG_PRINTF("test BinSearchTreeNode\n");
+  YT_DEBUG_PRINTF("test BinSearchTreeNode");
   {
     //二叉查找树BinSearchTreeNode
     typedef BinSearchTreeNode<int> mybst;
@@ -165,7 +165,7 @@ void test_BinaryTree() {
     bsRe = binSearch(rootp, 9);
     BOOST_TEST_NOT(bsRe);
   }
-  YT_DEBUG_PRINTF("test AVLTreeNode\n");
+  YT_DEBUG_PRINTF("test AVLTreeNode");
   {
     //AVL树
     typedef AVLTreeNode<int> myavlt;
@@ -232,7 +232,7 @@ void test_BinaryTree() {
     DLR(rootp, vec);
     BOOST_TEST_ALL_WITH(vec.begin(), vec.end(), answerDLR5.begin(), answerDLR5.end(), [](myavltPtr re, int an) { return re->obj == an; });
   }
-  YT_DEBUG_PRINTF("test BRTreeNode\n");  //todo 未完成
+  YT_DEBUG_PRINTF("test BRTreeNode");  //todo 未完成
   {
     //红黑树
     typedef BRTreeNode<int> mybrt;
@@ -250,7 +250,7 @@ void test_BinaryTree() {
 }
 
 void test_Graph() {
-  YT_DEBUG_PRINTF("test Graph\n");  //todo 未完成
+  YT_DEBUG_PRINTF("test Graph");  //todo 未完成
   typedef Graph<uint32_t> myGraph;
 
   vector<myGraph*> myGraphVec;

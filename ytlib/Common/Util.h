@@ -62,20 +62,15 @@
   #endif
 #endif
 
-//debug 调试
-#ifdef DEBUG
-  #if !defined(__FILENAME__)
-    #define __FILENAME__ __FILE__
-  #endif
+#if !defined(__FILENAME__)
+  #define __FILENAME__ __FILE__
+#endif
 
-  #define _STRING(x) #x
-  #define STRING(x) _STRING(x)
-  #define __FFL__ "[" __FILENAME__ ":" STRING(__LINE__) "@" __FUNCTION__ "]"
+#define _STRING(x) #x
+#define STRING(x) _STRING(x)
+#define COMMON_FMT(fmt) "[" __FILENAME__ ":" STRING(__LINE__) "@%s]" fmt "\n", __FUNCTION__
 
-  #define YT_DEBUG_PRINTF(fmt, ...) printf(__FFL__ fmt "\n", ##__VA_ARGS__)
-#else
-  #define YT_DEBUG_PRINTF(fmt, ...)
-#endif  // DEBUG
+#define YT_DEBUG_PRINTF(fmt, ...) printf(COMMON_FMT(fmt), ##__VA_ARGS__)
 
 // 导出定义
 #if defined(_WIN32)

@@ -46,7 +46,7 @@ class ConnectionBase : boost::noncopyable {
     if (stopflag) return true;
     if (err) {
       stopflag = true;
-      YT_DEBUG_PRINTF("read failed : %s\n", err.message().c_str());
+      YT_DEBUG_PRINTF("read failed : %s", err.message().c_str());
       err_CallBack(remote_ep);
       return true;
     }
@@ -60,7 +60,7 @@ class ConnectionBase : boost::noncopyable {
       return;
     }
     stopflag = true;
-    YT_DEBUG_PRINTF("read failed : recv an invalid header : %c %c %c %c %d\n",
+    YT_DEBUG_PRINTF("read failed : recv an invalid header : %c %c %c %c %d",
                     header[0], header[1], header[2], header[3], get_num_from_buf(&header[4]));
     err_CallBack(remote_ep);
     return;
@@ -97,11 +97,11 @@ class TcpConnectionPool {
   virtual void on_accept(TcpConnectionPtr& p, const boost::system::error_code& err) {
     if (stopflag) return;
     if (err) {
-      YT_DEBUG_PRINTF("listerner get err, please restart : %s\n", err.message().c_str());
+      YT_DEBUG_PRINTF("listerner get err, please restart : %s", err.message().c_str());
       return;
     }
     p->remote_ep = p->sock.remote_endpoint();
-    YT_DEBUG_PRINTF("get a new connection from %s:%d\n", p->remote_ep.address().to_string().c_str(), p->remote_ep.port());
+    YT_DEBUG_PRINTF("get a new connection from %s:%d", p->remote_ep.address().to_string().c_str(), p->remote_ep.port());
     m_TcpConnectionMutex.lock();
     m_mapTcpConnection[p->remote_ep] = p;
     m_TcpConnectionMutex.unlock();
@@ -114,7 +114,7 @@ class TcpConnectionPool {
     acceptorPtr->async_accept(pConnection->sock, std::bind(&TcpConnectionPool::on_accept, this, pConnection, std::placeholders::_1));
   }
   virtual void on_err(const TcpEp& ep) {
-    YT_DEBUG_PRINTF("connection to %s:%d get an err and is closed\n", ep.address().to_string().c_str(), ep.port());
+    YT_DEBUG_PRINTF("connection to %s:%d get an err and is closed", ep.address().to_string().c_str(), ep.port());
     std::unique_lock<std::shared_mutex> lck(m_TcpConnectionMutex);
     typename std::map<TcpEp, TcpConnectionPtr>::iterator itr = m_mapTcpConnection.find(ep);
     if (itr != m_mapTcpConnection.end()) {

@@ -75,7 +75,7 @@ class NetBackend : public boost::log::sinks::basic_sink_backend<
       if (err) {
         ConnectFlag = false;
         m_bFirstLogFlag = true;
-        YT_DEBUG_PRINTF("send to log server failed : %s\n", err.message().c_str());
+        YT_DEBUG_PRINTF("send to log server failed : %s", err.message().c_str());
         return;
       }
       if (m_bFirstLogFlag) {
@@ -95,7 +95,7 @@ class NetBackend : public boost::log::sinks::basic_sink_backend<
     boost::system::error_code err;
     sock.connect(LogServerEp, err);
     if (err) {
-      YT_DEBUG_PRINTF("connect to log server failed : %s\n", err.message().c_str());
+      YT_DEBUG_PRINTF("connect to log server failed : %s", err.message().c_str());
       return false;
     }
     ConnectFlag = true;

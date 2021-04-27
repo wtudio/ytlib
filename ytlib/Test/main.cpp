@@ -78,6 +78,6 @@ int32_t main(int32_t argc, char** argv) {
 
   test_QueueProcess();
 */
-  YT_DEBUG_PRINTF("********************end test*******************\n");
+  YT_DEBUG_PRINTF("********************end test*******************");
   return boost::report_errors();
 }

@@ -7,7 +7,7 @@ using namespace std;
 namespace ytlib {
 ///测试SortAlgs
 void test_SortAlgs() {
-  YT_DEBUG_PRINTF("test SortAlgs\n");
+  YT_DEBUG_PRINTF("test SortAlgs");
   const uint32_t num = 10;
   int answer[num] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
   //冒泡
@@ -53,7 +53,7 @@ void test_SortAlgs() {
 
 ///测试StringAlgs
 void test_StringAlgs() {
-  YT_DEBUG_PRINTF("test StringAlgs\n");
+  YT_DEBUG_PRINTF("test StringAlgs");
   //kmp
   string ss = "abcdef abcdefg abcdefgh";
   BOOST_TEST_EQ(KMP(ss, "abcdef"), 0);
