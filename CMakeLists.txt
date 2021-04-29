@@ -36,10 +36,11 @@ set( CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-std=c++1z" )
 set( BOOST_COMPONENTS system date_time filesystem thread log serialization)
 ENDIF()
 
-#要导出的变量
-set( YTLIB_LIBRARY )
-set( YTLIB_INCLUDE_DIR ${ytlib_SOURCE_DIR})
-set( YTLIB_LIBRARY_DIR )
+#要导出给引用者的变量
+set( YTLIB_LIBRARY )                          # ytlib自己生成的库
+set( YTLIB_LIBRARY_DEPEND )                   # ytlib依赖的库
+set( YTLIB_INCLUDE_DIR ${ytlib_SOURCE_DIR})   # ytlib头文件目录
+set( YTLIB_LIBRARY_DIR )                      # ytlib库文件目录
 
 #依赖库
 find_package( Boost COMPONENTS ${BOOST_COMPONENTS})
@@ -47,24 +48,20 @@ IF ( NOT Boost_FOUND )
   message(FATAL_ERROR "Cannot find Boost library. please set the boost path")
   mark_as_advanced( Boost_INCLUDE_DIRS Boost_LIBRARY_DIRS )
 ENDIF()
-set( YTLIB_LIBRARY ${YTLIB_LIBRARY} ${Boost_LIBRARIES})
+set( YTLIB_LIBRARY_DEPEND ${YTLIB_LIBRARY_DEPEND} ${Boost_LIBRARIES})
 set( YTLIB_INCLUDE_DIR ${YTLIB_INCLUDE_DIR} ${Boost_INCLUDE_DIRS})
 set( YTLIB_LIBRARY_DIR ${YTLIB_LIBRARY_DIR} ${Boost_LIBRARY_DIRS})
-message( STATUS "${YTLIB_LIBRARY}")
-#设置cmake目录（让cmake能够找到自定义cmake函数。如findpackage等）
+message( STATUS "${YTLIB_LIBRARY_DEPEND}")
+
+#设置cmake目录
 list( APPEND CMAKE_MODULE_PATH ${ytlib_SOURCE_DIR}/CMake )
 
 # 设置输出路径
-if( NOT LIBRARY_OUTPUT_PATH )
-  set( LIBRARY_OUTPUT_PATH ${ytlib_BINARY_DIR}/bin CACHE INTERNAL
-    "Single output directory for building all libraries." )
-endif()
-if( NOT EXECUTABLE_OUTPUT_PATH )
-  set( EXECUTABLE_OUTPUT_PATH ${ytlib_BINARY_DIR}/bin CACHE INTERNAL
-    "Single output directory for building all executables." )
-endif()
-mark_as_advanced( LIBRARY_OUTPUT_PATH EXECUTABLE_OUTPUT_PATH )
-set( YTLIB_LIBRARY_DIR ${YTLIB_LIBRARY_DIR} ${LIBRARY_OUTPUT_PATH})
+set( YTLIB_OUTPUT_PATH ${ytlib_BINARY_DIR}/bin )
+set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${YTLIB_OUTPUT_PATH} )
+set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${YTLIB_OUTPUT_PATH} )
+set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${YTLIB_OUTPUT_PATH} )
+set( YTLIB_LIBRARY_DIR ${YTLIB_LIBRARY_DIR} ${YTLIB_OUTPUT_PATH})
 
 #设置ide里文件目录
 set( CMAKE_USE_FOLDERS ON CACHE INTERNAL "Use folder view in IDE" )
@@ -87,12 +84,19 @@ ENDIF()
 #设置库类型
 option(BUILD_SHARED_LIBS "Build with shared libraries." OFF)
 mark_as_advanced( BUILD_SHARED_LIBS )
+IF (BUILD_SHARED_LIBS)
+  ADD_DEFINITIONS(-DBUILD_SHARED_LIBS)
+ENDIF()
 
 #链接设置
 include_directories( ${YTLIB_INCLUDE_DIR} )
 link_directories( ${YTLIB_LIBRARY_DIR} )
 
 #设置下一级目录
+#StringUtil:字符串公共库
+add_subdirectory( ytlib/StringUtil )
+set( YTLIB_LIBRARY ${YTLIB_LIBRARY} StringUtil)
+
 #TEST:测试项目
 add_subdirectory( ytlib/Test )
 

@@ -20,5 +20,5 @@ LINK_DIRECTORIES( ${YTLIB_LIBRARY_DIR} )
 # Set some variables that the user might want to use
 
 # The entire list of all components libraries.
-SET( YTLIB_LIBRARY @YTLIB_LIBRARY@ )
+SET( YTLIB_LIBRARY @YTLIB_LIBRARY@ @YTLIB_LIBRARY_DEPEND@ )
 

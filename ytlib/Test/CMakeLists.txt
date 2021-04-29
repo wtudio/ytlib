@@ -59,5 +59,9 @@ add_executable( ytTest
   ${Test_Files}
 )
 
+target_link_libraries(ytTest ${YTLIB_LIBRARY_DEPEND} )
+
+target_link_libraries(ytTest StringUtil)
+add_dependencies(ytTest StringUtil)
+
 define_filename_macro(ytTest)
-target_link_libraries(ytTest ${YTLIB_LIBRARY} )

@@ -73,9 +73,14 @@
 #define YT_DEBUG_PRINTF(fmt, ...) printf(COMMON_FMT(fmt), ##__VA_ARGS__)
 
 // 导出定义
-#if defined(_WIN32)
-  #define YT_DECLSPEC_EXPORT __declspec(dllexport)
-  #define YT_DECLSPEC_IMPORT __declspec(dllimport)
+#if defined(BUILD_SHARED_LIBS)
+  #if defined(_WIN32)
+    #define YT_DECLSPEC_EXPORT __declspec(dllexport)
+    #define YT_DECLSPEC_IMPORT __declspec(dllimport)
+  #else
+    #define YT_DECLSPEC_EXPORT __attribute__((visibility("default")))
+    #define YT_DECLSPEC_IMPORT
+  #endif
 #else
   #define YT_DECLSPEC_EXPORT
   #define YT_DECLSPEC_IMPORT

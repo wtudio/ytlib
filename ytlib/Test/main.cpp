@@ -24,6 +24,8 @@
 #include <stack>
 #include <vector>
 
+#include "ytlib/StringUtil/StringUtil.h"
+
 using namespace std;
 using namespace ytlib;
 
@@ -41,6 +43,8 @@ int32_t main(int32_t argc, char** argv) {
   //建议：最好不要在程序中使用中文！！！
   //std::locale::global(std::locale(""));
   //wcout.imbue(locale(""));
+
+  bool re = CheckIfInList("123,456,789", "123");
 
   //单元测试区
   //Algorithm
