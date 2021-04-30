@@ -11,6 +11,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cinttypes>
 #include <cstring>
 #include <map>
 #include <set>

@@ -51,8 +51,8 @@ class LOG_API Log {
   Log();
   ~Log();
 
-  void SetLevel(LOG_LEVEL lvl);
-  LOG_LEVEL Level() const;
+  void SetLevel(LOG_LEVEL lvl) { lvl_ = lvl; }
+  LOG_LEVEL Level() const { return lvl_; }
 
   void Trace(LOG_LEVEL lvl, const char* fmt, ...);
   void Trace(LOG_LEVEL lvl, const Ctx& ctx, const char* fmt, ...);

@@ -13,10 +13,6 @@ Log::Log() {
 Log::~Log() {
 }
 
-inline void Log::SetLevel(LOG_LEVEL lvl) { lvl_ = lvl; }
-
-inline LOG_LEVEL Log::Level() const { return lvl_; }
-
 void Log::Trace(LOG_LEVEL lvl, const char* fmt, ...) {
   ctx_mutex_.lock_shared();
   Ctx ctx = ctx_stack_.empty() ? Ctx() : ctx_stack_.top();

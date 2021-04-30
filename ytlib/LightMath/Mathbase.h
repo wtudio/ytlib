@@ -9,6 +9,7 @@
 #pragma once
 
 #include <cassert>
+#include <cinttypes>
 #include <cmath>
 #include <map>
 #include <vector>
