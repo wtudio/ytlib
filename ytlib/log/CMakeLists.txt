@@ -7,7 +7,7 @@ File(GLOB_RECURSE src *.cpp *.hpp *.h )
 source_group( ${CUR_TARGET_NAME} FILES ${src} )
 
 # 动态库（SHARED）/静态库（STATIC）/跟随工程（不填）
-add_library(${CUR_TARGET_NAME} STATIC
+add_library(${CUR_TARGET_NAME} 
     ${src}
 )
 

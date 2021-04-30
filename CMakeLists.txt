@@ -32,9 +32,13 @@ endif()
 IF(WIN32)
 set( BOOST_COMPONENTS )
 ELSE()
-set( CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-std=c++1z" )
 set( BOOST_COMPONENTS system date_time filesystem thread log serialization)
 ENDIF()
+
+#设定c++版本
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 #要导出给引用者的变量
 set( YTLIB_LIBRARY )                          # ytlib自己生成的库
@@ -96,6 +100,10 @@ link_directories( ${YTLIB_LIBRARY_DIR} )
 #StringUtil:字符串公共库
 add_subdirectory( ytlib/StringUtil )
 set( YTLIB_LIBRARY ${YTLIB_LIBRARY} StringUtil)
+
+#log:日志库
+add_subdirectory( ytlib/log )
+set( YTLIB_LIBRARY ${YTLIB_LIBRARY} log)
 
 #TEST:测试项目
 add_subdirectory( ytlib/Test )
