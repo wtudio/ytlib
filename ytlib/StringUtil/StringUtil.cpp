@@ -20,9 +20,9 @@ map<string, string> SplitToMap(const string& source, const string& vsep, const s
   map<string, string> result;
   if (source.empty()) return result;
 
-  size_t pos = 0;
-  size_t n;
-  size_t m;
+  std::size_t pos = 0;
+  std::size_t n;
+  std::size_t m;
   string str = source;
   str.append(vsep);
 
@@ -60,14 +60,14 @@ string JoinMap(const map<string, string>& kvmap, const string& vsep, const strin
 
 string GetValueFromStrKV(const string& str, const string& key, const string& vsep,
                          const string& msep, bool trimempty) {
-  size_t pos = str.find(key);
+  std::size_t pos = str.find(key);
   if (string::npos == pos) return "";
 
   pos = str.find(msep, pos);
   if (string::npos == pos) return "";
   pos += msep.length();
 
-  size_t pos_end = str.find(vsep, pos);
+  std::size_t pos_end = str.find(vsep, pos);
   if (string::npos == pos_end) pos_end = str.length();
 
   std::string re = str.substr(pos, pos_end - pos);
@@ -134,7 +134,7 @@ int CmpVersion(const string& ver1, const string& ver2) {
   const vector<string>& version1_detail = SplitToVec(ver1, ".");
   const vector<string>& version2_detail = SplitToVec(ver2, ".");
 
-  size_t idx = 0;
+  std::size_t idx = 0;
   for (idx = 0; idx < version1_detail.size() && idx < version2_detail.size(); ++idx) {
     int ver1 = atoi(version1_detail[idx].c_str());
     int ver2 = atoi(version2_detail[idx].c_str());
@@ -163,35 +163,35 @@ bool CheckVersionInside(const string& ver, const string& start_ver, const string
 
 string& ReplaceString(string& str, const string& ov, const string& nv) {
   if (str.empty()) return str;
-  vector<size_t> vec_pos;
-  size_t pos = 0, old_len = ov.size(), new_len = nv.size();
+  vector<std::size_t> vec_pos;
+  std::size_t pos = 0, old_len = ov.size(), new_len = nv.size();
   while (string::npos != (pos = str.find(ov, pos))) {
     vec_pos.push_back(pos);
     pos += old_len;
   }
-  size_t& vec_len = pos = vec_pos.size();
+  std::size_t& vec_len = pos = vec_pos.size();
   if (vec_len) {
     if (old_len == new_len) {
-      for (size_t ii = 0; ii < vec_len; ++ii)
+      for (std::size_t ii = 0; ii < vec_len; ++ii)
         memcpy(const_cast<char*>(str.c_str() + vec_pos[ii]), nv.c_str(), new_len);
     } else if (old_len > new_len) {
       char* p = const_cast<char*>(str.c_str()) + vec_pos[0];
       vec_pos.push_back(str.size());
-      for (size_t ii = 0; ii < vec_len; ++ii) {
+      for (std::size_t ii = 0; ii < vec_len; ++ii) {
         memcpy(p, nv.c_str(), new_len);
         p += new_len;
-        size_t cplen = vec_pos[ii + 1] - vec_pos[ii] - old_len;
+        std::size_t cplen = vec_pos[ii + 1] - vec_pos[ii] - old_len;
         memmove(p, str.c_str() + vec_pos[ii] + old_len, cplen);
         p += cplen;
       }
       str.resize(p - str.c_str());
     } else {
-      size_t diff = new_len - old_len;
+      std::size_t diff = new_len - old_len;
       vec_pos.push_back(str.size());
       str.resize(str.size() + diff * vec_len);
       char* p = const_cast<char*>(str.c_str()) + str.size();
-      for (size_t ii = vec_len - 1; ii < vec_len; --ii) {
-        size_t cplen = vec_pos[ii + 1] - vec_pos[ii] - old_len;
+      for (std::size_t ii = vec_len - 1; ii < vec_len; --ii) {
+        std::size_t cplen = vec_pos[ii + 1] - vec_pos[ii] - old_len;
         p -= cplen;
         memmove(p, str.c_str() + vec_pos[ii] + old_len, cplen);
         p -= new_len;
@@ -204,8 +204,8 @@ string& ReplaceString(string& str, const string& ov, const string& nv) {
 
 bool IsAlnumStr(const string& str) {
   const char* ps = str.c_str();
-  size_t len = str.length();
-  for (size_t ii = 0; ii < len; ++ii) {
+  std::size_t len = str.length();
+  for (std::size_t ii = 0; ii < len; ++ii) {
     if (!isalnum(ps[ii])) return false;
   }
   return true;
@@ -214,7 +214,7 @@ bool IsAlnumStr(const string& str) {
 bool CheckIfInList(const std::string& strlist, const std::string& key, char sep) {
   if (key.empty()) return false;
   if (key.find(sep) != std::string::npos) return false;
-  size_t pos = strlist.find(key);
+  std::size_t pos = strlist.find(key);
   while (pos != std::string::npos) {
     if ((pos > 0 && strlist[pos - 1] != sep) ||
         ((pos + key.length()) < strlist.length() && strlist[pos + key.length()] != sep)) {

@@ -56,7 +56,7 @@ class LogConnection : public ConnectionBase {
                             std::bind(&LogConnection::on_read_head, this, std::placeholders::_1, std::placeholders::_2));
   }
   //读取解析报头
-  void on_read_head(const boost::system::error_code& err, size_t read_bytes) {
+  void on_read_head(const boost::system::error_code& err, std::size_t read_bytes) {
     if (read_get_err(err)) return;
     if (header[0] == TCPHEAD1 && header[1] == TCPHEAD2 && header[2] == LOGHEAD1 && header[3] == LOGHEAD2 && read_bytes == HEAD_SIZE) {
       uint32_t pack_size = get_num_from_buf(&header[4]);
@@ -71,7 +71,7 @@ class LogConnection : public ConnectionBase {
     err_CallBack(remote_ep);
     return;
   }
-  void on_read_log(boost::shared_array<char>& buff_, const boost::system::error_code& err, size_t read_bytes) {
+  void on_read_log(boost::shared_array<char>& buff_, const boost::system::error_code& err, std::size_t read_bytes) {
     if (read_get_err(err)) return;
     m_logQueue.Enqueue(sharedBuf(buff_, static_cast<uint32_t>(read_bytes)));
     do_read_head();

@@ -295,17 +295,17 @@ void test_Graph() {
 
   //dijkstra
   auto dj = dijkstra(*myGraphVec[0], myGraphVec);
-  for (size_t ii = 0; ii < dj.first.size(); ++ii) {
+  for (std::size_t ii = 0; ii < dj.first.size(); ++ii) {
     cout << dj.first[ii] << " ";
   }
   cout << endl;
-  for (size_t ii = 0; ii < dj.first.size(); ++ii) {
+  for (std::size_t ii = 0; ii < dj.first.size(); ++ii) {
     cout << dj.second[ii] << " ";
   }
   cout << endl;
 
   vector<int32_t> djpath = dijkstraPath(7, dj.second);
-  for (size_t ii = 0; ii < djpath.size(); ++ii) {
+  for (std::size_t ii = 0; ii < djpath.size(); ++ii) {
     cout << myGraphVec[djpath[ii]]->obj << "-";
   }
   cout << endl;
@@ -319,7 +319,7 @@ void test_Graph() {
        << endl;
 
   vector<int32_t> flpath = floydPath(0, 7, fl.second);
-  for (size_t ii = 0; ii < flpath.size(); ++ii) {
+  for (std::size_t ii = 0; ii < flpath.size(); ++ii) {
     cout << myGraphVec[flpath[ii]]->obj << "-";
   }
   cout << endl;

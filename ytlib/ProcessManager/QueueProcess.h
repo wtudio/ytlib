@@ -24,7 +24,7 @@ template <class T,
           class _Queue = QueueBase<T> >
 class QueueProcess : public ProcessBase {
  public:
-  QueueProcess(size_t thCount_ = 1, size_t queueSize_ = 1000) : ProcessBase(),
+  QueueProcess(std::size_t thCount_ = 1, std::size_t queueSize_ = 1000) : ProcessBase(),
                                                                 m_bStopFlag(false),
                                                                 m_threadCount(thCount_),
                                                                 m_queue(queueSize_) {
@@ -35,7 +35,7 @@ class QueueProcess : public ProcessBase {
   virtual bool init() {
     if (m_Threads.size() > 0) return false;
     m_bStopFlag = false;
-    for (size_t ii = 0; ii < m_threadCount; ii++) {
+    for (std::size_t ii = 0; ii < m_threadCount; ii++) {
       m_Threads.create_thread(std::bind(&QueueProcess::Run, this));
     }
     return ProcessBase::init();
@@ -73,6 +73,6 @@ class QueueProcess : public ProcessBase {
   std::atomic_bool m_bStopFlag;
   boost::thread_group m_Threads;
   _Queue m_queue;
-  const size_t m_threadCount;
+  const std::size_t m_threadCount;
 };
 }  // namespace ytlib

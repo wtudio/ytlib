@@ -69,13 +69,13 @@ class BigNum {
     //需要确保进制相同
     assert(up == value.up);
     const BigNum *pNum1 = this, *pNum2 = &value;
-    size_t len1 = pNum1->_content.size(), len2 = pNum2->_content.size();
+    std::size_t len1 = pNum1->_content.size(), len2 = pNum2->_content.size();
     BigNum re(0, up);
     if (_symbol ^ value._symbol) {
       //异符号相加，用绝对值大的减小的，符号与大的相同。默认num1的绝对值大
       if (len1 == len2) {
         //从高位开始判断
-        for (size_t ii = len1 - 1; ii > 0; --ii) {
+        for (std::size_t ii = len1 - 1; ii > 0; --ii) {
           if (pNum1->_content[ii] > pNum2->_content[ii])
             break;
           else if (pNum1->_content[ii] < pNum2->_content[ii]) {
@@ -90,7 +90,7 @@ class BigNum {
       }
       re._symbol = pNum1->_symbol;
       bool flag = false;  //借位标志
-      for (size_t ii = 0; ii < len2; ++ii) {
+      for (std::size_t ii = 0; ii < len2; ++ii) {
         //需要借位的情况
         if (flag && pNum1->_content[ii] == 0) {
           flag = true;
@@ -104,7 +104,7 @@ class BigNum {
         }
         re._content.push_back(0);
       }
-      for (size_t ii = len2; ii < len1; ++ii) {
+      for (std::size_t ii = len2; ii < len1; ++ii) {
         if (flag && pNum1->_content[ii] == 0) {
           flag = true;
           re._content[ii] = up - 1;
@@ -123,7 +123,7 @@ class BigNum {
         std::swap(pNum1, pNum2);
       }
       //从低位开始加
-      for (size_t ii = 0; ii < len2; ++ii) {
+      for (std::size_t ii = 0; ii < len2; ++ii) {
         uint32_t tmp = pNum1->_content[ii] + pNum2->_content[ii] + re._content[ii];
         if ((up && tmp >= up) || tmp < pNum1->_content[ii] || (tmp == pNum1->_content[ii] && re._content[ii] == 1)) {
           re._content.push_back(1);
@@ -132,7 +132,7 @@ class BigNum {
           re._content.push_back(0);
         re._content[ii] = tmp;
       }
-      for (size_t ii = len2; ii < len1; ++ii) {
+      for (std::size_t ii = len2; ii < len1; ++ii) {
         if (pNum1->_content[ii] == (up - 1) && re._content[ii] == 1) {
           re._content[ii] = 0;
           re._content.push_back(1);
@@ -183,10 +183,10 @@ class BigNum {
   BigNum operator*(const BigNum& value) const {
     assert(up == value.up);
     BigNum re(0, up);
-    size_t len1 = this->_content.size(), len2 = value._content.size();
-    for (size_t ii = 0; ii < len1; ++ii) {
+    std::size_t len1 = this->_content.size(), len2 = value._content.size();
+    for (std::size_t ii = 0; ii < len1; ++ii) {
       if (this->_content[ii] != 0) {
-        for (size_t jj = 0; jj < len2; ++jj) {
+        for (std::size_t jj = 0; jj < len2; ++jj) {
           if (value._content[jj] != 0)
             re += BigNum(int64_t(this->_content[ii]) * value._content[jj], up, ii + jj);
         }
@@ -202,21 +202,21 @@ class BigNum {
   }
   //----------------------------------
   //移位计算
-  BigNum operator<<(size_t n) const {
+  BigNum operator<<(std::size_t n) const {
     BigNum re = *this;
     re._content.insert(re._content.begin(), 0);
     return re;
   }
-  BigNum& operator<<=(size_t n) {
+  BigNum& operator<<=(std::size_t n) {
     _content.insert(_content.begin(), 0);
     return *this;
   }
-  BigNum operator>>(size_t n) const {
+  BigNum operator>>(std::size_t n) const {
     BigNum re = *this;
     if (re._content.size()) re._content.erase(re._content.begin());
     return re;
   }
-  BigNum& operator>>=(size_t n) {
+  BigNum& operator>>=(std::size_t n) {
     if (_content.size()) _content.erase(_content.begin());
     return *this;
   }
@@ -275,8 +275,8 @@ int div(const int x, const int y)
     if (BigNum::operator bool() && value) return true;
     if (_symbol != value._symbol) return false;
     if (_content.size() != value._content.size()) return false;
-    size_t len = _content.size();
-    for (size_t ii = 0; ii < len; ++ii) {
+    std::size_t len = _content.size();
+    for (std::size_t ii = 0; ii < len; ++ii) {
       if (_content[ii] != value._content[ii]) return false;
     }
     return true;
@@ -292,9 +292,9 @@ int div(const int x, const int y)
     if (!_symbol && value._symbol) return true;
     if (_symbol && !(value._symbol)) return false;
     if (_content.size() != value._content.size()) return _symbol ^ (_content.size() > value._content.size());
-    size_t len = _content.size();
+    std::size_t len = _content.size();
     //从高位开始判断
-    for (size_t ii = len - 1; ii > 0; --ii) {
+    for (std::size_t ii = len - 1; ii > 0; --ii) {
       if (_content[ii] == value._content[ii]) continue;
       if (_symbol ^ (_content[ii] > value._content[ii])) return true;
       return false;
@@ -320,16 +320,16 @@ int div(const int x, const int y)
 
     if (val.up > 1 && val.up <= 16) {
       //如果进制在16之内则采用16进制的符号
-      size_t len = val._content.size();
+      std::size_t len = val._content.size();
       out << std::hex;
-      for (size_t ii = len - 1; ii < len; --ii) {
+      for (std::size_t ii = len - 1; ii < len; --ii) {
         out << val._content[ii];
       }
       out << std::dec;
     } else {
       //否则需要在各个位之间空开一格，以十进制输出数据
-      size_t len = val._content.size();
-      for (size_t ii = len - 1; ii < len; --ii) {
+      std::size_t len = val._content.size();
+      for (std::size_t ii = len - 1; ii < len; --ii) {
         out << val._content[ii] << ' ';
       }
     }

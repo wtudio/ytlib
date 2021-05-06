@@ -168,7 +168,7 @@ class myostringstream : public std::ostringstream {
  public:
   myostringstream(ios_base::openmode _Mode = ios_base::out) : std::ostringstream(_Mode) {}
   ~myostringstream(){};
-  void getPoint(char*& p, size_t& len) {
+  void getPoint(char*& p, std::size_t& len) {
     _mybuf.str("");
     rdbuf()->swap(_mybuf);
     p = _mybuf.pbase();
@@ -184,7 +184,7 @@ class myistringstream : public std::istringstream {
  public:
   myistringstream(ios_base::openmode _Mode = ios_base::out) : std::istringstream(_Mode) {}
   ~myistringstream(){};
-  void setPoint(char* p, size_t len) {
+  void setPoint(char* p, std::size_t len) {
     rdbuf()->swap(_mybuf);
     _mybuf.str("");
     _mybuf.setg(p, p, p + len);

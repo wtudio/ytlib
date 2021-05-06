@@ -67,7 +67,7 @@ void test_StringAlgs() {
   BOOST_TEST_EQ(StrDif("abcdfg", "abcdef"), 2);
 
   //LongestSubStrWithoutDup
-  pair<size_t, size_t> re = LongestSubStrWithoutDup("arabcacfr");
+  pair<std::size_t, std::size_t> re = LongestSubStrWithoutDup("arabcacfr");
   BOOST_TEST_EQ(re.first, 1);
   BOOST_TEST_EQ(re.second, 4);
 

@@ -1,5 +1,6 @@
 #include "log.hpp"
 
+#include <mutex>
 #include "console_writer.hpp"
 #include "rotate_file_writer.hpp"
 

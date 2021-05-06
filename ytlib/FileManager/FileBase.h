@@ -141,7 +141,7 @@ class FileBase {
     if (m_filepath.empty()) return T_TEXT("");
     tpath filepath = tGetAbsolutePath(m_filepath);
     tstring fname = filepath.filename().string<tstring>();
-    size_t pos = fname.find(T_TEXT('.'));
+    std::size_t pos = fname.find(T_TEXT('.'));
     if (pos < fname.length()) {
       fname = fname.substr(0, pos);
     }

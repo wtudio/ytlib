@@ -25,7 +25,7 @@ typedef boost::asio::ip::tcp::endpoint TcpEp;  //28个字节
 typedef boost::asio::ip::tcp::socket TcpSocket;
 
 ///大小端转换，将ps中的数据转换到pd中
-inline void transEndian(char* pd, const char* ps, size_t len) {
+inline void transEndian(char* pd, const char* ps, std::size_t len) {
 #ifdef BIG_ENDIAN
   memcpy(pd, ps, len);
 #else

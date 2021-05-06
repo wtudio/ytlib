@@ -172,7 +172,7 @@ class AVLTreeNode : public std::enable_shared_from_this<AVLTreeNode<T> > {
   AVLTreeNode<T>* pf;  ///<父节点
   AVLTNodePtr pl;      ///<左子节点
   AVLTNodePtr pr;      ///<右子节点
-  size_t hgt;          ///<节点高度
+  std::size_t hgt;          ///<节点高度
 
 #define HGT(p) ((p) ? p->hgt : 0)
 
@@ -197,8 +197,8 @@ class AVLTreeNode : public std::enable_shared_from_this<AVLTreeNode<T> > {
     AVLTreeNode<T>* end = pf;
     while (pos != end) {
       re.reset();
-      size_t curhgt = pos->hgt;
-      size_t lh = HGT(pos->pl), lr = HGT(pos->pr);
+      std::size_t curhgt = pos->hgt;
+      std::size_t lh = HGT(pos->pl), lr = HGT(pos->pr);
       if (lh >= lr + 2) {
         //左边比右边高了2
         if (HGT(pos->pl->pl) >= HGT(pos->pl->pr))
@@ -217,7 +217,7 @@ class AVLTreeNode : public std::enable_shared_from_this<AVLTreeNode<T> > {
         }
       }
       //如果发生旋转了，说明之前左右高度相差2，说明该节点高度一定发生改变
-      size_t cghgt;
+      std::size_t cghgt;
       if (re) {
         cghgt = re->hgt;
         pos = re->pf;
@@ -320,8 +320,8 @@ class AVLTreeNode : public std::enable_shared_from_this<AVLTreeNode<T> > {
     AVLTNodePtr re;
     while (pos != NULL) {
       re.reset();
-      size_t curhgt = pos->hgt;
-      size_t lh = HGT(pos->pl), lr = HGT(pos->pr);
+      std::size_t curhgt = pos->hgt;
+      std::size_t lh = HGT(pos->pl), lr = HGT(pos->pr);
       if (lh >= lr + 2) {
         //左边比右边高了2
         if (HGT(pos->pl->pl) >= HGT(pos->pl->pr))
@@ -340,7 +340,7 @@ class AVLTreeNode : public std::enable_shared_from_this<AVLTreeNode<T> > {
         }
       }
       //如果发生旋转了，说明之前左右高度相差2，说明该节点高度一定发生改变
-      size_t cghgt;
+      std::size_t cghgt;
       if (re) {
         cghgt = re->hgt;
         pos = re->pf;
@@ -354,9 +354,9 @@ class AVLTreeNode : public std::enable_shared_from_this<AVLTreeNode<T> > {
     return proot;
   }
   ///获取当前节点高度
-  inline size_t getHgt() {
-    size_t lh = (pl) ? pl->hgt : 0;
-    size_t lr = (pr) ? pr->hgt : 0;
+  inline std::size_t getHgt() {
+    std::size_t lh = (pl) ? pl->hgt : 0;
+    std::size_t lr = (pr) ? pr->hgt : 0;
     return std::max(lh, lr) + 1;
   }
 
@@ -676,10 +676,10 @@ void LRD(std::shared_ptr<T> nd, std::vector<std::shared_ptr<T> >& vec) {
  * @return 节点深度
  */
 template <typename T>
-size_t getDepth(const T* pnode) {
+std::size_t getDepth(const T* pnode) {
   assert(pnode != NULL);
   pnode = pnode->pf;
-  size_t count = 0;
+  std::size_t count = 0;
   while (pnode != NULL) {
     ++count;
     pnode = pnode->pf;
@@ -694,9 +694,9 @@ size_t getDepth(const T* pnode) {
  * @return 节点高度
  */
 template <typename T>
-size_t getHeight(const T* pnode) {
+std::size_t getHeight(const T* pnode) {
   assert(pnode != NULL);
-  size_t lh = 0, rh = 0;
+  std::size_t lh = 0, rh = 0;
   if (pnode->pl) lh = getHeight(pnode->pl.get());
   if (pnode->pr) rh = getHeight(pnode->pr.get());
   return std::max(lh, rh) + 1;
@@ -709,7 +709,7 @@ size_t getHeight(const T* pnode) {
  * @return 最长链长度
  */
 template <typename T>
-size_t getMaxChain(const T* pnode) {
+std::size_t getMaxChain(const T* pnode) {
   return getHeight(pnode);
 }
 /**
@@ -720,9 +720,9 @@ size_t getMaxChain(const T* pnode) {
  * @return 最短链长度
  */
 template <typename T>
-size_t getMinChain(const T* pnode) {
+std::size_t getMinChain(const T* pnode) {
   assert(pnode != NULL);
-  size_t lh = 0, rh = 0;
+  std::size_t lh = 0, rh = 0;
   if (pnode->pl) lh = getHeight(pnode->pl.get());
   if (pnode->pr) rh = getHeight(pnode->pr.get());
   return std::min(lh, rh) + 1;
@@ -735,9 +735,9 @@ size_t getMinChain(const T* pnode) {
  * @return 节点个数
  */
 template <typename T>
-size_t getNodeNum(const T* pnode) {
+std::size_t getNodeNum(const T* pnode) {
   assert(pnode != NULL);
-  size_t num = 1;
+  std::size_t num = 1;
   if (pnode->pl) num += getNodeNum(pnode->pl.get());
   if (pnode->pr) num += getNodeNum(pnode->pr.get());
   return num;
@@ -824,7 +824,7 @@ bool getLR(const T* pnode) {
 template <typename T>
 void traByLevel(std::shared_ptr<T> nd, std::vector<std::shared_ptr<T> >& vec) {
   assert(nd);
-  size_t pos1 = vec.size(), pos2;
+  std::size_t pos1 = vec.size(), pos2;
   vec.push_back(nd);
   while (pos1 < vec.size()) {
     pos2 = vec.size();

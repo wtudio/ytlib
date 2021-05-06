@@ -22,11 +22,11 @@ namespace ytlib {
 template <class T>
 class QueueBase {
  public:
-  explicit QueueBase(size_t n_) : m_maxcount(n_), stopflag(false) {}
+  explicit QueueBase(std::size_t n_) : m_maxcount(n_), stopflag(false) {}
   virtual ~QueueBase() { Stop(); }
 
-  size_t GetMaxCount() { return m_maxcount; }
-  size_t Count() {
+  std::size_t GetMaxCount() { return m_maxcount; }
+  std::size_t Count() {
     std::lock_guard<std::mutex> lck(m_mutex);
     return m_queue.size();
   }
@@ -80,7 +80,7 @@ class QueueBase {
   std::condition_variable m_cond;  ///<条件锁
   std::queue<T> m_queue;           ///<队列
 
-  const size_t m_maxcount;    ///<队列可支持最大个数
+  const std::size_t m_maxcount;    ///<队列可支持最大个数
   std::atomic_bool stopflag;  ///<停止标志
 };
 }  // namespace ytlib

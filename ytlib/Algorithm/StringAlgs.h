@@ -26,7 +26,7 @@ namespace ytlib {
  * @param pslen 字符串ps的长度
  * @return 字符串ps首次出现在ss中的位置，如果未出现则返回sslen
  */
-inline size_t KMP(const char* ss, size_t sslen, const char* ps, size_t pslen) {
+inline std::size_t KMP(const char* ss, std::size_t sslen, const char* ps, std::size_t pslen) {
   assert(sslen && pslen && ss != NULL && ps != NULL);
   if (pslen > sslen || pslen == 0) return sslen;
   int32_t* next = new int32_t[pslen];  //制作next数组
@@ -60,7 +60,7 @@ inline size_t KMP(const char* ss, size_t sslen, const char* ps, size_t pslen) {
  * @param ps 要匹配的短字符串
  * @return 字符串ps首次出现在ss中的位置，如果未出现则返回ss.length()
  */
-inline size_t KMP(const std::string& ss, const std::string& ps) {
+inline std::size_t KMP(const std::string& ss, const std::string& ps) {
   return KMP(ss.c_str(), ss.length(), ps.c_str(), ps.length());
 }
 
@@ -73,20 +73,20 @@ inline size_t KMP(const std::string& ss, const std::string& ps) {
  * @param s2len 字符串2长度
  * @return 字符串1和字符串2的差异度
  */
-inline size_t StrDif(const char* s1, size_t s1len, const char* s2, size_t s2len) {
+inline std::size_t StrDif(const char* s1, std::size_t s1len, const char* s2, std::size_t s2len) {
   assert(s1len && s2len && s1 != NULL && s2 != NULL);
   if (s2len > s1len) return StrDif(s2, s2len, s1, s1len);  //默认s1len>=s2len
 
   const uint32_t c1 = 1, c2 = 1;  //c1: unmatched cost; c2: mismatched cost
-  size_t *M1 = new size_t[s2len], *M2 = new size_t[s2len], *tmpM;
-  for (size_t ii = 0; ii < s2len; ++ii) M1[ii] = ii * c1;
-  for (size_t ii = 1; ii < s1len; ++ii) {
-    for (size_t jj = 0; jj < s2len; ++jj) {
+  std::size_t *M1 = new std::size_t[s2len], *M2 = new std::size_t[s2len], *tmpM;
+  for (std::size_t ii = 0; ii < s2len; ++ii) M1[ii] = ii * c1;
+  for (std::size_t ii = 1; ii < s1len; ++ii) {
+    for (std::size_t jj = 0; jj < s2len; ++jj) {
       if (jj == 0)
         M2[0] = ii * c1;
       else {
-        size_t val1 = ((s1[ii] == s2[jj]) ? 0 : c2) + M1[jj - 1];
-        size_t val2 = std::min(M1[jj], M2[jj - 1]) + c1;
+        std::size_t val1 = ((s1[ii] == s2[jj]) ? 0 : c2) + M1[jj - 1];
+        std::size_t val2 = std::min(M1[jj], M2[jj - 1]) + c1;
         M2[jj] = std::min(val1, val2);
       }
     }
@@ -94,7 +94,7 @@ inline size_t StrDif(const char* s1, size_t s1len, const char* s2, size_t s2len)
     M1 = M2;
     M2 = tmpM;
   }
-  size_t re = M1[s2len - 1];
+  std::size_t re = M1[s2len - 1];
   delete[] M1, M2;
   return re;
 }
@@ -105,7 +105,7 @@ inline size_t StrDif(const char* s1, size_t s1len, const char* s2, size_t s2len)
  * @param s2 字符串2
  * @return 字符串1和字符串2的差异度
  */
-inline size_t StrDif(const std::string& s1, const std::string& s2) {
+inline std::size_t StrDif(const std::string& s1, const std::string& s2) {
   return StrDif(s1.c_str(), s1.length(), s2.c_str(), s2.length());
 }
 
@@ -116,14 +116,14 @@ inline size_t StrDif(const std::string& s1, const std::string& s2) {
  * @param len 字符串长度
  * @return 最长不重复子串出现的位置和长度
  */
-inline std::pair<size_t, size_t> LongestSubStrWithoutDup(const char* s, size_t len) {
+inline std::pair<std::size_t, std::size_t> LongestSubStrWithoutDup(const char* s, std::size_t len) {
   assert(len && s != NULL);
-  size_t positions[256];                                    //每种字符上一次出现的位置
-  for (size_t ii = 0; ii < len; ++ii) positions[ii] = len;  //初始化为len，表示没出现
-  size_t maxLen = 0, maxPos = 0;                            //最长的字串长度和位置
-  size_t curLen = 0, curPos = 0;                            //当前不重复字串的长度和位置
-  for (size_t ii = 0; ii < len; ++ii) {
-    size_t& prePos = positions[s[ii]];
+  std::size_t positions[256];                                    //每种字符上一次出现的位置
+  for (std::size_t ii = 0; ii < len; ++ii) positions[ii] = len;  //初始化为len，表示没出现
+  std::size_t maxLen = 0, maxPos = 0;                            //最长的字串长度和位置
+  std::size_t curLen = 0, curPos = 0;                            //当前不重复字串的长度和位置
+  for (std::size_t ii = 0; ii < len; ++ii) {
+    std::size_t& prePos = positions[s[ii]];
     if (prePos == len || (ii - prePos) > curLen)
       ++curLen;
     else {
@@ -140,9 +140,9 @@ inline std::pair<size_t, size_t> LongestSubStrWithoutDup(const char* s, size_t l
     maxLen = curLen;
     maxPos = curPos;
   }
-  return std::pair<size_t, size_t>(maxPos, maxLen);
+  return std::pair<std::size_t, std::size_t>(maxPos, maxLen);
 }
-inline std::pair<size_t, size_t> LongestSubStrWithoutDup(const std::string& s) {
+inline std::pair<std::size_t, std::size_t> LongestSubStrWithoutDup(const std::string& s) {
   return LongestSubStrWithoutDup(s.c_str(), s.length());
 }
 
@@ -156,36 +156,36 @@ inline std::pair<size_t, size_t> LongestSubStrWithoutDup(const std::string& s) {
  * @return 无
  */
 inline void replaceAll(std::string& str, const std::string& oldValue, const std::string& newValue) {
-  std::vector<size_t> vecPos;
-  size_t iPos = 0, oldLen = oldValue.size(), newLen = newValue.size();
+  std::vector<std::size_t> vecPos;
+  std::size_t iPos = 0, oldLen = oldValue.size(), newLen = newValue.size();
   while (std::string::npos != (iPos = str.find(oldValue, iPos))) {
     vecPos.push_back(iPos);
     iPos += oldLen;
   }
 
-  size_t& vecLen = iPos = vecPos.size();
+  std::size_t& vecLen = iPos = vecPos.size();
   if (vecLen) {
     if (oldLen == newLen) {
-      for (size_t ii = 0; ii < vecLen; ++ii)
+      for (std::size_t ii = 0; ii < vecLen; ++ii)
         memcpy(const_cast<char*>(str.c_str() + vecPos[ii]), newValue.c_str(), newLen);
     } else if (oldLen > newLen) {
       char* p = const_cast<char*>(str.c_str()) + vecPos[0];
       vecPos.push_back(str.size());
-      for (size_t ii = 0; ii < vecLen; ++ii) {
+      for (std::size_t ii = 0; ii < vecLen; ++ii) {
         memcpy(p, newValue.c_str(), newLen);
         p += newLen;
-        size_t cplen = vecPos[ii + 1] - vecPos[ii] - oldLen;
+        std::size_t cplen = vecPos[ii + 1] - vecPos[ii] - oldLen;
         memmove(p, str.c_str() + vecPos[ii] + oldLen, cplen);
         p += cplen;
       }
       str.resize(p - str.c_str());
     } else {
-      size_t diff = newLen - oldLen;
+      std::size_t diff = newLen - oldLen;
       vecPos.push_back(str.size());
       str.resize(str.size() + diff * vecLen);
       char* p = const_cast<char*>(str.c_str()) + str.size();
-      for (size_t ii = vecLen - 1; ii < vecLen; --ii) {
-        size_t cplen = vecPos[ii + 1] - vecPos[ii] - oldLen;
+      for (std::size_t ii = vecLen - 1; ii < vecLen; --ii) {
+        std::size_t cplen = vecPos[ii + 1] - vecPos[ii] - oldLen;
         p -= cplen;
         memmove(p, str.c_str() + vecPos[ii] + oldLen, cplen);
         p -= newLen;
@@ -204,7 +204,7 @@ inline void replaceAll(std::string& str, const std::string& oldValue, const std:
  */
 inline std::vector<std::string> splitAll(const std::string& str, const std::string& seperators) {
   std::vector<std::string> re;
-  size_t pos1, pos2 = 0;
+  std::size_t pos1, pos2 = 0;
   do {
     pos1 = str.find_first_not_of(seperators, pos2);
     if (pos1 == std::string::npos) break;

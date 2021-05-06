@@ -34,7 +34,7 @@ class KeyValueFile : public FileBase<std::map<std::string, std::string> > {
       for (; getline(infile, buf);) {
         //以#开头的行为注释
         if (buf[0] != '#') {
-          size_t pos = buf.find_first_of('=');
+          std::size_t pos = buf.find_first_of('=');
           if (pos != std::string::npos) {
             std::string key(buf.substr(0, pos));
             boost::trim(key);

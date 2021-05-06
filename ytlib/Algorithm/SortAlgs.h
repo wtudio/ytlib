@@ -51,11 +51,11 @@ class sortObj {
  * @return 无
  */
 template <typename T>
-void bubbleSort(T* arr, size_t len) {
+void bubbleSort(T* arr, std::size_t len) {
   if (len < 2) return;
   using std::swap;
-  for (size_t ii = 0; ii < len; ++ii) {
-    for (size_t jj = 0; jj < len - 1 - ii; ++jj) {
+  for (std::size_t ii = 0; ii < len; ++ii) {
+    for (std::size_t jj = 0; jj < len - 1 - ii; ++jj) {
       if (arr[jj] > arr[jj + 1]) {
         swap(arr[jj], arr[jj + 1]);
       }
@@ -72,19 +72,19 @@ void bubbleSort(T* arr, size_t len) {
  * @return 无
  */
 template <typename T>
-void mergeSort(T* arr, size_t len) {
+void mergeSort(T* arr, std::size_t len) {
   if (len < 2) return;
   if (len == 2) {
     using std::swap;
     if (arr[0] > arr[1]) swap(arr[0], arr[1]);
     return;
   }
-  size_t middle = len / 2;
+  std::size_t middle = len / 2;
   mergeSort(arr, middle);
   mergeSort(arr + middle, len - middle);
   //在另外的空间排序好了再复制回来
   T* tmpArr = new T[len];
-  size_t lc = 0, rc = middle, tc = 0;
+  std::size_t lc = 0, rc = middle, tc = 0;
   while ((lc < middle) && (rc < len)) {
     tmpArr[tc++] = (arr[lc] < arr[rc]) ? arr[lc++] : arr[rc++];
   }
@@ -102,7 +102,7 @@ void mergeSort(T* arr, size_t len) {
  * @return 无
  */
 template <typename T>
-void mergeSort2(T* arr, size_t len) {
+void mergeSort2(T* arr, std::size_t len) {
   if (len < 2) return;
   using std::swap;
   if (len == 2) {
@@ -111,10 +111,10 @@ void mergeSort2(T* arr, size_t len) {
   }
 
   T *tmpArr1 = new T[len], *tmpArr0 = arr;
-  for (size_t ii = 1; ii < len; ii <<= 1) {
-    size_t jj = 0;
+  for (std::size_t ii = 1; ii < len; ii <<= 1) {
+    std::size_t jj = 0;
     while (jj + ii < len) {
-      size_t lc = jj, rc = jj + ii, tc = jj, middle = jj + ii, last = jj + 2 * ii;
+      std::size_t lc = jj, rc = jj + ii, tc = jj, middle = jj + ii, last = jj + 2 * ii;
       if (last > len) last = len;
 
       while ((lc < middle) && (rc < last)) {
@@ -152,14 +152,14 @@ void mergeSort2(T* arr, size_t len) {
  * @return 无
  */
 template <typename T>
-void quickSort(T* arr, size_t len) {
+void quickSort(T* arr, std::size_t len) {
   if (len < 2) return;
   using std::swap;
   if (len == 2) {
     if (arr[0] > arr[1]) swap(arr[0], arr[1]);
     return;
   }
-  size_t first = 0, last = len - 1, cur = first;
+  std::size_t first = 0, last = len - 1, cur = first;
   while (first < last) {
     while (first < last && arr[last] >= arr[cur]) --last;
     if (cur != last) {
@@ -186,11 +186,11 @@ void quickSort(T* arr, size_t len) {
  * @return 数据key在数组arr中首次出现的位置，没找到则返回len
  */
 template <typename T>
-size_t binarySearch(T* arr, size_t len, const T& key) {
+std::size_t binarySearch(T* arr, std::size_t len, const T& key) {
   assert(len);
-  size_t low = 0, high = len - 1;
+  std::size_t low = 0, high = len - 1;
   while (low < high) {
-    size_t mid = low + (high - low) / 2;
+    std::size_t mid = low + (high - low) / 2;
     if (arr[mid] < key)
       low = mid + 1;
     else
@@ -209,11 +209,11 @@ size_t binarySearch(T* arr, size_t len, const T& key) {
  * @return 数据key在数组arr中首次出现的位置，没找到则返回len
  */
 template <typename T>
-size_t binarySearchLast(T* arr, size_t len, const T& key) {
+std::size_t binarySearchLast(T* arr, std::size_t len, const T& key) {
   assert(len);
-  size_t low = 0, high = len - 1;
+  std::size_t low = 0, high = len - 1;
   while (low < high) {
-    size_t mid = low + (high - low + 1) / 2;
+    std::size_t mid = low + (high - low + 1) / 2;
     if (arr[mid] <= key)
       low = mid;
     else

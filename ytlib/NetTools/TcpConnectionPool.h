@@ -52,7 +52,7 @@ class ConnectionBase : boost::noncopyable {
     }
     return false;
   }
-  virtual void on_read_head(const boost::system::error_code& err, size_t read_bytes) {
+  virtual void on_read_head(const boost::system::error_code& err, std::size_t read_bytes) {
     if (read_get_err(err)) return;
     if (header[0] == TCPHEAD1 && header[1] == TCPHEAD2 && read_bytes == HEAD_SIZE) {
       uint32_t pack_size = get_num_from_buf(&header[4]);
