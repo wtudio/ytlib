@@ -37,7 +37,8 @@ source_group( "ProcessManager" FILES ${ProcessManager_Files} )
 File(GLOB_RECURSE SupportTools_Files ../SupportTools/*.h )
 source_group( "SupportTools" FILES ${SupportTools_Files} )
 
-
+File(GLOB_RECURSE misc_Files ../misc/*.h )
+source_group( "misc" FILES ${misc_Files} )
 
 File(GLOB_RECURSE Test_Files *.cpp *.h )
 source_group( "Test" FILES ${Test_Files} )
@@ -56,6 +57,7 @@ add_executable( ytTest
   ${NetTools_Files}
   ${ProcessManager_Files}
   ${SupportTools_Files}
+  ${misc_Files}
   ${Test_Files}
 )
 
