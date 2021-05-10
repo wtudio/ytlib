@@ -65,6 +65,8 @@ int32_t main(int32_t argc, char** argv) {
 
   //其他测试区
 
+  test_guid();
+
   /*
   test_bignum();
 
