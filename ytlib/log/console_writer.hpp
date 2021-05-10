@@ -1,6 +1,7 @@
 #pragma once
 
 #include "log.hpp"
+#include "log_exports.h"
 
 namespace ytlib {
 
@@ -12,6 +13,6 @@ class ConsoleWriter {
   bool print_color_ = true;
 };
 
-LogWriter GetConsoleWriter(const std::map<std::string, std::string>& cfg);
+LOG_API LogWriter GetConsoleWriter(const std::map<std::string, std::string>& cfg);
 
-}
+}  // namespace ytlib
