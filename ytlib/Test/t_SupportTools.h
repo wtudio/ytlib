@@ -11,5 +11,5 @@ void test_Serialize();
 void test_stl();
 void test_urlencode();
 void test_LoopTool();
-void test_guid();
+
 }  // namespace ytlib

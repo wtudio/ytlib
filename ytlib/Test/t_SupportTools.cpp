@@ -64,30 +64,4 @@ void test_LoopTool() {
   } while (++lt);
 }
 
-void test_guid() {
-  // 生成mac值
-  std::string mac = "testmac::abc::def";
-  std::string svr_id = "testsvr";
-  int thread_id = 123;
-  uint32_t mac_hash = std::hash<std::string>{}(mac + svr_id + std::to_string(thread_id)) % GUID_MAC_NUM;
-
-  // init工厂
-  GuidGenerFactory::Ins().InitInThread(mac_hash);
-
-  // 生成obj值
-  std::string obj_name = "test_obj_name";
-  uint32_t obj_hash = std::hash<std::string>{}(obj_name) % GUID_OBJ_NUM;
-
-  // 获取gener
-  GuidGener* gener = GuidGenerFactory::Ins().GetGuidGener(obj_hash);
-
-  // 生成guid
-  Guid guid_last = gener->GetGuid();
-  for (int ii = 0; ii < 1000; ++ii) {
-    Guid guid_cur = gener->GetGuid();
-    BOOST_TEST_NE(guid_cur.id, guid_last.id);
-    guid_last = guid_cur;
-  }
-}
-
 }  // namespace ytlib
