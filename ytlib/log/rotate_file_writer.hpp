@@ -3,6 +3,7 @@
 #include <ctime>
 #include <fstream>
 #include "log.hpp"
+#include "log_exports.h"
 
 namespace ytlib {
 
@@ -23,6 +24,6 @@ class RotateFileWriter {
   std::ofstream ofs_;
 };
 
-LogWriter GetRotateFileWriter(const std::map<std::string, std::string>& cfg);
+LOG_API LogWriter GetRotateFileWriter(const std::map<std::string, std::string>& cfg);
 
 }  // namespace ytlib

@@ -7,13 +7,11 @@ include( ${ytlib_SOURCE_DIR}/CMake/util.cmake )
 
 #定义变量，添加宏定义
 option(YTLIB_UNICODE "build ytlib with unicode" OFF)
-mark_as_advanced(YTLIB_UNICODE)
 IF (YTLIB_UNICODE)
   ADD_DEFINITIONS(-DUNICODE)
 ENDIF()
 
 option(YTLIB_DOUBLE_PRECISION "build ytlib with double precision" ON)
-mark_as_advanced(YTLIB_DOUBLE_PRECISION)
 IF (YTLIB_DOUBLE_PRECISION)
   ADD_DEFINITIONS(-DUSE_DOUBLE_PRECISION)
 ENDIF()
@@ -30,9 +28,9 @@ endif()
 
 #平台特化
 IF(WIN32)
-set( BOOST_COMPONENTS )
+  set( BOOST_COMPONENTS )
 ELSE()
-set( BOOST_COMPONENTS system date_time filesystem thread log serialization)
+  set( BOOST_COMPONENTS system date_time filesystem thread log serialization)
 ENDIF()
 
 #设定c++版本
@@ -49,9 +47,9 @@ set( YTLIB_LIBRARY_DIR )                      # ytlib库文件目录
 #依赖库
 find_package( Boost COMPONENTS ${BOOST_COMPONENTS})
 IF ( NOT Boost_FOUND )
-  message(FATAL_ERROR "Cannot find Boost library. please set the boost path")
-  mark_as_advanced( Boost_INCLUDE_DIRS Boost_LIBRARY_DIRS )
+  message(FATAL_ERROR "Cannot find Boost library. please set the Boost_INCLUDE_DIRS to boost root path.")
 ENDIF()
+mark_as_advanced( Boost_INCLUDE_DIRS Boost_LIBRARY_DIRS )
 set( YTLIB_LIBRARY_DEPEND ${YTLIB_LIBRARY_DEPEND} ${Boost_LIBRARIES})
 set( YTLIB_INCLUDE_DIR ${YTLIB_INCLUDE_DIR} ${Boost_INCLUDE_DIRS})
 set( YTLIB_LIBRARY_DIR ${YTLIB_LIBRARY_DIR} ${Boost_LIBRARY_DIRS})
@@ -87,10 +85,34 @@ ENDIF()
 
 #设置库类型
 option(BUILD_SHARED_LIBS "Build with shared libraries." OFF)
-mark_as_advanced( BUILD_SHARED_LIBS )
 IF (BUILD_SHARED_LIBS)
   ADD_DEFINITIONS(-DBUILD_SHARED_LIBS)
 ENDIF()
+
+#设置测试。测试方法（需要先编译好）：ctest -C Debug/Release
+option(BUILD_TESTS "Build tests." TRUE)
+if (BUILD_TESTS)
+  set(GTEST_ROOT "GTEST_ROOT-NOTFOUND" CACHE PATH "path to gtest install path.")
+  find_package(GTest QUIET)
+  IF ( NOT GTest_FOUND )
+    message(FATAL_ERROR "Cannot find googletest library. please set the GTEST_ROOT to googletest install path.")
+  ENDIF()
+  mark_as_advanced( GTEST_ROOT GTest_DIR)
+  set( YTLIB_INCLUDE_DIR ${YTLIB_INCLUDE_DIR} ${GTEST_INCLUDE_DIRS})
+  enable_testing()
+endif()
+
+option(BUILD_BENCH_TESTS "Build benchmark tests." TRUE)
+if (BUILD_BENCH_TESTS)
+  set(benchmark_ROOT_DIR "benchmark_ROOT_DIR-NOTFOUND" CACHE PATH "path to googlebenchmark install path.")
+  find_package(benchmark QUIET)
+  IF ( NOT benchmark_FOUND )
+    message(FATAL_ERROR "Cannot find googlebenchmark library. please set the benchmark_ROOT_DIR to googlebenchmark install path.")
+  ENDIF()
+  mark_as_advanced( benchmark_ROOT_DIR benchmark_DIR)
+  set( YTLIB_INCLUDE_DIR ${YTLIB_INCLUDE_DIR} ${benchmark_INCLUDE_DIRS})
+  enable_testing()
+endif()
 
 #链接设置
 include_directories( ${YTLIB_INCLUDE_DIR} )
@@ -114,7 +136,7 @@ configure_file( ${ytlib_SOURCE_DIR}/CMake/UseYTLIB.cmake.in  ${ytlib_BINARY_DIR}
 #导出文档
 set( ytlib_DOC_DIR ${ytlib_SOURCE_DIR}/doc )
 IF(WIN32)
-execute_process(COMMAND ${ytlib_DOC_DIR}/buildDoc.bat ${ytlib_DOC_DIR} WORKING_DIRECTORY ${ytlib_DOC_DIR})
+  execute_process(COMMAND ${ytlib_DOC_DIR}/buildDoc.bat ${ytlib_DOC_DIR} WORKING_DIRECTORY ${ytlib_DOC_DIR})
 ELSE()
-execute_process(COMMAND ${ytlib_DOC_DIR}/buildDoc.sh ${ytlib_DOC_DIR} WORKING_DIRECTORY ${ytlib_DOC_DIR})
+  execute_process(COMMAND ${ytlib_DOC_DIR}/buildDoc.sh ${ytlib_DOC_DIR} WORKING_DIRECTORY ${ytlib_DOC_DIR})
 ENDIF()

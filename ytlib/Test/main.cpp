@@ -47,10 +47,6 @@ int32_t main(int32_t argc, char** argv) {
 
   bool re = CheckIfInList("123,456,789", "123");
 
-  Log l;
-  l.SetLevel(LOG_LEVEL::L_DEBUG);
-  LOG_LEVEL ll = l.Level();
-
   //单元测试区
   //Algorithm
   test_SortAlgs();
