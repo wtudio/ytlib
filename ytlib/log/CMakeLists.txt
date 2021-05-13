@@ -1,22 +1,28 @@
-# 以当前文件夹设置目标名
-string(REGEX REPLACE ".*/\(.*\)" "\\1" CUR_DIR ${CMAKE_CURRENT_SOURCE_DIR})
-set(CUR_TARGET_NAME ${CUR_DIR})
+# 获取当前文件夹
+STRING(REGEX REPLACE ".*/\(.*\)" "\\1" CUR_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+
+# 设置目标库
+SET(CUR_TARGET_NAME ${CUR_DIR})
 
 # 设置源文件
-File(GLOB_RECURSE src *.cpp *.hpp *.h )
-source_group( ${CUR_TARGET_NAME} FILES ${src} )
+File(GLOB_RECURSE src *.cpp *.hpp *.h)
+File(GLOB_RECURSE test_files *_test.cpp)
+File(GLOB_RECURSE benchmark_files *_benchmark.cpp)
+LIST(REMOVE_ITEM src ${test_files} ${benchmark_files})
+SOURCE_GROUP(${CUR_TARGET_NAME} FILES ${src})
 
-# 动态库（SHARED）/静态库（STATIC）/跟随工程（不填）
+# 生成项目
 add_library(${CUR_TARGET_NAME} 
     ${src}
 )
 
-# 添加依赖（如果有）
-# target_link_libraries(${CUR_TARGET_NAME} xxx)
+# 添加依赖
 # add_dependencies(${CUR_TARGET_NAME} xxx)
+# target_link_libraries(${CUR_TARGET_NAME} xxx)
 
 # 其他设置
-set_target_properties(${CUR_TARGET_NAME} PROPERTIES UNITY_BUILD ON)
-SET_PROPERTY(TARGET ${CUR_TARGET_NAME} PROPERTY FOLDER "deplibs")
+set_misc_for_target(${CUR_TARGET_NAME})
 
-define_filename_macro(${CUR_TARGET_NAME})
+# 设置测试
+add_gtest_for_target(${CUR_TARGET_NAME} ${test_files})
+add_benchmark_test_for_target(${CUR_TARGET_NAME} ${benchmark_files})

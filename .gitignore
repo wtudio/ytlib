@@ -4,3 +4,4 @@ build/
 debug/
 release/
 doc/html
+doc/doxygen.log

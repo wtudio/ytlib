@@ -56,7 +56,7 @@ inline void clear_mbstate(std::mbstate_t& mbs) {
   std::memset(&mbs, 0, sizeof(std::mbstate_t));
 }
 
-inline void tostring_internal(std::string& outstr, const wchar_t* src, std::std::size_t size, std::locale const& loc) {
+inline void tostring_internal(std::string& outstr, const wchar_t* src, std::size_t size, std::locale const& loc) {
   if (size == 0) {
     outstr.clear();
     return;
@@ -68,19 +68,19 @@ inline void tostring_internal(std::string& outstr, const wchar_t* src, std::std:
   clear_mbstate(state);
 
   wchar_t const* from_first = src;
-  std::std::size_t const from_size = size;
+  std::size_t const from_size = size;
   wchar_t const* const from_last = from_first + from_size;
   wchar_t const* from_next = from_first;
 
   std::vector<char> dest(from_size);
 
   char* to_first = &dest.front();
-  std::std::size_t to_size = dest.size();
+  std::size_t to_size = dest.size();
   char* to_last = to_first + to_size;
   char* to_next = to_first;
 
   std::codecvt<wchar_t, char, std::mbstate_t>::result ret;
-  std::std::size_t converted = 0;
+  std::size_t converted = 0;
   while (from_next != from_last) {
     ret = cdcvt.out(
         state, from_first, from_last,
@@ -113,7 +113,7 @@ inline void tostring_internal(std::string& outstr, const wchar_t* src, std::std:
   outstr.assign(dest.begin(), dest.begin() + converted);
 }
 
-inline void towstring_internal(std::wstring& outstr, const char* src, std::std::size_t size, std::locale const& loc) {
+inline void towstring_internal(std::wstring& outstr, const char* src, std::size_t size, std::locale const& loc) {
   if (size == 0) {
     outstr.clear();
     return;
@@ -125,19 +125,19 @@ inline void towstring_internal(std::wstring& outstr, const char* src, std::std::
   clear_mbstate(state);
 
   char const* from_first = src;
-  std::std::size_t const from_size = size;
+  std::size_t const from_size = size;
   char const* const from_last = from_first + from_size;
   char const* from_next = from_first;
 
   std::vector<wchar_t> dest(from_size);
 
   wchar_t* to_first = &dest.front();
-  std::std::size_t to_size = dest.size();
+  std::size_t to_size = dest.size();
   wchar_t* to_last = to_first + to_size;
   wchar_t* to_next = to_first;
 
   std::codecvt<wchar_t, char, std::mbstate_t>::result ret;
-  std::std::size_t converted = 0;
+  std::size_t converted = 0;
   while (true) {
     ret = cdcvt.in(
         state, from_first, from_last,
