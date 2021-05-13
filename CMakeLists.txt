@@ -119,16 +119,24 @@ include_directories( ${YTLIB_INCLUDE_DIR} )
 link_directories( ${YTLIB_LIBRARY_DIR} )
 
 #设置下一级目录
-#StringUtil:字符串公共库
-add_subdirectory( ytlib/StringUtil )
-set( YTLIB_LIBRARY ${YTLIB_LIBRARY} StringUtil)
-
 #log:日志库
 add_subdirectory( ytlib/log )
 set( YTLIB_LIBRARY ${YTLIB_LIBRARY} log)
 
+#misc:杂项
+add_subdirectory( ytlib/misc )
+# set( YTLIB_LIBRARY ${YTLIB_LIBRARY} misc)
+
+#----------------------------以下待废弃----------------------------
+
+#StringUtil:字符串公共库
+add_subdirectory( ytlib/StringUtil )
+set( YTLIB_LIBRARY ${YTLIB_LIBRARY} StringUtil)
+
 #TEST:测试项目
 add_subdirectory( ytlib/Test )
+
+#----------------------------以上待废弃----------------------------
 
 #提供给使用者的配置文件config.in
 configure_file( ${ytlib_SOURCE_DIR}/CMake/UseYTLIB.cmake.in  ${ytlib_BINARY_DIR}/UseYTLIB.cmake @ONLY )

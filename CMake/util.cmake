@@ -65,6 +65,48 @@ function(add_benchmark_test_for_target target test_src)
     endif()
 endfunction()
 
+# 为hpp类库添加gtest项目
+function(add_gtest_for_hpp target test_src)
+    if (BUILD_TESTS)
+        set(target_test_name ${target}_test)
+
+        SOURCE_GROUP(${target_test_name} FILES ${test_src})
+
+        add_executable(${target_test_name} 
+            ${test_src}
+        )
+
+        target_link_libraries(${target_test_name} GTest::GTest GTest::Main)
+
+        set_target_properties(${target_test_name} PROPERTIES UNITY_BUILD ON)
+        SET_PROPERTY(TARGET ${target_test_name} PROPERTY FOLDER ${target})
+        define_filename_macro(${target_test_name})
+
+        add_test(NAME ${target_test_name} COMMAND $<TARGET_FILE:${target_test_name}>)
+    endif()
+endfunction()
+
+# 为hpp类库添加benchmark test项目
+function(add_benchmark_test_for_hpp target test_src)
+    if (BUILD_BENCH_TESTS)
+        set(target_test_name ${target}_benchmark)
+
+        SOURCE_GROUP(${target_test_name} FILES ${test_src})
+
+        add_executable(${target_test_name} 
+            ${test_src}
+        )
+
+        target_link_libraries(${target_test_name} benchmark::benchmark)
+
+        set_target_properties(${target_test_name} PROPERTIES UNITY_BUILD ON)
+        SET_PROPERTY(TARGET ${target_test_name} PROPERTY FOLDER ${target})
+        define_filename_macro(${target_test_name})
+
+        add_test(NAME ${target_test_name} COMMAND $<TARGET_FILE:${target_test_name}>)
+    endif()
+endfunction()
+
 # 为目标库设置杂项
 function(set_misc_for_target target)
     set_target_properties(${target} PROPERTIES UNITY_BUILD ON)

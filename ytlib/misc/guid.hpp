@@ -14,24 +14,22 @@
 
 #include <cinttypes>
 #include <ctime>
-#include <map>
 
 namespace ytlib {
 
 // GUID相关配置，总位数不要超过64
 enum {
-  GUID_MAC_BIT = 10,                 // 机器/线程编号占位数。不要设置超过32位
+  GUID_MAC_BIT = 18,                 // 机器/线程编号占位数。不要设置超过32位
   GUID_MAC_NUM = 1 << GUID_MAC_BIT,  // 最大机器/线程数
 
-  GUID_OBJ_BIT = 12,                 // obj编号占位数。不要设置超过32位
+  GUID_OBJ_BIT = 7,                  // obj编号占位数。不要设置超过32位
   GUID_OBJ_NUM = 1 << GUID_OBJ_BIT,  // 最大obj类别数
 
-  GUID_TIME0 = 1564210961,  // 初始时间
+  GUID_TIME0 = 1609430400,  // 初始时间：2021-01-01 00:00:00
   GUID_TIME_BIT = 29,       // 时间戳使用29位，大概够用十几年。不要设置超过32位
 
-  GUID_INST_BIT = 13,                  // 每秒实例编号占位数。不要设置超过32位
+  GUID_INST_BIT = 10,                  // 每秒实例编号占位数。不要设置超过32位
   GUID_INST_NUM = 1 << GUID_INST_BIT,  // 每秒最大实例数
-
 };
 
 // GUID实例
@@ -46,78 +44,75 @@ union Guid {
   uint64_t id;
 };
 
-// 对应一个mac+obj，生成guid，应用于单线程场景下
+// GuidGener，非线程安全，应用于单线程场景下
 class GuidGener {
-  friend class GuidGenerFactory;
-
  public:
-  // 获取guid
-  Guid GetGuid() {
-    uint32_t cur_t = (uint32_t)time(0) - GUID_TIME0;
-
-    if (cur_t > guid_.t) {
-      guid_.t = cur_t;
-      guid_.ins = 0;
-    }
-
-    if (guid_.ins < GUID_INST_NUM) {
-      ++guid_.ins;
-    } else {
-      ++guid_.t;
-      guid_.ins = 0;
-    }
-
-    return guid_;
+  virtual ~GuidGener() {
+    if (guid_buf_ != nullptr) delete[] guid_buf_;
   }
 
- private:
-  GuidGener(uint32_t mac_id, uint32_t obj_id) {
-    guid_.id = 0;
-    guid_.mac = mac_id;
-    guid_.obj = obj_id;
-  }
-  ~GuidGener() {}
-
-  Guid guid_;
-};
-
-// GuidGener工厂类，应用于单线程场景下
-class GuidGenerFactory {
- public:
-  ~GuidGenerFactory() {
-    for (auto& itr : guid_gener_buf_)
-      delete itr.second;
-  }
-
-  // 线程级单例
-  static GuidGenerFactory& Ins() {
-    static thread_local GuidGenerFactory instance;
+  // 单例
+  static GuidGener &Ins() {
+    static thread_local GuidGener instance;
     return instance;
   }
 
   // 设置初始mac值，mac值不应超过GUID_MAC_BIT位，mac值应能在整个guid系统内部唯一标识一个线程
-  void InitInThread(uint32_t mac_id) {
-    mac_id_ = mac_id;
+  void Init(uint32_t mac_id) {
+    assert(mac_id < GUID_MAC_NUM);
+
+    guid_buf_ = new Guid[GUID_OBJ_NUM];
+    for (uint32_t ii = 0; ii < GUID_OBJ_NUM; ++ii) {
+      guid_buf_[ii].id = 0;
+      guid_buf_[ii].mac = mac_id;
+      guid_buf_[ii].obj = ii;
+    }
   };
 
-  // 根据obj_id获取GuidGener，obj_id值不应超过GUID_OBJ_NUM，obj_id应能在当前线程下唯一标识一种实例
-  GuidGener* GetGuidGener(uint32_t obj_id) {
-    auto finditr = guid_gener_buf_.find(obj_id);
-    if (finditr != guid_gener_buf_.end())
-      return finditr->second;
+  // 根据obj_id获取guid，obj_id值不应超过GUID_OBJ_NUM，obj_id应能在当前线程下唯一标识一种实例
+  Guid GetGuid(uint32_t obj_id) {
+    Guid &guid = guid_buf_[obj_id];
+    uint32_t cur_t = (uint32_t)time(0) - GUID_TIME0;
 
-    GuidGener* gener = new GuidGener(mac_id_, obj_id);
-    guid_gener_buf_.emplace(obj_id, gener);
-    return gener;
+    if (cur_t > guid.t) {
+      guid.t = cur_t;
+      guid.ins = 0;
+    } else if (guid.ins < GUID_INST_NUM) {
+      ++guid.ins;
+    } else {
+      ++guid.t;
+      guid.ins = 0;
+    }
+
+    return guid;
   }
 
- private:
-  GuidGenerFactory() {
+ protected:
+  GuidGener() {
     static_assert(GUID_MAC_BIT + GUID_OBJ_BIT + GUID_TIME_BIT + GUID_INST_BIT <= 64, "guid size should be less than 64 bits");
   }
 
-  uint32_t mac_id_;
-  std::map<uint32_t, GuidGener*> guid_gener_buf_;
+  Guid *guid_buf_ = nullptr;
+};
+
+// 对应一个mac+obj，生成guid，应用于单线程场景下
+class ObjGuidGener {
+ public:
+  ObjGuidGener() {}
+  ~ObjGuidGener() {}
+
+  void Init(uint32_t obj_id) {
+    assert(obj_id < GUID_OBJ_NUM);
+    obj_id_ = obj_id;
+  }
+
+  // 获取guid
+  Guid GetGuid() {
+    return GuidGener::Ins().GetGuid(obj_id_);
+  }
+
+ private:
+  uint32_t obj_id_ = 0;
 };
 
 }  // namespace ytlib

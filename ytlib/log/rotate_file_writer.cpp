@@ -2,9 +2,19 @@
 #include <cstring>
 #include <filesystem>
 
+#if defined(_WIN32)
+  #define localtime_r(a, b) localtime_s(b, a)
+#endif
+
 namespace ytlib {
 
-const std::ofstream::pos_type RotateFileWriter::MAX_FILE_SIZE = 10 * 1024 * 1024;
+RotateFileWriter::~RotateFileWriter() {
+  if (ofs_.is_open()) {
+    ofs_.flush();
+    ofs_.clear();
+    ofs_.close();
+  }
+}
 
 void RotateFileWriter::Write(const LogData& data) {
   if (CheckNeedRotate() && (0 != OpenNewFile()))
@@ -27,17 +37,24 @@ int RotateFileWriter::Open(const std::string& file) {
   return OpenNewFile();
 }
 
+void RotateFileWriter::SetMaxFileSize(size_t max_file_size) {
+  // 至少1M
+  if (max_file_size > 1024 * 1024)
+    max_file_size_ = max_file_size;
+}
+
 bool RotateFileWriter::CheckNeedRotate() {
   auto now = std::chrono::system_clock::now();
   time_t cnow = std::chrono::system_clock::to_time_t(now);
-  auto* now_tm = std::localtime(&cnow);
-  if (now_tm->tm_hour != t_.tm_hour || now_tm->tm_yday != t_.tm_yday)
+  struct tm now_tm;
+  localtime_r(&cnow, &now_tm);
+  if (now_tm.tm_hour != t_.tm_hour || now_tm.tm_yday != t_.tm_yday)
     return true;
 
   if (!ofs_.is_open())
     return true;
 
-  if (ofs_.tellp() > MAX_FILE_SIZE)
+  if (ofs_.tellp() > max_file_size_)
     return true;
 
   return false;
@@ -51,7 +68,7 @@ int RotateFileWriter::OpenNewFile() {
 
   auto now = std::chrono::system_clock::now();
   time_t cnow = std::chrono::system_clock::to_time_t(now);
-  t_ = *(std::localtime(&cnow));
+  localtime_r(&cnow, &t_);
 
   char name_buf[128];
   snprintf(name_buf, sizeof(name_buf), "%s_%04d%02d%02d_%02d%02d%02d", base_file_name_.c_str(),
@@ -87,6 +104,12 @@ LogWriter GetRotateFileWriter(const std::map<std::string, std::string>& cfg) {
   }
 
   auto pw = std::make_shared<RotateFileWriter>();
+
+  auto max_file_size_itr = cfg.find("max_file_size_m");
+  if (max_file_size_itr != cfg.end()) {
+    pw->SetMaxFileSize(std::atoll(max_file_size_itr->second.c_str()) * 1024 * 1024);
+  }
+
   if (pw->Open(full_path) != 0) {
     fprintf(stderr, "RotateFileWriter.Open %s fail: %s\n", full_path.c_str(), strerror(errno));
     return LogWriter();
