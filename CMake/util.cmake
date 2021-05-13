@@ -33,7 +33,7 @@ function(add_gtest_for_target target test_src)
         )
 
         add_dependencies(${target_test_name} ${target})
-        target_link_libraries(${target_test_name} ${target} GTest::gtest GTest::gtest_main)
+        target_link_libraries(${target_test_name} ${target} GTest::GTest GTest::Main)
 
         set_target_properties(${target_test_name} PROPERTIES UNITY_BUILD ON)
         SET_PROPERTY(TARGET ${target_test_name} PROPERTY FOLDER ${target})
