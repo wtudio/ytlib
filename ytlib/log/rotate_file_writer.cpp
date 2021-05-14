@@ -1,12 +1,35 @@
 #include "rotate_file_writer.hpp"
 #include <cstring>
+#include <ctime>
 #include <filesystem>
+#include <fstream>
 
 #if defined(_WIN32)
   #define localtime_r(a, b) localtime_s(b, a)
 #endif
 
 namespace ytlib {
+
+class RotateFileWriter {
+ public:
+  ~RotateFileWriter();
+
+  void Write(const LogData& data);
+  int Open(const std::string& file);
+
+  void SetMaxFileSize(size_t max_file_size);
+
+ private:
+  bool CheckNeedRotate();
+  int OpenNewFile();
+
+ private:
+  std::string base_file_name_;  // 基础文件路径
+  struct tm t_;                 // 当前文件创建时间
+  std::ofstream ofs_;
+
+  std::ofstream::pos_type max_file_size_ = 16 * 1024 * 1024;  // 最大日志文件大小，默认16M
+};
 
 RotateFileWriter::~RotateFileWriter() {
   if (ofs_.is_open()) {

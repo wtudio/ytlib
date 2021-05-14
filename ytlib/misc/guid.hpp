@@ -53,7 +53,7 @@ class GuidGener {
 
   // 单例
   static GuidGener &Ins() {
-    static thread_local GuidGener instance;
+    thread_local GuidGener instance;
     return instance;
   }
 

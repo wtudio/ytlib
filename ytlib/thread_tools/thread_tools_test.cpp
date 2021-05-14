@@ -2,10 +2,13 @@
 
 #include "block_queue.hpp"
 #include "channel.hpp"
+#include "thread_id.hpp"
 #include "ytlib/misc/misc_macro.h"
 
 #include <atomic>
 #include <iostream>
+#include <map>
+#include <set>
 #include <string>
 #include <thread>
 
@@ -42,7 +45,7 @@ class TestObj {
 uint32_t TestObj::gid = 0;
 
 // 测试Channel
-TEST(THREAD_TOOLS_TEST, CHANNEL_BASE) {
+TEST(THREAD_TOOLS_TEST, Channel_BASE) {
   using TestChannel = ytlib::Channel<TestObj>;
 
   std::atomic<uint32_t> ct = 0;
@@ -66,7 +69,7 @@ TEST(THREAD_TOOLS_TEST, CHANNEL_BASE) {
 }
 
 // 测试BlockQueue基础同步操作
-TEST(THREAD_TOOLS_TEST, BLOCK_QUEUE_BASE) {
+TEST(THREAD_TOOLS_TEST, BlockQueue_BASE) {
   using BckQueue = ytlib::BlockQueue<TestObj>;
   TestObj::gid = 0;
   uint32_t n = 5;
@@ -105,7 +108,7 @@ TEST(THREAD_TOOLS_TEST, BLOCK_QUEUE_BASE) {
 }
 
 // 测试BlockQueue异步操作
-TEST(THREAD_TOOLS_TEST, BLOCK_QUEUE_ANYSC) {
+TEST(THREAD_TOOLS_TEST, BlockQueue_ANYSC) {
   using BckQueue = ytlib::BlockQueue<TestObj>;
   TestObj::gid = 0;
   BckQueue qu(100);
@@ -138,4 +141,43 @@ TEST(THREAD_TOOLS_TEST, BLOCK_QUEUE_ANYSC) {
   t1.join();
   t2.join();
   ASSERT_EQ(ct, 1);
+}
+
+// 测试ThreadIdTool
+TEST(THREAD_TOOLS_TEST, ThreadIdTool) {
+  using ytlib::ThreadIdTool;
+
+  uint64_t tid = ytlib::GetThreadId();
+  for (uint32_t ii = 0; ii < 100; ++ii) {
+    ASSERT_EQ(ytlib::GetThreadId(), tid);
+  }
+
+  const uint32_t thread_num = 10;
+  std::mutex mu;
+  std::map<uint32_t, uint64_t> thread_id_map;
+
+  std::list<std::thread> threads;
+  for (uint32_t ii = 0; ii < thread_num; ++ii) {
+    threads.emplace(threads.end(), [&, ii] {
+      std::this_thread::sleep_for(std::chrono::milliseconds(1));
+      uint64_t tid = ytlib::GetThreadId();
+      for (uint32_t ii = 0; ii < 100; ++ii) {
+        ASSERT_EQ(ytlib::GetThreadId(), tid);
+      }
+
+      mu.lock();
+      thread_id_map.emplace(ii, tid);
+      mu.unlock();
+    });
+  }
+
+  for (auto itr = threads.begin(); itr != threads.end(); itr++) {
+    itr->join();
+  }
+
+  std::set<uint64_t> thread_id_set;
+  for (auto &itr : thread_id_map) {
+    ASSERT_EQ(thread_id_set.find(itr.second) == thread_id_set.end(), true);
+    thread_id_set.insert(itr.second);
+  }
 }

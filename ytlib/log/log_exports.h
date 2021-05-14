@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ytlib/Common/shared_lib_def.h"
+#include "ytlib/misc/shared_lib_def.h"
 
 #if defined(log_EXPORTS)
   #define LOG_API YT_DECLSPEC_EXPORT

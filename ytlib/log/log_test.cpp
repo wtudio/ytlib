@@ -4,7 +4,7 @@
 
 using ytlib::Log;
 
-TEST(HelloTest, BasicAssertions) {
-  Log::Ins().SetLevel(ytlib::LOG_LEVEL::L_INFO);
-  EXPECT_EQ(Log::Ins().Level(), ytlib::LOG_LEVEL::L_INFO);
+TEST(LOG_TEST, LEVEL) {
+  Log::Ins().SetLevel(ytlib::LOG_LEVEL::L_FATAL);
+  EXPECT_EQ(Log::Ins().Level(), ytlib::LOG_LEVEL::L_FATAL);
 }

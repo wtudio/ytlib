@@ -1,5 +1,10 @@
 #pragma once
 
+// 在cmake中调用【define_filename_macro】来定义__FILENAME__，以在日志中打印相对路径
+#if !defined(__FILENAME__)
+  #define __FILENAME__ __FILE__
+#endif
+
 #define _STRING(x) #x
 #define STRING(x) _STRING(x)
 #define COMMON_FMT(fmt) "[" __FILENAME__ ":" STRING(__LINE__) "@%s]" fmt "\n", __FUNCTION__

@@ -62,13 +62,4 @@
   #endif
 #endif
 
-#if !defined(__FILENAME__)
-  #define __FILENAME__ __FILE__
-#endif
-
-#define _STRING(x) #x
-#define STRING(x) _STRING(x)
-#define COMMON_FMT(fmt) "[" __FILENAME__ ":" STRING(__LINE__) "@%s]" fmt "\n", __FUNCTION__
-
-#define YT_DEBUG_PRINTF(fmt, ...) printf(COMMON_FMT(fmt), ##__VA_ARGS__)
-
+#define YT_DEBUG_PRINTF(fmt, ...) printf(fmt, ##__VA_ARGS__)

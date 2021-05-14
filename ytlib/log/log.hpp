@@ -106,7 +106,7 @@ class Log {
 
     va_list argp;
     va_start(argp, fmt);
-    TraceReal(lvl, ctx, fmt, argp);
+    TraceHandle(lvl, ctx, fmt, argp);
     va_end(argp);
   }
   void Trace(LOG_LEVEL lvl, const Ctx& ctx, const char* fmt, ...) {
@@ -114,7 +114,7 @@ class Log {
 
     va_list argp;
     va_start(argp, fmt);
-    TraceReal(lvl, ctx, fmt, argp);
+    TraceHandle(lvl, ctx, fmt, argp);
     va_end(argp);
   }
 
@@ -136,11 +136,11 @@ class Log {
   Log() {}
 
   uint64_t GetThreadId() {
-    static thread_local uint64_t thread_id = std::hash<std::thread::id>{}(std::this_thread::get_id());  // 缓存的线程id
+    thread_local uint64_t thread_id = std::hash<std::thread::id>{}(std::this_thread::get_id());  // 缓存的线程id
     return thread_id;
   }
 
-  void TraceReal(LOG_LEVEL lvl, const Ctx& ctx, const char* fmt, va_list argp) {
+  void TraceHandle(LOG_LEVEL lvl, const Ctx& ctx, const char* fmt, va_list argp) {
     LogData* log_data;
     log_buf_queue_.Dequeue(log_data);
     vsnprintf(log_data->msg, MAX_BUF_SIZE, fmt, argp);
@@ -153,16 +153,12 @@ class Log {
     log_channel_.Enqueue(log_data);
   }
 
-  LOG_LEVEL lvl_ = LOG_LEVEL::L_INFO;  // 日志打印级别
-
-  std::shared_mutex ctx_mutex_;
-  std::stack<Ctx> ctx_stack_;  // context
-
-  std::vector<LogWriter> writers_;  // writer
-
+  LOG_LEVEL lvl_ = LOG_LEVEL::L_INFO;   // 日志打印级别
+  std::shared_mutex ctx_mutex_;         // context锁
+  std::stack<Ctx> ctx_stack_;           // context
+  std::vector<LogWriter> writers_;      // writer
   std::vector<LogData> log_buf_;        // log缓冲
   BlockQueue<LogData*> log_buf_queue_;  // log缓冲管理队列
-
-  Channel<LogData*> log_channel_;  // log线程
+  Channel<LogData*> log_channel_;       // log线程
 };
 }  // namespace ytlib
