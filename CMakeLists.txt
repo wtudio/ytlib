@@ -119,6 +119,10 @@ include_directories( ${YTLIB_INCLUDE_DIR} )
 link_directories( ${YTLIB_LIBRARY_DIR} )
 
 #设置下一级目录
+#thread_tools:线程相关工具
+add_subdirectory( ytlib/thread_tools )
+# set( YTLIB_LIBRARY ${YTLIB_LIBRARY} misc)
+
 #log:日志库
 add_subdirectory( ytlib/log )
 set( YTLIB_LIBRARY ${YTLIB_LIBRARY} log)
@@ -126,6 +130,8 @@ set( YTLIB_LIBRARY ${YTLIB_LIBRARY} log)
 #misc:杂项
 add_subdirectory( ytlib/misc )
 # set( YTLIB_LIBRARY ${YTLIB_LIBRARY} misc)
+
+
 
 #----------------------------以下待废弃----------------------------
 
