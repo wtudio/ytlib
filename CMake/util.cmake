@@ -60,8 +60,6 @@ function(add_benchmark_test_for_target target test_src)
         set_target_properties(${target_test_name} PROPERTIES UNITY_BUILD ON)
         SET_PROPERTY(TARGET ${target_test_name} PROPERTY FOLDER ${target})
         define_filename_macro(${target_test_name})
-
-        add_test(NAME ${target_test_name} COMMAND $<TARGET_FILE:${target_test_name}>)
     endif()
 endfunction()
 
@@ -102,8 +100,6 @@ function(add_benchmark_test_for_hpp target test_src)
         set_target_properties(${target_test_name} PROPERTIES UNITY_BUILD ON)
         SET_PROPERTY(TARGET ${target_test_name} PROPERTY FOLDER ${target})
         define_filename_macro(${target_test_name})
-
-        add_test(NAME ${target_test_name} COMMAND $<TARGET_FILE:${target_test_name}>)
     endif()
 endfunction()
 
