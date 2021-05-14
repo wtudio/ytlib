@@ -8,6 +8,7 @@
  */
 #pragma once
 
+#include <cassert>
 #include <list>
 #include <thread>
 #include "block_queue.hpp"
@@ -35,17 +36,17 @@ class Channel : public BlockQueue<T> {
     assert(f_);
     for (uint32_t ii = 0; ii < th_size_; ++ii) {
       threads_.emplace(threads_.end(), [&] {
-        std::unique_lock<std::mutex> lck(mutex_);
+        std::unique_lock<std::mutex> lck(BlockQueue<T>::mutex_);
         while (true) {
-          while (!queue_.empty()) {
-            T data(std::move(queue_.front()));
-            queue_.pop();
+          while (!BlockQueue<T>::queue_.empty()) {
+            T data(std::move(BlockQueue<T>::queue_.front()));
+            BlockQueue<T>::queue_.pop();
             lck.unlock();
             f_(std::move(data));
             lck.lock();
           }
-          if (!running_flag_) return;
-          cond_.wait(lck);
+          if (!BlockQueue<T>::running_flag_) return;
+          BlockQueue<T>::cond_.wait(lck);
         }
       });
     }

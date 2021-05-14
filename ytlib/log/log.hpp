@@ -91,7 +91,7 @@ class Log {
       log_buf_queue_.Enqueue(p);
     });
 
-    log_channel_.Start();
+    log_channel_.StartProcess();
   }
 
   void SetLevel(LOG_LEVEL lvl) { lvl_ = lvl; }
@@ -141,7 +141,8 @@ class Log {
   }
 
   void TraceReal(LOG_LEVEL lvl, const Ctx& ctx, const char* fmt, va_list argp) {
-    LogData* log_data = log_buf_queue_.Dequeue();
+    LogData* log_data;
+    log_buf_queue_.Dequeue(log_data);
     vsnprintf(log_data->msg, MAX_BUF_SIZE, fmt, argp);
 
     log_data->lvl = lvl;
