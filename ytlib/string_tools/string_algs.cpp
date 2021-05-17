@@ -7,14 +7,7 @@
  * @email 905976782@qq.com
  * @date 2019-07-26
  */
-#pragma once
-
-#include <algorithm>
-#include <cassert>
-#include <cstring>
-#include <map>
-#include <string>
-#include <vector>
+#include "string_algs.hpp"
 
 namespace ytlib {
 /**
@@ -26,7 +19,7 @@ namespace ytlib {
  * @param pslen 字符串ps的长度
  * @return 字符串ps首次出现在ss中的位置，如果未出现则返回sslen
  */
-inline std::size_t KMP(const char* ss, std::size_t sslen, const char* ps, std::size_t pslen) {
+std::size_t KMP(const char* ss, std::size_t sslen, const char* ps, std::size_t pslen) {
   assert(sslen && pslen && ss != NULL && ps != NULL);
   if (pslen > sslen || pslen == 0) return sslen;
   int32_t* next = new int32_t[pslen];  //制作next数组
@@ -53,16 +46,6 @@ inline std::size_t KMP(const char* ss, std::size_t sslen, const char* ps, std::s
   delete[] next;
   return (jj == pslen) ? (ii - jj) : sslen;
 }
-/**
- * @brief 字符串匹配kmp算法（std::string形式）
- * @details 调用了char数组形式kmp
- * @param ss 要被匹配的长字符串
- * @param ps 要匹配的短字符串
- * @return 字符串ps首次出现在ss中的位置，如果未出现则返回ss.length()
- */
-inline std::size_t KMP(const std::string& ss, const std::string& ps) {
-  return KMP(ss.c_str(), ss.length(), ps.c_str(), ps.length());
-}
 
 /**
  * @brief 计算字符串差异度
@@ -73,7 +56,7 @@ inline std::size_t KMP(const std::string& ss, const std::string& ps) {
  * @param s2len 字符串2长度
  * @return 字符串1和字符串2的差异度
  */
-inline std::size_t StrDif(const char* s1, std::size_t s1len, const char* s2, std::size_t s2len) {
+std::size_t StrDif(const char* s1, std::size_t s1len, const char* s2, std::size_t s2len) {
   assert(s1len && s2len && s1 != NULL && s2 != NULL);
   if (s2len > s1len) return StrDif(s2, s2len, s1, s1len);  //默认s1len>=s2len
 
@@ -98,16 +81,6 @@ inline std::size_t StrDif(const char* s1, std::size_t s1len, const char* s2, std
   delete[] M1, M2;
   return re;
 }
-/**
- * @brief 计算字符串差异度（std::string形式）
- * @details 调用char数组形式StrDif
- * @param s1 字符串1
- * @param s2 字符串2
- * @return 字符串1和字符串2的差异度
- */
-inline std::size_t StrDif(const std::string& s1, const std::string& s2) {
-  return StrDif(s1.c_str(), s1.length(), s2.c_str(), s2.length());
-}
 
 /**
  * @brief 最长不重复子串
@@ -116,7 +89,7 @@ inline std::size_t StrDif(const std::string& s1, const std::string& s2) {
  * @param len 字符串长度
  * @return 最长不重复子串出现的位置和长度
  */
-inline std::pair<std::size_t, std::size_t> LongestSubStrWithoutDup(const char* s, std::size_t len) {
+std::pair<std::size_t, std::size_t> LongestSubStrWithoutDup(const char* s, std::size_t len) {
   assert(len && s != NULL);
   std::size_t positions[256];                                    //每种字符上一次出现的位置
   for (std::size_t ii = 0; ii < len; ++ii) positions[ii] = len;  //初始化为len，表示没出现
@@ -142,9 +115,6 @@ inline std::pair<std::size_t, std::size_t> LongestSubStrWithoutDup(const char* s
   }
   return std::pair<std::size_t, std::size_t>(maxPos, maxLen);
 }
-inline std::pair<std::size_t, std::size_t> LongestSubStrWithoutDup(const std::string& s) {
-  return LongestSubStrWithoutDup(s.c_str(), s.length());
-}
 
 /**
  * @brief 替换所有
@@ -155,7 +125,7 @@ inline std::pair<std::size_t, std::size_t> LongestSubStrWithoutDup(const std::st
  * @param newValue 要替换成的字符串
  * @return 无
  */
-inline void replaceAll(std::string& str, const std::string& oldValue, const std::string& newValue) {
+void replaceAll(std::string& str, const std::string& oldValue, const std::string& newValue) {
   std::vector<std::size_t> vecPos;
   std::size_t iPos = 0, oldLen = oldValue.size(), newLen = newValue.size();
   while (std::string::npos != (iPos = str.find(oldValue, iPos))) {
@@ -202,7 +172,7 @@ inline void replaceAll(std::string& str, const std::string& oldValue, const std:
  * @param seperators 分割字符
  * @return 分割结果vector
  */
-inline std::vector<std::string> splitAll(const std::string& str, const std::string& seperators) {
+std::vector<std::string> splitAll(const std::string& str, const std::string& seperators) {
   std::vector<std::string> re;
   std::size_t pos1, pos2 = 0;
   do {

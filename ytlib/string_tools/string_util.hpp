@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-#include "ytlib/Common/Util.h"
+#include "string_tools_exports.h"
 
 namespace ytlib {
 
@@ -24,7 +24,7 @@ inline std::string WithDef(const std::string& val, const std::string& defval = "
  * @param s 待处理字符串
  * @return 处理后的字符串
  */
-std::string& trim(std::string& s);
+STRING_TOOLS_API std::string& trim(std::string& s);
 
 /**
  * @brief 带默认值的获取map<string,string>中val数据
@@ -47,9 +47,9 @@ inline std::string GetMapItemWithDef(const std::map<std::string, std::string>& m
  * @param trimempty 是否去除空格
  * @return 解析后的map
  */
-std::map<std::string, std::string> SplitToMap(const std::string& source,
-                                              const std::string& vsep = "&",
-                                              const std::string& msep = "=", bool trimempty = true);
+STRING_TOOLS_API std::map<std::string, std::string> SplitToMap(const std::string& source,
+                                                               const std::string& vsep = "&",
+                                                               const std::string& msep = "=", bool trimempty = true);
 
 /**
  * @brief 拼接map为a=1&b=2&c=3形式的string
@@ -58,8 +58,8 @@ std::map<std::string, std::string> SplitToMap(const std::string& source,
  * @param msep 单个kv内部的分隔符
  * @return 拼接后的字符串
  */
-std::string JoinMap(const std::map<std::string, std::string>& kvmap, const std::string& vsep = "&",
-                    const std::string& msep = "=");
+STRING_TOOLS_API std::string JoinMap(const std::map<std::string, std::string>& kvmap, const std::string& vsep = "&",
+                                     const std::string& msep = "=");
 
 /**
  * @brief 向s中添加kv字段
@@ -85,9 +85,9 @@ inline void SetParamsKV(std::string& s, const std::string& key, const std::strin
  * @param trimempty 是否对每项结果去除空格
  * @return key对应的val
  */
-std::string GetValueFromStrKV(const std::string& str, const std::string& key,
-                              const std::string& vsep = "&", const std::string& msep = "=",
-                              bool trimempty = true);
+STRING_TOOLS_API std::string GetValueFromStrKV(const std::string& str, const std::string& key,
+                                               const std::string& vsep = "&", const std::string& msep = "=",
+                                               bool trimempty = true);
 
 /**
  * @brief 分割字符串到vector
@@ -97,8 +97,8 @@ std::string GetValueFromStrKV(const std::string& str, const std::string& key,
  * @param trimempty 是否对每项结果去除空格
  * @return 分割结果
  */
-std::vector<std::string> SplitToVec(const std::string& source, const std::string& separators,
-                                    bool cleanempty = true, bool trimempty = true);
+STRING_TOOLS_API std::vector<std::string> SplitToVec(const std::string& source, const std::string& separators,
+                                                     bool cleanempty = true, bool trimempty = true);
 
 /**
  * @brief 拼接vector到string
@@ -106,7 +106,7 @@ std::vector<std::string> SplitToVec(const std::string& source, const std::string
  * @param separators 分隔符
  * @return 拼接后的字符串
  */
-std::string JoinVec(const std::vector<std::string>& vec, const std::string& separators);
+STRING_TOOLS_API std::string JoinVec(const std::vector<std::string>& vec, const std::string& separators);
 
 /**
  * @brief 拼接set到string
@@ -114,7 +114,7 @@ std::string JoinVec(const std::vector<std::string>& vec, const std::string& sepa
  * @param separators 分隔符
  * @return 拼接后的字符串
  */
-std::string JoinSet(const std::set<std::string>& st, const std::string& separators);
+STRING_TOOLS_API std::string JoinSet(const std::set<std::string>& st, const std::string& separators);
 
 /**
  * @brief 比较版本，如6.1.1 6.2.8
@@ -122,7 +122,7 @@ std::string JoinSet(const std::set<std::string>& st, const std::string& separato
  * @param ver2 版本2
  * @return 返回1是大于，返回0是相等，返回-1是小于
  */
-int CmpVersion(const std::string& ver1, const std::string& ver2);
+STRING_TOOLS_API int CmpVersion(const std::string& ver1, const std::string& ver2);
 
 /**
  * @brief 比较ios版本。去除掉版本字段中的“ios”字符串后再调用CmpVersion
@@ -130,7 +130,7 @@ int CmpVersion(const std::string& ver1, const std::string& ver2);
  * @param ver2 版本2
  * @return 返回1是大于，返回0是相等，返回-1是小于
  */
-int IosCmpVersion(const std::string& ver1, const std::string& ver2);
+STRING_TOOLS_API int IosCmpVersion(const std::string& ver1, const std::string& ver2);
 
 /**
  * @brief 检查版本是否处于设定版本之间。需要保证start_ver<end_ver。若end_ver空，则设为999.9.9.9
@@ -139,8 +139,8 @@ int IosCmpVersion(const std::string& ver1, const std::string& ver2);
  * @param end_ver 结束版本
  * @return 返回true是在传入的版本之间
  */
-bool CheckVersionInside(const std::string& ver, const std::string& start_ver,
-                        const std::string& end_ver);
+STRING_TOOLS_API bool CheckVersionInside(const std::string& ver, const std::string& start_ver,
+                                         const std::string& end_ver);
 
 /**
  * @brief 将一个字符串中指定字符串ov换为字符串nv
@@ -149,14 +149,14 @@ bool CheckVersionInside(const std::string& ver, const std::string& start_ver,
  * @param nv 要替换成的子字符串
  * @return 替换后的字符串
  */
-std::string& ReplaceString(std::string& str, const std::string& ov, const std::string& nv);
+STRING_TOOLS_API std::string& ReplaceString(std::string& str, const std::string& ov, const std::string& nv);
 
 /**
  * @brief 判断字符串是否为数字和字母组成
  * @param str 待判断字符串
  * @return 是否为数字和字母组成
  */
-bool IsAlnumStr(const std::string& str);
+STRING_TOOLS_API bool IsAlnumStr(const std::string& str);
 
 /**
  * @brief 判断key字符串是否在list字符串中，如"123"是否在"123,456,789"中
@@ -166,7 +166,7 @@ bool IsAlnumStr(const std::string& str);
  * @param sep list的分隔符
  * @return key是否在list中
  */
-bool CheckIfInList(const std::string& strlist, const std::string& key, char sep = ',');
+STRING_TOOLS_API bool CheckIfInList(const std::string& strlist, const std::string& key, char sep = ',');
 
 /**
  * @brief 获取map中的key的集合

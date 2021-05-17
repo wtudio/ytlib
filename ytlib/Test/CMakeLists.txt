@@ -37,9 +37,6 @@ source_group( "ProcessManager" FILES ${ProcessManager_Files} )
 File(GLOB_RECURSE SupportTools_Files ../SupportTools/*.h )
 source_group( "SupportTools" FILES ${SupportTools_Files} )
 
-File(GLOB_RECURSE misc_Files ../misc/*.h )
-source_group( "misc" FILES ${misc_Files} )
-
 File(GLOB_RECURSE Test_Files *.cpp *.h )
 source_group( "Test" FILES ${Test_Files} )
 
@@ -63,8 +60,4 @@ add_executable( ytTest
 
 target_link_libraries(ytTest ${YTLIB_LIBRARY_DEPEND} )
 
-Set( deplibs StringUtil log)
-target_link_libraries(ytTest ${deplibs})
-add_dependencies(ytTest ${deplibs})
-
-define_filename_macro(ytTest)
+set_misc_for_target(ytTest)

@@ -1,7 +1,6 @@
 #include "t_SupportTools.h"
 
 #include <ytlib/SupportTools/UUID.h>
-#include <ytlib/SupportTools/UrlEncode.h>
 
 #include <algorithm>
 #include <boost/core/lightweight_test.hpp>
@@ -41,17 +40,6 @@ void test_stl() {
 
   re = accumulate(v1.begin(), v1.end(), 0);
   cout << re << endl;
-}
-
-void test_urlencode() {
-  string s2 = "http://abc123.com/aaa/bbbb?qa=1&qb=adf";
-  printf("%lld\t%lld\t%X\t%s\n", s2.size(), s2.capacity(), static_cast<const void*>(s2.c_str()), s2.c_str());
-
-  string s3 = UrlEncode(s2, false);
-  printf("%lld\t%lld\t%X\t%s\n", s3.size(), s3.capacity(), static_cast<const void*>(s3.c_str()), s3.c_str());
-
-  string s4 = UrlDecode(s3);
-  printf("%lld\t%lld\t%X\t%s\n", s4.size(), s4.capacity(), static_cast<const void*>(s4.c_str()), s4.c_str());
 }
 
 void test_LoopTool() {

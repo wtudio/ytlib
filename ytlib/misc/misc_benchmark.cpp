@@ -6,22 +6,20 @@
 
 #include "guid.hpp"
 
-using ytlib::Guid;
-using ytlib::GuidGener;
-using ytlib::ObjGuidGener;
+namespace ytlib {
 
 static void BM_GuidGener(benchmark::State& state) {
   // 生成mac值
   std::string mac = "testmac::abc::def";
   std::string svr_id = "testsvr";
   int thread_id = 123;
-  uint32_t mac_hash = std::hash<std::string>{}(mac + svr_id + std::to_string(thread_id)) % ytlib::GUID_MAC_NUM;
+  uint32_t mac_hash = std::hash<std::string>{}(mac + svr_id + std::to_string(thread_id)) % GUID_MAC_NUM;
 
   GuidGener::Ins().Init(mac_hash);
 
   // 生成obj值
   std::string obj_name = "test_obj_name";
-  uint32_t obj_hash = std::hash<std::string>{}(obj_name) % ytlib::GUID_OBJ_NUM;
+  uint32_t obj_hash = std::hash<std::string>{}(obj_name) % GUID_OBJ_NUM;
 
   for (auto _ : state) {
     Guid guid = GuidGener::Ins().GetGuid(obj_hash);
@@ -34,13 +32,13 @@ static void BM_ObjGuidGener(benchmark::State& state) {
   std::string mac = "testmac::abc::def";
   std::string svr_id = "testsvr";
   int thread_id = 123;
-  uint32_t mac_hash = std::hash<std::string>{}(mac + svr_id + std::to_string(thread_id)) % ytlib::GUID_MAC_NUM;
+  uint32_t mac_hash = std::hash<std::string>{}(mac + svr_id + std::to_string(thread_id)) % GUID_MAC_NUM;
 
   GuidGener::Ins().Init(mac_hash);
 
   // 生成obj值
   std::string obj_name = "test_obj_name";
-  uint32_t obj_hash = std::hash<std::string>{}(obj_name) % ytlib::GUID_OBJ_NUM;
+  uint32_t obj_hash = std::hash<std::string>{}(obj_name) % GUID_OBJ_NUM;
   ObjGuidGener gener;
   gener.Init(obj_hash);
 
@@ -49,5 +47,7 @@ static void BM_ObjGuidGener(benchmark::State& state) {
   }
 }
 BENCHMARK(BM_ObjGuidGener);
+
+}  // namespace ytlib
 
 BENCHMARK_MAIN();

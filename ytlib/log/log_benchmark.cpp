@@ -2,11 +2,11 @@
 
 #include "log.hpp"
 
-using ytlib::Log;
+namespace ytlib {
 
 static void BM_StringCreation(benchmark::State& state) {
   for (auto _ : state) {
-    Log::Ins().SetLevel(ytlib::LOG_LEVEL::L_INFO);
+    Log::Ins().SetLevel(LOG_LEVEL::L_INFO);
   }
 }
 // Register the function as a benchmark
@@ -19,5 +19,7 @@ static void BM_StringCopy(benchmark::State& state) {
     auto l = Log::Ins().Level();
 }
 BENCHMARK(BM_StringCopy);
+
+}  // namespace ytlib
 
 BENCHMARK_MAIN();

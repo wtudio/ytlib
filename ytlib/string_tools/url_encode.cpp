@@ -1,16 +1,17 @@
 /**
- * @file UrlEncode.h
+ * @file url_encode.cpp
  * @brief Url编解码
  * @details UrlEncode、UrlDecode
  * @author WT
  * @email 905976782@qq.com
  * @date 2019-07-26
  */
-#pragma once
+#include "url_encode.hpp"
 
-#include <ytlib/Common/Util.h>
+#include <cassert>
 
 namespace ytlib {
+
 inline unsigned char ToHex(unsigned char x, bool up) {
   return x > 9 ? x + (up ? 55 : 87) : x + 48;
 }
@@ -27,13 +28,8 @@ inline unsigned char FromHex(unsigned char x) {
     assert(0);
   return y;
 }
-/**
- * @brief UrlEncode
- * @param str 待编码字符串
- * @param up 是否转码为大写字符
- * @return 转码后的结果字符串
- */
-inline std::string UrlEncode(const std::string& str, bool up = true) {
+
+std::string UrlEncode(const std::string& str, bool up) {
   std::string strTemp;
   std::size_t length = str.length();
   strTemp.reserve(length << 1);
@@ -50,12 +46,8 @@ inline std::string UrlEncode(const std::string& str, bool up = true) {
   }
   return strTemp;
 }
-/**
- * @brief UrlDecode
- * @param str 待解码字符串
- * @return 解码后的结果字符串
- */
-inline std::string UrlDecode(const std::string& str) {
+
+std::string UrlDecode(const std::string& str) {
   std::string strTemp;
   std::size_t length = str.length();
   strTemp.reserve(length);

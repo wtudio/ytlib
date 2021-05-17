@@ -90,7 +90,7 @@ IF (BUILD_SHARED_LIBS)
 ENDIF()
 
 #设置测试。测试方法（需要先编译好）：ctest -C Debug/Release
-option(BUILD_TESTS "Build tests." TRUE)
+option(BUILD_TESTS "Build tests." OFF)
 if (BUILD_TESTS)
   set(GTEST_ROOT "GTEST_ROOT-NOTFOUND" CACHE PATH "path to gtest install path.")
   find_package(GTest QUIET)
@@ -102,7 +102,7 @@ if (BUILD_TESTS)
   enable_testing()
 endif()
 
-option(BUILD_BENCH_TESTS "Build benchmark tests." TRUE)
+option(BUILD_BENCH_TESTS "Build benchmark tests." OFF)
 if (BUILD_BENCH_TESTS)
   set(benchmark_ROOT_DIR "benchmark_ROOT_DIR-NOTFOUND" CACHE PATH "path to googlebenchmark install path.")
   find_package(benchmark QUIET)
@@ -119,25 +119,17 @@ include_directories( ${YTLIB_INCLUDE_DIR} )
 link_directories( ${YTLIB_LIBRARY_DIR} )
 
 #设置下一级目录
-#thread_tools:线程相关工具
 add_subdirectory( ytlib/thread_tools )
-# set( YTLIB_LIBRARY ${YTLIB_LIBRARY} misc)
-
-#log:日志库
-add_subdirectory( ytlib/log )
-set( YTLIB_LIBRARY ${YTLIB_LIBRARY} log)
-
-#misc:杂项
+add_subdirectory( ytlib/string_tools )
 add_subdirectory( ytlib/misc )
-# set( YTLIB_LIBRARY ${YTLIB_LIBRARY} misc)
+add_subdirectory( ytlib/log )
 
-
+set( YTLIB_LIBRARY ${YTLIB_LIBRARY} 
+  string_tools
+  log
+)
 
 #----------------------------以下待废弃----------------------------
-
-#StringUtil:字符串公共库
-add_subdirectory( ytlib/StringUtil )
-set( YTLIB_LIBRARY ${YTLIB_LIBRARY} StringUtil)
 
 #TEST:测试项目
 add_subdirectory( ytlib/Test )

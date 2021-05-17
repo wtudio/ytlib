@@ -9,8 +9,11 @@
 
 #include "block_queue.hpp"
 #include "channel.hpp"
+#include "signal.hpp"
 #include "thread_id.hpp"
 #include "ytlib/misc/misc_macro.h"
+
+namespace ytlib {
 
 class TestObj {
  public:
@@ -46,7 +49,7 @@ uint32_t TestObj::gid = 0;
 
 // 测试Channel
 TEST(THREAD_TOOLS_TEST, Channel_BASE) {
-  using TestChannel = ytlib::Channel<TestObj>;
+  using TestChannel = Channel<TestObj>;
 
   std::atomic<uint32_t> ct = 0;
 
@@ -70,7 +73,7 @@ TEST(THREAD_TOOLS_TEST, Channel_BASE) {
 
 // 测试BlockQueue基础同步操作
 TEST(THREAD_TOOLS_TEST, BlockQueue_BASE) {
-  using BckQueue = ytlib::BlockQueue<TestObj>;
+  using BckQueue = BlockQueue<TestObj>;
   TestObj::gid = 0;
   uint32_t n = 5;
   BckQueue qu(n);
@@ -109,7 +112,7 @@ TEST(THREAD_TOOLS_TEST, BlockQueue_BASE) {
 
 // 测试BlockQueue异步操作
 TEST(THREAD_TOOLS_TEST, BlockQueue_ANYSC) {
-  using BckQueue = ytlib::BlockQueue<TestObj>;
+  using BckQueue = BlockQueue<TestObj>;
   TestObj::gid = 0;
   BckQueue qu(100);
 
@@ -122,14 +125,14 @@ TEST(THREAD_TOOLS_TEST, BlockQueue_ANYSC) {
 
   std::thread t1([&] {
     qu.Enqueue(TestObj());
-    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
     qu.Enqueue(TestObj());
-    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
     qu.Stop();
   });
 
   std::thread t2([&] {
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
     TestObj obj;
     ASSERT_EQ(qu.BlockDequeue(obj), true);
     ASSERT_EQ(TestObj::gid, 3);
@@ -143,13 +146,41 @@ TEST(THREAD_TOOLS_TEST, BlockQueue_ANYSC) {
   ASSERT_EQ(ct, 1);
 }
 
+// 测试LightSignal
+TEST(THREAD_TOOLS_TEST, LightSignal) {
+  LightSignal s;
+  uint32_t i = 0;
+
+  std::thread t1([&] {
+    ASSERT_EQ(i, 0);
+    s.wait();  // node1
+    ASSERT_EQ(i, 1);
+    ASSERT_EQ(s.wait_for(50), false);
+    ASSERT_EQ(i, 1);
+    ASSERT_EQ(s.wait_for(100), true);  // node2
+    ASSERT_EQ(i, 2);
+  });
+
+  std::thread t2([&] {
+    ASSERT_EQ(i, 0);
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    i = 1;
+    s.notify();  // node1
+    s.reset();
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    i = 2;
+    s.notify();  // node2
+  });
+
+  t1.join();
+  t2.join();
+}
+
 // 测试ThreadIdTool
 TEST(THREAD_TOOLS_TEST, ThreadIdTool) {
-  using ytlib::ThreadIdTool;
-
-  uint64_t tid = ytlib::GetThreadId();
+  uint64_t tid = GetThreadId();
   for (uint32_t ii = 0; ii < 100; ++ii) {
-    ASSERT_EQ(ytlib::GetThreadId(), tid);
+    ASSERT_EQ(GetThreadId(), tid);
   }
 
   const uint32_t thread_num = 10;
@@ -160,9 +191,9 @@ TEST(THREAD_TOOLS_TEST, ThreadIdTool) {
   for (uint32_t ii = 0; ii < thread_num; ++ii) {
     threads.emplace(threads.end(), [&, ii] {
       std::this_thread::sleep_for(std::chrono::milliseconds(1));
-      uint64_t tid = ytlib::GetThreadId();
+      uint64_t tid = GetThreadId();
       for (uint32_t ii = 0; ii < 100; ++ii) {
-        ASSERT_EQ(ytlib::GetThreadId(), tid);
+        ASSERT_EQ(GetThreadId(), tid);
       }
 
       mu.lock();
@@ -181,3 +212,5 @@ TEST(THREAD_TOOLS_TEST, ThreadIdTool) {
     thread_id_set.insert(itr.second);
   }
 }
+
+}  // namespace ytlib

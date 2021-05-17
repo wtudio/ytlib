@@ -22,9 +22,12 @@
 // 包含特定头文件
 #if defined(_WIN32)
   #define NOMINMAX
-  #include <Shlwapi.h>
+// clang-format off
   #include <WinSock2.h>
   #include <Windows.h>
+
+  #include <Shlwapi.h>
+// clang-format on
 #else
   #include <arpa/inet.h>
   #include <dlfcn.h>

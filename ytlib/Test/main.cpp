@@ -23,8 +23,6 @@
 #include "t_NetTools.h"
 #include "t_ProcessManager.h"
 #include "t_SupportTools.h"
-#include "ytlib/StringUtil/StringUtil.h"
-#include "ytlib/log/log.hpp"
 
 using namespace std;
 using namespace ytlib;
@@ -44,12 +42,9 @@ int32_t main(int32_t argc, char** argv) {
   //std::locale::global(std::locale(""));
   //wcout.imbue(locale(""));
 
-  bool re = CheckIfInList("123,456,789", "123");
-
   //单元测试区
   //Algorithm
   test_SortAlgs();
-  test_StringAlgs();
 
   //DataStructure
   test_BinaryTree();
@@ -65,7 +60,6 @@ int32_t main(int32_t argc, char** argv) {
 
   test_Serialize();
   test_stl();
-  test_urlencode();
   test_LoopTool();
   test_NetLog();
   test_TcpNetAdapter();
