@@ -10,6 +10,7 @@
 
 #include <ytlib/FileManager/FileBase.h>
 #include <ytlib/SupportTools/XMLTools.h>
+
 #include <boost/algorithm/string.hpp>
 
 namespace ytlib {

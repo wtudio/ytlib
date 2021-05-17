@@ -1,4 +1,5 @@
 #include "StringUtil.h"
+
 #include <cstring>
 
 namespace ytlib {

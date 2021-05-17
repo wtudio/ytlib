@@ -1,4 +1,5 @@
 #include "rotate_file_writer.hpp"
+
 #include <cstring>
 #include <ctime>
 #include <filesystem>

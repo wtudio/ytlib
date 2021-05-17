@@ -11,6 +11,7 @@
 #include <cassert>
 #include <list>
 #include <thread>
+
 #include "block_queue.hpp"
 
 namespace ytlib {

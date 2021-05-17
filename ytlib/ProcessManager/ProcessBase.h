@@ -9,6 +9,7 @@
 #pragma once
 
 #include <ytlib/Common/TString.h>
+
 #include <functional>
 
 namespace ytlib {

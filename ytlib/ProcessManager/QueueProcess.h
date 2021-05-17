@@ -10,6 +10,7 @@
 
 #include <ytlib/ProcessManager/ProcessBase.h>
 #include <ytlib/SupportTools/QueueBase.h>
+
 #include <boost/thread.hpp>
 
 namespace ytlib {
@@ -25,9 +26,9 @@ template <class T,
 class QueueProcess : public ProcessBase {
  public:
   QueueProcess(std::size_t thCount_ = 1, std::size_t queueSize_ = 1000) : ProcessBase(),
-                                                                m_bStopFlag(false),
-                                                                m_threadCount(thCount_),
-                                                                m_queue(queueSize_) {
+                                                                          m_bStopFlag(false),
+                                                                          m_threadCount(thCount_),
+                                                                          m_queue(queueSize_) {
   }
   virtual ~QueueProcess() {
     stop();

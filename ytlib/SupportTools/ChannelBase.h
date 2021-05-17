@@ -9,6 +9,7 @@
 #pragma once
 
 #include <ytlib/SupportTools/QueueBase.h>
+
 #include <boost/thread.hpp>
 #include <vector>
 

@@ -1,4 +1,5 @@
 #include "console_writer.hpp"
+
 #include <iostream>
 
 #if defined(_WIN32)

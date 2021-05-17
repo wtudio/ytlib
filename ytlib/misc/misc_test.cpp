@@ -1,10 +1,10 @@
 #include <gtest/gtest.h>
 
-#include "guid.hpp"
-
 #include <functional>
 #include <iostream>
 #include <string>
+
+#include "guid.hpp"
 
 using ytlib::Guid;
 using ytlib::GuidGener;

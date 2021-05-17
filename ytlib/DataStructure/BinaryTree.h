@@ -172,7 +172,7 @@ class AVLTreeNode : public std::enable_shared_from_this<AVLTreeNode<T> > {
   AVLTreeNode<T>* pf;  ///<父节点
   AVLTNodePtr pl;      ///<左子节点
   AVLTNodePtr pr;      ///<右子节点
-  std::size_t hgt;          ///<节点高度
+  std::size_t hgt;     ///<节点高度
 
 #define HGT(p) ((p) ? p->hgt : 0)
 

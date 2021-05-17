@@ -8,12 +8,12 @@
  */
 #pragma once
 
+#include <ytlib/LightMath/Complex.h>
+#include <ytlib/LightMath/Mathbase.h>
+
 #include <cstring>
 #include <iostream>
 #include <string>
-
-#include <ytlib/LightMath/Complex.h>
-#include <ytlib/LightMath/Mathbase.h>
 
 #define MAXSIZE 268435456
 

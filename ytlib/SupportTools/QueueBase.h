@@ -80,7 +80,7 @@ class QueueBase {
   std::condition_variable m_cond;  ///<条件锁
   std::queue<T> m_queue;           ///<队列
 
-  const std::size_t m_maxcount;    ///<队列可支持最大个数
-  std::atomic_bool stopflag;  ///<停止标志
+  const std::size_t m_maxcount;  ///<队列可支持最大个数
+  std::atomic_bool stopflag;     ///<停止标志
 };
 }  // namespace ytlib

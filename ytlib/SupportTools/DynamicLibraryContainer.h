@@ -9,6 +9,7 @@
 #pragma once
 
 #include <ytlib/SupportTools/DynamicLibrary.h>
+
 #include <boost/serialization/singleton.hpp>
 #include <mutex>
 

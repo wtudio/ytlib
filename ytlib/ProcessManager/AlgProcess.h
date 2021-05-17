@@ -9,6 +9,7 @@
 #pragma once
 
 #include <ytlib/ProcessManager/ProcessBase.h>
+
 #include <boost/thread.hpp>
 #include <map>
 #include <sstream>

@@ -9,6 +9,7 @@
 #pragma once
 
 #include <ytlib/LightMath/Mathbase.h>
+
 #include <algorithm>
 #include <iostream>
 #include <vector>

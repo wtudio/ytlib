@@ -1,16 +1,16 @@
 #include <gtest/gtest.h>
 
-#include "block_queue.hpp"
-#include "channel.hpp"
-#include "thread_id.hpp"
-#include "ytlib/misc/misc_macro.h"
-
 #include <atomic>
 #include <iostream>
 #include <map>
 #include <set>
 #include <string>
 #include <thread>
+
+#include "block_queue.hpp"
+#include "channel.hpp"
+#include "thread_id.hpp"
+#include "ytlib/misc/misc_macro.h"
 
 class TestObj {
  public:
