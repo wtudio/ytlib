@@ -25,8 +25,8 @@ class Exception : public std::exception {
   const char* msg_;
 };
 
-#define RT_ASSERT(exp)   \
-  if (!exp) [[unlikely]] \
-    throw ytlib::Exception("[" __FILENAME__ ":" STRING(__LINE__) "] assert (" #exp ") failed.");
+#define RT_ASSERT(exp)     \
+  if (!(exp)) [[unlikely]] \
+    throw ytlib::Exception("[" __FILENAME__ ":" STRING(__LINE__) "] assert ( " #exp " ) failed.");
 
 }  // namespace ytlib
