@@ -10,7 +10,7 @@ using std::vector;
 
 namespace ytlib {
 
-TEST(STRING_TEST, DEMO_TEST) {
+TEST(STRING_TEST, ALG_TEST) {
   //kmp
   string ss = "abcdef abcdefg abcdefgh";
   ASSERT_EQ(KMP(ss, "abcdef"), 0);
@@ -27,44 +27,110 @@ TEST(STRING_TEST, DEMO_TEST) {
   pair<std::size_t, std::size_t> re = LongestSubStrWithoutDup("arabcacfr");
   ASSERT_EQ(re.first, 1);
   ASSERT_EQ(re.second, 4);
+}
 
-  //replaceAll
-  string s = "abc123abc123abc123abc123abc123abc12";
-  int len = s.size();
-  const char* p = s.c_str();
-  replaceAll(s, "abc", "yhn");
-  EXPECT_STREQ(s.c_str(), "yhn123yhn123yhn123yhn123yhn123yhn12");
-  ASSERT_EQ(s.size(), len);
-  ASSERT_EQ(s.c_str(), p);
+TEST(STRING_TEST, trim_TEST) {
+  string str = " testval  ";
+  EXPECT_STREQ(trim(str).c_str(), "testval");
+  EXPECT_STREQ(str.c_str(), "testval");
+  EXPECT_STREQ(trim(str).c_str(), "testval");
+}
 
-  replaceAll(s, "123", "45");
-  EXPECT_STREQ(s.c_str(), "yhn45yhn45yhn45yhn45yhn45yhn12");
-  ASSERT_LT(s.size(), len);
-  ASSERT_EQ(s.c_str(), p);
+TEST(STRING_TEST, Replace_TEST) {
+  string str = "val1+val2+val3";
+  EXPECT_STREQ(ReplaceString(str, "val1", "val10").c_str(), "val10+val2+val3");
+  EXPECT_STREQ(ReplaceString(str, "val2", "v2").c_str(), "val10+v2+val3");
+  EXPECT_STREQ(ReplaceString(str, "val3", "val4").c_str(), "val10+v2+val4");
+}
 
-  replaceAll(s, "45", "6789000");
-  EXPECT_STREQ(s.c_str(), "yhn6789000yhn6789000yhn6789000yhn6789000yhn6789000yhn12");
-  ASSERT_GT(s.size(), len);
-  ASSERT_NE(s.c_str(), p);
+TEST(STRING_TEST, IsAlnumStr_TEST) {
+  EXPECT_EQ(IsAlnumStr("123456789"), true);
+  EXPECT_EQ(IsAlnumStr("123456789abcd"), true);
+  EXPECT_EQ(IsAlnumStr("123456789.."), false);
+}
 
-  replaceAll(s, "00", "#");
-  EXPECT_STREQ(s.c_str(), "yhn6789#0yhn6789#0yhn6789#0yhn6789#0yhn6789#0yhn12");
+TEST(STRING_TEST, Map_TEST) {
+  string str = "k1=v1& k2 =v2&k3= v3 &&k4=v4&k4=v4x& =v5&k6= &";
+  auto remap = SplitToMap(str);
+  EXPECT_STREQ(GetMapItemWithDef(remap, "k1").c_str(), "v1");
+  EXPECT_STREQ(GetMapItemWithDef(remap, "k2").c_str(), "v2");
+  EXPECT_STREQ(GetMapItemWithDef(remap, "k3").c_str(), "v3");
+  EXPECT_STREQ(GetMapItemWithDef(remap, "k4").c_str(), "v4x");
+  EXPECT_STREQ(GetMapItemWithDef(remap, "").c_str(), "v5");
+  EXPECT_STREQ(GetMapItemWithDef(remap, "k6").c_str(), "");
+  EXPECT_STREQ(GetMapItemWithDef(remap, "k7", "default").c_str(), "default");
 
-  //splitAll
-  vector<string> re2 = splitAll("&123%$#456%$#7890#$%", "&%$#");
-  vector<string> answer2{"123", "456", "7890"};
-  ASSERT_EQ(re2.size(), answer2.size());
-  for (std::size_t ii = 0; ii < re2.size(); ++ii) {
-    EXPECT_STREQ(re2[ii].c_str(), answer2[ii].c_str());
-  }
+  string str1 = JoinMap(remap);
+  EXPECT_STREQ(str1.c_str(), "=v5&k1=v1&k2=v2&k3=v3&k4=v4x&k6=");
 
-  string s2 = "http://abc123.com/aaa/bbbb?qa=1&qb=adf";
-  printf("%lld\t%lld\t%X\t%s\n", s2.size(), s2.capacity(), static_cast<const void*>(s2.c_str()), s2.c_str());
+  AddKV(str1, "k8", "v8");
+  EXPECT_STREQ(str1.c_str(), "=v5&k1=v1&k2=v2&k3=v3&k4=v4x&k6=&k8=v8");
+  string str2 = "";
+  AddKV(str2, "k8", "v8");
+  EXPECT_STREQ(str2.c_str(), "k8=v8");
 
-  string s3 = UrlEncode(s2, false);
-  printf("%lld\t%lld\t%X\t%s\n", s3.size(), s3.capacity(), static_cast<const void*>(s3.c_str()), s3.c_str());
+  string str3 = "k10=v10& k11 = v11 &k12 = v12 ";
+  EXPECT_STREQ(GetValueFromStrKV(str3, "k10").c_str(), "v10");
+  EXPECT_STREQ(GetValueFromStrKV(str3, "k11").c_str(), "v11");
+  EXPECT_STREQ(GetValueFromStrKV(str3, "k12").c_str(), "v12");
+  EXPECT_STREQ(GetValueFromStrKV(str3, "k12", "&", "=", false).c_str(), " v12 ");
 
-  string s4 = UrlDecode(s3);
-  printf("%lld\t%lld\t%X\t%s\n", s4.size(), s4.capacity(), static_cast<const void*>(s4.c_str()), s4.c_str());
+  std::map<std::string, std::map<std::string, std::string> > test_map;
+  test_map["111"].clear();
+  test_map["222"].clear();
+  test_map["333"].clear();
+  std::set<std::string> test_set = GetMapKeys(test_map);
+  EXPECT_EQ(test_set.size(), 3);
+}
+
+TEST(STRING_TEST, Vector_TEST) {
+  string str = "v1,v2,, v3 , ,v4,";
+  auto revec = SplitToVec(str, ",");
+  EXPECT_EQ(revec.size(), 4);
+  EXPECT_STREQ(revec[0].c_str(), "v1");
+  EXPECT_STREQ(revec[1].c_str(), "v2");
+  EXPECT_STREQ(revec[2].c_str(), "v3");
+  EXPECT_STREQ(revec[3].c_str(), "v4");
+
+  EXPECT_STREQ(JoinVec(revec, "|").c_str(), "v1|v2|v3|v4");
+
+  EXPECT_EQ(CheckIfInList("123456", "123456"), true);
+  EXPECT_EQ(CheckIfInList("0123456", "123456"), false);
+  EXPECT_EQ(CheckIfInList("1234567", "123456"), false);
+  EXPECT_EQ(CheckIfInList("123456,", "123456"), true);
+  EXPECT_EQ(CheckIfInList(",123456", "123456"), true);
+  EXPECT_EQ(CheckIfInList("aaa,123456,bbb", "123456"), true);
+  EXPECT_EQ(CheckIfInList("aaa,0123456,bbb", "123456"), false);
+  EXPECT_EQ(CheckIfInList("aaa,1234567,bbb", "123456"), false);
+  EXPECT_EQ(CheckIfInList("aaa,1234567,123456,bbb", "123456"), true);
+  EXPECT_EQ(CheckIfInList("123,456", "123,456", ','), false);
+  EXPECT_EQ(CheckIfInList("aaa,,bbb", "", ','), false);
+}
+
+TEST(STRING_TEST, Set_TEST) {
+  std::set<std::string> st{"v1", "v2", "v3", "v4"};
+  EXPECT_STREQ(JoinSet(st, "|").c_str(), "v1|v2|v3|v4");
+}
+
+TEST(STRING_TEST, Version_TEST) {
+  EXPECT_EQ(CmpVersion("7.6.8.11020", "7.6.8"), 1);
+  EXPECT_EQ(CmpVersion("7.6.8", "7.6.8"), 0);
+  EXPECT_EQ(CmpVersion("7.6.8", "7.6.8.11020"), -1);
+  EXPECT_EQ(CmpVersion("10.0.1.11020", "7.6.8"), 1);
+  EXPECT_EQ(CmpVersion("9.8.0", "9..8.0"), 0);
+
+  EXPECT_EQ(CheckVersionInside("7.6.8", "7.6.7", "7.6.9"), true);
+  EXPECT_EQ(CheckVersionInside("7.6.8", "7.6.8", "7.6.8"), true);
+  EXPECT_EQ(CheckVersionInside("7.6.6", "7.6.7", "7.6.9"), false);
+}
+
+TEST(STRING_TEST, UrlEncode_TEST) {
+  string s = "http://abc123.com/aaa/bbbb?qa=1&qb=adf";
+
+  string se = UrlEncode(s, false);
+  EXPECT_STREQ(se.c_str(), "http%3a%2f%2fabc123.com%2faaa%2fbbbb%3fqa%3d1%26qb%3dadf");
+
+  string sd = UrlDecode(se);
+  EXPECT_STREQ(sd.c_str(), s.c_str());
 }
 }  // namespace ytlib

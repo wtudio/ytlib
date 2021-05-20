@@ -147,7 +147,7 @@ TEST(THREAD_TOOLS_TEST, BlockQueue_ANYSC) {
 }
 
 // 测试LightSignal
-TEST(THREAD_TOOLS_TEST, LightSignal) {
+TEST(THREAD_TOOLS_TEST, LightSignal_BASE) {
   LightSignal s;
   uint32_t i = 0;
 
@@ -177,7 +177,7 @@ TEST(THREAD_TOOLS_TEST, LightSignal) {
 }
 
 // 测试ThreadIdTool
-TEST(THREAD_TOOLS_TEST, ThreadIdTool) {
+TEST(THREAD_TOOLS_TEST, ThreadIdTool_BASE) {
   uint64_t tid = GetThreadId();
   for (uint32_t ii = 0; ii < 100; ++ii) {
     ASSERT_EQ(GetThreadId(), tid);

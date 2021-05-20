@@ -58,18 +58,18 @@ class FileBase {
   void OpenFile(const tstring& path) {
     //检查文件名称与路径
     if (!CheckFileName(path)) {
-      throw Exception(Error::ER_ERROR_INVALID_FILENAME);
+      throw ytException(Error::ER_ERROR_INVALID_FILENAME);
     }
     tpath filepath = tGetAbsolutePath(path);
     m_filepath = filepath.string<tstring>();
     if (!boost::filesystem::exists(filepath)) {
-      throw Exception(Error::ER_ERROR_FILE_NOT_EXIST);
+      throw ytException(Error::ER_ERROR_FILE_NOT_EXIST);
     }
     if (!CreateFileObj()) {
-      throw Exception(Error::ER_ERROR_NEW_FILE_FAILED);
+      throw ytException(Error::ER_ERROR_NEW_FILE_FAILED);
     }
     if (!GetFileObj()) {
-      throw Exception(Error::ER_ERROR_PARSE_FILE_FAILED);
+      throw ytException(Error::ER_ERROR_PARSE_FILE_FAILED);
     }
     m_bInitialized = true;
   }
@@ -78,7 +78,7 @@ class FileBase {
   void NewFile() {
     m_filepath.clear();
     if (!CreateFileObj()) {
-      throw Exception(Error::ER_ERROR_NEW_FILE_FAILED);
+      throw ytException(Error::ER_ERROR_NEW_FILE_FAILED);
     }
     m_bInitialized = true;
   }
@@ -86,12 +86,12 @@ class FileBase {
   void NewFile(const tstring& path) {
     //检查文件名称与路径
     if (!CheckFileName(path)) {
-      throw Exception(Error::ER_ERROR_INVALID_FILENAME);
+      throw ytException(Error::ER_ERROR_INVALID_FILENAME);
     }
     tpath filepath = tGetAbsolutePath(path);
     m_filepath = filepath.string<tstring>();
     if (!CreateFileObj()) {
-      throw Exception(Error::ER_ERROR_NEW_FILE_FAILED);
+      throw ytException(Error::ER_ERROR_NEW_FILE_FAILED);
     }
     m_bInitialized = true;
     return (SaveFile());
@@ -99,34 +99,34 @@ class FileBase {
   ///子类在保存成功，将结构体写成文件后才返回success
   void SaveFile() {
     if ((m_filepath.empty()) || (!m_bInitialized)) {
-      throw Exception(Error::ER_ERROR_INVALID_SAVE);
+      throw ytException(Error::ER_ERROR_INVALID_SAVE);
     }
     tpath filepath = tGetAbsolutePath(m_filepath).parent_path();
     if ((!boost::filesystem::exists(filepath)) && (!boost::filesystem::create_directories(filepath))) {
-      throw Exception(Error::ER_ERROR_INVALID_SAVE);
+      throw ytException(Error::ER_ERROR_INVALID_SAVE);
     }
     if (!SaveFileObj()) {
-      throw Exception(Error::ER_ERROR_SAVE_FILE_FAILED);
+      throw ytException(Error::ER_ERROR_SAVE_FILE_FAILED);
     }
   }
 
   ///子类在另存为成功，将结构体写成文件后才返回success
   void SaveFile(const tstring& path) {
     if (!m_bInitialized) {
-      throw Exception(Error::ER_ERROR_INVALID_SAVE);
+      throw ytException(Error::ER_ERROR_INVALID_SAVE);
     }
     //检查文件名称与路径
     if (!CheckFileName(path)) {
-      throw Exception(Error::ER_ERROR_INVALID_FILENAME);
+      throw ytException(Error::ER_ERROR_INVALID_FILENAME);
     }
     tpath filepath = tGetAbsolutePath(path);
     m_filepath = filepath.string<tstring>();
     filepath = filepath.parent_path();
     if ((!boost::filesystem::exists(filepath)) && (!boost::filesystem::create_directories(filepath))) {
-      throw Exception(Error::ER_ERROR_INVALID_SAVE);
+      throw ytException(Error::ER_ERROR_INVALID_SAVE);
     }
     if (!SaveFileObj()) {
-      throw Exception(Error::ER_ERROR_SAVE_FILE_FAILED);
+      throw ytException(Error::ER_ERROR_SAVE_FILE_FAILED);
     }
   }
 

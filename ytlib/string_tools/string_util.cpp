@@ -9,21 +9,14 @@ using std::set;
 using std::string;
 using std::vector;
 
-string& trim(string& s) {
-  if (s.empty()) return s;
-  s.erase(0, s.find_first_not_of(" "));
-  s.erase(s.find_last_not_of(" ") + 1);
-  return s;
-}
+using std::size_t;
 
 map<string, string> SplitToMap(const string& source, const string& vsep, const string& msep,
                                bool trimempty) {
   map<string, string> result;
   if (source.empty()) return result;
 
-  std::size_t pos = 0;
-  std::size_t n;
-  std::size_t m;
+  size_t m, n, pos = 0;
   string str = source;
   str.append(vsep);
 
@@ -61,81 +54,89 @@ string JoinMap(const map<string, string>& kvmap, const string& vsep, const strin
 
 string GetValueFromStrKV(const string& str, const string& key, const string& vsep,
                          const string& msep, bool trimempty) {
-  std::size_t pos = str.find(key);
+  size_t pos = str.find(key);
   if (string::npos == pos) return "";
 
   pos = str.find(msep, pos);
   if (string::npos == pos) return "";
   pos += msep.length();
 
-  std::size_t pos_end = str.find(vsep, pos);
+  size_t pos_end = str.find(vsep, pos);
   if (string::npos == pos_end) pos_end = str.length();
 
-  std::string re = str.substr(pos, pos_end - pos);
+  string re = str.substr(pos, pos_end - pos);
   if (trimempty) trim(re);
 
   return re;
 }
 
-vector<string> SplitToVec(const string& source, const string& separators, bool cleanempty,
-                          bool trimempty) {
-  vector<string> result;
-  if (source.empty()) return result;
-
-  string::const_iterator it1 = source.begin();
-  string::const_iterator it2;
-  string::const_iterator it3;
-  string::const_iterator end = source.end();
-
-  while (it1 != end) {
-    if (trimempty) {
-      while (it1 != end && isspace(*it1)) ++it1;
-    }
-    it2 = it1;
-    while (it2 != end && separators.find(*it2) == string::npos) ++it2;
-    it3 = it2;
-    if (it3 != it1 && (trimempty)) {
-      --it3;
-      while (it3 != it1 && isspace(*it3)) --it3;
-      if (!isspace(*it3)) ++it3;
-    }
-    if (cleanempty) {
-      if (it3 != it1) result.push_back(string(it1, it3));
-    } else {
-      result.push_back(string(it1, it3));
-    }
-    it1 = it2;
-    if (it1 != end) ++it1;
-  }
-
-  return result;
+vector<string> SplitToVec(const string& source, const string& sep, bool trimempty) {
+  vector<string> re;
+  size_t pos1, pos2 = 0;
+  const string& real_sep = trimempty ? (sep + " ") : sep;
+  do {
+    pos1 = source.find_first_not_of(real_sep, pos2);
+    if (pos1 == string::npos) break;
+    pos2 = source.find_first_of(real_sep, pos1);
+    re.emplace_back(source.substr(pos1, pos2 - pos1));
+  } while (pos2 != string::npos);
+  return re;
 }
 
-string JoinVec(const vector<string>& vec, const string& separators) {
+string JoinVec(const vector<string>& vec, const string& sep) {
   string result;
   for (auto& itr : vec) {
     // 若不为空，则需要增加分隔符
-    if (!result.empty()) result += separators;
+    if (!result.empty()) result += sep;
     result += itr;
   }
   return result;
 }
 
-string JoinSet(const set<string>& st, const string& separators) {
+set<string> SplitToSet(const string& source, const string& sep, bool trimempty) {
+  set<string> re;
+  size_t pos1, pos2 = 0;
+  const string& real_sep = trimempty ? (sep + " ") : sep;
+  do {
+    pos1 = source.find_first_not_of(real_sep, pos2);
+    if (pos1 == string::npos) break;
+    pos2 = source.find_first_of(real_sep, pos1);
+    re.emplace(source.substr(pos1, pos2 - pos1));
+  } while (pos2 != string::npos);
+  return re;
+}
+
+string JoinSet(const set<string>& st, const string& sep) {
   string result;
   for (auto& itr : st) {
     // 若不为空，则需要增加分隔符
-    if (!result.empty()) result += separators;
+    if (!result.empty()) result += sep;
     result += itr;
   }
   return result;
+}
+
+bool CheckIfInList(const string& strlist, const string& key, char sep) {
+  if (key.empty()) return false;
+  if (key.find(sep) != string::npos) return false;
+  size_t pos = strlist.find(key);
+  while (pos != string::npos) {
+    if ((pos > 0 && strlist[pos - 1] != sep) ||
+        ((pos + key.length()) < strlist.length() && strlist[pos + key.length()] != sep)) {
+      // 如果前后有不是分割符的情况就查下一个
+      pos = strlist.find(key, pos + key.length());
+    } else {
+      return true;
+    }
+  }
+  return false;
 }
 
 int CmpVersion(const string& ver1, const string& ver2) {
   const vector<string>& version1_detail = SplitToVec(ver1, ".");
   const vector<string>& version2_detail = SplitToVec(ver2, ".");
 
-  std::size_t idx = 0;
+  size_t idx = 0;
   for (idx = 0; idx < version1_detail.size() && idx < version2_detail.size(); ++idx) {
     int ver1 = atoi(version1_detail[idx].c_str());
     int ver2 = atoi(version2_detail[idx].c_str());
@@ -150,49 +151,37 @@ int CmpVersion(const string& ver1, const string& ver2) {
   return version1_detail.size() > version2_detail.size() ? 1 : -1;
 }
 
-int IosCmpVersion(const string& ver1, const string& ver2) {
-  string tmp_ver1 = ver1;
-  string tmp_ver2 = ver2;
-  return CmpVersion(ReplaceString(tmp_ver1, "ios", ""), ReplaceString(tmp_ver2, "ios", ""));
-}
-
-bool CheckVersionInside(const string& ver, const string& start_ver, const string& end_ver) {
-  string start_ver_fix = start_ver.empty() ? "0.0.0.0" : start_ver;
-  string end_ver_fix = end_ver.empty() ? "999.9.9.9" : end_ver;
-  return (CmpVersion(ver, start_ver_fix) >= 0 && CmpVersion(ver, end_ver_fix) <= 0);
-}
-
 string& ReplaceString(string& str, const string& ov, const string& nv) {
   if (str.empty()) return str;
-  vector<std::size_t> vec_pos;
-  std::size_t pos = 0, old_len = ov.size(), new_len = nv.size();
+  vector<size_t> vec_pos;
+  size_t pos = 0, old_len = ov.size(), new_len = nv.size();
   while (string::npos != (pos = str.find(ov, pos))) {
-    vec_pos.push_back(pos);
+    vec_pos.emplace_back(pos);
     pos += old_len;
   }
-  std::size_t& vec_len = pos = vec_pos.size();
+  size_t& vec_len = pos = vec_pos.size();
   if (vec_len) {
     if (old_len == new_len) {
-      for (std::size_t ii = 0; ii < vec_len; ++ii)
+      for (size_t ii = 0; ii < vec_len; ++ii)
         memcpy(const_cast<char*>(str.c_str() + vec_pos[ii]), nv.c_str(), new_len);
     } else if (old_len > new_len) {
       char* p = const_cast<char*>(str.c_str()) + vec_pos[0];
-      vec_pos.push_back(str.size());
-      for (std::size_t ii = 0; ii < vec_len; ++ii) {
+      vec_pos.emplace_back(str.size());
+      for (size_t ii = 0; ii < vec_len; ++ii) {
         memcpy(p, nv.c_str(), new_len);
         p += new_len;
-        std::size_t cplen = vec_pos[ii + 1] - vec_pos[ii] - old_len;
+        size_t cplen = vec_pos[ii + 1] - vec_pos[ii] - old_len;
         memmove(p, str.c_str() + vec_pos[ii] + old_len, cplen);
         p += cplen;
       }
       str.resize(p - str.c_str());
     } else {
-      std::size_t diff = new_len - old_len;
-      vec_pos.push_back(str.size());
+      size_t diff = new_len - old_len;
+      vec_pos.emplace_back(str.size());
       str.resize(str.size() + diff * vec_len);
       char* p = const_cast<char*>(str.c_str()) + str.size();
-      for (std::size_t ii = vec_len - 1; ii < vec_len; --ii) {
-        std::size_t cplen = vec_pos[ii + 1] - vec_pos[ii] - old_len;
+      for (size_t ii = vec_len - 1; ii < vec_len; --ii) {
+        size_t cplen = vec_pos[ii + 1] - vec_pos[ii] - old_len;
         p -= cplen;
         memmove(p, str.c_str() + vec_pos[ii] + old_len, cplen);
         p -= new_len;
@@ -205,27 +194,11 @@ string& ReplaceString(string& str, const string& ov, const string& nv) {
 
 bool IsAlnumStr(const string& str) {
   const char* ps = str.c_str();
-  std::size_t len = str.length();
-  for (std::size_t ii = 0; ii < len; ++ii) {
+  size_t len = str.length();
+  for (size_t ii = 0; ii < len; ++ii) {
     if (!isalnum(ps[ii])) return false;
   }
   return true;
-}
-
-bool CheckIfInList(const std::string& strlist, const std::string& key, char sep) {
-  if (key.empty()) return false;
-  if (key.find(sep) != std::string::npos) return false;
-  std::size_t pos = strlist.find(key);
-  while (pos != std::string::npos) {
-    if ((pos > 0 && strlist[pos - 1] != sep) ||
-        ((pos + key.length()) < strlist.length() && strlist[pos + key.length()] != sep)) {
-      // 如果前后有不是分割符的情况就查下一个
-      pos = strlist.find(key, pos + key.length());
-    } else {
-      return true;
-    }
-  }
-  return false;
 }
 
 }  // namespace ytlib

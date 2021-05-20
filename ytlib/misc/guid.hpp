@@ -15,6 +15,8 @@
 #include <cinttypes>
 #include <ctime>
 
+#include "ytlib/misc/error.hpp"
+
 namespace ytlib {
 
 // GUID相关配置，总位数不要超过64
@@ -52,14 +54,14 @@ class GuidGener {
   }
 
   // 单例
-  static GuidGener &Ins() {
+  static GuidGener& Ins() {
     thread_local GuidGener instance;
     return instance;
   }
 
   // 设置初始mac值，mac值不应超过GUID_MAC_BIT位，mac值应能在整个guid系统内部唯一标识一个线程
-  void Init(uint32_t mac_id) {
-    assert(mac_id < GUID_MAC_NUM);
+  void Init(const uint32_t& mac_id) {
+    RT_ASSERT(mac_id < GUID_MAC_NUM);
 
     guid_buf_ = new Guid[GUID_OBJ_NUM];
     for (uint32_t ii = 0; ii < GUID_OBJ_NUM; ++ii) {
@@ -70,9 +72,9 @@ class GuidGener {
   };
 
   // 根据obj_id获取guid，obj_id值不应超过GUID_OBJ_NUM，obj_id应能在当前线程下唯一标识一种实例
-  Guid GetGuid(uint32_t obj_id) {
-    Guid &guid = guid_buf_[obj_id];
-    uint32_t cur_t = (uint32_t)time(0) - GUID_TIME0;
+  const Guid& GetGuid(const uint32_t& obj_id) {
+    Guid& guid = guid_buf_[obj_id];
+    const uint32_t& cur_t = static_cast<uint32_t>(time(0)) - GUID_TIME0;
 
     if (cur_t > guid.t) {
       guid.t = cur_t;
@@ -92,7 +94,7 @@ class GuidGener {
     static_assert(GUID_MAC_BIT + GUID_OBJ_BIT + GUID_TIME_BIT + GUID_INST_BIT <= 64, "guid size should be less than 64 bits");
   }
 
-  Guid *guid_buf_ = nullptr;
+  Guid* guid_buf_ = nullptr;
 };
 
 // 对应一个mac+obj，生成guid，应用于单线程场景下
@@ -101,13 +103,13 @@ class ObjGuidGener {
   ObjGuidGener() {}
   ~ObjGuidGener() {}
 
-  void Init(uint32_t obj_id) {
-    assert(obj_id < GUID_OBJ_NUM);
+  void Init(const uint32_t& obj_id) {
+    RT_ASSERT(obj_id < GUID_OBJ_NUM);
     obj_id_ = obj_id;
   }
 
   // 获取guid
-  Guid GetGuid() {
+  const Guid& GetGuid() {
     return GuidGener::Ins().GetGuid(obj_id_);
   }
 

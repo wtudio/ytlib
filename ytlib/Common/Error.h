@@ -59,13 +59,13 @@ inline const char* GetErrorMessage(Error err0) {
  * @brief ytlib异常类
  * 重载了std::exception
  */
-class Exception : public std::exception {
+class ytException : public std::exception {
  public:
-  Exception(Error err) : m_message(), m_errorcode(err) {
+  ytException(Error err) : m_message(), m_errorcode(err) {
   }
-  Exception(const std::string& msg) : m_message(msg), m_errorcode(ER_ERROR_UNKNOWN_EXCEPTION) {
+  ytException(const std::string& msg) : m_message(msg), m_errorcode(ER_ERROR_UNKNOWN_EXCEPTION) {
   }
-  virtual ~Exception(void) throw() {}
+  virtual ~ytException(void) throw() {}
   virtual const char* what() const throw() {
     if (m_message.empty()) {
       return GetErrorMessage(m_errorcode);

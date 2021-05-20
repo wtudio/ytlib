@@ -10,7 +10,7 @@ class ThreadIdTool {
     return instance;
   }
 
-  uint64_t GetThisThreadId() {
+  const uint64_t& GetThisThreadId() {
     thread_local uint64_t cur_thread_id = ++thread_count_;
     return cur_thread_id;
   }
@@ -21,7 +21,7 @@ class ThreadIdTool {
   std::atomic<uint64_t> thread_count_ = 0;
 };
 
-inline uint64_t GetThreadId() {
+inline const uint64_t& GetThreadId() {
   return ThreadIdTool::Ins().GetThisThreadId();
 }
 

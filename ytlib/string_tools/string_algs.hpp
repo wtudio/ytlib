@@ -1,7 +1,7 @@
 /**
- * @file StringAlgs.h
+ * @file string_algs.hpp
  * @brief 常用字符串算法
- * @details 常用字符串算法，包括kmp、差异度计算、最长不重复字串、替换、分割等。
+ * @details 常用字符串算法，包括kmp、差异度计算、最长不重复字串等。
  * 此处的算法都只是给出一种可行方案，不代表生产中的最佳方案
  * @author WT
  * @email 905976782@qq.com
@@ -9,9 +9,6 @@
  */
 #pragma once
 
-#include <algorithm>
-#include <cassert>
-#include <cstring>
 #include <map>
 #include <string>
 #include <vector>
@@ -74,23 +71,4 @@ inline std::pair<std::size_t, std::size_t> LongestSubStrWithoutDup(const std::st
   return LongestSubStrWithoutDup(s.c_str(), s.length());
 }
 
-/**
- * @brief 替换所有
- * @details 将一个字符串中指定字符串str1换为字符串str2。
- * 如果str1长度小于等于str2，则在原字符串基础上修改，否则会复制到新内存中
- * @param str 待处理字符串
- * @param oldValue 要被替换的字符串
- * @param newValue 要替换成的字符串
- * @return 无
- */
-STRING_TOOLS_API void replaceAll(std::string& str, const std::string& oldValue, const std::string& newValue);
-
-/**
- * @brief 分割
- * @details 将str以seperator中所有字符为分割符分割,返回分割结果vector，结果中不包含分隔符（boost中有）
- * @param str 待处理字符串
- * @param seperators 分割字符
- * @return 分割结果vector
- */
-STRING_TOOLS_API std::vector<std::string> splitAll(const std::string& str, const std::string& seperators);
 }  // namespace ytlib

@@ -28,13 +28,14 @@ endif()
 
 #平台特化
 IF(WIN32)
+  add_compile_options(/wd4819)
   set( BOOST_COMPONENTS )
 ELSE()
   set( BOOST_COMPONENTS system date_time filesystem thread log serialization)
 ENDIF()
 
 #设定c++版本
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -121,6 +122,7 @@ link_directories( ${YTLIB_LIBRARY_DIR} )
 #设置下一级目录
 add_subdirectory( ytlib/thread_tools )
 add_subdirectory( ytlib/string_tools )
+add_subdirectory( ytlib/container )
 add_subdirectory( ytlib/misc )
 add_subdirectory( ytlib/log )
 
