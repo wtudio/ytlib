@@ -24,5 +24,10 @@ SOURCE_GROUP(${CUR_TARGET_NAME} FILES ${src})
 # set_misc_for_target(${CUR_TARGET_NAME})
 
 # 设置测试
-add_gtest_for_hpp(TEST_TARGET ${CUR_TARGET_NAME} TEST_SRC ${test_files} DEP_LIB dl)
-add_benchmark_test_for_hpp(TEST_TARGET ${CUR_TARGET_NAME} TEST_SRC ${benchmark_files} DEP_LIB dl)
+if(WIN32)
+  SET(TARGET_DEP_LIB)
+else()
+  SET(TARGET_DEP_LIB dl)
+endif()
+add_gtest_for_hpp(TEST_TARGET ${CUR_TARGET_NAME} TEST_SRC ${test_files} DEP_LIB ${TARGET_DEP_LIB})
+add_benchmark_test_for_hpp(TEST_TARGET ${CUR_TARGET_NAME} TEST_SRC ${benchmark_files} DEP_LIB ${TARGET_DEP_LIB})
