@@ -1,6 +1,6 @@
-#include "log.hpp"
-
 #include <gtest/gtest.h>
+
+#include "log.hpp"
 
 namespace ytlib {
 

@@ -7,7 +7,6 @@
  * 3)、time：当前秒级时间戳
  * 4)、ins：当前实例编号
  * @author WT
- * @email 905976782@qq.com
  * @date 2021-05-10
  */
 #pragma once

@@ -3,7 +3,6 @@
  * @brief Url编解码
  * @details UrlEncode、UrlDecode
  * @author WT
- * @email 905976782@qq.com
  * @date 2019-07-26
  */
 #pragma once

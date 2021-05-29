@@ -3,7 +3,6 @@
  * @brief Channel
  * @details 基于线程安全队列的channel
  * @author WT
- * @email 905976782@qq.com
  * @date 2021-05-06
  */
 #pragma once

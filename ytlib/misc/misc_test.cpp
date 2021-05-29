@@ -4,10 +4,17 @@
 #include <iostream>
 #include <string>
 
+#include "dynamic_lib.hpp"
 #include "guid.hpp"
+#include "loop_tool.hpp"
+
 namespace ytlib {
 
-TEST(MISC_TEST, GUID_TEST) {
+using std::cout;
+using std::endl;
+using std::vector;
+
+TEST(MISC_TEST, GUID_BASE) {
   // 生成mac值
   std::string mac = "testmac::abc::def";
   std::string svr_id = "testsvr";
@@ -34,6 +41,29 @@ TEST(MISC_TEST, GUID_TEST) {
     ASSERT_GE(guid_cur.id, guid_last.id);
     guid_last = guid_cur;
   }
+}
+
+TEST(MISC_TEST, LoopTool_BASE) {
+  vector<uint32_t> vec{2, 3, 3};
+  LoopTool lt(vec);
+  do {
+    for (uint32_t ii = lt.m_vecContent.size() - 1; ii > 0; --ii) {
+      cout << lt.m_vecContent[ii] << '-';
+    }
+    cout << lt.m_vecContent[0] << endl;
+
+  } while (++lt);
+}
+
+TEST(MISC_TEST, DynamicLib_BASE) {
+  DynamicLib d;
+  ASSERT_FALSE(d);
+  ASSERT_STREQ(d.GetLibName().c_str(), "");
+  ASSERT_FALSE(d.Load("xxx/xxx"));
+
+  ASSERT_FALSE(DynamicLibContainer::Ins().LoadLib("xxx/xxx"));
+  ASSERT_FALSE(DynamicLibContainer::Ins().GetLib("xxx/xxx"));
+  ASSERT_FALSE(DynamicLibContainer::Ins().RemoveLib("xxx/xxx"));
 }
 
 }  // namespace ytlib

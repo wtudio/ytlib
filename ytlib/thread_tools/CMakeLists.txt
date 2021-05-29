@@ -1,7 +1,7 @@
 # 获取当前文件夹
 STRING(REGEX REPLACE ".*/\(.*\)" "\\1" CUR_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
-# 设置目标库
+# 设置目标名称
 SET(CUR_TARGET_NAME ${CUR_DIR})
 
 # 设置源文件
@@ -13,7 +13,7 @@ SOURCE_GROUP(${CUR_TARGET_NAME} FILES ${src})
 
 # 生成项目
 # add_library(${CUR_TARGET_NAME} 
-#     ${src}
+#   ${src}
 # )
 
 # 添加依赖
@@ -24,5 +24,5 @@ SOURCE_GROUP(${CUR_TARGET_NAME} FILES ${src})
 # set_misc_for_target(${CUR_TARGET_NAME})
 
 # 设置测试
-add_gtest_for_hpp(${CUR_TARGET_NAME} ${test_files})
-add_benchmark_test_for_hpp(${CUR_TARGET_NAME} ${benchmark_files})
+add_gtest_for_hpp(TEST_TARGET ${CUR_TARGET_NAME} TEST_SRC ${test_files})
+add_benchmark_test_for_hpp(TEST_TARGET ${CUR_TARGET_NAME} TEST_SRC ${benchmark_files})

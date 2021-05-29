@@ -1,9 +1,8 @@
 /**
  * @file signal.hpp
  * @brief 轻量级信号量
- * @details 轻量级信号量和相关操作
+ * @details 轻量级信号量和相关操作。todo：c++20支持atomic直接wait
  * @author WT
- * @email 905976782@qq.com
  * @date 2019-07-26
  */
 #pragma once

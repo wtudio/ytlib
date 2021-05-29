@@ -3,7 +3,6 @@
  * @brief BlockQueue
  * @details 阻塞队列
  * @author WT
- * @email 905976782@qq.com
  * @date 2021-05-06
  */
 #pragma once

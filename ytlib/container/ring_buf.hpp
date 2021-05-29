@@ -3,7 +3,6 @@
  * @brief RingBuf
  * @details 环形缓冲队列
  * @author WT
- * @email 905976782@qq.com
  * @date 2021-05-16
  */
 #pragma once
@@ -31,7 +30,7 @@ class RingBuf {
   bool Push(const T& item) {
     if (Full()) [[unlikely]]
       return false;
-    content[wpos_] = item;
+    content_[wpos_] = item;
     if (++wpos_ < BUF_SIZE) return true;
     wpos_ = 0;
     return true;
@@ -40,7 +39,7 @@ class RingBuf {
   bool Push(T&& item) {
     if (Full()) [[unlikely]]
       return false;
-    content[wpos_] = std::move(item);
+    content_[wpos_] = std::move(item);
     if (++wpos_ < BUF_SIZE) return true;
     wpos_ = 0;
     return true;
@@ -56,25 +55,25 @@ class RingBuf {
 
   T& Top() {
     RT_ASSERT(!Empty());
-    return content[rpos_];
+    return content_[rpos_];
   }
 
   T& Get(const uint32_t& pos) {
     RT_ASSERT(!Empty() && pos < Size());
     const uint32_t& cur_rpos = rpos_ + pos;
-    return content[((cur_rpos < BUF_SIZE) ? cur_rpos : (cur_rpos - BUF_SIZE))];
+    return content_[((cur_rpos < BUF_SIZE) ? cur_rpos : (cur_rpos - BUF_SIZE))];
   }
 
   bool PushArray(const T* buf, const uint32_t& len) {
     if (len > UnusedCapacity()) [[unlikely]]
       return false;
     if (wpos_ + len <= BUF_SIZE) {
-      memcpy(content + wpos_, buf, len * sizeof(T));
+      memcpy(content_ + wpos_, buf, len * sizeof(T));
       wpos_ += len;
     } else {
       const uint32_t& tmp_size = BUF_SIZE - wpos_;
-      memcpy(content + wpos_, buf, tmp_size * sizeof(T));
-      memcpy(content, buf + tmp_size, len - tmp_size * sizeof(T));
+      memcpy(content_ + wpos_, buf, tmp_size * sizeof(T));
+      memcpy(content_, buf + tmp_size, len - tmp_size * sizeof(T));
       wpos_ = len - tmp_size;
     }
     return true;
@@ -93,14 +92,14 @@ class RingBuf {
     if (len > Size()) [[unlikely]]
       return false;
     if (rpos_ + len <= wpos_) {
-      buf = content + rpos_;
+      buf = content_ + rpos_;
     } else {
       if (buf == nullptr) [[unlikely]]
         return false;
 
       const uint32_t& tmp_size = BUF_SIZE - rpos_;
-      memcpy(buf, content + rpos_, tmp_size * sizeof(T));
-      memcpy(buf + tmp_size, content, len - tmp_size * sizeof(T));
+      memcpy(buf, content_ + rpos_, tmp_size * sizeof(T));
+      memcpy(buf + tmp_size, content_, len - tmp_size * sizeof(T));
     }
     return true;
   }
@@ -113,14 +112,14 @@ class RingBuf {
     if (cur_rpos >= BUF_SIZE) cur_rpos -= BUF_SIZE;
 
     if (cur_rpos + len <= wpos_) {
-      buf = content + cur_rpos;
+      buf = content_ + cur_rpos;
     } else {
       if (buf == nullptr) [[unlikely]]
         return false;
 
       const uint32_t& tmp_size = BUF_SIZE - cur_rpos;
-      memcpy(buf, content + cur_rpos, tmp_size * sizeof(T));
-      memcpy(buf + tmp_size, content, len - tmp_size * sizeof(T));
+      memcpy(buf, content_ + cur_rpos, tmp_size * sizeof(T));
+      memcpy(buf + tmp_size, content_, len - tmp_size * sizeof(T));
     }
     return true;
   }
@@ -128,7 +127,7 @@ class RingBuf {
   void Clear() { wpos_ = rpos_ = 0; }
 
  protected:
-  T content[BUF_SIZE];
+  T content_[BUF_SIZE];
 
   uint32_t wpos_ = 0;  // 写位置
   uint32_t rpos_ = 0;  // 读位置

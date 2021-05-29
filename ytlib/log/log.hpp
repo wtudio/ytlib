@@ -3,7 +3,6 @@
  * @brief 高性能日志工具
  * @details 高性能异步日志工具，支持ctx、自定义writer
  * @author WT
- * @email 905976782@qq.com
  * @date 2021-05-08
  */
 #pragma once

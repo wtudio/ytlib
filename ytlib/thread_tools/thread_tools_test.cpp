@@ -155,19 +155,19 @@ TEST(THREAD_TOOLS_TEST, LightSignal_BASE) {
     ASSERT_EQ(i, 0);
     s.wait();  // node1
     ASSERT_EQ(i, 1);
-    ASSERT_EQ(s.wait_for(50), false);
+    ASSERT_EQ(s.wait_for(10), false);
     ASSERT_EQ(i, 1);
-    ASSERT_EQ(s.wait_for(100), true);  // node2
+    ASSERT_EQ(s.wait_for(500), true);  // node2
     ASSERT_EQ(i, 2);
   });
 
   std::thread t2([&] {
     ASSERT_EQ(i, 0);
-    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
     i = 1;
     s.notify();  // node1
     s.reset();
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
     i = 2;
     s.notify();  // node2
   });
