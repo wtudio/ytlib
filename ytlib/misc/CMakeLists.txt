@@ -24,5 +24,5 @@ SOURCE_GROUP(${CUR_TARGET_NAME} FILES ${src})
 # set_misc_for_target(${CUR_TARGET_NAME})
 
 # 设置测试
-add_gtest_for_hpp(TEST_TARGET ${CUR_TARGET_NAME} TEST_SRC ${test_files})
-add_benchmark_test_for_hpp(TEST_TARGET ${CUR_TARGET_NAME} TEST_SRC ${benchmark_files})
+add_gtest_for_hpp(TEST_TARGET ${CUR_TARGET_NAME} TEST_SRC ${test_files} DEP_LIB dl)
+add_benchmark_test_for_hpp(TEST_TARGET ${CUR_TARGET_NAME} TEST_SRC ${benchmark_files} DEP_LIB dl)

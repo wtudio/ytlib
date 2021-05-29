@@ -58,7 +58,7 @@ function(add_benchmark_test_for_target)
         )
 
         add_dependencies(${target_test_name} ${ARG_TEST_TARGET})
-        target_link_libraries(${target_test_name} ${ARG_TEST_TARGET} 
+        target_link_libraries(${target_test_name} ${ARG_TEST_TARGET}
             benchmark::benchmark benchmark::benchmark_main)
 
         set_target_properties(${target_test_name} PROPERTIES UNITY_BUILD ON)
@@ -69,7 +69,7 @@ endfunction()
 
 # 为hpp类库添加gtest项目
 function(add_gtest_for_hpp)
-    cmake_parse_arguments(ARG "" "TEST_TARGET" "TEST_SRC" ${ARGN})
+    cmake_parse_arguments(ARG "" "TEST_TARGET" "TEST_SRC;DEP_LIB" ${ARGN})
     if (BUILD_TESTS)
         set(target_test_name ${ARG_TEST_TARGET}_test)
 
@@ -79,7 +79,7 @@ function(add_gtest_for_hpp)
             ${ARG_TEST_SRC}
         )
 
-        target_link_libraries(${target_test_name}
+        target_link_libraries(${target_test_name} ${ARG_DEP_LIB}
             GTest::gtest GTest::gtest_main GTest::gmock GTest::gmock_main)
 
         set_target_properties(${target_test_name} PROPERTIES UNITY_BUILD ON)
@@ -92,7 +92,7 @@ endfunction()
 
 # 为hpp类库添加benchmark test项目
 function(add_benchmark_test_for_hpp)
-    cmake_parse_arguments(ARG "" "TEST_TARGET" "TEST_SRC" ${ARGN})
+    cmake_parse_arguments(ARG "" "TEST_TARGET" "TEST_SRC;DEP_LIB" ${ARGN})
     if (BUILD_BENCH_TESTS)
         set(target_test_name ${ARG_TEST_TARGET}_benchmark)
 
@@ -102,7 +102,7 @@ function(add_benchmark_test_for_hpp)
             ${ARG_TEST_SRC}
         )
 
-        target_link_libraries(${target_test_name}
+        target_link_libraries(${target_test_name} ${ARG_DEP_LIB}
             benchmark::benchmark benchmark::benchmark_main)
 
         set_target_properties(${target_test_name} PROPERTIES UNITY_BUILD ON)

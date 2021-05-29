@@ -7,10 +7,11 @@
  */
 #pragma once
 
+#include <cmath>
 #include <concepts>
 #include <iostream>
 
-#include "math_def.hpp"
+#include "math_def.h"
 
 namespace ytlib {
 

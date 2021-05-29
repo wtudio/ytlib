@@ -5,8 +5,6 @@
  * @author WT
  * @date 2019-07-26
  */
-#pragma once
-
 #include "math_tools.hpp"
 
 #include <cassert>

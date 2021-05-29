@@ -12,7 +12,7 @@
 #include <string>
 
 #include "complex.hpp"
-#include "math_def.hpp"
+#include "math_def.h"
 
 #define MAXSIZE 268435456
 

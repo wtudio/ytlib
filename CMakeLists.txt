@@ -20,14 +20,6 @@ if(IS_BIG_ENDIAN)
   ADD_DEFINITIONS(-DBIG_ENDIAN)
 endif()
 
-#平台特化
-if(WIN32)
-  add_compile_options(/wd4819)
-  set(BOOST_COMPONENTS)
-else()
-  set(BOOST_COMPONENTS system date_time filesystem thread log serialization)
-endif()
-
 #设定c++版本
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -38,6 +30,15 @@ set(YTLIB_LIBRARY)                          # ytlib自己生成的库
 set(YTLIB_LIBRARY_DEPEND)                   # ytlib依赖的库
 set(YTLIB_INCLUDE_DIR ${ytlib_SOURCE_DIR})   # ytlib头文件目录
 set(YTLIB_LIBRARY_DIR)                      # ytlib库文件目录
+
+#平台特化
+if(WIN32)
+  add_compile_options(/wd4819)
+  set(BOOST_COMPONENTS)
+else()
+  set(YTLIB_LIBRARY_DEPEND ${YTLIB_LIBRARY_DEPEND} dl)
+  set(BOOST_COMPONENTS system date_time filesystem thread log serialization)
+endif()
 
 #依赖库
 find_package(Boost COMPONENTS ${BOOST_COMPONENTS})
