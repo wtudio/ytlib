@@ -8,10 +8,11 @@
 #pragma once
 
 #include "FileSystem.h"
-#include "Util.h"
 #include "SharedBuf.h"
-#include "TcpConnectionPool.h"
-#include "ChannelBase.h"
+#include "ConnPool.h"
+#include "Util.h"
+
+#include "ytlib/thread_tools/block_queue.hpp"
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/log/trivial.hpp>
@@ -31,7 +32,7 @@ namespace ytlib {
  * 并以time_ip_id.txt的名称建立日志文件。time为日志文件建立的时间。
  * 当满足一定条件（达到某个时间点、日志文件大小过大）时新建一个数据库。
  */
-class LogConnection : public ConnectionBase {
+class LogConnection : public ConnBase {
  public:
   enum {
     LOGHEAD1 = 'L',
@@ -39,7 +40,7 @@ class LogConnection : public ConnectionBase {
   };
 
   LogConnection(boost::asio::io_service& io_,
-                std::function<void(const TcpEp&)> errcb_, tpath const* plogPath_) : ConnectionBase(io_, errcb_),
+                std::function<void(const TcpEp&)> errcb_, tpath const* plogPath_) : ConnBase(io_, errcb_),
                                                                                     plogPath(plogPath_),
                                                                                     m_bFirstLogFlag(true),
                                                                                     m_logQueue(1000),
@@ -60,7 +61,7 @@ class LogConnection : public ConnectionBase {
   void on_read_head(const boost::system::error_code& err, std::size_t read_bytes) {
     if (read_get_err(err)) return;
     if (header[0] == TCPHEAD1 && header[1] == TCPHEAD2 && header[2] == LOGHEAD1 && header[3] == LOGHEAD2 && read_bytes == HEAD_SIZE) {
-      uint32_t pack_size = get_num_from_buf(&header[4]);
+      uint32_t pack_size = GetNumFromBuf(&header[4]);
       boost::shared_array<char> pDataBuff = boost::shared_array<char>(new char[pack_size]);
       boost::asio::async_read(sock, boost::asio::buffer(pDataBuff.get(), pack_size), boost::asio::transfer_exactly(pack_size),
                               std::bind(&LogConnection::on_read_log, this, pDataBuff, std::placeholders::_1, std::placeholders::_2));
@@ -68,7 +69,7 @@ class LogConnection : public ConnectionBase {
     }
     stopflag = true;
     YT_DEBUG_PRINTF("read failed : recv an invalid header : %c %c %c %d %d",
-                    header[0], header[1], header[2], header[3], get_num_from_buf(&header[4]));
+                    header[0], header[1], header[2], header[3], GetNumFromBuf(&header[4]));
     err_CallBack(remote_ep);
     return;
   }
@@ -89,14 +90,14 @@ class LogConnection : public ConnectionBase {
 
         //提取该条日志的时间
         boost::posix_time::ptime pt;
-        transEndian((char*)&pt, &(buff_.buf[1]), 8);
+        TransEndian((char*)&pt, &(buff_.buf[1]), 8);
         uint32_t msgpos = 9;
         //检查是否是此连接第一条日志
         if (m_bFirstLogFlag) {
           if (buff_.buf_size < 14) return;
           //建立文件夹
-          uint32_t clientID = get_num_from_buf(&buff_.buf[9]);
-          tstring dbname = to_tstring(clientID) + T_TEXT('(') + T_STRING_TO_TSTRING(sock.remote_endpoint().address().to_string()) + T_TEXT(')');
+          uint32_t clientID = GetNumFromBuf(&buff_.buf[9]);
+          tstring dbname = to_tstring(clientID) + T_TEXT('(') + T_STR_TO_TSTR(sock.remote_endpoint().address().to_string()) + T_TEXT(')');
           tpath curLogPath = (*plogPath) / dbname;
           boost::filesystem::create_directories(curLogPath);
 
@@ -117,7 +118,7 @@ class LogConnection : public ConnectionBase {
     if (!m_bFirstLogFlag) lgfile.close();
   }
 
-  QueueBase<sharedBuf> m_logQueue;
+  BlockQueue<sharedBuf> m_logQueue;
   std::thread m_handleThread;
   tpath const* plogPath;
   bool m_bFirstLogFlag;
@@ -126,19 +127,19 @@ class LogConnection : public ConnectionBase {
 /**
  * @brief 网络日志服务器
  */
-class LoggerServer : public TcpConnectionPool<LogConnection> {
+class LoggerServer : public ConnPool<LogConnection> {
  public:
-  LoggerServer(uint16_t port_, const tstring& path_ = T_TEXT(""), uint32_t threadSize_ = 10) : TcpConnectionPool(port_, threadSize_), logPath(tGetAbsolutePath(path_)) {
+  LoggerServer(uint16_t port_, const tstring& path_ = T_TEXT(""), uint32_t threadSize_ = 10) : ConnPool(port_, threadSize_), logPath(tGetAbsolutePath(path_)) {
     boost::filesystem::create_directories(logPath);
   }
   virtual ~LoggerServer() {}
 
  private:
-  TcpConnectionPtr getNewTcpConnectionPtr() {
+  TcpConnectionPtr GetNewTcpConnectionPtr() {
     return std::make_shared<LogConnection>(service, std::bind(&LoggerServer::on_err, this, std::placeholders::_1), &logPath);
   }
   void on_err(const TcpEp& ep) {
-    TcpConnectionPool::on_err(ep);
+    ConnPool::on_err(ep);
   }
   const tpath logPath;
 };

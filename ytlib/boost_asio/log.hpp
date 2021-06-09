@@ -52,7 +52,7 @@ class NetBackend : public boost::log::sinks::basic_sink_backend<
     //设置本机id和日志等级。如果以后要添加其他信息也在此处添加拓展
     HostInfoSize = 1 + 8 + 4;
     HostInfoBuff = boost::shared_array<char>(new char[HostInfoSize]);
-    set_buf_from_num(&HostInfoBuff[9], myid_);
+    SetBufFromNum(&HostInfoBuff[9], myid_);
     logBuff.push_back(boost::asio::const_buffer(HostInfoBuff.get(), HostInfoSize));
     connect();
   }
@@ -63,10 +63,10 @@ class NetBackend : public boost::log::sinks::basic_sink_backend<
   void consume(boost::log::record_view const& rec) {
     //如果有连接才发送，否则不发送
     if (connect()) {
-      set_buf_from_num(&header[4], static_cast<uint32_t>(rec[boost::log::expressions::smessage]->size() + HostInfoSize));
+      SetBufFromNum(&header[4], static_cast<uint32_t>(rec[boost::log::expressions::smessage]->size() + HostInfoSize));
       HostInfoBuff[0] = static_cast<uint8_t>(*rec[boost::log::trivial::severity]);
       const boost::posix_time::ptime* tnow = (rec[boost::log::aux::default_attribute_names::timestamp()].extract<boost::posix_time::ptime>()).get_ptr();
-      transEndian(&HostInfoBuff[1], (char*)tnow, 8);
+      TransEndian(&HostInfoBuff[1], (char*)tnow, 8);
       logBuff.push_back(boost::asio::buffer(*rec[boost::log::expressions::smessage]));
       boost::system::error_code err;
       //发送失败则将ConnectFlag置为false

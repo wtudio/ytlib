@@ -18,14 +18,25 @@ namespace ytlib {
 /**
  * @brief 基于线程安全队列的channel
  * 保证处理完所有item才会退出
+ * 单队列，异步添加，可以多线程处理数据的通道。
+ * 从进入通道到取出通道数据会经过复制操作。因此建议始终传递share_ptr一类的指针。
+ * 使用阻塞取出，无法暂停，一旦开启将一直取出数据进行处理，直到无数据可取时阻塞
  */
 template <class T>
 class Channel : public BlockQueue<T> {
  public:
+  /**
+   * @brief 通道构造函数
+   * @param n 阻塞队列容量
+   */
   Channel(std::size_t n = ULONG_MAX) : BlockQueue<T>(n) {}
   virtual ~Channel() { StopProcess(); }
 
-  ///初始化
+  /**
+   * @brief 初始化
+   * @param f 处理内容的函数。参数推荐使用（智能）指针
+   * @param th_size 消费者线程数
+   */
   void Init(std::function<void(T &&)> f, uint32_t th_size = 1) {
     f_ = f;
     th_size_ = th_size;

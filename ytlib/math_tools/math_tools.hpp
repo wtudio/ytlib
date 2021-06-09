@@ -22,7 +22,7 @@ namespace ytlib {
  * @param n 输入的数字
  * @return n的二进制形式中有多少个1
  */
-MATH_API uint8_t CountOne(uint64_t n);
+MATH_TOOLS_API uint8_t CountOne(uint64_t n);
 
 //计算有多少个0
 inline uint8_t CountZero(uint64_t n) {
@@ -30,13 +30,13 @@ inline uint8_t CountZero(uint64_t n) {
 }
 
 //计算在pos之前的第一个1的位置
-MATH_API uint8_t FindFirstOne(uint64_t val, uint8_t pos);
+MATH_TOOLS_API uint8_t FindFirstOne(uint64_t val, uint8_t pos);
 
 //判断是否是质数
-MATH_API bool IsPrime(const uint64_t& num);
+MATH_TOOLS_API bool IsPrime(const uint64_t& num);
 
 //求最大公约数
-MATH_API uint64_t Gcd(uint64_t num1, uint64_t num2);
+MATH_TOOLS_API uint64_t Gcd(uint64_t num1, uint64_t num2);
 
 //求最小公倍数：num1*num2/gcd(num1,num2)
 inline uint64_t Lcm(uint64_t num1, uint64_t num2) {
@@ -44,24 +44,24 @@ inline uint64_t Lcm(uint64_t num1, uint64_t num2) {
 }
 
 //分解质因数
-MATH_API void Factoring(uint64_t num, std::vector<uint64_t>& re);
+MATH_TOOLS_API void Factoring(uint64_t num, std::vector<uint64_t>& re);
 
-MATH_API void Factoring(uint64_t num, std::map<uint64_t, uint64_t>& re);
+MATH_TOOLS_API void Factoring(uint64_t num, std::map<uint64_t, uint64_t>& re);
 
 //累乘，需保证n>=m，且m!=0
-MATH_API uint64_t Mul(uint64_t n, uint64_t m = 1);
+MATH_TOOLS_API uint64_t Mul(uint64_t n, uint64_t m = 1);
 
 //排列数，从从n个不同元素中，任取m(m≤n,m与n均为自然数）个元素，其排列的个数。A(n,m)=n!/(n-m)!
-MATH_API uint64_t Arn(uint64_t n, uint64_t m);
+MATH_TOOLS_API uint64_t Arn(uint64_t n, uint64_t m);
 
 //排列数递归求解，已知A(n,mr)求A(n,m)
-MATH_API uint64_t Arn(uint64_t n, uint64_t m, uint64_t a, uint64_t mr);
+MATH_TOOLS_API uint64_t Arn(uint64_t n, uint64_t m, uint64_t a, uint64_t mr);
 
 //组合数，C(n,m)=A(n,m)/m!=n!/(m!*(n-m)!)。C(n,m)=C(n,n-m)
-MATH_API uint64_t Crn(uint64_t n, uint64_t m);
+MATH_TOOLS_API uint64_t Crn(uint64_t n, uint64_t m);
 
 //组合数递归求解
-MATH_API uint64_t Crn(uint64_t n, uint64_t m, uint64_t c, uint64_t mr);
+MATH_TOOLS_API uint64_t Crn(uint64_t n, uint64_t m, uint64_t c, uint64_t mr);
 
 //等差数列求和
 template <typename T>

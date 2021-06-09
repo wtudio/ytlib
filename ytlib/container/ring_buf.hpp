@@ -54,12 +54,12 @@ class RingBuf {
   }
 
   T& Top() {
-    RT_ASSERT(!Empty());
+    RT_ASSERT(!Empty(), "buf is empty.");
     return content_[rpos_];
   }
 
   T& Get(const uint32_t& pos) {
-    RT_ASSERT(!Empty() && pos < Size());
+    RT_ASSERT(!Empty() && pos < Size(), "pos is invalid.");
     const uint32_t& cur_rpos = rpos_ + pos;
     return content_[((cur_rpos < BUF_SIZE) ? cur_rpos : (cur_rpos - BUF_SIZE))];
   }

@@ -7,7 +7,7 @@
 #include "dynamic_lib.hpp"
 #include "guid.hpp"
 #include "loop_tool.hpp"
-#include "print_helper.hpp"
+#include "shared_buf.hpp"
 
 namespace ytlib {
 
@@ -67,60 +67,29 @@ TEST(MISC_TEST, DynamicLib_BASE) {
   ASSERT_FALSE(DynamicLibContainer::Ins().RemoveLib("xxx/xxx"));
 }
 
-struct TestObj {
-  int age;
-  std::string name;
+TEST(MISC_TEST, sharedBuf_BASE) {
+  std::string s = "test test";
+  uint32_t n = s.size();
+  sharedBuf buf1(n);
+  ASSERT_EQ(buf1.Size(), n);
 
-  friend std::ostream& operator<<(std::ostream& out, const TestObj& obj) {
-    out << "age:" << obj.age << "\n";
-    out << "name:" << obj.name << "\n";
-    return out;
-  }
-};
+  buf1 = sharedBuf(s);
+  ASSERT_STREQ(std::string(buf1.Get(), n).c_str(), s.c_str());
 
-TEST(MISC_TEST, PrintHelper_BASE) {
-  PrintHelper::Ins().SetPrint(true);
-  ASSERT_TRUE(PrintHelper::Ins().IfPrint());
+  // 浅拷贝
+  sharedBuf buf2(buf1.GetSharedPtr(), n);
+  ASSERT_STREQ(std::string(buf2.Get(), n).c_str(), s.c_str());
+  ASSERT_EQ(buf1.Get(), buf2.Get());
 
-  TestObj obj = {20, "testname"};
-  std::string struct_str = R"str(test msg:
-age:20
-name:testname
-)str";
-  ASSERT_STREQ(PrintHelper::Ins().PrintStruct("test msg", obj).c_str(), struct_str.c_str());
+  // 深拷贝
+  sharedBuf buf3(buf1.Get(), n);
+  ASSERT_STREQ(std::string(buf3.Get(), n).c_str(), s.c_str());
+  ASSERT_NE(buf1.Get(), buf3.Get());
 
-  std::vector<std::string> v = {"val1", "val2", "val3\nval3val3"};
-  std::string v_str = R"str(test vec:
-vec size = 3
-[index=0]:val1
-[index=1]:val2
-[index=2]:
-val3
-val3val3
-)str";
-  ASSERT_STREQ(PrintHelper::Ins().PrintVec("test vec", v).c_str(), v_str.c_str());
-
-  std::set<std::string> s = {"val1", "val2", "val3\nval3val3"};
-  std::string s_str = R"str(test set:
-set size = 3
-[index=0]:val1
-[index=1]:val2
-[index=2]:
-val3
-val3val3
-)str";
-  ASSERT_STREQ(PrintHelper::Ins().PrintSet("test set", s).c_str(), s_str.c_str());
-
-  std::map<std::string, std::string> m = {{"key1", "val1"}, {"key2", "val2"}, {"key3", "val3\nval3val3"}};
-  std::string m_str = R"str(test map:
-map size = 3
-[index=0, key=key1]:val1
-[index=1, key=key2]:val2
-[index=2, key=key3]:
-val3
-val3val3
-)str";
-  ASSERT_STREQ(PrintHelper::Ins().PrintMap("test map", m).c_str(), m_str.c_str());
+  // 深拷贝
+  sharedBuf buf4 = sharedBuf::GetDeepCopy(buf1);
+  ASSERT_STREQ(std::string(buf4.Get(), n).c_str(), s.c_str());
+  ASSERT_NE(buf1.Get(), buf4.Get());
 }
 
 }  // namespace ytlib

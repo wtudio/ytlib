@@ -13,13 +13,6 @@ if(YTLIB_UNICODE)
   ADD_DEFINITIONS(-DUNICODE)
 endif()
 
-#判断大小端
-include (TestBigEndian)
-TEST_BIG_ENDIAN(IS_BIG_ENDIAN)
-if(IS_BIG_ENDIAN)
-  ADD_DEFINITIONS(-DBIG_ENDIAN)
-endif()
-
 #设定c++版本
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -111,19 +104,21 @@ link_directories(${YTLIB_LIBRARY_DIR})
 
 #需要编译的库
 set(YTLIB_LIBRARY ${YTLIB_LIBRARY} 
-  string_tools
-  math_tools
   log
+  math_tools
+  string_tools
 )
 
 #设置下一级目录
-add_subdirectory(ytlib/thread_tools)
-add_subdirectory(ytlib/string_tools)
-add_subdirectory(ytlib/math_tools)
+add_subdirectory(ytlib/boost_asio)
 add_subdirectory(ytlib/boost_tools)
 add_subdirectory(ytlib/container)
-add_subdirectory(ytlib/misc)
+add_subdirectory(ytlib/file_tools)
 add_subdirectory(ytlib/log)
+add_subdirectory(ytlib/math_tools)
+add_subdirectory(ytlib/misc)
+add_subdirectory(ytlib/string_tools)
+add_subdirectory(ytlib/thread_tools)
 
 if(BUILD_TESTS)
   add_subdirectory(ytlib/custom_test)

@@ -2,6 +2,7 @@
 
 #include "string_algs.hpp"
 #include "string_tools.hpp"
+#include "tstring.hpp"
 #include "url_encode.hpp"
 
 using std::pair;
@@ -10,7 +11,7 @@ using std::vector;
 
 namespace ytlib {
 
-TEST(STRING_TEST, ALG_TEST) {
+TEST(STRING_TEST, ALG_BASE) {
   //kmp
   string ss = "abcdef abcdefg abcdefgh";
   ASSERT_EQ(KMP(ss, "abcdef"), 0);
@@ -29,27 +30,27 @@ TEST(STRING_TEST, ALG_TEST) {
   ASSERT_EQ(re.second, 4);
 }
 
-TEST(STRING_TEST, trim_TEST) {
+TEST(STRING_TEST, trim_BASE) {
   string str = " testval  ";
   EXPECT_STREQ(trim(str).c_str(), "testval");
   EXPECT_STREQ(str.c_str(), "testval");
   EXPECT_STREQ(trim(str).c_str(), "testval");
 }
 
-TEST(STRING_TEST, Replace_TEST) {
+TEST(STRING_TEST, Replace_BASE) {
   string str = "val1+val2+val3";
   EXPECT_STREQ(ReplaceString(str, "val1", "val10").c_str(), "val10+val2+val3");
   EXPECT_STREQ(ReplaceString(str, "val2", "v2").c_str(), "val10+v2+val3");
   EXPECT_STREQ(ReplaceString(str, "val3", "val4").c_str(), "val10+v2+val4");
 }
 
-TEST(STRING_TEST, IsAlnumStr_TEST) {
+TEST(STRING_TEST, IsAlnumStr_BASE) {
   EXPECT_EQ(IsAlnumStr("123456789"), true);
   EXPECT_EQ(IsAlnumStr("123456789abcd"), true);
   EXPECT_EQ(IsAlnumStr("123456789.."), false);
 }
 
-TEST(STRING_TEST, Map_TEST) {
+TEST(STRING_TEST, Map_BASE) {
   string str = "k1=v1& k2 =v2&k3= v3 &&k4=v4&k4=v4x& =v5&k6= &";
   auto remap = SplitToMap(str);
   EXPECT_STREQ(GetMapItemWithDef(remap, "k1").c_str(), "v1");
@@ -83,7 +84,7 @@ TEST(STRING_TEST, Map_TEST) {
   EXPECT_EQ(test_set.size(), 3);
 }
 
-TEST(STRING_TEST, Vector_TEST) {
+TEST(STRING_TEST, Vector_BASE) {
   string str = "v1,v2,, v3 , ,v4,";
   auto revec = SplitToVec(str, ",");
   EXPECT_EQ(revec.size(), 4);
@@ -107,12 +108,12 @@ TEST(STRING_TEST, Vector_TEST) {
   EXPECT_EQ(CheckIfInList("aaa,,bbb", "", ','), false);
 }
 
-TEST(STRING_TEST, Set_TEST) {
+TEST(STRING_TEST, Set_BASE) {
   std::set<std::string> st{"v1", "v2", "v3", "v4"};
   EXPECT_STREQ(JoinSet(st, "|").c_str(), "v1|v2|v3|v4");
 }
 
-TEST(STRING_TEST, Version_TEST) {
+TEST(STRING_TEST, Version_BASE) {
   EXPECT_EQ(CmpVersion("7.6.8.11020", "7.6.8"), 1);
   EXPECT_EQ(CmpVersion("7.6.8", "7.6.8"), 0);
   EXPECT_EQ(CmpVersion("7.6.8", "7.6.8.11020"), -1);
@@ -124,7 +125,7 @@ TEST(STRING_TEST, Version_TEST) {
   EXPECT_EQ(CheckVersionInside("7.6.6", "7.6.7", "7.6.9"), false);
 }
 
-TEST(STRING_TEST, UrlEncode_TEST) {
+TEST(STRING_TEST, UrlEncode_BASE) {
   string s = "http://abc123.com/aaa/bbbb?qa=1&qb=adf";
 
   string se = UrlEncode(s, false);
@@ -133,4 +134,15 @@ TEST(STRING_TEST, UrlEncode_TEST) {
   string sd = UrlDecode(se);
   EXPECT_STREQ(sd.c_str(), s.c_str());
 }
+
+TEST(STRING_TEST, tstring_BASE) {
+  std::string s = "test123";
+
+  std::wstring ws = ytlib::ToWString(s);
+  EXPECT_STREQ(ws.c_str(), L"test123");
+
+  std::string s1 = ytlib::ToString(ws);
+  EXPECT_STREQ(s1.c_str(), "test123");
+}
+
 }  // namespace ytlib

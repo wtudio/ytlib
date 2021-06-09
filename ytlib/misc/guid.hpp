@@ -60,7 +60,7 @@ class GuidGener {
 
   // 设置初始mac值，mac值不应超过GUID_MAC_BIT位，mac值应能在整个guid系统内部唯一标识一个线程
   void Init(const uint32_t& mac_id) {
-    RT_ASSERT(mac_id < GUID_MAC_NUM);
+    RT_ASSERT(mac_id < GUID_MAC_NUM, "mac_id is invalid.");
 
     guid_buf_ = new Guid[GUID_OBJ_NUM];
     for (uint32_t ii = 0; ii < GUID_OBJ_NUM; ++ii) {
@@ -103,7 +103,7 @@ class ObjGuidGener {
   ~ObjGuidGener() {}
 
   void Init(const uint32_t& obj_id) {
-    RT_ASSERT(obj_id < GUID_OBJ_NUM);
+    RT_ASSERT(obj_id < GUID_OBJ_NUM, "obj_id is invalid.");
     obj_id_ = obj_id;
   }
 
