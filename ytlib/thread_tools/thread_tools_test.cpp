@@ -9,6 +9,7 @@
 
 #include "block_queue.hpp"
 #include "channel.hpp"
+#include "coroutine_tools.hpp"
 #include "signal.hpp"
 #include "thread_id.hpp"
 #include "ytlib/misc/misc_macro.h"
@@ -20,28 +21,31 @@ class TestObj {
   TestObj() {
     id = gid++;
     DBG_PRINT("create obj %d", id);
+    data = "";
   }
-  TestObj(const TestObj &obj) {
+  TestObj(const TestObj &obj) : data(obj.data) {
     id = gid++;
     DBG_PRINT("create obj %d from %d", id, obj.id);
   }
   TestObj &operator=(const TestObj &obj) {
     DBG_PRINT(" = obj %d to %d", obj.id, id);
+    data = obj.data;
     return *this;
   }
-  TestObj(TestObj &&obj) {
+  TestObj(TestObj &&obj) : data(std::move(obj.data)) {
     id = gid++;
     DBG_PRINT("move obj %d to %d", obj.id, id);
   }
   TestObj &operator=(const TestObj &&obj) {
     DBG_PRINT("move = obj %d to %d", obj.id, id);
+    data = std::move(obj.data);
     return *this;
   }
   ~TestObj() {
     DBG_PRINT("del obj %d", id);
   }
   uint32_t id;
-  uint32_t tmp;
+  std::string data;
   static uint32_t gid;
 };
 
@@ -55,7 +59,6 @@ TEST(THREAD_TOOLS_TEST, Channel_BASE) {
 
   auto f = [&](TestObj &&obj) {
     DBG_PRINT("handle obj %d", obj.id);
-    obj.tmp = obj.id;
     ++ct;
   };
 
@@ -155,10 +158,6 @@ TEST(THREAD_TOOLS_TEST, LightSignal_BASE) {
     ASSERT_EQ(i, 0);
     s.wait();  // node1
     ASSERT_EQ(i, 1);
-    ASSERT_EQ(s.wait_for(10), false);
-    ASSERT_EQ(i, 1);
-    ASSERT_EQ(s.wait_for(500), true);  // node2
-    ASSERT_EQ(i, 2);
   });
 
   std::thread t2([&] {
@@ -166,10 +165,28 @@ TEST(THREAD_TOOLS_TEST, LightSignal_BASE) {
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     i = 1;
     s.notify();  // node1
-    s.reset();
-    std::this_thread::sleep_for(std::chrono::milliseconds(200));
-    i = 2;
-    s.notify();  // node2
+  });
+
+  t1.join();
+  t2.join();
+}
+
+// 测试LightSignalAtomic
+TEST(THREAD_TOOLS_TEST, LightSignalAtomic_BASE) {
+  LightSignalAtomic s;
+  uint32_t i = 0;
+
+  std::thread t1([&] {
+    ASSERT_EQ(i, 0);
+    s.wait();  // node1
+    ASSERT_EQ(i, 1);
+  });
+
+  std::thread t2([&] {
+    ASSERT_EQ(i, 0);
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    i = 1;
+    s.notify();  // node1
   });
 
   t1.join();
@@ -211,6 +228,83 @@ TEST(THREAD_TOOLS_TEST, ThreadIdTool_BASE) {
     ASSERT_EQ(thread_id_set.find(itr.second) == thread_id_set.end(), true);
     thread_id_set.insert(itr.second);
   }
+}
+
+// 模拟异步请求
+void AsyncSendRecv(const TestObj &in_buf, std::function<void(TestObj &&)> callback) {
+  std::thread t([&in_buf, callback]() {
+    std::cout << "aaaaa" << std::endl;
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    TestObj out_buf;  // 3
+    out_buf.data = in_buf.data + "-echo";
+    callback(std::move(out_buf));
+    std::cout << "bbbbbb" << std::endl;
+  });
+  t.detach();
+}
+
+TEST(THREAD_TOOLS_TEST, coroutine_BASE) {
+  TestObj::gid = 0;
+
+  TestObj buf;  // 0
+  buf.data = "abcd";
+
+  auto sched = [&buf]() -> CoroSched<TestObj> {
+    // CoroSched.ret_ 1
+    std::cout << "start coro" << std::endl;
+
+    // Awaitable.re_ 2
+    // ret_buf 4
+    TestObj ret_buf = co_await Awaitable<TestObj>([&buf](std::function<void(TestObj &&)> cb) {
+      AsyncSendRecv(buf, cb);
+    });
+    std::cout << "coro 1" << std::endl;
+    co_yield ret_buf;  // 4->1  node1
+
+    std::cout << "coro 2" << std::endl;
+
+    // ret_buf2 6
+    TestObj ret_buf2 = co_await Awaitable<TestObj>([&ret_buf](std::function<void(TestObj &&)> cb) {
+      AsyncSendRecv(ret_buf, cb);
+    });
+
+    std::cout << "coro 3" << std::endl;
+
+    co_yield ret_buf2;  // node2
+
+    std::cout << "coro 4" << std::endl;
+
+    co_yield std::move(ret_buf);  // node3
+
+    std::cout << "coro 5" << std::endl;
+
+    co_return ret_buf2;  // node4
+  }();
+
+  // run
+  std::cout << "ttttt" << std::endl;
+  // 5
+  TestObj out_buf = sched.Get();  // node1
+  ASSERT_STREQ(out_buf.data.c_str(), "abcd-echo");
+
+  // not run
+  out_buf = sched.Get();
+  ASSERT_STREQ(out_buf.data.c_str(), "abcd-echo");
+
+  // run
+  sched.Resume();         // node1 start
+  out_buf = sched.Get();  // node2
+  ASSERT_STREQ(out_buf.data.c_str(), "abcd-echo-echo");
+
+  // run
+  sched.Resume();         // node2 start
+  out_buf = sched.Get();  // node3
+  ASSERT_STREQ(out_buf.data.c_str(), "abcd-echo");
+
+  // run
+  sched.Resume();         // node3 start
+  out_buf = sched.Get();  // node4
+  ASSERT_STREQ(out_buf.data.c_str(), "abcd-echo-echo");
 }
 
 }  // namespace ytlib
