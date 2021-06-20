@@ -13,6 +13,7 @@
 #include "signal.hpp"
 #include "thread_id.hpp"
 #include "ytlib/misc/misc_macro.h"
+#include "ytlib/thread_tools/thread_id.hpp"
 
 namespace ytlib {
 
@@ -20,29 +21,29 @@ class TestObj {
  public:
   TestObj() {
     id = gid++;
-    DBG_PRINT("create obj %d", id);
+    DBG_PRINT("[%lld]create obj %d", ytlib::GetThreadId(), id);
     data = "";
   }
   TestObj(const TestObj &obj) : data(obj.data) {
     id = gid++;
-    DBG_PRINT("create obj %d from %d", id, obj.id);
+    DBG_PRINT("[%lld]create obj %d from %d by copy", ytlib::GetThreadId(), id, obj.id);
   }
   TestObj &operator=(const TestObj &obj) {
-    DBG_PRINT(" = obj %d to %d", obj.id, id);
+    DBG_PRINT("[%lld]copy obj %d to %d", ytlib::GetThreadId(), obj.id, id);
     data = obj.data;
     return *this;
   }
   TestObj(TestObj &&obj) : data(std::move(obj.data)) {
     id = gid++;
-    DBG_PRINT("move obj %d to %d", obj.id, id);
+    DBG_PRINT("[%lld]create obj %d from %d by move", ytlib::GetThreadId(), id, obj.id);
   }
   TestObj &operator=(const TestObj &&obj) {
-    DBG_PRINT("move = obj %d to %d", obj.id, id);
+    DBG_PRINT("[%lld]move obj %d to %d", ytlib::GetThreadId(), obj.id, id);
     data = std::move(obj.data);
     return *this;
   }
   ~TestObj() {
-    DBG_PRINT("del obj %d", id);
+    DBG_PRINT("[%lld]del obj %d", ytlib::GetThreadId(), id);
   }
   uint32_t id;
   std::string data;
@@ -58,7 +59,7 @@ TEST(THREAD_TOOLS_TEST, Channel_BASE) {
   std::atomic<uint32_t> ct = 0;
 
   auto f = [&](TestObj &&obj) {
-    DBG_PRINT("handle obj %d", obj.id);
+    DBG_PRINT("[%lld]handle obj %d", obj.id);
     ++ct;
   };
 
@@ -235,7 +236,7 @@ void AsyncSendRecv(const TestObj &in_buf, std::function<void(TestObj &&)> callba
   std::thread t([&in_buf, callback]() {
     std::cout << "aaaaa" << std::endl;
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-    TestObj out_buf;  // 3
+    TestObj out_buf;  // 3、7
     out_buf.data = in_buf.data + "-echo";
     callback(std::move(out_buf));
     std::cout << "bbbbbb" << std::endl;
@@ -263,18 +264,19 @@ TEST(THREAD_TOOLS_TEST, coroutine_BASE) {
 
     std::cout << "coro 2" << std::endl;
 
-    // ret_buf2 6
+    // Awaitable.re_ 6
+    // ret_buf2 8
     TestObj ret_buf2 = co_await Awaitable<TestObj>([&ret_buf](std::function<void(TestObj &&)> cb) {
       AsyncSendRecv(ret_buf, cb);
     });
 
     std::cout << "coro 3" << std::endl;
 
-    co_yield ret_buf2;  // node2
+    co_yield ret_buf2;  // 8->1 node2
 
     std::cout << "coro 4" << std::endl;
 
-    co_yield std::move(ret_buf);  // node3
+    co_yield std::move(ret_buf);  // 4->1 node3
 
     std::cout << "coro 5" << std::endl;
 

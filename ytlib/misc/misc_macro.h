@@ -9,10 +9,7 @@
 #define STRING(x) _STRING(x)
 
 #ifdef _DEBUG
-  #include "ytlib/thread_tools/thread_id.hpp"
-  #define DBG_PRINT(fmt, ...)                                         \
-    printf("[" __FILENAME__ ":" STRING(__LINE__) "@%s][%lld]" fmt "\n", \
-           __FUNCTION__, ytlib::GetThreadId(), ##__VA_ARGS__)
+  #define DBG_PRINT(fmt, ...) printf("[" __FILENAME__ ":" STRING(__LINE__) "@%s]" fmt "\n", __FUNCTION__, ##__VA_ARGS__)
 #else
   #define DBG_PRINT(fmt, ...)
 #endif

@@ -102,7 +102,7 @@ class NetBackend : public boost::log::sinks::basic_sink_backend<
     return true;
   }
 
-  boost::asio::io_service service;  //全同步操作，所以不需要run
+  boost::asio::io_context service;  //全同步操作，所以不需要run
   TcpSocket sock;
   TcpEp LogServerEp;
   std::atomic_bool ConnectFlag;

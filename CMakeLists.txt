@@ -1,7 +1,8 @@
-cmake_minimum_required(VERSION 3.10)#最低版本要求
+cmake_minimum_required(VERSION 3.10)
+
 #cmake_policy设置（如果有）
 
-project(ytlib)#工程名称
+project(ytlib VERSION 0.1.0 LANGUAGES C CXX)
 
 message(STATUS "start cmake ytlib...")
 
@@ -21,20 +22,18 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 #要导出给引用者的变量
 set(YTLIB_LIBRARY)                          # ytlib自己生成的库
 set(YTLIB_LIBRARY_DEPEND)                   # ytlib依赖的库
-set(YTLIB_INCLUDE_DIR ${ytlib_SOURCE_DIR})   # ytlib头文件目录
+set(YTLIB_INCLUDE_DIR ${ytlib_SOURCE_DIR})  # ytlib头文件目录
 set(YTLIB_LIBRARY_DIR)                      # ytlib库文件目录
 
 #平台特化
 if(WIN32)
   add_compile_options(/wd4819)
-  set(BOOST_COMPONENTS)
 else()
   set(YTLIB_LIBRARY_DEPEND ${YTLIB_LIBRARY_DEPEND} dl)
-  set(BOOST_COMPONENTS system date_time filesystem thread log serialization)
 endif()
 
 #依赖库
-find_package(Boost COMPONENTS ${BOOST_COMPONENTS})
+find_package(Boost QUIET)
 if(NOT Boost_FOUND)
   message(FATAL_ERROR "Cannot find Boost library. please set the Boost_INCLUDE_DIRS to boost root path.")
 endif()

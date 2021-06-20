@@ -6,6 +6,7 @@
 
 namespace ytlib {
 
+// 上层是线程的协程调度器
 template <class T>
 class CoroSched {
  public:
@@ -81,15 +82,14 @@ class CoroSched {
 template <class T>
 class Awaitable {
  public:
- typedef 
-  using RetCallback = std::function<void(const T&)>;
+  using RetCallback = std::function<void(T&&)>;
 
   Awaitable(std::function<void(RetCallback)> anyscfun) : anyscfun_(anyscfun) {}
 
   bool await_ready() const noexcept { return false; }
   void await_suspend(std::coroutine_handle<> h) {
-    anyscfun_([=](const T& re) {
-      this->re_ = re;
+    anyscfun_([=](T&& re) {
+      this->re_ = std::move(re);
       h.resume();
     });
   }

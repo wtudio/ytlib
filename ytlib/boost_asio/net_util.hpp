@@ -18,7 +18,7 @@ typedef boost::asio::ip::tcp::socket TcpSocket;
 
 ///检查端口是否可用。true说明可用
 inline bool CheckPort(uint16_t port_) {
-  boost::asio::io_service io;
+  boost::asio::io_context io;
   TcpSocket sk(io);
   sk.open(boost::asio::ip::tcp::v4());
   boost::system::error_code err;

@@ -39,7 +39,7 @@ class LogConnection : public ConnBase {
     LOGHEAD2 = 'G'
   };
 
-  LogConnection(boost::asio::io_service& io_,
+  LogConnection(boost::asio::io_context& io_,
                 std::function<void(const TcpEp&)> errcb_, tpath const* plogPath_) : ConnBase(io_, errcb_),
                                                                                     plogPath(plogPath_),
                                                                                     m_bFirstLogFlag(true),
