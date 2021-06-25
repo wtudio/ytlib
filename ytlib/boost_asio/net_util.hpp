@@ -12,9 +12,15 @@
 
 namespace ytlib {
 
-typedef boost::asio::ip::address IPAddr;       //ip
+typedef boost::asio::ip::address_v4 IPV4;      //ip
 typedef boost::asio::ip::tcp::endpoint TcpEp;  //28个字节
 typedef boost::asio::ip::tcp::socket TcpSocket;
+
+inline std::string TcpEp2Str(const TcpEp& ep) {
+  std::stringstream ss;
+  ss << ep;
+  return ss.str();
+}
 
 ///检查端口是否可用。true说明可用
 inline bool CheckPort(uint16_t port_) {
@@ -66,7 +72,7 @@ inline void SetBufFromNum(char* p, uint32_t n) {
 #endif
 }
 
-inline uint32_t GetNumFromBuf(char* p) {
+inline uint32_t GetNumFromBuf(const char* p) {
 #if ENDIAN_ORDER == LITTLE_ENDIAN
   return *((uint32_t*)p);
 #elif ENDIAN_ORDER == BIG_ENDIAN

@@ -1,147 +1,207 @@
 /**
- * @file LoggerServer.h
- * @brief 基于boost.log的远程日志服务器
- * @details 基于boost.log的远程日志服务器，提供日志存档、判断大小自动新建等功能
+ * @file log_svr.hpp
+ * @brief 基于boost.asio的远程日志服务器
+ * @details 基于boost.asio的远程日志服务器
  * @author WT
  * @date 2019-07-26
  */
 #pragma once
 
-#include "FileSystem.h"
-#include "SharedBuf.h"
-#include "ConnPool.h"
-#include "Util.h"
-
-#include "ytlib/thread_tools/block_queue.hpp"
-
-#include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/log/trivial.hpp>
-#include <boost/shared_array.hpp>
-
+#include <filesystem>
 #include <fstream>
-#include <thread>
+#include <memory>
+
+#include "net_util.hpp"
+#include "ytlib/misc/error.hpp"
+#include "ytlib/misc/misc_macro.h"
 
 namespace ytlib {
 
 /**
- * @brief 网络日志连接类
- * tag始终为 LG。
- * 目前版本日志服务器以目标机器id+ip:port为标签建立table。
- * 日志内容只有time、level、msg。
- * 初始化时给定一个路径，日志服务器每新连接一个客户机就在此目录下建立id_ip_port路径。
- * 并以time_ip_id.txt的名称建立日志文件。time为日志文件建立的时间。
- * 当满足一定条件（达到某个时间点、日志文件大小过大）时新建一个数据库。
+ * @brief 远程日志服务器
+ * 默认监听50001端口，为每个ip-port创建一个文件夹存放滚动日志文件
+ * 无协议，收到什么打印什么
  */
-class LogConnection : public ConnBase {
+class LogServer {
  public:
-  enum {
-    LOGHEAD1 = 'L',
-    LOGHEAD2 = 'G'
+  // 日志相关配置
+  struct LogConfig {
+    std::filesystem::path log_path;
+    std::ofstream::pos_type max_file_size;
   };
+  using LogCfgPtr = std::shared_ptr<LogConfig>;
 
-  LogConnection(boost::asio::io_context& io_,
-                std::function<void(const TcpEp&)> errcb_, tpath const* plogPath_) : ConnBase(io_, errcb_),
-                                                                                    plogPath(plogPath_),
-                                                                                    m_bFirstLogFlag(true),
-                                                                                    m_logQueue(1000),
-                                                                                    m_handleThread(std::bind(&LogConnection::logHandel, this)) {
+ public:
+  explicit LogServer(boost::asio::io_context& io, uint16_t port = 50001,
+                     LogCfgPtr log_cfg_ptr = LogCfgPtr()) : port_(port),
+                                                            io_(io),
+                                                            acceptor_(io, {IPV4(), port}),
+                                                            sessions_strand_(boost::asio::make_strand(io)),
+                                                            log_cfg_ptr_(log_cfg_ptr) {
+    if (!log_cfg_ptr_) {
+      log_cfg_ptr_ = std::make_shared<LogConfig>();
+      log_cfg_ptr_->log_path = "./log";
+      log_cfg_ptr_->max_file_size = 1 * 1024 * 1024;
+    }
+    log_cfg_ptr_->log_path = std::filesystem::absolute(log_cfg_ptr_->log_path);
   }
-  virtual ~LogConnection() {
-    stopflag = true;
-    m_logQueue.Stop();
-    m_handleThread.join();
+  ~LogServer() {}
+
+  // no copy
+  LogServer(const LogServer&) = delete;
+  LogServer& operator=(const LogServer&) = delete;
+
+  void Start() {
+    RT_ASSERT(CheckPort(port_), "port is used.");
+
+    if (std::filesystem::status(log_cfg_ptr_->log_path).type() != std::filesystem::file_type::directory)
+      std::filesystem::create_directories(log_cfg_ptr_->log_path);
+
+    boost::asio::co_spawn(
+        io_,
+        [this]() -> boost::asio::awaitable<void> {
+          try {
+            for (;;) {
+              auto p_session = std::make_shared<LogSession>(
+                  co_await acceptor_.async_accept(boost::asio::use_awaitable),
+                  io_,
+                  log_cfg_ptr_);
+
+              boost::asio::co_spawn(
+                  sessions_strand_,
+                  [this, p_session]() -> boost::asio::awaitable<void> {
+                    sessions_.emplace(sessions_.end(), p_session);
+                  },
+                  boost::asio::detached);
+
+              p_session->Start();
+            }
+          } catch (const std::exception& e) {
+            std::cerr << "log svr accept connection get exception:" << e.what() << '\n';
+          }
+          co_return;
+        },
+        boost::asio::detached);
+  }
+
+  void Stop() {
   }
 
  private:
-  void do_read_head() {
-    boost::asio::async_read(sock, boost::asio::buffer(header, HEAD_SIZE), boost::asio::transfer_exactly(HEAD_SIZE),
-                            std::bind(&LogConnection::on_read_head, this, std::placeholders::_1, std::placeholders::_2));
-  }
-  //读取解析报头
-  void on_read_head(const boost::system::error_code& err, std::size_t read_bytes) {
-    if (read_get_err(err)) return;
-    if (header[0] == TCPHEAD1 && header[1] == TCPHEAD2 && header[2] == LOGHEAD1 && header[3] == LOGHEAD2 && read_bytes == HEAD_SIZE) {
-      uint32_t pack_size = GetNumFromBuf(&header[4]);
-      boost::shared_array<char> pDataBuff = boost::shared_array<char>(new char[pack_size]);
-      boost::asio::async_read(sock, boost::asio::buffer(pDataBuff.get(), pack_size), boost::asio::transfer_exactly(pack_size),
-                              std::bind(&LogConnection::on_read_log, this, pDataBuff, std::placeholders::_1, std::placeholders::_2));
-      return;
-    }
-    stopflag = true;
-    YT_DEBUG_PRINTF("read failed : recv an invalid header : %c %c %c %d %d",
-                    header[0], header[1], header[2], header[3], GetNumFromBuf(&header[4]));
-    err_CallBack(remote_ep);
-    return;
-  }
-  void on_read_log(boost::shared_array<char>& buff_, const boost::system::error_code& err, std::size_t read_bytes) {
-    if (read_get_err(err)) return;
-    m_logQueue.Enqueue(sharedBuf(buff_, static_cast<uint32_t>(read_bytes)));
-    do_read_head();
-  }
-  //此方法里还需判断格式是否正确
-  void logHandel() {
-    std::ofstream lgfile;
-    while (!stopflag) {
-      sharedBuf buff_;
-      if (m_logQueue.BlockDequeue(buff_)) {
-        if (buff_.buf_size < 10) return;
-        //日志等级
-        uint8_t lglvl = static_cast<uint8_t>(buff_.buf[0]);
+  class LogSession : public std::enable_shared_from_this<LogSession> {
+   public:
+    LogSession(TcpSocket&& sock, boost::asio::io_context& io,
+               LogCfgPtr log_cfg_ptr) : sock_(std::move(sock)),
+                                        strand_(boost::asio::make_strand(io)),
+                                        log_cfg_ptr_(log_cfg_ptr) {}
 
-        //提取该条日志的时间
-        boost::posix_time::ptime pt;
-        TransEndian((char*)&pt, &(buff_.buf[1]), 8);
-        uint32_t msgpos = 9;
-        //检查是否是此连接第一条日志
-        if (m_bFirstLogFlag) {
-          if (buff_.buf_size < 14) return;
-          //建立文件夹
-          uint32_t clientID = GetNumFromBuf(&buff_.buf[9]);
-          tstring dbname = to_tstring(clientID) + T_TEXT('(') + T_STR_TO_TSTR(sock.remote_endpoint().address().to_string()) + T_TEXT(')');
-          tpath curLogPath = (*plogPath) / dbname;
-          boost::filesystem::create_directories(curLogPath);
+    ~LogSession() {
+      if (sock_.is_open()) {
+        sock_.close();
+      }
 
-          //新建数据库
-          tstring slogTime = boost::posix_time::to_iso_string_type<tchar>(pt);
-          curLogPath = curLogPath / (dbname + T_TEXT('_') + slogTime + T_TEXT(".txt"));
-          lgfile.open(curLogPath.c_str(), std::ios::trunc);
-          msgpos += 4;
-          m_bFirstLogFlag = false;
-        }
-
-        //将日志写入日志文件。这里buf最后不知道为什么没有传\0过来，因此需要手动一下
-        char tmpc = buff_.buf[buff_.buf_size - 1];
-        buff_.buf[buff_.buf_size - 1] = '\0';
-        lgfile << '[' << pt << "]<" << (boost::log::trivial::severity_level)(lglvl) << ">:" << &(buff_.buf[msgpos]) << tmpc << std::endl;
+      if (ofs_.is_open()) {
+        ofs_.flush();
+        ofs_.clear();
+        ofs_.close();
       }
     }
-    if (!m_bFirstLogFlag) lgfile.close();
-  }
 
-  BlockQueue<sharedBuf> m_logQueue;
-  std::thread m_handleThread;
-  tpath const* plogPath;
-  bool m_bFirstLogFlag;
-};
+    void Start() {
+      const TcpEp& ep = sock_.remote_endpoint();
+      DBG_PRINT("get a new connection from %s:%d", ep.address().to_string().c_str(), ep.port());
 
-/**
- * @brief 网络日志服务器
- */
-class LoggerServer : public ConnPool<LogConnection> {
- public:
-  LoggerServer(uint16_t port_, const tstring& path_ = T_TEXT(""), uint32_t threadSize_ = 10) : ConnPool(port_, threadSize_), logPath(tGetAbsolutePath(path_)) {
-    boost::filesystem::create_directories(logPath);
-  }
-  virtual ~LoggerServer() {}
+      log_file_dir_ = log_cfg_ptr_->log_path / (ep.address().to_string() + "_" + std::to_string(ep.port()));
+
+      if (std::filesystem::status(log_file_dir_).type() != std::filesystem::file_type::directory)
+        std::filesystem::create_directories(log_file_dir_);
+
+      DBG_PRINT("log session file dir: %s", log_file_dir_.string().c_str());
+
+      auto self = shared_from_this();
+      boost::asio::co_spawn(
+          strand_,
+          [this, self]() -> boost::asio::awaitable<void> {
+            try {
+              const std::size_t data_size = 1024;
+              char data[data_size];
+              for (;;) {
+                std::size_t n = co_await sock_.async_read_some(boost::asio::buffer(data, data_size), boost::asio::use_awaitable);
+
+                time_t cnow = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+                struct tm now_tm;
+#if defined(_WIN32)
+                localtime_s(&now_tm, &cnow);
+#else
+                localtime_r(&cnow, &now_tm);
+#endif
+
+                if (!ofs_.is_open() || ofs_.tellp() > log_cfg_ptr_->max_file_size ||
+                    now_tm.tm_hour != t_.tm_hour || now_tm.tm_yday != t_.tm_yday) {
+                  if (ofs_.is_open()) {
+                    ofs_.flush();
+                    ofs_.clear();
+                    ofs_.close();
+                  }
+
+                  t_ = now_tm;
+                  char name_buf[32];
+                  snprintf(name_buf, sizeof(name_buf), "%04d%02d%02d_%02d%02d%02d.log",
+                           t_.tm_year + 1900, t_.tm_mon + 1, t_.tm_mday, t_.tm_hour, t_.tm_min, t_.tm_sec);
+
+                  ofs_.open(log_file_dir_ / name_buf, std::ios::app);
+                }
+
+                ofs_ << std::string_view(data, n);
+              }
+            } catch (std::exception& e) {
+              std::cerr << "log session get exception and exit, addr:" << sock_.remote_endpoint() << ", exception:" << e.what() << '\n';
+            }
+            co_return;
+          },
+          boost::asio::detached);
+
+      boost::asio::co_spawn(
+          strand_,
+          [this, self]() -> boost::asio::awaitable<void> {
+            try {
+              boost::asio::steady_timer t(strand_);
+              for (;;) {
+                t.expires_after(std::chrono::seconds(5));
+                co_await t.async_wait(boost::asio::use_awaitable);
+                if (ofs_.is_open()) {
+                  ofs_.flush();
+                }
+              }
+            } catch (const std::exception& e) {
+              std::cerr << "log session timer get exception and exit, addr:" << sock_.remote_endpoint() << ", exception:" << e.what() << '\n';
+            }
+            co_return;
+          },
+          boost::asio::detached);
+    }
+
+   private:
+    TcpSocket sock_;
+    boost::asio::strand<boost::asio::io_context::executor_type> strand_;
+
+    struct tm t_;                         // 当前文件创建时间
+    std::ofstream ofs_;                   // 日志文件
+    std::filesystem::path log_file_dir_;  // 日志文件目录
+
+    LogCfgPtr log_cfg_ptr_;  // 日志配置
+  };
 
  private:
-  TcpConnectionPtr GetNewTcpConnectionPtr() {
-    return std::make_shared<LogConnection>(service, std::bind(&LoggerServer::on_err, this, std::placeholders::_1), &logPath);
-  }
-  void on_err(const TcpEp& ep) {
-    ConnPool::on_err(ep);
-  }
-  const tpath logPath;
+  const uint16_t port_;  //监听端口
+
+  boost::asio::io_context& io_;
+  boost::asio::ip::tcp::acceptor acceptor_;  //监听器
+
+  boost::asio::strand<boost::asio::io_context::executor_type> sessions_strand_;  // session池操作strand
+  std::list<LogSession> sessions_;                                               // session池
+
+  LogCfgPtr log_cfg_ptr_;  // 日志配置
 };
 
 }  // namespace ytlib

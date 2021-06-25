@@ -15,6 +15,17 @@
 
 namespace ytlib {
 
+/*
+目标：
+1、服务端、客户端连接池，以及合并的对等连接池
+2、连接类型可业务自定义化，提供任意（logsvr）、boost序列化结构体、char* buf、文件几种默认业务/协议形式
+*/
+
+
+
+
+// -------------------------
+
 /**
  * @brief tcp连接池基类
  * 包头和包内容应该尽可能合在一个tcp包中，否则各层协议前缀消耗很大
@@ -22,13 +33,10 @@ namespace ytlib {
  */
 class ConnPoolBase {
  public:
-  using Strand = boost::asio::io_context::strand;
-
- public:
   // sock管理结构，不要放逻辑在里面
   class Conn {
    public:
-    Conn(Strand& strand) : sock_(strand), strand_(strand) {}
+    Conn(boost::asio::io_context::strand& strand) : sock_(strand), strand_(strand) {}
     ~Conn() {}
 
     // no copy
@@ -36,13 +44,13 @@ class ConnPoolBase {
     Conn& Conn = (const Conn&) = delete;
 
     TcpSocket sock_;  //sock连接
-    Strand& strand_;
+    boost::asio::io_context::strand& strand_;
   };
 
  public:
-  ConnPoolBase(Strand& strand, uint16_t port) : port_(port),
-                                                strand_(strand),
-                                                acceptor_(strand, TcpEp(boost::asio::ip::tcp::v4(), port)) {}
+  ConnPoolBase(boost::asio::io_context::strand& strand, uint16_t port) : port_(port),
+                                                                         strand_(strand),
+                                                                         acceptor_(strand, TcpEp(boost::asio::ip::tcp::v4(), port)) {}
   virtual ~ConnPoolBase() {}
 
   // no copy
@@ -85,7 +93,7 @@ class ConnPoolBase {
  protected:
   const uint16_t port_;  //监听端口
 
-  Strand& strand_;
+  boost::asio::io_context::strand& strand_;
   boost::asio::ip::tcp::acceptor acceptor_;            //监听器
   std::map<IPAddr, std::shared_ptr<Conn> > conn_map_;  //目标ep-ConnBase的map
 };

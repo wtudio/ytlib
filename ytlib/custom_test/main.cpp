@@ -160,21 +160,12 @@ CoReturnObj SendRecv_co(int in) {
   co_return ret1 + ret2;
 }
 
-void fff(std::string&& s) {
-  string s1;
-  s1 = std::move(s);
-}
-
 int32_t main(int32_t argc, char** argv) {
   DBG_PRINT("-------------------start test-------------------");
   //tcout输出中文需要设置
   //建议：最好不要在程序中使用中文！！！
   //std::locale::global(std::locale(""));
   //wcout.imbue(locale(""));
-
-  std::string s1 = "abc";
-  fff(s1);
-  fff(std::move(s1));
 
   // 同步阻塞work
   {

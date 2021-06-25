@@ -23,10 +23,12 @@
 本文件待废弃
 主要思路：单线程+协程无锁模型，io_context::strand由外层传入
 需要实现的功能场景：
-- log svr，用boost序列化结构体传递
+- log svr
+- boost序列化结构体传递
 - char* buf传递
 - 文件传递
 - 带主动connect的，client-proxy-svr三层结构
+- 对等关系网络适配器
 */
 
 namespace ytlib {
@@ -810,6 +812,81 @@ class ConnPool {
 
   const uint32_t thread_size_;  //使用的异步线程数量
   const uint16_t port_;         //监听端口，并且所有主动进行的连接都绑定到这个端口上
+};
+
+
+class NetBackend : public boost::log::sinks::basic_sink_backend<boost::log::sinks::synchronized_feeding> {
+ public:
+  //目前只支持int型id。如果要改成string型id也很简单
+  explicit NetBackend(boost::asio::io_context& io, const TcpEp& log_svr_ep) : sock(service), LogServerEp(logserver_ep_), ConnectFlag(false), m_bFirstLogFlag(true) {
+    header[0] = LogConnection::TCPHEAD1;
+    header[1] = LogConnection::TCPHEAD2;
+    header[2] = LogConnection::LOGHEAD1;
+    header[3] = LogConnection::LOGHEAD2;
+    logBuff.push_back(boost::asio::const_buffer(header, HEAD_SIZE));
+    //设置本机id和日志等级。如果以后要添加其他信息也在此处添加拓展
+    HostInfoSize = 1 + 8 + 4;
+    HostInfoBuff = boost::shared_array<char>(new char[HostInfoSize]);
+    SetBufFromNum(&HostInfoBuff[9], myid_);
+    logBuff.push_back(boost::asio::const_buffer(HostInfoBuff.get(), HostInfoSize));
+    connect();
+  }
+  virtual ~NetBackend() {
+    sock.close();
+    logBuff.clear();
+  }
+  void consume(const boost::log::record_view& rec) {
+    //如果有连接才发送，否则不发送
+    if (connect()) {
+      SetBufFromNum(&header[4], static_cast<uint32_t>(rec[boost::log::expressions::smessage]->size() + HostInfoSize));
+      HostInfoBuff[0] = static_cast<uint8_t>(*rec[boost::log::trivial::severity]);
+      const boost::posix_time::ptime* tnow = (rec[boost::log::aux::default_attribute_names::timestamp()].extract<boost::posix_time::ptime>()).get_ptr();
+      TransEndian(&HostInfoBuff[1], (char*)tnow, 8);
+      logBuff.push_back(boost::asio::buffer(*rec[boost::log::expressions::smessage]));
+      boost::system::error_code err;
+      //发送失败则将ConnectFlag置为false
+      sock.write_some(logBuff, err);
+      logBuff.pop_back();  //弹出msg
+      if (err) {
+        ConnectFlag = false;
+        m_bFirstLogFlag = true;
+        YT_DEBUG_PRINTF("send to log server failed : %s", err.message().c_str());
+        return;
+      }
+      if (m_bFirstLogFlag) {
+        logBuff.pop_back();  //弹出第一包内容
+        HostInfoSize = 1 + 8;
+        HostInfoBuff = boost::shared_array<char>(new char[HostInfoSize]);
+        logBuff.push_back(boost::asio::const_buffer(HostInfoBuff.get(), HostInfoSize));
+        m_bFirstLogFlag = false;
+      }
+    }
+  }
+
+ private:
+  bool connect() {
+    if (ConnectFlag) return true;
+    sock.open(boost::asio::ip::tcp::v4());
+    boost::system::error_code err;
+    sock.connect(LogServerEp, err);
+    if (err) {
+      YT_DEBUG_PRINTF("connect to log server failed : %s", err.message().c_str());
+      return false;
+    }
+    ConnectFlag = true;
+    return true;
+  }
+
+  boost::asio::io_context service;  //全同步操作，所以不需要run
+  TcpSocket sock;
+  TcpEp LogServerEp;
+  std::atomic_bool ConnectFlag;
+  std::vector<boost::asio::const_buffer> logBuff;
+  boost::shared_array<char> HostInfoBuff;
+  uint32_t HostInfoSize;
+  static const uint8_t HEAD_SIZE = 8;
+  char header[HEAD_SIZE];  //报头缓存
+  bool m_bFirstLogFlag;
 };
 
 }  // namespace ytlib

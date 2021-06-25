@@ -1,14 +1,89 @@
 #include <gtest/gtest.h>
 
-#include <boost/date_time/posix_time/posix_time.hpp>
-#include "TcpNetAdapter.h"
+#include "asio_tools.hpp"
+#include "boost_log.hpp"
+#include "log_svr.hpp"
+#include "net_util.hpp"
+#include "ytlib/misc/misc_macro.h"
 
 namespace ytlib {
 
 using namespace boost::asio;
 using namespace std;
-/*
 
+TEST(BOOST_ASIO_TEST, UTIL) {
+  uint16_t port = GetUsablePort();
+  ASSERT_TRUE(CheckPort(port));
+
+  char buf[4];
+  uint32_t n = 123456789;
+  SetBufFromNum(buf, n);
+  ASSERT_EQ(GetNumFromBuf(buf), 123456789);
+}
+
+TEST(BOOST_ASIO_TEST, LOG) {
+  auto svr1_sys_ptr = std::make_shared<AsioExecutor>(1);
+  auto svr2_sys_ptr = std::make_shared<AsioExecutor>(1);
+  auto cli_sys_ptr = std::make_shared<AsioExecutor>(1);
+
+  thread t_svr1([svr1_sys_ptr] {
+    LogServer lgsvr(svr1_sys_ptr->IO(), 50001);
+    lgsvr.Start();
+    svr1_sys_ptr->Run();
+  });
+
+  std::this_thread::sleep_for(std::chrono::seconds(1));
+
+  YTBLCtr::Ins().EnableConsoleLog();
+  YTBLCtr::Ins().EnableFileLog("./test");
+  YTBLCtr::Ins().EnableNetLog(cli_sys_ptr->IO(), {IPV4({127, 0, 0, 1}), 50001});
+
+  thread t_cli([cli_sys_ptr] {
+    cli_sys_ptr->Run();
+  });
+
+  YTBL_SET_LEVEL(info);
+
+  YTBL_TRACE << "test trace log" << std::endl;
+  YTBL_DEBUG << "test debug log" << std::endl;
+  YTBL_INFO << "test info log" << std::endl;
+  YTBL_WARN << "test warning log" << std::endl;
+  YTBL_ERROR << "test error log" << std::endl;
+  YTBL_FATAL << "test fatal log" << std::endl;
+
+  std::this_thread::sleep_for(std::chrono::seconds(1));
+
+  svr1_sys_ptr->Stop();
+  t_svr1.join();
+
+  thread t_svr2([svr2_sys_ptr] {
+    auto cfgptr = std::make_shared<LogServer::LogConfig>();
+    cfgptr->log_path = "./log2";
+    cfgptr->max_file_size = 1 * 1024 * 1024;
+    LogServer lgsvr(svr2_sys_ptr->IO(), 50001, cfgptr);
+    lgsvr.Start();
+    svr2_sys_ptr->Run();
+  });
+
+  std::this_thread::sleep_for(std::chrono::seconds(1));
+
+  YTBL_TRACE << "test trace log" << std::endl;
+  YTBL_DEBUG << "test debug log" << std::endl;
+  YTBL_INFO << "test info log" << std::endl;
+  YTBL_WARN << "test warning log" << std::endl;
+  YTBL_ERROR << "test error log" << std::endl;
+  YTBL_FATAL << "test fatal log" << std::endl;
+
+  std::this_thread::sleep_for(std::chrono::seconds(1));
+
+  svr2_sys_ptr->Stop();
+  t_svr2.join();
+
+  cli_sys_ptr->Stop();
+  t_cli.join();
+}
+
+/*
 TEST(BOOST_TOOLS_TEST, LOG) {
   LoggerServer l(55555);
   l.start();
