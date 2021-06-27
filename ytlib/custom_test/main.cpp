@@ -20,192 +20,68 @@
 #include "ytlib/misc/error.hpp"
 #include "ytlib/misc/misc_macro.h"
 
+#define BOOST_ASIO_NO_DEPRECATED
+#include <boost/asio.hpp>
+
+#include "ytlib/boost_asio/net_util.hpp"
+
 using namespace std;
 using namespace ytlib;
 
-std::list<std::thread> tlist;
-std::mutex mu;
-
-// 同步阻塞work
-int SendRecv(int in) {
-  std::this_thread::sleep_for(500ms);
-  mu.lock();
-  std::cout << "run in thread:" << std::this_thread::get_id()
-            << ". in: " << in << std::endl;
-  mu.unlock();
-  return in;
-}
-
-// 异步回调work
-using cbtype = std::function<void(int re)>;
-
-void SendRecv_cb(int in, cbtype cb) {
-  tlist.emplace(tlist.end(), [=] {
-    cb(SendRecv(in));
-  });
-}
-
-// future work
-std::future<int> SendRecv_fu(int in) {
-  return std::async([=] {
-    return SendRecv(in);
-  });
-}
-
-// 协程
-struct CoReturnObj {
-  struct promise_type {
-    promise_type() {
-      std::cout << "run in thread:" << std::this_thread::get_id()
-                << ", promise_type construct" << std::endl;
-    }
-    ~promise_type() {
-      std::cout << "run in thread:" << std::this_thread::get_id()
-                << ", promise_type delet" << std::endl;
-    }
-
-    CoReturnObj get_return_object() {
-      std::cout << "run in thread:" << std::this_thread::get_id()
-                << ", get_return_object" << std::endl;
-
-      return CoReturnObj(this);
-    }
-    std::suspend_never initial_suspend() {
-      std::cout << "run in thread:" << std::this_thread::get_id()
-                << ", initial_suspend" << std::endl;
-      return {};
-    }
-    std::suspend_never final_suspend() noexcept {
-      std::cout << "run in thread:" << std::this_thread::get_id()
-                << ", final_suspend" << std::endl;
-      return {};
-    }
-
-    /*
-    void return_void() {
-      std::cout << "run in thread:" << std::this_thread::get_id()
-                << ", return_void" << std::endl;
-    }
-    */
-
-    void return_value(int re) {
-      std::cout << "run in thread:" << std::this_thread::get_id()
-                << ", return_value" << std::endl;
-      p_ret->set_value(re);
-    }
-
-    std::suspend_never yield_value(int re) {
-      std::cout << "run in thread:" << std::this_thread::get_id()
-                << ", yield_value" << std::endl;
-      p_ret->set_value(re);
-      return {};
-    }
-
-    void unhandled_exception() {
-      std::cout << "run in thread:" << std::this_thread::get_id()
-                << ", unhandled_exception" << std::endl;
-    }
-
-    std::promise<int>* p_ret = nullptr;
-  };
-
-  CoReturnObj(promise_type* p) : handle(std::coroutine_handle<promise_type>::from_promise(*p)) {
-    p->p_ret = &ret;
-  }
-
-  std::promise<int> ret;
-  std::coroutine_handle<promise_type> handle;
-};
-
-template <class T>
-struct Awaitable {
-  Awaitable(std::function<void(std::function<void(T re)>)> anyscfun) {
-    anyscfun_ = anyscfun;
-  }
-
-  constexpr bool await_ready() const noexcept {
-    std::cout << "run in thread:" << std::this_thread::get_id()
-              << ", await_ready" << std::endl;
-    return false;
-  }
-  void await_suspend(std::coroutine_handle<> h) {
-    std::cout << "run in thread:" << std::this_thread::get_id()
-              << ", await_suspend" << std::endl;
-
-    anyscfun_([=](T re) {
-      this->re_ = re;
-      h.resume();
-    });
-  }
-  T await_resume() noexcept {
-    std::cout << "run in thread:" << std::this_thread::get_id()
-              << ", await_resume" << std::endl;
-    return re_;
-  }
-
-  std::function<void(cbtype)> anyscfun_;
-  T re_;
-};
-
-CoReturnObj SendRecv_co(int in) {
-  int ret1 = co_await Awaitable<int>([in](std::function<void(int re)> cb) {
-    SendRecv_cb(in, cb);
-  });
-
-  co_yield 100;
-
-  int ret2 = co_await Awaitable<int>([in](std::function<void(int re)> cb) {
-    SendRecv_cb(in + 1, cb);
-  });
-  co_return ret1 + ret2;
-}
-
 int32_t main(int32_t argc, char** argv) {
   DBG_PRINT("-------------------start test-------------------");
-  //tcout输出中文需要设置
-  //建议：最好不要在程序中使用中文！！！
-  //std::locale::global(std::locale(""));
-  //wcout.imbue(locale(""));
 
-  // 同步阻塞work
-  {
-    int re = SendRecv(1);
-  }
+  uint32_t n = 2;
+  boost::asio::io_context io(n);
+  boost::asio::steady_timer t(io);
+  boost::asio::steady_timer t2(io);
 
-  // 异步回调work
-  {
-    SendRecv_cb(2, [](int re) {
-      mu.lock();
-      std::cout << "run in thread:" << std::this_thread::get_id()
-                << ". cb ret: " << re << std::endl;
-      mu.unlock();
+  boost::asio::co_spawn(
+      io,
+      [&t, &t2]() -> boost::asio::awaitable<void> {
+        try {
+          for (uint32_t ii = 0; ii < 10; ++ii) {
+            t.expires_after(std::chrono::seconds(1));
+            std::cerr << "thread " << std::this_thread::get_id() << " run 1.\n";
+            co_await t.async_wait(boost::asio::use_awaitable);
+            t2.expires_after(std::chrono::seconds(2));
+          }
+        } catch (const std::exception& e) {
+          std::cerr << "log svr accept connection get exception:" << e.what() << '\n';
+        }
+        co_return;
+      },
+      boost::asio::detached);
+
+  boost::asio::co_spawn(
+      io,
+      [&t2]() -> boost::asio::awaitable<void> {
+        try {
+          for (uint32_t ii = 0; ii < 10; ++ii) {
+            t2.expires_after(std::chrono::seconds(2));
+            std::cerr << "thread " << std::this_thread::get_id() << " run 2.\n";
+            co_await t2.async_wait(boost::asio::use_awaitable);
+          }
+        } catch (const std::exception& e) {
+          std::cerr << "log svr accept connection get exception:" << e.what() << '\n';
+        }
+        co_return;
+      },
+      boost::asio::detached);
+
+  std::list<std::thread> threads_;
+
+  for (int ii = 0; ii < n; ++ii) {
+    threads_.emplace(threads_.end(), [&io] {
+      std::cerr << "thread " << std::this_thread::get_id() << " start.\n";
+      io.run();
+      std::cerr << "thread " << std::this_thread::get_id() << " exit.\n";
     });
   }
 
-  // future work
-  {
-    std::future<int> re = SendRecv_fu(3);
-    int reget = re.get();
-    mu.lock();
-    std::cout << "run in thread:" << std::this_thread::get_id()
-              << ". fu ret: " << reget << std::endl;
-    mu.unlock();
-  }
-
-  // 协程
-  {
-    auto re = SendRecv_co(4);
-    auto fu = re.ret.get_future();
-    int reget = fu.get();
-    mu.lock();
-    std::cout << "run in thread:" << std::this_thread::get_id()
-              << ". co ret: " << reget << std::endl;
-    mu.unlock();
-  }
-
-  for (auto itr = tlist.begin(); itr != tlist.end();) {
+  for (auto itr = threads_.begin(); itr != threads_.end();) {
     itr->join();
-    tlist.erase(itr++);
+    threads_.erase(itr++);
   }
 
   DBG_PRINT("********************end test*******************");
