@@ -171,6 +171,13 @@ STRING_TOOLS_API std::string& ReplaceString(std::string& str, const std::string&
 STRING_TOOLS_API bool IsAlnumStr(const std::string& str);
 
 /**
+ * @brief 判断字符串是否为数字组成
+ * @param str 待判断字符串
+ * @return 是否为数字组成
+ */
+STRING_TOOLS_API bool IsDigitStr(const std::string& str);
+
+/**
  * @brief 获取map中的key的集合
  * @param ValType map中val的类型
  * @param m 输入map

@@ -25,7 +25,7 @@ namespace ytlib {
 
 enum {
   MAX_BUF_SIZE = 1024,  // fmt的buf大小，不支持过大的日志
-  MAX_LOG_SIZE = 256,   // 日志缓冲条数，超过缓冲大小将被丢弃
+  MAX_LOG_SIZE = 1024,  // 日志缓冲条数，超过缓冲大小将被丢弃
 };
 
 // context
@@ -49,7 +49,7 @@ using LogWriter = std::function<void(const LogData&)>;
 /**
  * @brief 高性能日志工具
  * 高性能异步日志工具，支持ctx、自定义writer
- * 大部分接口使用inline方式，追求性能
+ * 使用时先AddWriter再Init
  */
 class Log {
  public:

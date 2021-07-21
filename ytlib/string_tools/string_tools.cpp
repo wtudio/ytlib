@@ -193,10 +193,17 @@ string& ReplaceString(string& str, const string& ov, const string& nv) {
 }
 
 bool IsAlnumStr(const string& str) {
-  const char* ps = str.c_str();
-  size_t len = str.length();
-  for (size_t ii = 0; ii < len; ++ii) {
-    if (!isalnum(ps[ii])) return false;
+  if (str.length() == 0) return false;
+  for (auto& c : str) {
+    if (!isalnum(c)) return false;
+  }
+  return true;
+}
+
+bool IsDigitStr(const string& str) {
+  if (str.length() == 0) return false;
+  for (auto& c : str) {
+    if (c > '9' || c < '0') return false;
   }
   return true;
 }
