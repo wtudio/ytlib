@@ -12,8 +12,8 @@
 #include "SharedBuf.h"
 #include "serialize.hpp"
 
-#include "ytlib/thread_tools/block_queue.hpp"
-#include "ytlib/thread_tools/signal.hpp"
+#include "ytlib/thread/block_queue.hpp"
+#include "ytlib/thread/signal.hpp"
 
 #include <atomic>
 #include <future>

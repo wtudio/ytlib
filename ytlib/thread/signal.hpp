@@ -14,7 +14,6 @@
 namespace ytlib {
 /**
  * @brief 轻量级信号量，使用c++20中atomic的信号量功能
- * todo：待验证
  */
 class LightSignalAtomic {
  public:

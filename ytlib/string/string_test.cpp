@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "string_algs.hpp"
-#include "string_tools.hpp"
+#include "string_util.hpp"
 #include "tstring.hpp"
 #include "url_encode.hpp"
 

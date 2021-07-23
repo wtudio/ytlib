@@ -8,6 +8,7 @@
 #include "guid.hpp"
 #include "loop_tool.hpp"
 #include "shared_buf.hpp"
+#include "time.hpp"
 
 namespace ytlib {
 
@@ -92,4 +93,8 @@ TEST(MISC_TEST, sharedBuf_BASE) {
   ASSERT_NE(buf1.Get(), buf4.Get());
 }
 
+TEST(MISC_TEST, TIME_BASE) {
+  std::string s = GetCurTimeStr();
+  ASSERT_EQ(s.length(), 15);
+}
 }  // namespace ytlib

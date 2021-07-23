@@ -18,8 +18,8 @@
 #include <vector>
 
 #include "loglevel_def.hpp"
-#include "ytlib/thread_tools/block_queue.hpp"
-#include "ytlib/thread_tools/channel.hpp"
+#include "ytlib/thread/block_queue.hpp"
+#include "ytlib/thread/channel.hpp"
 
 namespace ytlib {
 

@@ -15,57 +15,76 @@
 #include "net_util.hpp"
 #include "ytlib/misc/error.hpp"
 #include "ytlib/misc/misc_macro.h"
+#include "ytlib/misc/time.hpp"
 
 namespace ytlib {
+
+/**
+ * @brief 远程日志服务器配置
+ */
+struct LogSvrCfg {
+  LogSvrCfg() : log_path("./log"),
+                max_file_size(1 * 1024 * 1024) {}
+
+  uint16_t port = 50001;
+  std::filesystem::path log_path;
+  std::ofstream::pos_type max_file_size;
+
+  uint32_t timer_dt = 5;           // 定时器间隔，秒
+  uint32_t max_no_data_time = 60;  // 最长无数据时间，秒
+};
 
 /**
  * @brief 远程日志服务器
  * 默认监听50001端口，为每个ip-port创建一个文件夹存放滚动日志文件
  * 无协议，收到什么打印什么
- * 必须以智能指针形式构造，在
+ * 必须以智能指针形式构造，同时在创建的所有协程中持有智能指针，以确保所有协程结束后才能析构
  */
-class LogServer : public std::enable_shared_from_this<LogServer> {
+class LogSvr : public std::enable_shared_from_this<LogSvr> {
  public:
-  explicit LogServer(boost::asio::io_context& io, uint16_t port = 50001,
-                     const std::filesystem::path& log_path = "./log",
-                     std::ofstream::pos_type max_file_size = 1 * 1024 * 1024) : port_(port),
-                                                                                io_(io),
-                                                                                acceptor_(io, {IPV4(), port}),
-                                                                                sessions_mgr_strand_(boost::asio::make_strand(io)),
-                                                                                log_path_(log_path),
-                                                                                max_file_size_(max_file_size) {}
+  LogSvr(boost::asio::io_context& io, const LogSvrCfg& cfg) : io_(io),
+                                                              sessions_mgr_strand_(boost::asio::make_strand(io_)),
+                                                              cfg_(cfg) {
+    if (cfg_.port > 65535 || cfg_.port < 1000) cfg_.port = 50001;
+
+    if (cfg_.max_file_size < 100 * 1024) cfg_.max_file_size = 100 * 1024;
+    if (cfg_.max_file_size > 1024 * 1024 * 1024) cfg_.max_file_size = 1024 * 1024 * 1024;
+  }
 
   // 必须先主动调用Stop函数，等待所有协程结束，所有资源释放，所有智能指针释放，才能析构
-  ~LogServer() {}
+  ~LogSvr() {}
 
   // no copy
-  LogServer(const LogServer&) = delete;
-  LogServer& operator=(const LogServer&) = delete;
+  LogSvr(const LogSvr&) = delete;
+  LogSvr& operator=(const LogSvr&) = delete;
 
   void Start() {
-    RT_ASSERT(CheckPort(port_), "port is used.");
+    RT_ASSERT(CheckPort(cfg_.port), "port is used.");
 
-    if (std::filesystem::status(log_path_).type() != std::filesystem::file_type::directory)
-      std::filesystem::create_directories(log_path_);
+    acceptor_ptr_ = std::make_shared<boost::asio::ip::tcp::acceptor>(io_, TcpEp{IPV4(), cfg_.port});
 
+    if (std::filesystem::status(cfg_.log_path).type() != std::filesystem::file_type::directory)
+      std::filesystem::create_directories(cfg_.log_path);
+
+    auto self = shared_from_this();
     boost::asio::co_spawn(
         sessions_mgr_strand_,
-        [this, auto self = shared_from_this()]() -> boost::asio::awaitable<void> {
+        [this, self]() -> boost::asio::awaitable<void> {
           try {
             for (;;) {
-              auto p_session = std::make_shared<LogSession>(
-                  co_await acceptor_.async_accept(boost::asio::use_awaitable),
-                  this);
-              p_session->Start();
+              auto session_ptr = std::make_shared<LogSession>(
+                  co_await acceptor_ptr_->async_accept(boost::asio::use_awaitable),
+                  self);
+              session_ptr->Start();
 
-              session_ptr_set_.insert(p_session);
+              session_ptr_set_.emplace(session_ptr);
             }
           } catch (const std::exception& e) {
             std::cerr << "log svr accept connection get exception:" << e.what() << '\n';
           }
 
-          acceptor_.close();
-          acceptor_.release();
+          acceptor_ptr_->close();
+          acceptor_ptr_->release();
 
           co_return;
         },
@@ -73,13 +92,16 @@ class LogServer : public std::enable_shared_from_this<LogServer> {
   }
 
   void Stop() {
-    acceptor_.cancel();
+    acceptor_ptr_->cancel();
 
+    auto self = shared_from_this();
     boost::asio::co_spawn(
         sessions_mgr_strand_,
-        [this]() -> boost::asio::awaitable<void> {
+        [this, self]() -> boost::asio::awaitable<void> {
           for (auto& session_ptr : session_ptr_set_)
             session_ptr->Stop();
+
+          session_ptr_set_.clear();
 
           co_return;
         },
@@ -89,24 +111,26 @@ class LogServer : public std::enable_shared_from_this<LogServer> {
  private:
   class LogSession : public std::enable_shared_from_this<LogSession> {
    public:
-    LogSession(TcpSocket&& sock, LogServer* logsvr_ptr) : sock_(std::move(sock)),
-                                                          logsvr_ptr_(logsvr_ptr),
-                                                          strand_(boost::asio::make_strand(logsvr_ptr->io_)),
-                                                          timer_(strand_) {}
+    LogSession(TcpSocket&& sock, std::shared_ptr<LogSvr> logsvr_ptr) : sock_(std::move(sock)),
+                                                                       logsvr_ptr_(logsvr_ptr),
+                                                                       strand_(boost::asio::make_strand(logsvr_ptr_->io_)),
+                                                                       timer_(strand_) {}
 
     // 必须先主动调用Stop函数，等待所有协程结束，所有资源释放，所有智能指针释放，才能析构
     ~LogSession() {}
 
     void Start() {
       const TcpEp& ep = sock_.remote_endpoint();
-      DBG_PRINT("get a new connection from %s:%d", ep.address().to_string().c_str(), ep.port());
 
-      log_file_dir_ = logsvr_ptr_->log_path_ / (ep.address().to_string() + "_" + std::to_string(ep.port()));
+      std::filesystem::path log_file_dir = logsvr_ptr_->cfg_.log_path / (ep.address().to_string() + "_" + std::to_string(ep.port()));
 
-      if (std::filesystem::status(log_file_dir_).type() != std::filesystem::file_type::directory)
-        std::filesystem::create_directories(log_file_dir_);
+      if (std::filesystem::status(log_file_dir).type() != std::filesystem::file_type::directory)
+        std::filesystem::create_directories(log_file_dir);
 
-      DBG_PRINT("log session file dir: %s", log_file_dir_.string().c_str());
+      log_file_ = log_file_dir / (ep.address().to_string() + "_" + std::to_string(ep.port()) + ".log");
+
+      DBG_PRINT("get a new connection from %s:%d, log session file dir: %s",
+                ep.address().to_string().c_str(), ep.port(), log_file_dir.string().c_str());
 
       auto self = shared_from_this();
       // 接收协程
@@ -119,32 +143,11 @@ class LogServer : public std::enable_shared_from_this<LogServer> {
               for (;;) {
                 std::size_t n = co_await sock_.async_read_some(boost::asio::buffer(data, data_size), boost::asio::use_awaitable);
 
-                time_t cnow = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-                struct tm now_tm;
-#if defined(_WIN32)
-                localtime_s(&now_tm, &cnow);
-#else
-                localtime_r(&cnow, &now_tm);
-#endif
-
-                if (!ofs_.is_open() || ofs_.tellp() > logsvr_ptr_->max_file_size_ ||
-                    now_tm.tm_hour != t_.tm_hour || now_tm.tm_yday != t_.tm_yday) {
-                  if (ofs_.is_open()) {
-                    ofs_.flush();
-                    ofs_.clear();
-                    ofs_.close();
-                  }
-
-                  t_ = now_tm;
-                  char name_buf[32];
-                  snprintf(name_buf, sizeof(name_buf), "%04d%02d%02d_%02d%02d%02d.log",
-                           t_.tm_year + 1900, t_.tm_mon + 1, t_.tm_mday, t_.tm_hour, t_.tm_min, t_.tm_sec);
-
-                  ofs_.open(log_file_dir_ / name_buf, std::ios::app);
-                }
+                if (!ofs_.is_open())
+                  ofs_.open(log_file_, std::ios::app);
 
                 ofs_ << std::string_view(data, n);
-                has_data = true;
+                tick_has_data_ = true;
               }
             } catch (std::exception& e) {
               std::cerr << "log session get exception and exit, addr:" << sock_.remote_endpoint() << ", exception:" << e.what() << '\n';
@@ -152,14 +155,14 @@ class LogServer : public std::enable_shared_from_this<LogServer> {
 
             Stop();
 
+            sock_.close();
+            sock_.release();
+
             if (ofs_.is_open()) {
               ofs_.flush();
               ofs_.clear();
               ofs_.close();
             }
-
-            sock_.close();
-            sock_.release();
 
             co_return;
           },
@@ -170,22 +173,31 @@ class LogServer : public std::enable_shared_from_this<LogServer> {
           strand_,
           [this, self]() -> boost::asio::awaitable<void> {
             try {
-              const uint32_t dt = 5;                 // 定时器间隔，秒
-              const uint32_t max_no_data_time = 60;  // 最长无数据时间，秒
-              uint32_t no_data_time_count = 0;       // 无数据时间，秒
+              uint32_t no_data_time_count = 0;  // 当前无数据时间，秒
 
               for (;;) {
-                timer_.expires_after(std::chrono::seconds(dt));
+                timer_.expires_after(std::chrono::seconds(logsvr_ptr_->cfg_.timer_dt));
                 co_await timer_.async_wait(boost::asio::use_awaitable);
-                if (has_data && ofs_.is_open()) {
-                  ofs_.flush();
-                  has_data = false;
+
+                if (tick_has_data_) {
+                  tick_has_data_ = false;
                   no_data_time_count = 0;
-                } else {
-                  no_data_time_count += dt;
-                  if (no_data_time_count > max_no_data_time) {
-                    break;
+
+                  if (ofs_.is_open()) ofs_.flush();
+
+                  // 判断日志文件是否需要rename
+                  if (std::filesystem::file_size(log_file_) > logsvr_ptr_->cfg_.max_file_size) {
+                    if (ofs_.is_open()) {
+                      ofs_.clear();
+                      ofs_.close();
+                    }
+                    std::filesystem::rename(log_file_, log_file_.string() + "_" + GetCurTimeStr());
                   }
+
+                } else {
+                  no_data_time_count += logsvr_ptr_->cfg_.timer_dt;
+                  if (no_data_time_count > logsvr_ptr_->cfg_.max_no_data_time)
+                    break;
                 }
               }
             } catch (const std::exception& e) {
@@ -199,7 +211,7 @@ class LogServer : public std::enable_shared_from_this<LogServer> {
           boost::asio::detached);
     }
 
-    // 在stop的时候只是想办法结束各个协程，协程里面使用到的资源由各个协程自行释放。stop触发时机有2个：各个协程遇到异常时、上层主动调用
+    // 在stop的时候只是想办法结束各个协程，协程里面使用到的资源由各个协程自行释放
     void Stop() {
       sock_.cancel();
       timer_.cancel();
@@ -218,29 +230,24 @@ class LogServer : public std::enable_shared_from_this<LogServer> {
     }
 
    private:
-    TcpSocket sock_;
+    std::shared_ptr<LogSvr> logsvr_ptr_;
     boost::asio::strand<boost::asio::io_context::executor_type> strand_;
     boost::asio::steady_timer timer_;
+    TcpSocket sock_;
 
-    struct tm t_;                         // 当前文件创建时间
-    std::ofstream ofs_;                   // 当前日志文件写入句柄
-    std::filesystem::path log_file_dir_;  // 当前日志文件目录
-    bool has_data = false;
-    bool stopped_flag_ = false;
-    LogServer* logsvr_ptr_;
+    std::filesystem::path log_file_;  // 当前日志文件路径
+    std::ofstream ofs_;               // 当前日志文件写入句柄
+
+    bool tick_has_data_ = false;
   };
 
  private:
-  const uint16_t port_;  //监听端口
-
   boost::asio::io_context& io_;
-  boost::asio::ip::tcp::acceptor acceptor_;  //监听器
-
   boost::asio::strand<boost::asio::io_context::executor_type> sessions_mgr_strand_;  // session池操作strand
+  std::shared_ptr<boost::asio::ip::tcp::acceptor> acceptor_ptr_;                     //监听器
   std::set<std::shared_ptr<LogSession> > session_ptr_set_;                           // session池
 
-  std::filesystem::path log_path_;         // 日志文件路径
-  std::ofstream::pos_type max_file_size_;  // 日志文件最大大小
+  LogSvrCfg cfg_;  // 配置
 };
 
 }  // namespace ytlib

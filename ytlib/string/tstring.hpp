@@ -1,4 +1,11 @@
-#include "tstring.hpp"
+/**
+ * @file tstring.hpp
+ * @brief 提供对wchar_t的相关支持
+ * @details 提供对wchar_t的相关支持。实际编程中都使用char降低编程难度，此文件仅供与只支持wchar的接口交互
+ * @author WT
+ * @date 2019-07-26
+ */
+#pragma once
 
 #include <algorithm>
 #include <cctype>
@@ -6,21 +13,46 @@
 #include <cwchar>
 #include <cwctype>
 #include <iterator>
+#include <locale>
+#include <string>
 #include <vector>
 
 namespace ytlib {
 
-inline void clear_mbstate(std::mbstate_t& mbs) {
-  std::memset(&mbs, 0, sizeof(std::mbstate_t));
-}
+#if defined(USE_WCHAR)
+typedef wchar_t tchar;
+#else
+typedef char tchar;
+#endif
 
-std::string ToString(const wchar_t* src, std::size_t size, const std::locale& loc) {
+typedef std::basic_string<tchar> tstring;
+
+typedef std::basic_ostream<tchar> tostream;
+typedef std::basic_istream<tchar> tistream;
+typedef std::basic_ostringstream<tchar> tostringstream;
+typedef std::basic_istringstream<tchar> tistringstream;
+typedef std::basic_ifstream<tchar> tifstream;
+typedef std::basic_ofstream<tchar> tofstream;
+
+#if defined(USE_WCHAR)
+  #define tcout std::wcout
+  #define tcerr std::wcerr
+  #define to_tstring std::to_wstring
+
+#else
+  #define tcout std::cout
+  #define tcerr std::cerr
+  #define to_tstring std::to_string
+
+#endif  // USE_WCHAR
+
+inline std::string ToString(const wchar_t* src, std::size_t size, const std::locale& loc) {
   if (size == 0) return "";
 
   //typedef std::codecvt<wchar_t, char, std::mbstate_t> std::codecvt<wchar_t, char, std::mbstate_t>;
   const std::codecvt<wchar_t, char, std::mbstate_t>& cdcvt = std::use_facet<std::codecvt<wchar_t, char, std::mbstate_t>>(loc);
   std::mbstate_t state;
-  clear_mbstate(state);
+  std::memset(&state, 0, sizeof(std::mbstate_t));
 
   wchar_t const* from_first = src;
   std::size_t const from_size = size;
@@ -54,7 +86,7 @@ std::string ToString(const wchar_t* src, std::size_t size, const std::locale& lo
     } else if (ret == std::codecvt<wchar_t, char, std::mbstate_t>::ok && from_next == from_last) {
       break;
     } else if (ret == std::codecvt<wchar_t, char, std::mbstate_t>::error && to_next != to_last && from_next != from_last) {
-      clear_mbstate(state);
+      std::memset(&state, 0, sizeof(std::mbstate_t));
       ++from_next;
       from_first = from_next;
       *to_next = '?';
@@ -68,13 +100,13 @@ std::string ToString(const wchar_t* src, std::size_t size, const std::locale& lo
   return std::string(dest.begin(), dest.begin() + converted);
 }
 
-std::wstring ToWString(const char* src, std::size_t size, const std::locale& loc) {
+inline std::wstring ToWString(const char* src, std::size_t size, const std::locale& loc) {
   if (size == 0) return L"";
 
   //typedef std::codecvt<wchar_t, char, std::mbstate_t> std::codecvt<wchar_t, char, std::mbstate_t>;
   const std::codecvt<wchar_t, char, std::mbstate_t>& cdcvt = std::use_facet<std::codecvt<wchar_t, char, std::mbstate_t>>(loc);
   std::mbstate_t state;
-  clear_mbstate(state);
+  std::memset(&state, 0, sizeof(std::mbstate_t));
 
   char const* from_first = src;
   std::size_t const from_size = size;
@@ -109,7 +141,7 @@ std::wstring ToWString(const char* src, std::size_t size, const std::locale& loc
     } else if (ret == std::codecvt<wchar_t, char, std::mbstate_t>::ok && from_next == from_last) {
       break;
     } else if (ret == std::codecvt<wchar_t, char, std::mbstate_t>::error && to_next != to_last && from_next != from_last) {
-      clear_mbstate(state);
+      std::memset(&state, 0, sizeof(std::mbstate_t));
       ++from_next;
       from_first = from_next;
       *to_next = L'?';
@@ -123,5 +155,31 @@ std::wstring ToWString(const char* src, std::size_t size, const std::locale& loc
 
   return std::wstring(dest.begin(), dest.begin() + converted);
 }
+
+inline std::string ToString(const std::wstring& str) {
+  return ToString(str.c_str(), str.size(), std::locale());
+}
+
+inline std::string ToString(const wchar_t* str) {
+  return ToString(str, std::wcslen(str), std::locale());
+}
+
+inline std::wstring ToWString(const std::string& str) {
+  return ToWString(str.c_str(), str.size(), std::locale());
+}
+
+inline std::wstring ToWString(const char* str) {
+  return ToWString(str, std::strlen(str), std::locale());
+}
+
+#if defined(USE_WCHAR)
+  #define T_TEXT(STRING) L##STRING
+  #define T_STR_TO_TSTR(STRING) ytlib::ToWString(STRING)
+  #define T_TSTR_TO_STR(STRING) ytlib::ToString(STRING)
+#else
+  #define T_TEXT(STRING) STRING
+  #define T_STR_TO_TSTR
+  #define T_TSTR_TO_STR
+#endif
 
 }  // namespace ytlib

@@ -18,7 +18,7 @@ TEST(BOOST_ASIO_TEST, UTIL) {
   char buf[4];
   uint32_t n = 123456789;
   SetBufFromNum(buf, n);
-  ASSERT_EQ(GetNumFromBuf(buf), 123456789);
+  ASSERT_EQ(GetNumFromBuf(buf), n);
 }
 
 TEST(BOOST_ASIO_TEST, LOG) {
@@ -27,19 +27,27 @@ TEST(BOOST_ASIO_TEST, LOG) {
   auto cli_sys_ptr = std::make_shared<AsioExecutor>(1);
 
   thread t_svr1([svr1_sys_ptr] {
-    LogServer lgsvr(svr1_sys_ptr->IO(), 50001);
-    lgsvr.Start();
-    svr1_sys_ptr->Run();
+    auto lgsvr_ptr = std::make_shared<LogSvr>(svr1_sys_ptr->IO(), LogSvrCfg());
+    svr1_sys_ptr->RegisterSvrFunc([&lgsvr_ptr] { lgsvr_ptr->Start(); },
+                                  [&lgsvr_ptr] { lgsvr_ptr->Stop(); });
+
+    svr1_sys_ptr->Start();
+    svr1_sys_ptr->Join();
   });
 
   std::this_thread::sleep_for(std::chrono::seconds(1));
 
+  auto net_log_cli_ptr = std::make_shared<NetLogClient>(cli_sys_ptr->IO(), TcpEp{IPV4({127, 0, 0, 1}), 50001});
+  cli_sys_ptr->RegisterSvrFunc(std::function<void()>(),
+                               [&net_log_cli_ptr] { net_log_cli_ptr->Stop(); });
+
   YTBLCtr::Ins().EnableConsoleLog();
   YTBLCtr::Ins().EnableFileLog("./test");
-  YTBLCtr::Ins().EnableNetLog(cli_sys_ptr->IO(), {IPV4({127, 0, 0, 1}), 50001});
+  YTBLCtr::Ins().EnableNetLog(net_log_cli_ptr);
 
   thread t_cli([cli_sys_ptr] {
-    cli_sys_ptr->Run();
+    cli_sys_ptr->Start();
+    cli_sys_ptr->Join();
   });
 
   YTBL_SET_LEVEL(info);
@@ -57,12 +65,14 @@ TEST(BOOST_ASIO_TEST, LOG) {
   t_svr1.join();
 
   thread t_svr2([svr2_sys_ptr] {
-    auto cfgptr = std::make_shared<LogServer::LogConfig>();
-    cfgptr->log_path = "./log2";
-    cfgptr->max_file_size = 1 * 1024 * 1024;
-    LogServer lgsvr(svr2_sys_ptr->IO(), 50001, cfgptr);
-    lgsvr.Start();
-    svr2_sys_ptr->Run();
+    LogSvrCfg cfg;
+    cfg.port = 50001;
+    cfg.log_path = "./log2";
+    auto lgsvr_ptr = std::make_shared<LogSvr>(svr2_sys_ptr->IO(), cfg);
+    svr2_sys_ptr->RegisterSvrFunc([&lgsvr_ptr] { lgsvr_ptr->Start(); },
+                                  [&lgsvr_ptr] { lgsvr_ptr->Stop(); });
+    svr2_sys_ptr->Start();
+    svr2_sys_ptr->Join();
   });
 
   std::this_thread::sleep_for(std::chrono::seconds(1));

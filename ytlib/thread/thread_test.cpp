@@ -13,7 +13,6 @@
 #include "signal.hpp"
 #include "thread_id.hpp"
 #include "ytlib/misc/misc_macro.h"
-#include "ytlib/thread_tools/thread_id.hpp"
 
 namespace ytlib {
 
