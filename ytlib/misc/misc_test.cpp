@@ -8,6 +8,7 @@
 #include "guid.hpp"
 #include "loop_tool.hpp"
 #include "shared_buf.hpp"
+#include "time.hpp"
 
 namespace ytlib {
 
@@ -48,7 +49,7 @@ TEST(MISC_TEST, LoopTool_BASE) {
   vector<uint32_t> vec{2, 3, 3};
   LoopTool lt(vec);
   do {
-    for (uint32_t ii = lt.m_vecContent.size() - 1; ii > 0; --ii) {
+    for (size_t ii = lt.m_vecContent.size() - 1; ii > 0; --ii) {
       cout << lt.m_vecContent[ii] << '-';
     }
     cout << lt.m_vecContent[0] << endl;
@@ -69,7 +70,7 @@ TEST(MISC_TEST, DynamicLib_BASE) {
 
 TEST(MISC_TEST, sharedBuf_BASE) {
   std::string s = "test test";
-  uint32_t n = s.size();
+  size_t n = s.size();
   sharedBuf buf1(n);
   ASSERT_EQ(buf1.Size(), n);
 
@@ -92,4 +93,8 @@ TEST(MISC_TEST, sharedBuf_BASE) {
   ASSERT_NE(buf1.Get(), buf4.Get());
 }
 
+TEST(MISC_TEST, TIME_BASE) {
+  std::string s = GetCurTimeStr();
+  ASSERT_EQ(s.length(), 15);
+}
 }  // namespace ytlib

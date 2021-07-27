@@ -7,17 +7,41 @@
  */
 #pragma once
 
-#include "FileSystem.h"
-#include "serialize.hpp"
-#include "SharedBuf.h"
 #include "ConnPool.h"
+#include "FileSystem.h"
+#include "SharedBuf.h"
+#include "serialize.hpp"
 
-#include "ytlib/thread_tools/block_queue.hpp"
-#include "ytlib/thread_tools/signal.hpp"
+#include "ytlib/thread/block_queue.hpp"
+#include "ytlib/thread/signal.hpp"
 
 #include <atomic>
 #include <future>
 #include <memory>
+
+/*
+本文件待废弃
+*/
+
+/*
+网络库目标：
+实现4种典型场景：
+1、rpc类型，客户端主动与服务端建立连接，主动发包后等待收包，服务端完全只能被动建立连接、收包回包，不能主动发包
+以boost序列化结构体为req、rsp
+
+2、cs类型，客户端主动与服务端建立连接，此后客户端与服务端对等收发msg
+msg类型包括3种：boost序列化结构体、char* buf数据、文件
+1 byte head-len + head-len byte head + n byte data
+head中存储data大小和类型
+
+3、ss类型，对等连接池
+只认id不认ep，accept的和主动connect的都绑定到一个id上
+要发送时只要目标id有conn（之前对方连过来的）就用已有的conn，否则才去主动conn
+接收时也只回调给对应id注册的回调函数，而不管是从哪个连接过来的数据
+
+
+4、日志服务器类型，纯c2s，纯char* buf数据
+*/
 
 namespace ytlib {
 /*
@@ -86,7 +110,7 @@ class TcpConnection : public ConnBase {
     DATAHEAD = 'D',
     FILEHEAD = 'F'
   };
-  TcpConnection(boost::asio::io_service& io_,
+  TcpConnection(boost::asio::io_context& io_,
                 std::function<void(const TcpEp&)> errcb_,
                 tpath const* p_RecvPath_,
                 std::function<void(dataPtr&)> cb_) : ConnBase(io_, errcb_),
@@ -579,9 +603,301 @@ class TcpNetAdapter : public ConnPool<TcpConnection<T>> {
   tpath m_SendPath;                                 ///<发送文件路径
 
   std::map<IDType, TcpEp> m_mapHostInfo;  ///<主机列表：id-info
-  std::shared_mutex m_hostInfoMutex;       ///<主机列表的读写锁
+  std::shared_mutex m_hostInfoMutex;      ///<主机列表的读写锁
 
   const IDType m_myid;  ///<自身id，构造之后无法修改
+};
+
+// ----------------------------------------------------------------------------
+
+/**
+ * @brief tcp网络连接类接口，子类继承它并实现Start方法
+ */
+class ConnBase {
+ public:
+  ConnBase(boost::asio::io_context& io) : sock_(io), strand_(io) {}
+  virtual ~ConnBase() {}
+
+  // no copy
+  ConnBase(const ConnBase&) = delete;
+  ConnBase& ConnBase = (const ConnBase&) = delete;
+
+  // 用于主动连接
+  bool Connect(const TcpEp& ep, uint16_t port = 0) {
+    sock_.open(boost::asio::ip::tcp::v4());
+
+    if (port) {
+      //如果指定端口了，则尝试绑定到本地的指定端口
+      sock_.set_option(TcpSocket::reuse_address(true));
+
+      boost::system::error_code err;
+      sock_.bind(TcpEp(boost::asio::ip::tcp::v4(), port), err);
+
+      if (err) DBG_PRINT("bind to local port %d failed, err: %s", port, err.message().c_str());
+    }
+
+    boost::system::error_code err;
+    sock_.connect(ep, err);
+    if (err) {
+      DBG_PRINT("connect failed, err: %s", err.message().c_str());
+      return false;
+    }
+
+    return true;
+  }
+
+  // 开始主动监听
+  virtual void Start() = 0;
+
+  TcpSocket& Sock() const { return sock_; }
+
+ protected:
+  TcpSocket sock_;  //sock连接
+  boost::asio::io_context::strand strand_;
+};
+
+/**
+ * @brief 网络连接类接口
+ * 管理单个sock连接。提供一个默认的基类，子类需要重载一些函数以实现具体功能
+ * 标准数据包发送规范：
+ * step1：先传一个报头：（8 byte）
+ *   head: 2 byte
+ *   tag: 2 byte
+ *   size: 4 byte ：默认小端传输
+ * step2：传输size个byte的数据
+ * 如果使用结束符的话，需要在发送完成一个包后发送一个结束head：tag = TCPEND1 + TCPEND2
+ */
+class DemoConn {
+ public:
+  enum {
+    TCPHEAD1 = 'Y',
+    TCPHEAD2 = 'T',
+    TCPEND1 = 'O',
+    TCPEND2 = 'V'
+  };
+  static const uint8_t HEAD_SIZE = 8;
+
+  DemoConn(boost::asio::io_context& service,
+           std::function<void(const TcpEp&)> errcb) : sock_(service), errcb_(errcb), stopflag_(false) {}
+  virtual ~DemoConn() { stopflag_ = true; }
+
+  // no copy
+  DemoConn(const DemoConn&) = delete;
+  DemoConn& DemoConn = (const DemoConn&) = delete;
+
+  virtual void Start() { ReadHead(); }
+
+  TcpSocket sock_;   //sock连接
+  TcpEp remote_ep_;  //远端地址
+
+ protected:
+  //异步读head
+  virtual void ReadHead() {
+    boost::asio::async_read(sock_,
+                            boost::asio::buffer(header, HEAD_SIZE),
+                            boost::asio::transfer_exactly(HEAD_SIZE),
+                            std::bind(&DemoConn::OnReadHead, this, std::placeholders::_1, std::placeholders::_2));
+  }
+
+  //示例包头读取回调
+  virtual void OnReadHead(const boost::system::error_code& err, std::size_t read_bytes) {
+    if (stopflag_) return;
+
+    if (err) {
+      stopflag_ = true;
+      DBG_PRINT("read failed: %s", err.message().c_str());
+      errcb_(remote_ep_);
+      return;
+    }
+
+    if (!(header[0] == TCPHEAD1 && header[1] == TCPHEAD2 && read_bytes == HEAD_SIZE)) {
+      stopflag_ = true;
+      DBG_PRINT("read failed: recv an invalid header : %c %c %c %c %d",
+                header[0], header[1], header[2], header[3], GetNumFromBuf(&header[4]));
+      errcb_(remote_ep_);
+      return;
+    }
+
+    uint32_t pack_size = GetNumFromBuf(&header[4]);
+    //do something
+    return;
+  }
+
+  std::atomic_bool stopflag_;                ///<停止标志
+  std::function<void(const TcpEp&)> errcb_;  ///<发生错误时的回调。一旦读/写出错，就关闭连接并调用回调告知上层
+  char header[HEAD_SIZE];                    ///<接收缓存
+};
+
+/**
+ * @brief tcp连接池基类
+ */
+class ConnPool {
+  typedef std::shared_ptr<ConnBase> TcpConnectionPtr;
+
+ public:
+  ConnPool(uint16_t port, uint32_t thread_size = 10) : port_(port), thread_size_(thread_size), stopflag_(true) {}
+  virtual ~ConnPool() { Stop(); }
+
+  virtual bool Start() {
+    if (!CheckPort(port_)) return false;
+
+    //如果要做高并发连接的话可以在此处添加异步accept的个数
+    TcpConnectionPtr conn_ptr = GetNewTcpConnectionPtr();
+    if (!conn_ptr) return false;
+
+    service_.reset();
+    stopflag_ = false;
+    acceptor_ptr_ = std::make_shared<boost::asio::ip::tcp::acceptor>(service_, TcpEp(boost::asio::ip::tcp::v4(), port_), true);
+    acceptor_ptr_->async_accept(conn_ptr->sock_, std::bind(&ConnPool::OnAccept, this, conn_ptr, std::placeholders::_1));
+
+    for (uint32_t ii = 0; ii < thread_size_; ++ii) {
+      threads_.emplace(threads_.end(), [&service_] {
+        service_.run();
+      });
+    }
+    return true;
+  }
+
+  virtual void Stop() {
+    if (stopflag_) return;
+
+    stopflag_ = true;
+    service_.stop();
+    acceptor_ptr_.reset();
+
+    tcp_conn_map_mutex_.lock();
+    tcp_conn_map_.clear();
+    lck.unlock();
+
+    for (auto itr = threads_.begin(); itr != threads_.end();) {
+      itr->join();
+      threads_.erase(itr++);
+    }
+  }
+
+ protected:
+  virtual TcpConnectionPtr GetNewTcpConnectionPtr() {
+    return std::make_shared<ConnBase>(service_, std::bind(&ConnPool::OnErr, this, std::placeholders::_1));
+  }
+
+  virtual void OnAccept(TcpConnectionPtr& p, const boost::system::error_code& err) {
+    if (stopflag_) return;
+
+    if (err) {
+      DBG_PRINT("listerner get err, please restart : %s", err.message().c_str());
+      return;
+    }
+
+    p->remote_ep_ = p->sock_.remote_endpoint();
+    DBG_PRINT("get a new connection from %s:%d", p->remote_ep_.address().to_string().c_str(), p->remote_ep_.port());
+
+    tcp_conn_map_mutex_.lock();
+    tcp_conn_map_[p->remote_ep_] = p;
+    tcp_conn_map_mutex_.unlock();
+
+    p->Start();
+
+    TcpConnectionPtr conn_ptr = GetNewTcpConnectionPtr();
+    if (!conn_ptr) {
+      Stop();
+      return;
+    }
+    acceptor_ptr_->async_accept(conn_ptr->sock_, std::bind(&ConnPool::OnAccept, this, conn_ptr, std::placeholders::_1));
+  }
+
+  virtual void OnErr(const TcpEp& ep) {
+    DBG_PRINT("connection to %s:%d get an err and is closed", ep.address().to_string().c_str(), ep.port());
+    std::unique_lock<std::shared_mutex> lck(tcp_conn_map_mutex_);
+    auto itr = tcp_conn_map_.find(ep);
+    if (itr != tcp_conn_map_.end())
+      tcp_conn_map_.erase(itr);
+  }
+
+  std::atomic_bool stopflag_;       //停止标志
+  std::list<std::thread> threads_;  //线程
+
+  std::map<TcpEp, TcpConnectionPtr> tcp_conn_map_;  //目标ep-TcpConnection的map
+  std::shared_mutex tcp_conn_map_mutex_;
+
+  std::shared_ptr<boost::asio::ip::tcp::acceptor> acceptor_ptr_;  //监听器
+  boost::asio::io_context service_;
+
+  const uint32_t thread_size_;  //使用的异步线程数量
+  const uint16_t port_;         //监听端口，并且所有主动进行的连接都绑定到这个端口上
+};
+
+class NetBackend : public boost::log::sinks::basic_sink_backend<boost::log::sinks::synchronized_feeding> {
+ public:
+  //目前只支持int型id。如果要改成string型id也很简单
+  explicit NetBackend(boost::asio::io_context& io, const TcpEp& log_svr_ep) : sock(service), LogServerEp(logserver_ep_), ConnectFlag(false), m_bFirstLogFlag(true) {
+    header[0] = LogConnection::TCPHEAD1;
+    header[1] = LogConnection::TCPHEAD2;
+    header[2] = LogConnection::LOGHEAD1;
+    header[3] = LogConnection::LOGHEAD2;
+    logBuff.push_back(boost::asio::const_buffer(header, HEAD_SIZE));
+    //设置本机id和日志等级。如果以后要添加其他信息也在此处添加拓展
+    HostInfoSize = 1 + 8 + 4;
+    HostInfoBuff = boost::shared_array<char>(new char[HostInfoSize]);
+    SetBufFromNum(&HostInfoBuff[9], myid_);
+    logBuff.push_back(boost::asio::const_buffer(HostInfoBuff.get(), HostInfoSize));
+    connect();
+  }
+  virtual ~NetBackend() {
+    sock.close();
+    logBuff.clear();
+  }
+  void consume(const boost::log::record_view& rec) {
+    //如果有连接才发送，否则不发送
+    if (connect()) {
+      SetBufFromNum(&header[4], static_cast<uint32_t>(rec[boost::log::expressions::smessage]->size() + HostInfoSize));
+      HostInfoBuff[0] = static_cast<uint8_t>(*rec[boost::log::trivial::severity]);
+      const boost::posix_time::ptime* tnow = (rec[boost::log::aux::default_attribute_names::timestamp()].extract<boost::posix_time::ptime>()).get_ptr();
+      TransEndian(&HostInfoBuff[1], (char*)tnow, 8);
+      logBuff.push_back(boost::asio::buffer(*rec[boost::log::expressions::smessage]));
+      boost::system::error_code err;
+      //发送失败则将ConnectFlag置为false
+      sock.write_some(logBuff, err);
+      logBuff.pop_back();  //弹出msg
+      if (err) {
+        ConnectFlag = false;
+        m_bFirstLogFlag = true;
+        YT_DEBUG_PRINTF("send to log server failed : %s", err.message().c_str());
+        return;
+      }
+      if (m_bFirstLogFlag) {
+        logBuff.pop_back();  //弹出第一包内容
+        HostInfoSize = 1 + 8;
+        HostInfoBuff = boost::shared_array<char>(new char[HostInfoSize]);
+        logBuff.push_back(boost::asio::const_buffer(HostInfoBuff.get(), HostInfoSize));
+        m_bFirstLogFlag = false;
+      }
+    }
+  }
+
+ private:
+  bool connect() {
+    if (ConnectFlag) return true;
+    sock.open(boost::asio::ip::tcp::v4());
+    boost::system::error_code err;
+    sock.connect(LogServerEp, err);
+    if (err) {
+      YT_DEBUG_PRINTF("connect to log server failed : %s", err.message().c_str());
+      return false;
+    }
+    ConnectFlag = true;
+    return true;
+  }
+
+  boost::asio::io_context service;  //全同步操作，所以不需要run
+  TcpSocket sock;
+  TcpEp LogServerEp;
+  std::atomic_bool ConnectFlag;
+  std::vector<boost::asio::const_buffer> logBuff;
+  boost::shared_array<char> HostInfoBuff;
+  uint32_t HostInfoSize;
+  static const uint8_t HEAD_SIZE = 8;
+  char header[HEAD_SIZE];  //报头缓存
+  bool m_bFirstLogFlag;
 };
 
 }  // namespace ytlib

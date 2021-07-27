@@ -7,10 +7,39 @@
  */
 #pragma once
 
+#include <atomic>
 #include <condition_variable>
 #include <mutex>
 
 namespace ytlib {
+/**
+ * @brief 轻量级信号量，使用c++20中atomic的信号量功能
+ */
+class LightSignalAtomic {
+ public:
+  LightSignalAtomic() : flag_(false) {}
+  ~LightSignalAtomic() {}
+
+  ///唤醒所有wait
+  void notify() {
+    flag_ = true;
+    flag_.notify_all();
+  }
+
+  ///无限等待唤醒
+  void wait() {
+    flag_.wait(false);
+  }
+
+  ///重置信号量
+  void reset() {
+    flag_ = false;
+  }
+
+ private:
+  std::atomic_bool flag_;
+};
+
 /**
  * @brief 轻量级信号量
  * 线程安全的轻量级信号量

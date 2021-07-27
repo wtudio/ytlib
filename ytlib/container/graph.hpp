@@ -13,7 +13,7 @@
 #include <map>
 #include <vector>
 
-#include <ytlib/math_tools/matrix.hpp>
+#include "ytlib/math/matrix.hpp"
 
 namespace ytlib {
 typedef double g_sideType;

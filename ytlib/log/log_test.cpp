@@ -1,13 +1,34 @@
 #include <gtest/gtest.h>
 
 #include "log.hpp"
+#include "log_macro.hpp"
 #include "print_helper.hpp"
+
+#include "rotate_file_writer.hpp"
 
 namespace ytlib {
 
 TEST(LOG_TEST, log_BASE) {
   Log::Ins().SetLevel(LOG_LEVEL::L_FATAL);
   EXPECT_EQ(Log::Ins().Level(), LOG_LEVEL::L_FATAL);
+
+  std::map<std::string, std::string> cfg{
+      {"path", "log"},
+      {"filename", "test.log"},
+      {"rotate_type", "time"},
+      {"max_file_size_m", "1"},
+      {"max_file_num", "5"}};
+  Log::Ins().AddWriter(GetRotateFileWriter(cfg));
+  Log::Ins().Init(LOG_LEVEL::L_TRACE);
+
+  for (int ii = 0; ii < 1000; ++ii) {
+    YT_TRACE("test YT_TRACE");
+    YT_DEBUG("test YT_DEBUG");
+    YT_INFO("test YT_INFO");
+    YT_WARN("test YT_WARN");
+    YT_ERROR("test YT_ERROR");
+    YT_FATAL("test YT_FATAL");
+  }
 }
 
 struct TestObj {
@@ -21,7 +42,7 @@ struct TestObj {
   }
 };
 
-TEST(MISC_TEST, PrintHelper_BASE) {
+TEST(LOG_TEST, PrintHelper_BASE) {
   PrintHelper::Ins().SetPrint(true);
   ASSERT_TRUE(PrintHelper::Ins().IfPrint());
 

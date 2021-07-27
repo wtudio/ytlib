@@ -17,27 +17,15 @@
 #include <string>
 #include <vector>
 
-#include "ytlib/thread_tools/block_queue.hpp"
-#include "ytlib/thread_tools/channel.hpp"
+#include "loglevel_def.hpp"
+#include "ytlib/thread/block_queue.hpp"
+#include "ytlib/thread/channel.hpp"
 
 namespace ytlib {
 
 enum {
   MAX_BUF_SIZE = 1024,  // fmt的buf大小，不支持过大的日志
-  MAX_LOG_SIZE = 256,   // 日志缓冲条数，超过缓冲大小将被丢弃
-};
-
-/**
- * @brief 日志级别
- */
-enum class LOG_LEVEL : uint8_t {
-  L_TRACE = 0,
-  L_DEBUG,
-  L_INFO,
-  L_WARN,
-  L_ERROR,
-  L_FATAL,
-  L_NONE,
+  MAX_LOG_SIZE = 1024,  // 日志缓冲条数，超过缓冲大小将被丢弃
 };
 
 // context
@@ -61,7 +49,7 @@ using LogWriter = std::function<void(const LogData&)>;
 /**
  * @brief 高性能日志工具
  * 高性能异步日志工具，支持ctx、自定义writer
- * 大部分接口使用inline方式，追求性能
+ * 使用时先AddWriter再Init
  */
 class Log {
  public:
