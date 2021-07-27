@@ -9,6 +9,8 @@
 #include <vector>
 
 #include "ytlib/misc/error.hpp"
+#include "ytlib/misc/misc_macro.h"
+#include "ytlib/thread/thread_id.hpp"
 
 namespace ytlib {
 
@@ -28,7 +30,7 @@ class AsioExecutor {
     try {
       Join();
     } catch (const std::exception& e) {
-      std::cerr << "AsioExecutor destruct get exception:" << e.what() << '\n';
+      DBG_PRINT("AsioExecutor destruct get exception, %s", e.what());
     }
   }
 
@@ -58,9 +60,15 @@ class AsioExecutor {
     signals_.async_wait([&](auto, auto) { Stop(); });
 
     auto run_func = [this] {
-      std::cerr << "AsioExecutor thread " << std::this_thread::get_id() << " start.\n";
-      io_.run();
-      std::cerr << "AsioExecutor thread " << std::this_thread::get_id() << " exit.\n";
+      DBG_PRINT("AsioExecutor thread %llu start.", ytlib::GetThreadId());
+
+      try {
+        io_.run();
+      } catch (const std::exception& e) {
+        DBG_PRINT("AsioExecutor thread %llu get exception %s.", ytlib::GetThreadId(), e.what());
+      }
+
+      DBG_PRINT("AsioExecutor thread %llu exit.", ytlib::GetThreadId());
     };
 
     for (uint32_t ii = 0; ii < threads_num_; ++ii) {
@@ -71,17 +79,23 @@ class AsioExecutor {
   // join，阻塞直到所有线程退出
   void Join() {
     for (auto itr = threads_.begin(); itr != threads_.end();) {
-      itr->join();
+      if (itr->joinable())
+        itr->join();
       threads_.erase(itr++);
     }
   }
 
   // 停止，异步
   void Stop() {
+    if (std::atomic_exchange(&stop_flag_, true)) return;
+
     // 并不需要调用io_.stop()。当io_上所有任务都运行完毕后，会自动停止
     for (std::size_t ii = stop_func_vec_.size() - 1; ii < stop_func_vec_.size(); --ii) {
       stop_func_vec_[ii]();
     }
+
+    signals_.cancel();
+    signals_.clear();
   }
 
   // 获取io
@@ -94,6 +108,7 @@ class AsioExecutor {
   std::list<std::thread> threads_;
   std::vector<std::function<void()> > start_func_vec_;
   std::vector<std::function<void()> > stop_func_vec_;
+  std::atomic_bool stop_flag_ = false;
 };
 
 }  // namespace ytlib

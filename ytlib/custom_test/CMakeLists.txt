@@ -5,7 +5,6 @@ add_library(testlib
 )
 
 SET_PROPERTY(TARGET testlib PROPERTY FOLDER custom_test)
-define_filename_macro(testlib)
 
 # --------------------------------------------------
 # custom_test
@@ -16,4 +15,3 @@ add_executable( custom_test
 target_link_libraries(custom_test ${YTLIB_LIBRARY_DEPEND})
 
 SET_PROPERTY(TARGET custom_test PROPERTY FOLDER custom_test)
-define_filename_macro(custom_test)

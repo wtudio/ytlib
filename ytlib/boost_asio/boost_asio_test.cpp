@@ -22,21 +22,11 @@ TEST(BOOST_ASIO_TEST, UTIL) {
 }
 
 TEST(BOOST_ASIO_TEST, LOG) {
+  auto cli_sys_ptr = std::make_shared<AsioExecutor>(1);
   auto svr1_sys_ptr = std::make_shared<AsioExecutor>(1);
   auto svr2_sys_ptr = std::make_shared<AsioExecutor>(1);
-  auto cli_sys_ptr = std::make_shared<AsioExecutor>(1);
 
-  thread t_svr1([svr1_sys_ptr] {
-    auto lgsvr_ptr = std::make_shared<LogSvr>(svr1_sys_ptr->IO(), LogSvrCfg());
-    svr1_sys_ptr->RegisterSvrFunc([&lgsvr_ptr] { lgsvr_ptr->Start(); },
-                                  [&lgsvr_ptr] { lgsvr_ptr->Stop(); });
-
-    svr1_sys_ptr->Start();
-    svr1_sys_ptr->Join();
-  });
-
-  std::this_thread::sleep_for(std::chrono::seconds(1));
-
+  // cli
   auto net_log_cli_ptr = std::make_shared<NetLogClient>(cli_sys_ptr->IO(), TcpEp{IPV4({127, 0, 0, 1}), 50001});
   cli_sys_ptr->RegisterSvrFunc(std::function<void()>(),
                                [&net_log_cli_ptr] { net_log_cli_ptr->Stop(); });
@@ -48,7 +38,20 @@ TEST(BOOST_ASIO_TEST, LOG) {
   thread t_cli([cli_sys_ptr] {
     cli_sys_ptr->Start();
     cli_sys_ptr->Join();
+    DBG_PRINT("cli_sys_ptr exit");
   });
+
+  //svr1
+  thread t_svr1([svr1_sys_ptr] {
+    auto lgsvr_ptr = std::make_shared<LogSvr>(svr1_sys_ptr->IO(), LogSvrCfg());
+    svr1_sys_ptr->RegisterSvrFunc([&lgsvr_ptr] { lgsvr_ptr->Start(); },
+                                  [&lgsvr_ptr] { lgsvr_ptr->Stop(); });
+
+    svr1_sys_ptr->Start();
+    svr1_sys_ptr->Join();
+    DBG_PRINT("svr1_sys_ptr exit");
+  });
+  std::this_thread::sleep_for(std::chrono::seconds(1));
 
   YTBL_SET_LEVEL(info);
 
@@ -60,21 +63,23 @@ TEST(BOOST_ASIO_TEST, LOG) {
   YTBL_FATAL << "test fatal log" << std::endl;
 
   std::this_thread::sleep_for(std::chrono::seconds(1));
-
   svr1_sys_ptr->Stop();
   t_svr1.join();
 
+  // svr2
   thread t_svr2([svr2_sys_ptr] {
     LogSvrCfg cfg;
     cfg.port = 50001;
     cfg.log_path = "./log2";
+    cfg.timer_dt = 1;
+    cfg.max_no_data_time = 3;
     auto lgsvr_ptr = std::make_shared<LogSvr>(svr2_sys_ptr->IO(), cfg);
     svr2_sys_ptr->RegisterSvrFunc([&lgsvr_ptr] { lgsvr_ptr->Start(); },
                                   [&lgsvr_ptr] { lgsvr_ptr->Stop(); });
     svr2_sys_ptr->Start();
     svr2_sys_ptr->Join();
+    DBG_PRINT("svr2_sys_ptr exit");
   });
-
   std::this_thread::sleep_for(std::chrono::seconds(1));
 
   YTBL_TRACE << "test trace log" << std::endl;
@@ -84,8 +89,16 @@ TEST(BOOST_ASIO_TEST, LOG) {
   YTBL_ERROR << "test error log" << std::endl;
   YTBL_FATAL << "test fatal log" << std::endl;
 
-  std::this_thread::sleep_for(std::chrono::seconds(1));
+  std::this_thread::sleep_for(std::chrono::seconds(5));
 
+  YTBL_TRACE << "test trace log" << std::endl;
+  YTBL_DEBUG << "test debug log" << std::endl;
+  YTBL_INFO << "test info log" << std::endl;
+  YTBL_WARN << "test warning log" << std::endl;
+  YTBL_ERROR << "test error log" << std::endl;
+  YTBL_FATAL << "test fatal log" << std::endl;
+
+  std::this_thread::sleep_for(std::chrono::seconds(1));
   svr2_sys_ptr->Stop();
   t_svr2.join();
 

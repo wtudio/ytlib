@@ -20,29 +20,29 @@ class TestObj {
  public:
   TestObj() {
     id = gid++;
-    DBG_PRINT("[%lld]create obj %d", ytlib::GetThreadId(), id);
+    DBG_PRINT("[%llu]create obj %d", ytlib::GetThreadId(), id);
     data = "";
   }
   TestObj(const TestObj &obj) : data(obj.data) {
     id = gid++;
-    DBG_PRINT("[%lld]create obj %d from %d by copy", ytlib::GetThreadId(), id, obj.id);
+    DBG_PRINT("[%llu]create obj %d from %d by copy", ytlib::GetThreadId(), id, obj.id);
   }
   TestObj &operator=(const TestObj &obj) {
-    DBG_PRINT("[%lld]copy obj %d to %d", ytlib::GetThreadId(), obj.id, id);
+    DBG_PRINT("[%llu]copy obj %d to %d", ytlib::GetThreadId(), obj.id, id);
     data = obj.data;
     return *this;
   }
   TestObj(TestObj &&obj) : data(std::move(obj.data)) {
     id = gid++;
-    DBG_PRINT("[%lld]create obj %d from %d by move", ytlib::GetThreadId(), id, obj.id);
+    DBG_PRINT("[%llu]create obj %d from %d by move", ytlib::GetThreadId(), id, obj.id);
   }
   TestObj &operator=(const TestObj &&obj) {
-    DBG_PRINT("[%lld]move obj %d to %d", ytlib::GetThreadId(), obj.id, id);
+    DBG_PRINT("[%llu]move obj %d to %d", ytlib::GetThreadId(), obj.id, id);
     data = std::move(obj.data);
     return *this;
   }
   ~TestObj() {
-    DBG_PRINT("[%lld]del obj %d", ytlib::GetThreadId(), id);
+    DBG_PRINT("[%llu]del obj %d", ytlib::GetThreadId(), id);
   }
   uint32_t id;
   std::string data;
@@ -58,7 +58,7 @@ TEST(THREAD_TOOLS_TEST, Channel_BASE) {
   std::atomic<uint32_t> ct = 0;
 
   auto f = [&](TestObj &&obj) {
-    DBG_PRINT("[%lld]handle obj %d", obj.id);
+    DBG_PRINT("[%llu]handle obj %d", obj.id);
     ++ct;
   };
 

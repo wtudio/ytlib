@@ -5,7 +5,7 @@
 
 #define CTX(x, ...) ytlib::Ctx(new std::map<std::string, std::string>{x, ##__VA_ARGS__})
 
-#define LOG_FMT(fmt) "[" __FILENAME__ ":" STRING(__LINE__) "@%s]" fmt, __FUNCTION__
+#define LOG_FMT(fmt) "[" __FILE__ ":" STRING(__LINE__) "@%s]" fmt, __FUNCTION__
 
 #define YT_LOG(lvl, fmt, ...) Log::Ins().Trace(lvl, LOG_FMT(fmt), ##__VA_ARGS__)
 

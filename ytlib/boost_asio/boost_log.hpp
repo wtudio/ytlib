@@ -42,14 +42,30 @@ class NetLogClient : public std::enable_shared_from_this<NetLogClient> {
  public:
   NetLogClient(boost::asio::io_context& io, const TcpEp& log_svr_ep) : strand_(boost::asio::make_strand(io)),
                                                                        log_svr_ep_(log_svr_ep),
-                                                                       sock_(strand_),
-                                                                       stop_flag_(false) {}
+                                                                       sock_(strand_) {}
 
   ~NetLogClient() {}
 
+  // no copy
+  NetLogClient(const NetLogClient&) = delete;
+  NetLogClient& operator=(const NetLogClient&) = delete;
+
   void Stop() {
-    stop_flag_ = true;
-    sock_.cancel();
+    if (std::atomic_exchange(&stop_flag_, true)) return;
+
+    auto self = shared_from_this();
+    boost::asio::co_spawn(
+        strand_,
+        [this, self]() -> boost::asio::awaitable<void> {
+          if (sock_.is_open()) {
+            sock_.cancel();
+            sock_.close();
+            sock_.release();
+          }
+
+          co_return;
+        },
+        boost::asio::detached);
   }
 
   void LogToSvr(std::shared_ptr<boost::asio::streambuf> log_buf) {
@@ -62,6 +78,7 @@ class NetLogClient : public std::enable_shared_from_this<NetLogClient> {
         [this, self, log_buf]() -> boost::asio::awaitable<void> {
           try {
             if (!sock_.is_open()) {
+              DBG_PRINT("start create a new connect to %s", TcpEp2Str(log_svr_ep_).c_str());
               co_await sock_.async_connect(log_svr_ep_, boost::asio::use_awaitable);
             }
 
@@ -71,11 +88,13 @@ class NetLogClient : public std::enable_shared_from_this<NetLogClient> {
             }
 
           } catch (const std::exception& e) {
-            std::cerr << "send log to svr get exception, addr:" << sock_.remote_endpoint() << ", exception:" << e.what() << '\n';
+            DBG_PRINT("send log to svr get exception, addr %s, exception %s", TcpEp2Str(log_svr_ep_).c_str(), e.what());
+            if (sock_.is_open()) {
+              sock_.cancel();
+              sock_.close();
+              sock_.release();
+            }
           }
-
-          sock_.close();
-          sock_.release();
 
           co_return;
         },
@@ -87,7 +106,7 @@ class NetLogClient : public std::enable_shared_from_this<NetLogClient> {
 
   boost::asio::strand<boost::asio::io_context::executor_type> strand_;
   TcpSocket sock_;
-  std::atomic_bool stop_flag_;
+  std::atomic_bool stop_flag_ = false;
 };
 
 /**
@@ -194,7 +213,7 @@ class YTBLCtr {
 };
 
 //日志宏定义，YTBL=ytlib boost log
-#define YTBL_FMT "[" __FILENAME__ ":" STRING(__LINE__) "@" << __FUNCTION__ << "]"
+#define YTBL_FMT "[" __FILE__ ":" STRING(__LINE__) "@" << __FUNCTION__ << "]"
 #define YTBL_TRACE BOOST_LOG_TRIVIAL(trace) << YTBL_FMT
 #define YTBL_DEBUG BOOST_LOG_TRIVIAL(debug) << YTBL_FMT
 #define YTBL_INFO BOOST_LOG_TRIVIAL(info) << YTBL_FMT

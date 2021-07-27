@@ -67,7 +67,8 @@ class Channel : public BlockQueue<T> {
   void StopProcess() {
     BlockQueue<T>::Stop();
     for (auto itr = threads_.begin(); itr != threads_.end();) {
-      itr->join();
+      if (itr->joinable())
+        itr->join();
       threads_.erase(itr++);
     }
   }

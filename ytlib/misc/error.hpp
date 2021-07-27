@@ -28,6 +28,6 @@ class Exception : public std::exception {
 // runtime assert
 #define RT_ASSERT(exp, ...) \
   if (!(exp)) [[unlikely]]  \
-    throw ytlib::Exception("[" __FILENAME__ ":" STRING(__LINE__) "] assert ( " #exp " ) failed. " __VA_ARGS__);
+    throw ytlib::Exception("[" __FILE__ ":" STRING(__LINE__) "] assert ( " #exp " ) failed. " __VA_ARGS__);
 
 }  // namespace ytlib
