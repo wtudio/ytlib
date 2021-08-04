@@ -233,12 +233,10 @@ TEST(THREAD_TOOLS_TEST, ThreadIdTool_BASE) {
 // 模拟异步请求
 void AsyncSendRecv(const TestObj &in_buf, std::function<void(TestObj &&)> callback) {
   std::thread t([&in_buf, callback]() {
-    std::cout << "aaaaa" << std::endl;
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-    TestObj out_buf;  // 3、7
+    TestObj out_buf;
     out_buf.data = in_buf.data + "-echo";
     callback(std::move(out_buf));
-    std::cout << "bbbbbb" << std::endl;
   });
   t.detach();
 }
@@ -246,46 +244,28 @@ void AsyncSendRecv(const TestObj &in_buf, std::function<void(TestObj &&)> callba
 TEST(THREAD_TOOLS_TEST, coroutine_BASE) {
   TestObj::gid = 0;
 
-  TestObj buf;  // 0
+  TestObj buf;
   buf.data = "abcd";
 
   auto sched = [&buf]() -> CoroSched<TestObj> {
-    // CoroSched.ret_ 1
-    std::cout << "start coro" << std::endl;
-
-    // Awaitable.re_ 2
-    // ret_buf 4
     TestObj ret_buf = co_await Awaitable<TestObj>([&buf](std::function<void(TestObj &&)> cb) {
       AsyncSendRecv(buf, cb);
     });
-    std::cout << "coro 1" << std::endl;
-    co_yield ret_buf;  // 4->1  node1
+    co_yield ret_buf;
 
-    std::cout << "coro 2" << std::endl;
-
-    // Awaitable.re_ 6
-    // ret_buf2 8
     TestObj ret_buf2 = co_await Awaitable<TestObj>([&ret_buf](std::function<void(TestObj &&)> cb) {
       AsyncSendRecv(ret_buf, cb);
     });
 
-    std::cout << "coro 3" << std::endl;
+    co_yield ret_buf2;
 
-    co_yield ret_buf2;  // 8->1 node2
+    co_yield std::move(ret_buf);
 
-    std::cout << "coro 4" << std::endl;
-
-    co_yield std::move(ret_buf);  // 4->1 node3
-
-    std::cout << "coro 5" << std::endl;
-
-    co_return ret_buf2;  // node4
+    co_return ret_buf2;
   }();
 
   // run
-  std::cout << "ttttt" << std::endl;
-  // 5
-  TestObj out_buf = sched.Get();  // node1
+  TestObj out_buf = sched.Get();
   ASSERT_STREQ(out_buf.data.c_str(), "abcd-echo");
 
   // not run
@@ -293,18 +273,18 @@ TEST(THREAD_TOOLS_TEST, coroutine_BASE) {
   ASSERT_STREQ(out_buf.data.c_str(), "abcd-echo");
 
   // run
-  sched.Resume();         // node1 start
-  out_buf = sched.Get();  // node2
+  sched.Resume();
+  out_buf = sched.Get();
   ASSERT_STREQ(out_buf.data.c_str(), "abcd-echo-echo");
 
   // run
-  sched.Resume();         // node2 start
-  out_buf = sched.Get();  // node3
+  sched.Resume();
+  out_buf = sched.Get();
   ASSERT_STREQ(out_buf.data.c_str(), "abcd-echo");
 
   // run
-  sched.Resume();         // node3 start
-  out_buf = sched.Get();  // node4
+  sched.Resume();
+  out_buf = sched.Get();
   ASSERT_STREQ(out_buf.data.c_str(), "abcd-echo-echo");
 }
 

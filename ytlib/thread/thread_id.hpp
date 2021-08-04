@@ -1,3 +1,10 @@
+/**
+ * @file thread_id.hpp
+ * @brief thread_id
+ * @details 获取线程id
+ * @author WT
+ * @date 2021-05-06
+ */
 #pragma once
 
 #include <atomic>

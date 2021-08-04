@@ -1,3 +1,10 @@
+/**
+ * @file coroutine_tools.hpp
+ * @brief coroutine_tools
+ * @details 协程工具，实验性质
+ * @author WT
+ * @date 2021-05-06
+ */
 #pragma once
 
 #include <atomic>

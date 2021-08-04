@@ -1,5 +1,5 @@
 /**
- * @file log_svr.hpp
+ * @file net_log.hpp
  * @brief 基于boost.asio的远程日志服务器
  * @details 基于boost.asio的远程日志服务器
  * @author WT
@@ -19,6 +19,77 @@
 #include "ytlib/misc/time.hpp"
 
 namespace ytlib {
+
+class NetLogClient : public std::enable_shared_from_this<NetLogClient> {
+ public:
+  NetLogClient(boost::asio::io_context& io, const TcpEp& log_svr_ep) : strand_(boost::asio::make_strand(io)),
+                                                                       log_svr_ep_(log_svr_ep),
+                                                                       sock_(strand_) {}
+
+  ~NetLogClient() {}
+
+  // no copy
+  NetLogClient(const NetLogClient&) = delete;
+  NetLogClient& operator=(const NetLogClient&) = delete;
+
+  void Stop() {
+    if (std::atomic_exchange(&stop_flag_, true)) return;
+
+    auto self = shared_from_this();
+    boost::asio::co_spawn(
+        strand_,
+        [this, self]() -> boost::asio::awaitable<void> {
+          if (sock_.is_open()) {
+            sock_.cancel();
+            sock_.close();
+            sock_.release();
+          }
+
+          co_return;
+        },
+        boost::asio::detached);
+  }
+
+  void LogToSvr(std::shared_ptr<boost::asio::streambuf> log_buf) {
+    if (stop_flag_) [[unlikely]]
+      return;
+
+    auto self = shared_from_this();
+    boost::asio::co_spawn(
+        strand_,
+        [this, self, log_buf]() -> boost::asio::awaitable<void> {
+          try {
+            if (!sock_.is_open()) {
+              DBG_PRINT("start create a new connect to %s", TcpEp2Str(log_svr_ep_).c_str());
+              co_await sock_.async_connect(log_svr_ep_, boost::asio::use_awaitable);
+            }
+
+            while (log_buf->size()) {
+              std::size_t n = co_await sock_.async_write_some(log_buf->data(), boost::asio::use_awaitable);
+              log_buf->consume(n);
+            }
+
+          } catch (const std::exception& e) {
+            DBG_PRINT("send log to svr get exception, addr %s, exception %s", TcpEp2Str(log_svr_ep_).c_str(), e.what());
+            if (sock_.is_open()) {
+              sock_.cancel();
+              sock_.close();
+              sock_.release();
+            }
+          }
+
+          co_return;
+        },
+        boost::asio::detached);
+  }
+
+ private:
+  const TcpEp log_svr_ep_;
+
+  boost::asio::strand<boost::asio::io_context::executor_type> strand_;
+  TcpSocket sock_;
+  std::atomic_bool stop_flag_ = false;
+};
 
 /**
  * @brief 远程日志服务器配置

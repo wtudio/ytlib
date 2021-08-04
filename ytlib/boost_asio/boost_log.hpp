@@ -33,81 +33,11 @@
 #include <boost/log/utility/setup/file.hpp>
 #include <boost/shared_ptr.hpp>
 
+#include "net_log.hpp"
 #include "net_util.hpp"
 #include "ytlib/misc/misc_macro.h"
 
 namespace ytlib {
-
-class NetLogClient : public std::enable_shared_from_this<NetLogClient> {
- public:
-  NetLogClient(boost::asio::io_context& io, const TcpEp& log_svr_ep) : strand_(boost::asio::make_strand(io)),
-                                                                       log_svr_ep_(log_svr_ep),
-                                                                       sock_(strand_) {}
-
-  ~NetLogClient() {}
-
-  // no copy
-  NetLogClient(const NetLogClient&) = delete;
-  NetLogClient& operator=(const NetLogClient&) = delete;
-
-  void Stop() {
-    if (std::atomic_exchange(&stop_flag_, true)) return;
-
-    auto self = shared_from_this();
-    boost::asio::co_spawn(
-        strand_,
-        [this, self]() -> boost::asio::awaitable<void> {
-          if (sock_.is_open()) {
-            sock_.cancel();
-            sock_.close();
-            sock_.release();
-          }
-
-          co_return;
-        },
-        boost::asio::detached);
-  }
-
-  void LogToSvr(std::shared_ptr<boost::asio::streambuf> log_buf) {
-    if (stop_flag_) [[unlikely]]
-      return;
-
-    auto self = shared_from_this();
-    boost::asio::co_spawn(
-        strand_,
-        [this, self, log_buf]() -> boost::asio::awaitable<void> {
-          try {
-            if (!sock_.is_open()) {
-              DBG_PRINT("start create a new connect to %s", TcpEp2Str(log_svr_ep_).c_str());
-              co_await sock_.async_connect(log_svr_ep_, boost::asio::use_awaitable);
-            }
-
-            while (log_buf->size()) {
-              std::size_t n = co_await sock_.async_write_some(log_buf->data(), boost::asio::use_awaitable);
-              log_buf->consume(n);
-            }
-
-          } catch (const std::exception& e) {
-            DBG_PRINT("send log to svr get exception, addr %s, exception %s", TcpEp2Str(log_svr_ep_).c_str(), e.what());
-            if (sock_.is_open()) {
-              sock_.cancel();
-              sock_.close();
-              sock_.release();
-            }
-          }
-
-          co_return;
-        },
-        boost::asio::detached);
-  }
-
- private:
-  const TcpEp log_svr_ep_;
-
-  boost::asio::strand<boost::asio::io_context::executor_type> strand_;
-  TcpSocket sock_;
-  std::atomic_bool stop_flag_ = false;
-};
 
 /**
  * @brief 基于boost.log的网络日志后端
@@ -116,7 +46,7 @@ class NetLogClient : public std::enable_shared_from_this<NetLogClient> {
 class NetLogBackend : public boost::log::sinks::basic_sink_backend<boost::log::sinks::synchronized_feeding>,
                       public boost::enable_shared_from_this<NetLogBackend> {
  public:
-  explicit NetLogBackend(std::shared_ptr<NetLogClient> net_log_cli_ptr, int unuse) : net_log_cli_ptr_(net_log_cli_ptr) {
+  explicit NetLogBackend(std::shared_ptr<NetLogClient> net_log_cli_ptr) : net_log_cli_ptr_(net_log_cli_ptr) {
     RT_ASSERT(net_log_cli_ptr_, "net_log_cli_ptr is nullptr.");
   }
 
@@ -135,10 +65,6 @@ class NetLogBackend : public boost::log::sinks::basic_sink_backend<boost::log::s
         << "]" << rec[boost::log::expressions::smessage];
 
     net_log_cli_ptr_->LogToSvr(log_buf);
-  }
-
-  void flush() {
-    return;
   }
 
  private:
@@ -188,7 +114,7 @@ class YTBLCtr {
 
   void EnableNetLog(std::shared_ptr<NetLogClient> net_log_cli_ptr) {
     if (!std::atomic_exchange(&net_log_flag, true)) {
-      auto sink = boost::make_shared<boost::log::sinks::synchronous_sink<NetLogBackend> >(net_log_cli_ptr, 0);
+      auto sink = boost::make_shared<boost::log::sinks::synchronous_sink<NetLogBackend> >(boost::make_shared<NetLogBackend>(net_log_cli_ptr));
 
       boost::log::core::get()->add_sink(sink);
     }

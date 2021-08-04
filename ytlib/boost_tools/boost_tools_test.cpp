@@ -1,7 +1,5 @@
 #include <gtest/gtest.h>
 
-//#include "log.hpp"
-//#include "log_svr.hpp"
 #include "serialize.hpp"
 #include "uuid.hpp"
 #include "xml_tools.hpp"

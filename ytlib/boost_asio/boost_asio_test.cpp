@@ -2,7 +2,7 @@
 
 #include "asio_tools.hpp"
 #include "boost_log.hpp"
-#include "log_svr.hpp"
+#include "net_log.hpp"
 #include "net_util.hpp"
 #include "ytlib/misc/misc_macro.h"
 
