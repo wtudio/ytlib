@@ -1,3 +1,10 @@
+/**
+ * @file console_writer.hpp
+ * @brief 控制台日志writer
+ * @note 控制台日志writer
+ * @author WT
+ * @date 2021-08-05
+ */
 #pragma once
 
 #include <iostream>

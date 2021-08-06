@@ -1,7 +1,7 @@
 /**
  * @file make_final.hpp
  * @brief 无法被继承的类
- * @details 制作一个无法被继承的类
+ * @note 制作一个无法被继承的类
  * @author WT
  * @date 2019-07-26
  */

@@ -1,7 +1,7 @@
 /**
  * @file coroutine_tools.hpp
- * @brief coroutine_tools
- * @details 协程工具，实验性质
+ * @brief 协程工具
+ * @note 协程工具，实验性质
  * @author WT
  * @date 2021-05-06
  */
@@ -13,7 +13,9 @@
 
 namespace ytlib {
 
-// 上层是线程的协程调度器
+/**
+ * @brief 上层是线程的协程调度器
+ */
 template <class T>
 class CoroSched {
  public:
@@ -50,18 +52,18 @@ class CoroSched {
     CoroSched* p_coro_sched;
   };
 
-  // 等待协程下一次调用co_yield或co_return
+  ///等待协程下一次调用co_yield或co_return
   void Wait() {
     flag_.wait(static_cast<uint8_t>(CoroState::RUN));
   }
 
-  // 等待协程下一次调用co_yield或co_return，并获取其返回的值
+  ///等待协程下一次调用co_yield或co_return，并获取其返回的值
   T& Get() {
     flag_.wait(static_cast<uint8_t>(CoroState::RUN));
     return ret_;
   }
 
-  // 继续运行co_yield挂起的协程
+  ///继续运行co_yield挂起的协程
   void Resume() {
     if (flag_ == static_cast<uint8_t>(CoroState::YIELD)) {
       flag_ = static_cast<uint8_t>(CoroState::RUN);
@@ -86,6 +88,9 @@ class CoroSched {
   std::coroutine_handle<promise_type> handle_;
 };
 
+/**
+ * @brief 有返回值的异步过程转协程句柄封装
+ */
 template <class T>
 class Awaitable {
  public:
@@ -107,6 +112,9 @@ class Awaitable {
   T re_;
 };
 
+/**
+ * @brief 无返回值的异步过程转协程句柄封装
+ */
 template <>
 class Awaitable<void> {
  public:

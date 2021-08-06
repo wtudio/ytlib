@@ -1,7 +1,7 @@
 /**
  * @file math_def.hpp
  * @brief 一些math上的宏定义
- * @details 一些math上的宏定义
+ * @note 一些math上的宏定义
  * @author WT
  * @date 2021-05-28
  */
@@ -21,8 +21,3 @@
 #define MATH_2_SQRTPI 1.1283791670955125738961589031215  // 2/sqrt(pi)
 #define MATH_SQRT2 1.4142135623730950488016887242097     // sqrt(2)
 #define MATH_SQRT1_2 0.70710678118654752440084436210485  // 1/sqrt(2)
-
-// 判断浮点数是否相等
-#ifndef fequal
-  #define fequal(a, b) (((a - b) > -1e-6) && ((a - b) < 1e-6))
-#endif

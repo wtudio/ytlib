@@ -1,7 +1,7 @@
 /**
  * @file heap.hpp
  * @brief 堆
- * @details 堆和相关的算法，仅学习用。stl中有关于heap的函数：make_heap/pop_heap/push_heap/sort_heap
+ * @note 堆和相关的算法，仅学习用。stl中有关于heap的函数：make_heap/pop_heap/push_heap/sort_heap
  * @author WT
  * @date 2019-07-26
  */

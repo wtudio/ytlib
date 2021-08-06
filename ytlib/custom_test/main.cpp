@@ -1,7 +1,7 @@
 /**
  * @file main.cpp
  * @brief 自定义测试
- * @details 自定义相关测试
+ * @note 自定义相关测试
  * @author WT
  * @date 2019-07-26
  */
@@ -17,13 +17,11 @@
 #include <thread>
 #include <vector>
 
-#include "ytlib/misc/error.hpp"
-#include "ytlib/misc/misc_macro.h"
-
-#define BOOST_ASIO_NO_DEPRECATED
 #include <boost/asio.hpp>
 
 #include "ytlib/boost_asio/net_util.hpp"
+#include "ytlib/misc/error.hpp"
+#include "ytlib/misc/misc_macro.h"
 
 using namespace std;
 using namespace ytlib;

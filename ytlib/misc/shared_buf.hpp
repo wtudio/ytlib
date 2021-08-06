@@ -1,7 +1,7 @@
 /**
  * @file shared_buf.hpp
  * @brief 智能buffer
- * @details 基于std::shared_ptr<char[]>的智能buffer，当没有人引用时自动销毁
+ * @note 基于std::shared_ptr<char[]>的智能buffer，当没有人引用时自动销毁
  * @author WT
  * @date 2021-06-04
  */
@@ -15,45 +15,45 @@ namespace ytlib {
  * @brief 通用buff
  * 基于std::shared_ptr<char[]>的智能buffer，当没有人引用时自动销毁
  */
-struct sharedBuf {
+struct SharedBuf {
   /**
    * @brief 默认构造函数
    */
-  sharedBuf() {}
+  SharedBuf() {}
 
   /**
    * @brief 构造函数
    * @param input_buf_size 输入buf的大小
    */
-  sharedBuf(uint32_t input_buf_size) : buf_size(input_buf_size) {
+  SharedBuf(uint32_t input_buf_size) : buf_size(input_buf_size) {
     buf = std::make_shared<char[]>(buf_size);
   }
 
   /**
    * @brief 构造函数
-   * @details 浅拷贝
+   * @note 浅拷贝
    * @param input_buf 输入buf，const std::shared_ptr<char[]>&形式
    * @param input_buf_size 输入buf的大小
    */
-  sharedBuf(const std::shared_ptr<char[]>& input_buf, uint32_t input_buf_size) : buf(input_buf), buf_size(input_buf_size) {}
+  SharedBuf(const std::shared_ptr<char[]>& input_buf, uint32_t input_buf_size) : buf(input_buf), buf_size(input_buf_size) {}
 
   /**
    * @brief 构造函数
-   * @details 深拷贝
+   * @note 深拷贝
    * @param input_buf 输入buf，const char*形式
    * @param input_buf_size 输入buf的大小
    */
-  sharedBuf(const char* input_buf, uint32_t input_buf_size) : buf_size(input_buf_size) {
+  SharedBuf(const char* input_buf, uint32_t input_buf_size) : buf_size(input_buf_size) {
     buf = std::make_shared<char[]>(buf_size);
     memcpy(buf.get(), input_buf, buf_size);
   }
 
   /**
    * @brief 构造函数
-   * @details 深拷贝
+   * @note 深拷贝
    * @param buf_str 输入buf，std::string形式
    */
-  sharedBuf(const std::string& buf_str) : buf_size(static_cast<uint32_t>(buf_str.size())) {
+  SharedBuf(const std::string& buf_str) : buf_size(static_cast<uint32_t>(buf_str.size())) {
     buf = std::make_shared<char[]>(buf_size);
     memcpy(buf.get(), buf_str.c_str(), buf_size);
   }
@@ -68,8 +68,8 @@ struct sharedBuf {
   char* Get() const { return buf.get(); }
 
   //默认的拷贝构造函数的浅拷贝，此处提供深拷贝
-  static sharedBuf GetDeepCopy(const sharedBuf& sbuf) {
-    return sharedBuf(sbuf.buf.get(), sbuf.buf_size);
+  static SharedBuf GetDeepCopy(const SharedBuf& sbuf) {
+    return SharedBuf(sbuf.buf.get(), sbuf.buf_size);
   }
 
  private:

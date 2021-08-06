@@ -1,7 +1,7 @@
 /**
  * @file guid.hpp
  * @brief 通用的local guid生成
- * @details 采用四个元素来生成一个guid：
+ * @note 采用四个元素来生成一个guid：
  * 1)、mac值：能在整个系统内部唯一标识一个线程，可以由机器mac/服务器编号/进程号/线程号等生成
  * 2)、obj id值：能在当前线程内唯一标识一种类型的实例
  * 3)、time：当前秒级时间戳

@@ -1,7 +1,7 @@
 /**
  * @file net_log.hpp
  * @brief 基于boost.asio的远程日志服务器
- * @details 基于boost.asio的远程日志服务器
+ * @note 基于boost.asio的远程日志服务器
  * @author WT
  * @date 2019-07-26
  */
@@ -28,9 +28,8 @@ class NetLogClient : public std::enable_shared_from_this<NetLogClient> {
 
   ~NetLogClient() {}
 
-  // no copy
-  NetLogClient(const NetLogClient&) = delete;
-  NetLogClient& operator=(const NetLogClient&) = delete;
+  NetLogClient(const NetLogClient&) = delete;             ///<no copy
+  NetLogClient& operator=(const NetLogClient&) = delete;  ///<no copy
 
   void Stop() {
     if (std::atomic_exchange(&stop_flag_, true)) return;
@@ -125,9 +124,8 @@ class LogSvr : public std::enable_shared_from_this<LogSvr> {
 
   ~LogSvr() {}
 
-  // no copy
-  LogSvr(const LogSvr&) = delete;
-  LogSvr& operator=(const LogSvr&) = delete;
+  LogSvr(const LogSvr&) = delete;             ///<no copy
+  LogSvr& operator=(const LogSvr&) = delete;  ///<no copy
 
   void Start() {
     RT_ASSERT(CheckPort(cfg_.port), "port is used.");
@@ -197,9 +195,8 @@ class LogSvr : public std::enable_shared_from_this<LogSvr> {
 
     ~LogSession() {}
 
-    // no copy
-    LogSession(const LogSession&) = delete;
-    LogSession& operator=(const LogSession&) = delete;
+    LogSession(const LogSession&) = delete;             ///<no copy
+    LogSession& operator=(const LogSession&) = delete;  ///<no copy
 
     void Start() {
       std::filesystem::path log_file_dir = logsvr_ptr_->cfg_.log_path / session_name_;

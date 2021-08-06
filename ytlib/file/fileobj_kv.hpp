@@ -1,25 +1,28 @@
 /**
  * @file fileobj_kv.hpp
  * @brief k-v形式文件
- * @details 将key-value型文件与map<string, string>关联
+ * @note 将key-value型文件与map<string, string>关联
  * @author WT
  * @date 2019-07-26
  */
 #pragma once
 
-#include "fileobj_inf.hpp"
-
 #include <fstream>
 #include <map>
+
+#include "fileobj_inf.hpp"
 
 namespace ytlib {
 /**
  * @brief k-v形式文件类
- * 使用map格式。涉及到存储的都弄成string。以#开头的行为注释
+ * @note 使用map格式。涉及到存储的都弄成string。以#开头的行为注释
  */
 class KeyValueFile : public FileObj<std::map<std::string, std::string> > {
  public:
+  ///构造函数
   KeyValueFile() : FileObj() {}
+
+  ///析构函数
   virtual ~KeyValueFile() {}
 
  protected:

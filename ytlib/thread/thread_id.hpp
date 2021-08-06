@@ -1,7 +1,7 @@
 /**
  * @file thread_id.hpp
  * @brief thread_id
- * @details 获取线程id
+ * @note 获取线程id
  * @author WT
  * @date 2021-05-06
  */
@@ -10,6 +10,8 @@
 #include <atomic>
 
 namespace ytlib {
+
+///获取线程id工具
 class ThreadIdTool {
  public:
   static ThreadIdTool& Ins() {

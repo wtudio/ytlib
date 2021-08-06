@@ -210,32 +210,99 @@ TEST(MATH_TEST, BigNum_TEST) {
   cout << g << endl;
 }
 
-TEST(MATH_TEST, MATH_TOOL_TEST) {
-  cout << Gcd(42, 30) << endl;
-  cout << Gcd(770, 26) << endl;
-  cout << Gcd(121, 132) << endl;
+TEST(MATH_TEST, MATH_UTIL_TEST) {
+  ASSERT_EQ(CountOne(0b0), 0);
+  ASSERT_EQ(CountOne(0b1000), 1);
+  ASSERT_EQ(CountOne(0b1001), 2);
+  ASSERT_EQ(CountOne(0b1010010001), 4);
 
-  std::vector<uint64_t> v;
-  Factoring(60, v);
+  ASSERT_EQ(CountZero(0b0), 64 - 0);
+  ASSERT_EQ(CountZero(0b1000), 64 - 1);
+  ASSERT_EQ(CountZero(0b1001), 64 - 2);
+  ASSERT_EQ(CountZero(0b1010010001), 64 - 4);
+
+  ASSERT_EQ(FindFirstOne(0b101000), 3);
+  ASSERT_EQ(FindFirstOne(0b101001), 0);
+  ASSERT_EQ(FindFirstOne(0b101001, 1), 3);
+
+  ASSERT_FALSE(IsPrime(0));
+  ASSERT_FALSE(IsPrime(1));
+  ASSERT_TRUE(IsPrime(2));
+  ASSERT_TRUE(IsPrime(3));
+  ASSERT_FALSE(IsPrime(4));
+  ASSERT_TRUE(IsPrime(23));
+  ASSERT_TRUE(IsPrime(997));
+  ASSERT_FALSE(IsPrime(997 * 991));
+
+  ASSERT_EQ(Gcd(42, 30), 6);
+  ASSERT_EQ(Gcd(770, 26), 2);
+  ASSERT_EQ(Gcd(121, 132), 11);
+  ASSERT_EQ(Gcd(1, 1), 1);
+  ASSERT_EQ(Gcd(1, 2), 1);
+  ASSERT_EQ(Gcd(1, 0), 1);
+  ASSERT_EQ(Gcd(0, 0), 1);
+
+  ASSERT_EQ(Lcm(0, 0), 0);
+  ASSERT_EQ(Lcm(0, 100), 0);
+  ASSERT_EQ(Lcm(1, 1), 1);
+  ASSERT_EQ(Lcm(1, 10), 10);
+  ASSERT_EQ(Lcm(2, 5), 10);
+  ASSERT_EQ(Lcm(4, 10), 20);
+
+  std::vector<uint64_t> v = Factoring2Vec(60);
+  std::vector<uint64_t> tgt_v{2, 2, 3, 5};
+  ASSERT_EQ(v.size(), tgt_v.size());
   for (uint32_t ii = 0; ii < v.size(); ++ii) {
-    cout << v[ii] << " ";
+    ASSERT_EQ(v[ii], tgt_v[ii]);
   }
-  cout << endl;
-  std::map<uint64_t, uint64_t> m;
-  Factoring(60, m);
-  for (std::map<uint64_t, uint64_t>::iterator ii = m.begin(); ii != m.end(); ++ii) {
-    cout << ii->first << ":" << ii->second << " ";
+
+  std::map<uint64_t, uint64_t> m = Factoring2Map(60);
+  std::map<uint64_t, uint64_t> tgt_m{{2, 2}, {3, 1}, {5, 1}};
+  for (const auto &itr : m) {
+    auto tgt_itr = tgt_m.find(itr.first);
+    ASSERT_TRUE(tgt_itr != tgt_m.end());
+    ASSERT_EQ(itr.second, tgt_itr->second);
   }
-  cout << endl;
 
-  cout << Mul(5) << endl;     //120
-  cout << Mul(9, 5) << endl;  //15120
-  cout << Arn(9, 2) << endl;  //72
-  cout << Crn(9, 2) << endl;  //36
+  ASSERT_EQ(Mul(0), 0);
+  ASSERT_EQ(Mul(5), 120);
+  ASSERT_EQ(Mul(9, 5), 15120);
+  ASSERT_EQ(Mul(9, 9), 9);
+  ASSERT_EQ(Mul(9, 10), 0);
 
-  cout << SumAP(1.0, 2.0, 3) << endl;   //9
-  cout << SumGP(2.0, 1.0, 10) << endl;  //20
-  cout << SumGP(2.0, 3.0, 4) << endl;   //80
+  ASSERT_EQ(Arn(9, 2), 72);
+  ASSERT_EQ(Arn(0, 2), 0);
+  ASSERT_EQ(Arn(2, 0), 0);
+  ASSERT_EQ(Arn(9, 1), 9);
+  ASSERT_EQ(Arn(4, 4), 24);
+
+  ASSERT_EQ(Arn(9, 2, Arn(9, 1), 1), 72);
+  ASSERT_EQ(Arn(9, 2, Arn(9, 2), 2), 72);
+  ASSERT_EQ(Arn(9, 2, Arn(9, 3), 3), 72);
+
+  ASSERT_EQ(Crn(9, 2), 36);
+  ASSERT_EQ(Crn(0, 2), 0);
+  ASSERT_EQ(Crn(2, 0), 0);
+  ASSERT_EQ(Crn(9, 1), 9);
+  ASSERT_EQ(Crn(4, 4), 1);
+
+  ASSERT_EQ(Crn(9, 2, Crn(9, 1), 1), 36);
+  ASSERT_EQ(Crn(9, 2, Crn(9, 2), 2), 36);
+  ASSERT_EQ(Crn(9, 2, Crn(9, 3), 3), 36);
+
+  ASSERT_TRUE(std::abs(SumAP(1.0, 2.0, 3) - 9.0) < 1e-6);
+
+  ASSERT_TRUE(std::abs(SumGP(2.0, 0.0, 10)) < 1e-6);
+  ASSERT_TRUE(std::abs(SumGP(0.0, 2.0, 10)) < 1e-6);
+  ASSERT_TRUE(std::abs(SumGP(0.0, 0.0, 10)) < 1e-6);
+  ASSERT_TRUE(std::abs(SumGP(2.0, 1.0, 10) - 20.0) < 1e-6);
+  ASSERT_TRUE(std::abs(SumGP(2.0, 3.0, 4) - 80.0) < 1e-6);
+  ASSERT_TRUE(std::abs(SumGP(2.0, 3.0, 0)) < 1e-6);
+
+  ASSERT_TRUE(std::abs(Pow(0.0, 1)) < 1e-6);
+  ASSERT_TRUE(std::abs(Pow(1.0, 0) - 1.0) < 1e-6);
+  ASSERT_TRUE(std::abs(Pow(2.0, 1) - 2.0) < 1e-6);
+  ASSERT_TRUE(std::abs(Pow(2.0, 10) - 1024.0) < 1e-6);
 }
 
 TEST(MATH_TEST, SORT_ALGS_TEST) {
@@ -243,51 +310,51 @@ TEST(MATH_TEST, SORT_ALGS_TEST) {
   int answer[num] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
   //冒泡
   int data1[num] = {1, 4, 2, 8, 5, 9, 0, 7, 6, 3};
-  bubbleSort(data1, num);
+  BubbleSort(data1, num);
   for (uint32_t ii = 0; ii < num; ++ii) {
     ASSERT_EQ(data1[ii], answer[ii]);
   }
 
   //归并
   int data2[num] = {1, 4, 2, 8, 5, 9, 0, 7, 6, 3};
-  mergeSort(data2, num);
+  MergeSort(data2, num);
   for (uint32_t ii = 0; ii < num; ++ii) {
     ASSERT_EQ(data2[ii], answer[ii]);
   }
 
   //归并，非递归
   int data2_2[num] = {1, 4, 2, 8, 5, 9, 0, 7, 6, 3};
-  mergeSort2(data2_2, num);
+  MergeSort2(data2_2, num);
   for (uint32_t ii = 0; ii < num; ++ii) {
     ASSERT_EQ(data2_2[ii], answer[ii]);
   }
 
   //快排
   int data3[num] = {1, 4, 2, 8, 5, 9, 0, 7, 6, 3};
-  quickSort(data3, num);
+  QuickSort(data3, num);
   for (uint32_t ii = 0; ii < num; ++ii) {
     ASSERT_EQ(data3[ii], answer[ii]);
   }
 
   //二分查找
-  ASSERT_EQ(binarySearch(answer, num, 6), 6);
-  ASSERT_EQ(binarySearch(answer, num, -1), num);
+  ASSERT_EQ(BinarySearch(answer, num, 6), 6);
+  ASSERT_EQ(BinarySearch(answer, num, -1), num);
 
   int data4[num] = {0, 0, 1, 1, 2, 2, 2, 3, 3, 4};
-  ASSERT_EQ(binarySearch(data4, num, 2), 4);
-  ASSERT_EQ(binarySearch(data4, num, 1), 2);
+  ASSERT_EQ(BinarySearch(data4, num, 2), 4);
+  ASSERT_EQ(BinarySearch(data4, num, 1), 2);
 
   int data5[num] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
   int data6[num] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
   int data7[num] = {2, 2, 2, 2, 2, 2, 2, 2, 2, 2};
 
-  ASSERT_EQ(binarySearch(data5, num, 1), num);
-  ASSERT_EQ(binarySearch(data6, num, 1), 0);
-  ASSERT_EQ(binarySearch(data7, num, 1), num);
+  ASSERT_EQ(BinarySearch(data5, num, 1), num);
+  ASSERT_EQ(BinarySearch(data6, num, 1), 0);
+  ASSERT_EQ(BinarySearch(data7, num, 1), num);
 
-  ASSERT_EQ(binarySearchLast(data5, num, 1), num);
-  ASSERT_EQ(binarySearchLast(data6, num, 1), 9);
-  ASSERT_EQ(binarySearchLast(data7, num, 1), num);
+  ASSERT_EQ(BinarySearchLast(data5, num, 1), num);
+  ASSERT_EQ(BinarySearchLast(data6, num, 1), 9);
+  ASSERT_EQ(BinarySearchLast(data7, num, 1), num);
 }
 
 }  // namespace ytlib

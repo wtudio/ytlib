@@ -71,24 +71,24 @@ TEST(MISC_TEST, DynamicLib_BASE) {
 TEST(MISC_TEST, sharedBuf_BASE) {
   std::string s = "test test";
   size_t n = s.size();
-  sharedBuf buf1(n);
+  SharedBuf buf1(n);
   ASSERT_EQ(buf1.Size(), n);
 
-  buf1 = sharedBuf(s);
+  buf1 = SharedBuf(s);
   ASSERT_STREQ(std::string(buf1.Get(), n).c_str(), s.c_str());
 
   // 浅拷贝
-  sharedBuf buf2(buf1.GetSharedPtr(), n);
+  SharedBuf buf2(buf1.GetSharedPtr(), n);
   ASSERT_STREQ(std::string(buf2.Get(), n).c_str(), s.c_str());
   ASSERT_EQ(buf1.Get(), buf2.Get());
 
   // 深拷贝
-  sharedBuf buf3(buf1.Get(), n);
+  SharedBuf buf3(buf1.Get(), n);
   ASSERT_STREQ(std::string(buf3.Get(), n).c_str(), s.c_str());
   ASSERT_NE(buf1.Get(), buf3.Get());
 
   // 深拷贝
-  sharedBuf buf4 = sharedBuf::GetDeepCopy(buf1);
+  SharedBuf buf4 = SharedBuf::GetDeepCopy(buf1);
   ASSERT_STREQ(std::string(buf4.Get(), n).c_str(), s.c_str());
   ASSERT_NE(buf1.Get(), buf4.Get());
 }

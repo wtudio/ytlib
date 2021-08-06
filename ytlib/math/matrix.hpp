@@ -1,7 +1,7 @@
 /**
  * @file matrix.hpp
  * @brief 矩阵类
- * @details 基于模板的简易矩阵类型
+ * @note 基于模板的简易矩阵类型
  * @author WT
  * @date 2019-07-26
  */

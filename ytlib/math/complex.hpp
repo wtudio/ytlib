@@ -1,7 +1,7 @@
 /**
  * @file complex.hpp
  * @brief 复数
- * @details 复数和相关运算，仅学习用。stl中有复数库<complex>
+ * @note 复数和相关运算，仅学习用。stl中有复数库<complex>
  * @author WT
  * @date 2019-07-26
  */

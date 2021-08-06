@@ -1,7 +1,7 @@
 /**
  * @file graph.hpp
  * @brief 图
- * @details 提供模板化的图的实现和相关的算法，包括有向图/无向图、BFS/DFS、dijkstra、floyd等。
+ * @note 提供模板化的图的实现和相关的算法，包括有向图/无向图、BFS/DFS、dijkstra、floyd等。
  * 只是作为样板学习之用，实际工程中需要时根据需求参考源码进行改动。
  * todo：待完善
  * @author WT
@@ -96,7 +96,7 @@ inline void releaseGraphVec(std::vector<Graph<T>*>& vec) {
 }
 /**
  * @brief 创建邻接矩阵
- * @details M.val[i][j]表示从顶点vec[i]出发到顶点vec[j]的直接距离，-1值表示不直接连接
+ * @note M.val[i][j]表示从顶点vec[i]出发到顶点vec[j]的直接距离，-1值表示不直接连接
  * @param T 模板参数，节点类型
  * @param vec 存放待创建邻接矩阵的图的节点的vector
  * @return 邻接矩阵
@@ -117,7 +117,7 @@ g_sideMatrix createAdjMatrix(const std::vector<Graph<T>*>& vec) {
 }
 /**
  * @brief 图的深拷贝
- * @details 深拷贝一个图
+ * @note 深拷贝一个图
  * @param T 模板参数，节点类型
  * @param vec 存放待深拷贝的图的节点的vector
  * @return 存放深拷贝结果的图的节点的vector
@@ -139,7 +139,7 @@ std::vector<Graph<T>*> copyGraph(const std::vector<Graph<T>*>& vec) {
 }
 /**
  * @brief DFS
- * @details 图的深度优先遍历。遍历之前应确定所有节点的visited已经被重置为false
+ * @note 图的深度优先遍历。遍历之前应确定所有节点的visited已经被重置为false
  * @param T 模板参数，节点类型
  * @param val 待DFS的节点
  * @param vec 存放DFS结果的vector
@@ -155,7 +155,7 @@ void DFS(Graph<T>& val, std::vector<Graph<T>*>& vec) {
 }
 /**
  * @brief BFS
- * @details 图的广度优先遍历。遍历之前应确定所有节点的visited已经被重置为false
+ * @note 图的广度优先遍历。遍历之前应确定所有节点的visited已经被重置为false
  * @param T 模板参数，节点类型
  * @param val 待BFS的节点
  * @param vec 存放BFS结果的vector
@@ -184,7 +184,7 @@ void BFS(Graph<T>& val, std::vector<Graph<T>*>& vec) {
 
 /**
  * @brief dijkstra算法
- * @details 求一个节点到其他节点的最短路径，返回距离数组和路径数组。禁止负权边
+ * @note 求一个节点到其他节点的最短路径，返回距离数组和路径数组。禁止负权边
  * @param T 模板参数，节点类型
  * @param beginNode 源节点
  * @param vec 存放目标节点的vector
@@ -225,7 +225,7 @@ std::pair<std::vector<g_sideType>, std::vector<int32_t> > dijkstra(const Graph<T
 }
 /**
  * @brief dijkstra算法求特定节点到另一个节点的最短路径
- * @details 根据dijkstra返回的路径数组求特定节点到另一个节点的最短路径。返回的是倒推的路径
+ * @note 根据dijkstra返回的路径数组求特定节点到另一个节点的最短路径。返回的是倒推的路径
  * @param dstIdx 目标节点在vec中的index
  * @param path dijkstra函数返回的路径数组
  * @return 倒推的路径
@@ -241,7 +241,7 @@ inline std::vector<int32_t> dijkstraPath(int32_t dstIdx, const std::vector<int32
 }
 /**
  * @brief floyd算法
- * @details 求所有节点到其他所有节点的最短路径，返回距离矩阵和路径矩阵
+ * @note 求所有节点到其他所有节点的最短路径，返回距离矩阵和路径矩阵
  * @param T 模板参数，节点类型
  * @param vec 存放目标节点的vector
  * @return 距离矩阵和路径矩阵
@@ -277,7 +277,7 @@ std::pair<g_sideMatrix, Matrix_i> floyd(const std::vector<Graph<T>*>& vec) {
 }
 /**
  * @brief floyd算法求特定节点到另一个节点的最短路径
- * @details 根据floyd返回的路径矩阵求一个节点到另一个节点的最短路径。返回的是正推的路径
+ * @note 根据floyd返回的路径矩阵求一个节点到另一个节点的最短路径。返回的是正推的路径
  * @param srcIdx 源节点在vec中的index
  * @param dstIdx 目标节点在vec中的index
  * @param path floyd函数返回的路径矩阵

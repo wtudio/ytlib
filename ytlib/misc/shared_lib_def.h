@@ -1,7 +1,7 @@
 /**
  * @file shared_lib_def.h
  * @brief 动态库头文件
- * @details 定义YT_DECLSPEC_IMPORT、YT_DECLSPEC_IMPORT宏
+ * @note 定义YT_DECLSPEC_IMPORT、YT_DECLSPEC_IMPORT宏
  * @author WT
  * @date 2021-04-30
  */

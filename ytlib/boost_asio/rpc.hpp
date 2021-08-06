@@ -1,7 +1,7 @@
 /**
  * @file rpc.hpp
  * @brief rpc demo
- * @details 基于boost.asio的rpc demo
+ * @note 基于boost.asio的rpc demo
  * @author WT
  * @date 2021-07-26
  */

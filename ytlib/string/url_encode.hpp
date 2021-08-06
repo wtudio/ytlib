@@ -1,7 +1,7 @@
 /**
  * @file url_encode.hpp
  * @brief Url编解码
- * @details UrlEncode、UrlDecode
+ * @note UrlEncode、UrlDecode
  * @author WT
  * @date 2019-07-26
  */

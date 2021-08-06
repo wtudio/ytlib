@@ -1,7 +1,7 @@
 /**
  * @file uuid.hpp
  * @brief UUID
- * @details 基于boost的UUID
+ * @note 基于boost的UUID
  * @author WT
  * @date 2019-07-26
  */

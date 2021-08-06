@@ -1,7 +1,7 @@
 /**
  * @file big_num.hpp
  * @brief 大数
- * @details 可转换进制的大数类
+ * @note 可转换进制的大数类
  * @author WT
  * @date 2019-07-26
  */

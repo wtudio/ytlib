@@ -1,8 +1,7 @@
 /**
  * @file block_ring.hpp
- * @brief BlockRing
- * @details 线程安全的阻塞环形队列
- * 分为三阶段：预写、写完、读
+ * @brief 阻塞环形队列
+ * @note 线程安全的阻塞环形队列
  * @author WT
  * @date 2021-05-06
  */

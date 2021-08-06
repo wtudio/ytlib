@@ -1,7 +1,7 @@
 /**
  * @file log.hpp
  * @brief 高性能日志工具
- * @details 高性能异步日志工具，支持ctx、自定义writer
+ * @note 高性能异步日志工具，支持ctx、自定义writer
  * @author WT
  * @date 2021-05-08
  */

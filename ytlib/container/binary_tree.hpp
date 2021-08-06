@@ -1,7 +1,7 @@
 /**
  * @file binary_tree.hpp
  * @brief 二叉树
- * @details 提供模板化的一些树的实现和相关的算法，包括AVL树、红黑树。不能使用继承，因为有成员是自身类型的智能指针
+ * @note 提供模板化的一些树的实现和相关的算法，包括AVL树、红黑树。不能使用继承，因为有成员是自身类型的智能指针
  * @author WT
  * @date 2019-07-26
  */
@@ -134,7 +134,7 @@ class BinSearchTreeNode {
 
 /**
  * @brief 在二叉搜索树中进行查找
- * @details 使用递归方法
+ * @note 使用递归方法
  * @param NodeType 模板参数，节点类型
  * @param ValType 模板参数，节点obj类型
  * @return 查找到的节点的智能指针，若没有查到则返回空智能指针
@@ -624,7 +624,7 @@ class BRTreeNode : public std::enable_shared_from_this<BRTreeNode<T> > {
 };
 /**
  * @brief 前序遍历
- * @details 以当前节点为根节点，递归前序遍历，返回一个指针数组。中-左-右
+ * @note 以当前节点为根节点，递归前序遍历，返回一个指针数组。中-左-右
  * @param T 模板参数，节点类型
  * @param nd 要前序遍历的根节点
  * @param vec 指针数组，要返回的遍历结果
@@ -639,7 +639,7 @@ void DLR(std::shared_ptr<T> nd, std::vector<std::shared_ptr<T> >& vec) {
 }
 /**
  * @brief 中序遍历
- * @details 以当前节点为根节点，递归中序遍历，返回一个指针数组。左-中-右
+ * @note 以当前节点为根节点，递归中序遍历，返回一个指针数组。左-中-右
  * @param T 模板参数，节点类型
  * @param nd 要前序遍历的根节点
  * @param vec 指针数组，要返回的遍历结果
@@ -654,7 +654,7 @@ void LDR(std::shared_ptr<T> nd, std::vector<std::shared_ptr<T> >& vec) {
 }
 /**
  * @brief 后序遍历
- * @details 以当前节点为根节点，递归后序遍历，返回一个指针数组。左-右-中
+ * @note 以当前节点为根节点，递归后序遍历，返回一个指针数组。左-右-中
  * @param T 模板参数，节点类型
  * @param nd 要前序遍历的根节点
  * @param vec 指针数组，要返回的遍历结果
@@ -669,7 +669,7 @@ void LRD(std::shared_ptr<T> nd, std::vector<std::shared_ptr<T> >& vec) {
 }
 /**
  * @brief 获取一个节点的深度
- * @details 获取一个节点的深度，根节点深度为0
+ * @note 获取一个节点的深度，根节点深度为0
  * @param T 模板参数，节点类型
  * @param pnode 要获取深度的节点
  * @return 节点深度
@@ -687,7 +687,7 @@ std::size_t getDepth(const T* pnode) {
 }
 /**
  * @brief 获取一个节点的高度
- * @details 获取一个节点的高度，叶子节点高度为1
+ * @note 获取一个节点的高度，叶子节点高度为1
  * @param T 模板参数，节点类型
  * @param pnode 要获取高度的节点
  * @return 节点高度
@@ -702,7 +702,7 @@ std::size_t getHeight(const T* pnode) {
 }
 /**
  * @brief 获取一个树中最长根-叶链长度
- * @details 获取一个树中从根节点到叶子节点的最长节点个数。实际调用getHeight
+ * @note 获取一个树中从根节点到叶子节点的最长节点个数。实际调用getHeight
  * @param T 模板参数，节点类型
  * @param pnode 要获取最长链长度的树的根节点
  * @return 最长链长度
@@ -713,7 +713,7 @@ std::size_t getMaxChain(const T* pnode) {
 }
 /**
  * @brief 获取一个树中最短根-叶链长度
- * @details 获取一个树中从根节点到叶子节点的最短节点个数
+ * @note 获取一个树中从根节点到叶子节点的最短节点个数
  * @param T 模板参数，节点类型
  * @param pnode 要获取最短链长度的树的根节点
  * @return 最短链长度
@@ -728,7 +728,7 @@ std::size_t getMinChain(const T* pnode) {
 }
 /**
  * @brief 获取树中节点个数
- * @details 获取树中节点个数
+ * @note 获取树中节点个数
  * @param T 模板参数，节点类型
  * @param pnode 要获取节点个数的树的根节点
  * @return 节点个数
@@ -743,7 +743,7 @@ std::size_t getNodeNum(const T* pnode) {
 }
 /**
  * @brief 设置子节点
- * @details 将一个节点作为左子节点，与原左子节点断开。插入的节点与其原父节点断开
+ * @note 将一个节点作为左子节点，与原左子节点断开。插入的节点与其原父节点断开
  * @param T 模板参数，节点类型
  * @param pfather 父节点
  * @param pchild 子节点
@@ -758,7 +758,7 @@ void setLChild(T* pfather, std::shared_ptr<T> pchild) {
 }
 /**
  * @brief 设置子节点
- * @details 将一个节点作为右子节点，与原右子节点断开。插入的节点与其原父节点断开
+ * @note 将一个节点作为右子节点，与原右子节点断开。插入的节点与其原父节点断开
  * @param T 模板参数，节点类型
  * @param pfather 父节点
  * @param pchild 子节点
@@ -773,7 +773,7 @@ void setRChild(T* pfather, std::shared_ptr<T> pchild) {
 }
 /**
  * @brief 与左子树断开
- * @details 与左子树断开
+ * @note 与左子树断开
  * @param T 模板参数，节点类型
  * @param pnode 待处理节点
  * @return 无
@@ -786,7 +786,7 @@ void breakLChild(T* pnode) {
 }
 /**
  * @brief 与右子树断开
- * @details 与右子树断开
+ * @note 与右子树断开
  * @param T 模板参数，节点类型
  * @param pnode 待处理节点
  * @return 无
@@ -799,7 +799,7 @@ void breakRChild(T* pnode) {
 }
 /**
  * @brief 判断是否为父节点的左节点
- * @details 判断是父节点的左节点还是右节点。true表示左。使用前应检查父节点是否为空
+ * @note 判断是父节点的左节点还是右节点。true表示左。使用前应检查父节点是否为空
  * @param T 模板参数，节点类型
  * @param pnode 待处理节点
  * @return 无
@@ -814,7 +814,7 @@ bool getLR(const T* pnode) {
 }
 /**
  * @brief 分层遍历
- * @details 分层遍历二叉树，将结果输出到vector数组中
+ * @note 分层遍历二叉树，将结果输出到vector数组中
  * @param T 模板参数，节点类型
  * @param nd 待分层遍历的树的根节点
  * @param vec 要返回的遍历结果
@@ -836,7 +836,7 @@ void traByLevel(std::shared_ptr<T> nd, std::vector<std::shared_ptr<T> >& vec) {
 }
 /**
  * @brief 二叉树序列化
- * @details 根据前序遍历进行的二叉树序列化，存储为vector<pair<bool,T> >
+ * @note 根据前序遍历进行的二叉树序列化，存储为vector<pair<bool,T> >
  * @param NodeType 模板参数，节点类型
  * @param ValType 模板参数，节点obj类型
  * @param proot 待序列化的树的根节点
@@ -855,7 +855,7 @@ void SerializeTree(const std::shared_ptr<NodeType>& proot, std::vector<std::pair
 }
 /**
  * @brief 二叉树反序列化
- * @details 根据前序遍历进行的二叉树反序列化，根据vector<pair<bool,T> >反序列化
+ * @note 根据前序遍历进行的二叉树反序列化，根据vector<pair<bool,T> >反序列化
  * @param NodeType 模板参数，节点类型
  * @param ValType 模板参数，节点obj类型
  * @param proot 待存放反序列化结果的树的根节点
@@ -869,7 +869,7 @@ void DeserializeTree(std::shared_ptr<NodeType>& proot, const std::vector<std::pa
 }
 /**
  * @brief 二叉树反序列化
- * @details 根据前序遍历进行的二叉树反序列化，根据vector<pair<bool,T> >::const_iterator反序列化
+ * @note 根据前序遍历进行的二叉树反序列化，根据vector<pair<bool,T> >::const_iterator反序列化
  * @param NodeType 模板参数，节点类型
  * @param ValType 模板参数，节点obj类型
  * @param proot 待存放反序列化结果的树的根节点
@@ -888,7 +888,7 @@ void DeserializeTree(std::shared_ptr<NodeType>& proot, typename std::vector<std:
 }
 /**
  * @brief 二叉树深拷贝
- * @details 对二叉树进行深拷贝
+ * @note 对二叉树进行深拷贝
  * @param T 模板参数，节点类型
  * @param proot 待拷贝的树的根节点
  * @return 深拷贝结果
@@ -903,7 +903,7 @@ std::shared_ptr<T> copyTree(const std::shared_ptr<T>& proot) {
 
 /**
  * @brief 检查是否为二叉树
- * @details 检查一颗二叉树是否合法，子节点、父节点是否对应相连
+ * @note 检查一颗二叉树是否合法，子节点、父节点是否对应相连
  * @param T 模板参数，节点类型
  * @param proot 待检查的树的根节点
  * @return 二叉树是否合法
@@ -925,7 +925,7 @@ bool checkBinTree(const std::shared_ptr<T>& proot) {
 
 /**
  * @brief 检查是否为搜索二叉树
- * @details 检查一颗二叉树是否为搜索二叉树，要求左<中<=右
+ * @note 检查一颗二叉树是否为搜索二叉树，要求左<中<=右
  * @param T 模板参数，节点类型
  * @param proot 待检查的树的根节点
  * @return 是否为搜索二叉树
@@ -948,7 +948,7 @@ bool checkBinSearchTree(const std::shared_ptr<T>& proot) {
 }
 /**
  * @brief 检查是否为AVL树
- * @details 检查一颗二叉树是否为AVL树，要求各叶子节点深度相差<=1
+ * @note 检查一颗二叉树是否为AVL树，要求各叶子节点深度相差<=1
  * @param T 模板参数，节点类型
  * @param proot 待检查的树的根节点
  * @return 是否为AVL树
@@ -961,7 +961,7 @@ bool checkAVLTree(const std::shared_ptr<T>& proot) {
 }
 /**
  * @brief 检查是否为红黑树
- * @details 检查一颗二叉树是否为红黑树，要求根节点黑、没有连续红节点、所有路径有相同数目黑节点
+ * @note 检查一颗二叉树是否为红黑树，要求根节点黑、没有连续红节点、所有路径有相同数目黑节点
  * @param T 模板参数，节点类型
  * @param proot 待检查的树的根节点
  * @return 是否为红黑树

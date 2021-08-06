@@ -199,7 +199,7 @@ void send_fun(myTcpNetAdapter* p, std::vector<uint32_t> id) {
     packptr->obj.c = std::to_string(ii * 5);
     packptr->obj.d = s;
 
-    sharedBuf mybuf;
+    SharedBuf mybuf;
     mybuf.buf = data;
     mybuf.buf_size = 1000;
     packptr->map_datas["data1"] = mybuf;

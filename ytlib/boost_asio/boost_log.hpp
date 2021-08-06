@@ -1,7 +1,7 @@
 /**
  * @file boost_log.hpp
  * @brief 基于boost.log的日志
- * @details 基于boost.log的日志，封装了本地日志和远程日志
+ * @note 基于boost.log的日志，封装了本地日志和远程日志
  * @author WT
  * @date 2019-07-26
  */
@@ -41,20 +41,27 @@ namespace ytlib {
 
 /**
  * @brief 基于boost.log的网络日志后端
- * 使用一个定时器协程不断的去检查并连接远端日志服务器。如果暂时还没连上远端日志服务器，则日志会被丢弃
  */
 class NetLogBackend : public boost::log::sinks::basic_sink_backend<boost::log::sinks::synchronized_feeding>,
                       public boost::enable_shared_from_this<NetLogBackend> {
  public:
+  /**
+   * @brief 构造函数
+   * @param[in] net_log_cli_ptr 网络日志客户端的智能指针
+   */
   explicit NetLogBackend(std::shared_ptr<NetLogClient> net_log_cli_ptr) : net_log_cli_ptr_(net_log_cli_ptr) {
     RT_ASSERT(net_log_cli_ptr_, "net_log_cli_ptr is nullptr.");
   }
 
+  ///析构函数
   ~NetLogBackend() {
     net_log_cli_ptr_->Stop();
   }
 
-  // 同步日志处理函数
+  /**
+   * @brief 日志处理接口
+   * @param[in] rec 单条日志内容
+   */
   void consume(const boost::log::record_view& rec) {
     auto log_buf = std::make_shared<boost::asio::streambuf>();
     std::ostream oss(log_buf.get());
@@ -73,16 +80,22 @@ class NetLogBackend : public boost::log::sinks::basic_sink_backend<boost::log::s
 
 /**
  * @brief 日志控制中心
- * 提供全局单例
+ * @note 提供全局单例。YTBL =  ytlib boost log
  */
 class YTBLCtr {
  public:
-  // 单例
+  /**
+   * @brief 获取全局单例
+   * @return YTBLCtr全局单例
+   */
   static YTBLCtr& Ins() {
     static YTBLCtr instance;
     return instance;
   }
 
+  /**
+   * @brief 开启控制台日志
+   */
   void EnableConsoleLog() {
     if (!std::atomic_exchange(&con_log_flag, true)) {
       boost::log::add_console_log(
@@ -96,6 +109,9 @@ class YTBLCtr {
     }
   }
 
+  /**
+   * @brief 开启文件日志
+   */
   void EnableFileLog(const std::string& base_file_name_) {
     if (!std::atomic_exchange(&file_log_flag, true)) {
       boost::log::add_file_log(
@@ -112,6 +128,9 @@ class YTBLCtr {
     }
   }
 
+  /**
+   * @brief 开启网络日志
+   */
   void EnableNetLog(std::shared_ptr<NetLogClient> net_log_cli_ptr) {
     if (!std::atomic_exchange(&net_log_flag, true)) {
       auto sink = boost::make_shared<boost::log::sinks::synchronous_sink<NetLogBackend> >(boost::make_shared<NetLogBackend>(net_log_cli_ptr));
@@ -138,7 +157,9 @@ class YTBLCtr {
   std::atomic_bool net_log_flag;
 };
 
-//日志宏定义，YTBL=ytlib boost log
+///设置日志级别：trace | debug | info | warning | error | fatal
+#define YTBL_SET_LEVEL(lvl) (boost::log::core::get())->set_filter(boost::log::trivial::severity >= boost::log::trivial::lvl);
+
 #define YTBL_FMT "[" __FILE__ ":" STRING(__LINE__) "@" << __FUNCTION__ << "]"
 #define YTBL_TRACE BOOST_LOG_TRIVIAL(trace) << YTBL_FMT
 #define YTBL_DEBUG BOOST_LOG_TRIVIAL(debug) << YTBL_FMT
@@ -146,7 +167,5 @@ class YTBLCtr {
 #define YTBL_WARN BOOST_LOG_TRIVIAL(warning) << YTBL_FMT
 #define YTBL_ERROR BOOST_LOG_TRIVIAL(error) << YTBL_FMT
 #define YTBL_FATAL BOOST_LOG_TRIVIAL(fatal) << YTBL_FMT
-
-#define YTBL_SET_LEVEL(lvl) (boost::log::core::get())->set_filter(boost::log::trivial::severity >= boost::log::trivial::lvl);
 
 }  // namespace ytlib

@@ -104,8 +104,12 @@ if(BUILD_WITH_BOOST)
   add_subdirectory(ytlib/boost_tools)
 endif()
 
-if(BUILD_TESTS)
+if(BUILD_TESTS AND BUILD_WITH_BOOST)
   add_subdirectory(ytlib/custom_test)
+endif()
+
+if(BUILD_BENCH_TESTS AND BUILD_WITH_BOOST)
+  add_subdirectory(ytlib/custom_bench_test)
 endif()
 
 #提供给使用者的配置文件config.in

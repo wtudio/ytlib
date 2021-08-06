@@ -1,13 +1,12 @@
 /**
  * @file net_util.hpp
  * @brief 网络基础模块
- * @details 一些网络基础工具，如大小端转换、端口检查等
+ * @note 一些网络基础工具，如大小端转换、端口检查等
  * @author WT
  * @date 2019-07-26
  */
 #pragma once
 
-#define BOOST_ASIO_NO_DEPRECATED
 #include <boost/asio.hpp>
 
 namespace ytlib {

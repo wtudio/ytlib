@@ -58,7 +58,7 @@ TEST(THREAD_TOOLS_TEST, Channel_BASE) {
   std::atomic<uint32_t> ct = 0;
 
   auto f = [&](TestObj &&obj) {
-    DBG_PRINT("[%llu]handle obj %d", obj.id);
+    DBG_PRINT("[%llu]handle obj %u", ytlib::GetThreadId(), obj.id);
     ++ct;
   };
 

@@ -1,7 +1,7 @@
 /**
  * @file block_queue.hpp
- * @brief BlockQueue
- * @details 阻塞队列
+ * @brief 阻塞队列
+ * @note 线程安全的阻塞队列
  * @author WT
  * @date 2021-05-06
  */

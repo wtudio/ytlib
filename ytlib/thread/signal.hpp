@@ -1,7 +1,7 @@
 /**
  * @file signal.hpp
  * @brief 轻量级信号量
- * @details 轻量级信号量和相关操作。todo：c++20支持atomic直接wait
+ * @note 轻量级信号量和相关操作
  * @author WT
  * @date 2019-07-26
  */
@@ -13,7 +13,8 @@
 
 namespace ytlib {
 /**
- * @brief 轻量级信号量，使用c++20中atomic的信号量功能
+ * @brief 轻量级信号量
+ * @note 使用c++20中atomic的信号量功能
  */
 class LightSignalAtomic {
  public:
@@ -42,7 +43,7 @@ class LightSignalAtomic {
 
 /**
  * @brief 轻量级信号量
- * 线程安全的轻量级信号量
+ * @note 线程安全的轻量级信号量
  */
 class LightSignal {
  public:

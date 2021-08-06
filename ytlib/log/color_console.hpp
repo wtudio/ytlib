@@ -1,3 +1,10 @@
+/**
+ * @file color_console.hpp
+ * @brief 彩色控制台参数
+ * @note 彩色控制台参数，分win下和linux下
+ * @author WT
+ * @date 2021-08-05
+ */
 #pragma once
 
 namespace ytlib {

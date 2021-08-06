@@ -1,12 +1,18 @@
+/**
+ * @file asio_tools.hpp
+ * @brief asio工具类
+ * @note asio执行工具类，封装了asio的一般使用模式
+ * @author WT
+ * @date 2021-08-05
+ */
 #pragma once
-
-#define BOOST_ASIO_NO_DEPRECATED
-#include <boost/asio.hpp>
 
 #include <functional>
 #include <list>
 #include <thread>
 #include <vector>
+
+#include <boost/asio.hpp>
 
 #include "ytlib/misc/error.hpp"
 #include "ytlib/misc/misc_macro.h"
@@ -16,16 +22,21 @@ namespace ytlib {
 
 /**
  * @brief asio执行工具
- * 使用时先调用RegisterSvrFunc注册子服务的启动、停止方法
- * 然后调用Start方法异步启动
- * 之后可以调用join方法，等待kill信号或其他异步程序里调用Stop方法结束整个服务
+ * @note 使用时先调用RegisterSvrFunc注册子服务的启动、停止方法，
+ * 然后调用Start方法异步启动，之后可以调用join方法，等待kill信号或其他异步程序里调用Stop方法结束整个服务。
+ * 并不会调用asio的stop方法，只会调用注册的stop方法，等各个子服务自己停止。
  */
 class AsioExecutor {
  public:
+  /**
+   * @brief 构造函数
+   * @param[in] threads_num 服务要启动的线程数
+   */
   explicit AsioExecutor(uint32_t threads_num) : threads_num_(threads_num),
                                                 io_(threads_num),
                                                 signals_(io_, SIGINT, SIGTERM) {}
 
+  ///析构函数
   ~AsioExecutor() noexcept {
     try {
       Join();
@@ -34,22 +45,24 @@ class AsioExecutor {
     }
   }
 
-  // no copy
-  AsioExecutor(const AsioExecutor&) = delete;
-  AsioExecutor& operator=(const AsioExecutor&) = delete;
+  AsioExecutor(const AsioExecutor&) = delete;             ///<no copy
+  AsioExecutor& operator=(const AsioExecutor&) = delete;  ///<no copy
 
   /**
-   * @brief 注册svr的start、stop function
-   * @details 越早注册的start func越早执行，越早注册的stop func越晚执行
-   * @param start_func 子服务启动方法，一般在其中起一个启动协程
-   * @param stop_func 子服务结束方法，需要保证可以重复调用
+   * @brief 注册svr的start、stop方法
+   * @note 越早注册的start func越早执行，越早注册的stop func越晚执行
+   * @param[in] start_func 子服务启动方法，一般在其中起一个启动协程
+   * @param[in] stop_func 子服务结束方法，需要保证可以重复调用
    */
   void RegisterSvrFunc(std::function<void()>&& start_func, std::function<void()>&& stop_func) {
     if (start_func) start_func_vec_.emplace_back(std::move(start_func));
     if (stop_func) stop_func_vec_.emplace_back(std::move(stop_func));
   }
 
-  // 开始，异步
+  /**
+   * @brief 开始运行
+   * @note 异步，会调用注册的start方法并启动指定数量的线程
+   */
   void Start() {
     RT_ASSERT(threads_num_ >= 1, "threads_num_ must >= 1");
 
@@ -76,7 +89,10 @@ class AsioExecutor {
     }
   }
 
-  // join，阻塞直到所有线程退出
+  /**
+   * @brief join
+   * @note 阻塞直到所有线程退出
+   */
   void Join() {
     for (auto itr = threads_.begin(); itr != threads_.end();) {
       if (itr->joinable())
@@ -85,7 +101,10 @@ class AsioExecutor {
     }
   }
 
-  // 停止，异步
+  /**
+   * @brief 停止
+   * @note 异步，会调用注册的stop方法
+   */
   void Stop() {
     if (std::atomic_exchange(&stop_flag_, true)) return;
 
@@ -98,7 +117,10 @@ class AsioExecutor {
     signals_.clear();
   }
 
-  // 获取io
+  /**
+   * @brief 获取io
+   * @return io_context
+   */
   boost::asio::io_context& IO() { return io_; }
 
  private:

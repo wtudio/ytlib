@@ -1,7 +1,7 @@
 /**
  * @file ring_buf.hpp
  * @brief RingBuf
- * @details 环形缓冲队列
+ * @note 环形缓冲队列
  * @author WT
  * @date 2021-05-16
  */

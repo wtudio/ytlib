@@ -1,7 +1,7 @@
 /**
  * @file tstring.hpp
  * @brief 提供对wchar_t的相关支持
- * @details 提供对wchar_t的相关支持。实际编程中都使用char降低编程难度，此文件仅供与只支持wchar的接口交互
+ * @note 提供对wchar_t的相关支持。实际编程中都使用char降低编程难度，此文件仅供与只支持wchar的接口交互
  * @author WT
  * @date 2019-07-26
  */
