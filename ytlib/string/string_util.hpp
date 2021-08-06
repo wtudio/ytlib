@@ -139,9 +139,9 @@ inline std::string GetValueFromStrKV(const std::string& str, const std::string& 
 
 /**
  * @brief 分割字符串到vector
- * @param source 待处理字符串
+ * @param source 待处理字符串。连续分隔符视为1个
  * @param sep 分隔符
- * @param trimempty 是否对每项结果去除空格
+ * @param trimempty 是否对每项结果去除空格。如果为true则等效为空格也是分隔符。默认true
  * @return 分割结果
  */
 inline std::vector<std::string> SplitToVec(const std::string& source, const std::string& sep,

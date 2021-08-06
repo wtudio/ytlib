@@ -234,6 +234,57 @@ TEST(MATH_TEST, MATH_UTIL_TEST) {
   ASSERT_TRUE(IsPrime(997));
   ASSERT_FALSE(IsPrime(997 * 991));
 
+  struct TestCaseForGcd {
+    std::string name;
+
+    uint64_t num1;
+    uint64_t num2;
+
+    uint64_t want_result;
+  };
+  std::vector<TestCaseForGcd> test_cases;
+
+  test_cases.emplace_back(TestCaseForGcd{
+      "good_case1",
+      42,
+      30,
+      6});
+  test_cases.emplace_back(TestCaseForGcd{
+      "good_case2",
+      770,
+      26,
+      2});
+  test_cases.emplace_back(TestCaseForGcd{
+      "good_case3",
+      121,
+      132,
+      12});
+  test_cases.emplace_back(TestCaseForGcd{
+      "bad_case1",
+      1,
+      1,
+      1});
+  test_cases.emplace_back(TestCaseForGcd{
+      "bad_case2",
+      1,
+      2,
+      1});
+  test_cases.emplace_back(TestCaseForGcd{
+      "bad_case3",
+      1,
+      0,
+      1});
+  test_cases.emplace_back(TestCaseForGcd{
+      "bad_case4",
+      0,
+      0,
+      1});
+
+  for (size_t ii = 0; ii < test_cases.size(); ++ii) {
+    EXPECT_EQ(Gcd(test_cases[ii].num1, test_cases[ii].num2), test_cases[ii].want_result)
+        << "Gcd Test " << test_cases[ii].name << " failed";
+  }
+
   ASSERT_EQ(Gcd(42, 30), 6);
   ASSERT_EQ(Gcd(770, 26), 2);
   ASSERT_EQ(Gcd(121, 132), 11);

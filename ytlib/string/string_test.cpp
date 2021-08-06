@@ -85,15 +85,81 @@ TEST(STRING_TEST, Map_BASE) {
 }
 
 TEST(STRING_TEST, Vector_BASE) {
-  string str = "v1,v2,, v3 , ,v4,";
-  auto revec = SplitToVec(str, ",");
-  EXPECT_EQ(revec.size(), 4);
-  EXPECT_STREQ(revec[0].c_str(), "v1");
-  EXPECT_STREQ(revec[1].c_str(), "v2");
-  EXPECT_STREQ(revec[2].c_str(), "v3");
-  EXPECT_STREQ(revec[3].c_str(), "v4");
+  struct TestCaseForSplitToVec {
+    std::string name;
 
-  EXPECT_STREQ(JoinVec(revec, "|").c_str(), "v1|v2|v3|v4");
+    std::string source;
+    std::string sep;
+    bool trimempty;
+
+    std::vector<std::string> want_result;
+  };
+  std::vector<TestCaseForSplitToVec> test_cases;
+
+  test_cases.emplace_back(TestCaseForSplitToVec{
+      "case 1",
+      "v1,v2, v3,v4",
+      ",",
+      true,
+      {"v1", "v2", "v3", "v4"}});
+
+  test_cases.emplace_back(TestCaseForSplitToVec{
+      "case 2",
+      "v1,v2, v3,v4",
+      ",",
+      false,
+      {"v1", "v2", " v3", "v4"}});
+
+  test_cases.emplace_back(TestCaseForSplitToVec{
+      "case 3",
+      "v1,v2,, v3 , ,v4,",
+      ",",
+      true,
+      {"v1", "v2", "v3", "v4"}});
+
+  test_cases.emplace_back(TestCaseForSplitToVec{
+      "case 4",
+      "v1,v2,, v3 , ,v4,",
+      ",",
+      false,
+      {"v1", "v2", " v3 ", " ", "v4"}});
+
+  test_cases.emplace_back(TestCaseForSplitToVec{
+      "bad case 1",
+      " ",
+      ",",
+      true,
+      {}});
+
+  test_cases.emplace_back(TestCaseForSplitToVec{
+      "bad case 2",
+      " ",
+      ",",
+      false,
+      {" "}});
+
+  test_cases.emplace_back(TestCaseForSplitToVec{
+      "bad case 3",
+      " , ",
+      ",",
+      false,
+      {" ", " "}});
+
+  for (size_t ii = 0; ii < test_cases.size(); ++ii) {
+    auto ret = SplitToVec(
+        test_cases[ii].source,
+        test_cases[ii].sep,
+        test_cases[ii].trimempty);
+    ASSERT_EQ(ret.size(), test_cases[ii].want_result.size())
+        << "SplitToVec Test " << test_cases[ii].name << " failed";
+    for (size_t jj = 0; jj < ret.size(); ++jj) {
+      EXPECT_STREQ(ret[jj].c_str(), test_cases[ii].want_result[jj].c_str())
+          << "SplitToVec Test " << test_cases[ii].name << " failed";
+    }
+  }
+
+  std::vector<std::string> vec{"v1", "v2", "v3", "v4"};
+  EXPECT_STREQ(JoinVec(vec, "|").c_str(), "v1|v2|v3|v4");
 
   EXPECT_EQ(CheckIfInList("123456", "123456"), true);
   EXPECT_EQ(CheckIfInList("0123456", "123456"), false);
