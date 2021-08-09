@@ -8,6 +8,7 @@
 #include "guid.hpp"
 #include "loop_tool.hpp"
 #include "shared_buf.hpp"
+#include "test_util.hpp"
 #include "time.hpp"
 
 namespace ytlib {
@@ -97,4 +98,28 @@ TEST(MISC_TEST, TIME_BASE) {
   std::string s = GetCurTimeStr();
   ASSERT_EQ(s.length(), 15);
 }
+
+TEST(TEST_UTIL_TEST, BASE) {
+  std::vector<std::string> v1{"aaa", "bbb", "ccc"};
+  std::vector<std::string> v2{"aaa", "bbb", "ccc"};
+  std::vector<std::string> v3{"aaa", "bbb", "cccc"};
+
+  EXPECT_TRUE(CheckVectorEqual(v1, v2));
+  EXPECT_FALSE(CheckVectorEqual(v1, v3));
+
+  std::set<std::string> set1{"aaa", "bbb", "ccc"};
+  std::set<std::string> set2{"aaa", "bbb", "ccc"};
+  std::set<std::string> set3{"aaa", "bbb", "cccc"};
+
+  EXPECT_TRUE(CheckSetEqual(set1, set2));
+  EXPECT_FALSE(CheckSetEqual(set1, set3));
+
+  std::map<std::string, std::string> map1{{"k1", "v1"}, {"k2", "v2"}, {"k3", "v3"}};
+  std::map<std::string, std::string> map2{{"k1", "v1"}, {"k2", "v2"}, {"k3", "v3"}};
+  std::map<std::string, std::string> map3{{"k1", "v1"}, {"k2", "v2"}, {"k3", "v3x"}};
+
+  EXPECT_TRUE(CheckMapEqual(map1, map2));
+  EXPECT_FALSE(CheckMapEqual(map1, map3));
+}
+
 }  // namespace ytlib
