@@ -24,45 +24,45 @@ TEST(STRING_ALGS_TEST, KMP) {
   std::vector<TestCaseForKMP> test_cases;
 
   test_cases.emplace_back(TestCaseForKMP{
-      "case 1",
-      "abcdef abcdefg abcdefgh",
-      "abcdef",
-      0});
+      .name = "case 1",
+      .ss = "abcdef abcdefg abcdefgh",
+      .ps = "abcdef",
+      .want_result = 0});
   test_cases.emplace_back(TestCaseForKMP{
-      "case 2",
-      "abcdef abcdefg abcdefgh",
-      "abcdefg",
-      7});
+      .name = "case 2",
+      .ss = "abcdef abcdefg abcdefgh",
+      .ps = "abcdefg",
+      .want_result = 7});
   test_cases.emplace_back(TestCaseForKMP{
-      "case 3",
-      "abcdef abcdefg abcdefgh",
-      "abcdefgh",
-      15});
+      .name = "case 3",
+      .ss = "abcdef abcdefg abcdefgh",
+      .ps = "abcdefgh",
+      .want_result = 15});
   test_cases.emplace_back(TestCaseForKMP{
-      "case 4",
-      "abcdef abcdefg abcdefgh",
-      "aaaa",
-      23});
+      .name = "case 4",
+      .ss = "abcdef abcdefg abcdefgh",
+      .ps = "aaaa",
+      .want_result = 23});
   test_cases.emplace_back(TestCaseForKMP{
-      "bad case 1",
-      "123",
-      "",
-      3});
+      .name = "bad case 1",
+      .ss = "123",
+      .ps = "",
+      .want_result = 3});
   test_cases.emplace_back(TestCaseForKMP{
-      "bad case 2",
-      "123",
-      "4",
-      3});
+      .name = "bad case 2",
+      .ss = "123",
+      .ps = "4",
+      .want_result = 3});
   test_cases.emplace_back(TestCaseForKMP{
-      "bad case 3",
-      "123",
-      "1234",
-      3});
+      .name = "bad case 3",
+      .ss = "123",
+      .ps = "1234",
+      .want_result = 3});
   test_cases.emplace_back(TestCaseForKMP{
-      "bad case 4",
-      "",
-      "",
-      0});
+      .name = "bad case 4",
+      .ss = "",
+      .ps = "",
+      .want_result = 0});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
     auto ret = KMP(
@@ -85,35 +85,35 @@ TEST(STRING_ALGS_TEST, StrDif) {
   std::vector<TestCaseForStrDif> test_cases;
 
   test_cases.emplace_back(TestCaseForStrDif{
-      "case 1",
-      "abcdxfg",
-      "abcdefg",
-      1});
+      .name = "case 1",
+      .s1 = "abcdxfg",
+      .s2 = "abcdefg",
+      .want_result = 1});
   test_cases.emplace_back(TestCaseForStrDif{
-      "case 2",
-      "abcdfg",
-      "abcdefg",
-      1});
+      .name = "case 2",
+      .s1 = "abcdfg",
+      .s2 = "abcdefg",
+      .want_result = 1});
   test_cases.emplace_back(TestCaseForStrDif{
-      "case 3",
-      "abcdfg",
-      "abcdef",
-      2});
+      .name = "case 3",
+      .s1 = "abcdfg",
+      .s2 = "abcdef",
+      .want_result = 2});
   test_cases.emplace_back(TestCaseForStrDif{
-      "bad case 1",
-      "",
-      "",
-      0});
+      .name = "bad case 1",
+      .s1 = "",
+      .s2 = "",
+      .want_result = 0});
   test_cases.emplace_back(TestCaseForStrDif{
-      "bad case 3",
-      "",
-      "a",
-      1});
+      .name = "bad case 3",
+      .s1 = "",
+      .s2 = "a",
+      .want_result = 1});
   test_cases.emplace_back(TestCaseForStrDif{
-      "bad case 4",
-      "b",
-      "a",
-      1});
+      .name = "bad case 4",
+      .s1 = "b",
+      .s2 = "a",
+      .want_result = 1});
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
     auto ret = StrDif(
         test_cases[ii].s1,
@@ -134,13 +134,13 @@ TEST(STRING_ALGS_TEST, LongestSubStrWithoutDup) {
   std::vector<TestCaseForLongestSubStrWithoutDup> test_cases;
 
   test_cases.emplace_back(TestCaseForLongestSubStrWithoutDup{
-      "case 1",
-      "arabcacfr",
-      {1, 4}});
+      .name = "case 1",
+      .s = "arabcacfr",
+      .want_result = {1, 4}});
   test_cases.emplace_back(TestCaseForLongestSubStrWithoutDup{
-      "case 2",
-      "",
-      {0, 0}});
+      .name = "case 2",
+      .s = "",
+      .want_result = {0, 0}});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
     auto ret = LongestSubStrWithoutDup(
@@ -163,17 +163,17 @@ TEST(STRING_UTIL_TEST, Trim) {
   std::vector<TestCaseForTrim> test_cases;
 
   test_cases.emplace_back(TestCaseForTrim{
-      "case 1",
-      " testval  ",
-      "testval"});
+      .name = "case 1",
+      .s = " testval  ",
+      .want_result = "testval"});
   test_cases.emplace_back(TestCaseForTrim{
-      "case 2",
-      " ",
-      ""});
+      .name = "case 2",
+      .s = " ",
+      .want_result = ""});
   test_cases.emplace_back(TestCaseForTrim{
-      "case 3",
-      "",
-      ""});
+      .name = "case 3",
+      .s = "",
+      .want_result = ""});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
     auto ret = Trim(
@@ -198,41 +198,41 @@ TEST(STRING_UTIL_TEST, ReplaceString) {
   std::vector<TestCaseForReplaceString> test_cases;
 
   test_cases.emplace_back(TestCaseForReplaceString{
-      "case 1",
-      "val1+val2+val3",
-      "val1",
-      "val10",
-      "val10+val2+val3"});
+      .name = "case 1",
+      .str = "val1+val2+val3",
+      .ov = "val1",
+      .nv = "val10",
+      .want_result = "val10+val2+val3"});
   test_cases.emplace_back(TestCaseForReplaceString{
-      "case 2",
-      "val1+val2+val3",
-      "val2",
-      "v2",
-      "val1+v2+val3"});
+      .name = "case 2",
+      .str = "val1+val2+val3",
+      .ov = "val2",
+      .nv = "v2",
+      .want_result = "val1+v2+val3"});
   test_cases.emplace_back(TestCaseForReplaceString{
-      "case 3",
-      "val1+val2+val3",
-      "val3",
-      "val4",
-      "val1+val2+val4"});
+      .name = "case 3",
+      .str = "val1+val2+val3",
+      .ov = "val3",
+      .nv = "val4",
+      .want_result = "val1+val2+val4"});
   test_cases.emplace_back(TestCaseForReplaceString{
-      "bad case 1",
-      "val1+val2+val3",
-      "kkk",
-      "ddd",
-      "val1+val2+val3"});
+      .name = "bad case 1",
+      .str = "val1+val2+val3",
+      .ov = "kkk",
+      .nv = "ddd",
+      .want_result = "val1+val2+val3"});
   test_cases.emplace_back(TestCaseForReplaceString{
-      "bad case 2",
-      "val1+val2+val3",
-      "",
-      "ddd",
-      "val1+val2+val3"});
+      .name = "bad case 2",
+      .str = "val1+val2+val3",
+      .ov = "",
+      .nv = "ddd",
+      .want_result = "val1+val2+val3"});
   test_cases.emplace_back(TestCaseForReplaceString{
-      "bad case 3",
-      "val1+val2+val3",
-      "+",
-      "",
-      "val1val2val3"});
+      .name = "bad case 3",
+      .str = "val1+val2+val3",
+      .ov = "+",
+      .nv = "",
+      .want_result = "val1val2val3"});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
     auto ret = ReplaceString(
@@ -257,21 +257,21 @@ TEST(STRING_UTIL_TEST, IsAlnumStr) {
   std::vector<TestCaseForIsAlnumStr> test_cases;
 
   test_cases.emplace_back(TestCaseForIsAlnumStr{
-      "case 1",
-      "123456789",
-      true});
+      .name = "case 1",
+      .str = "123456789",
+      .want_result = true});
   test_cases.emplace_back(TestCaseForIsAlnumStr{
-      "case 2",
-      "123456789abcd",
-      true});
+      .name = "case 2",
+      .str = "123456789abcd",
+      .want_result = true});
   test_cases.emplace_back(TestCaseForIsAlnumStr{
-      "case 3",
-      "123456789..",
-      false});
+      .name = "case 3",
+      .str = "123456789..",
+      .want_result = false});
   test_cases.emplace_back(TestCaseForIsAlnumStr{
-      "case 4",
-      "",
-      false});
+      .name = "case 4",
+      .str = "",
+      .want_result = false});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
     auto ret = IsAlnumStr(
@@ -295,41 +295,89 @@ TEST(STRING_UTIL_TEST, SplitToMap) {
   std::vector<TestCaseForSplitToMap> test_cases;
 
   test_cases.emplace_back(TestCaseForSplitToMap{
-      "case 1",
-      "k1=v1&k2=v2&k3=v3&k4=v4",
-      "&",
-      "=",
-      true,
-      {{"k1", "v1"}, {"k2", "v2"}, {"k3", "v3"}, {"k4", "v4"}}});
+      .name = "case 1",
+      .source = "k1=v1&k2=v2&k3=v3&k4=v4",
+      .vsep = "&",
+      .msep = "=",
+      .trimempty = true,
+      .want_result = {{"k1", "v1"}, {"k2", "v2"}, {"k3", "v3"}, {"k4", "v4"}}});
   test_cases.emplace_back(TestCaseForSplitToMap{
-      "case 2",
-      "k1=v1& k2 =v2&k3= v3 &k4=v4",
-      "&",
-      "=",
-      true,
-      {{"k1", "v1"}, {"k2", "v2"}, {"k3", "v3"}, {"k4", "v4"}}});
+      .name = "case 2",
+      .source = "k1=v1& k2 =v2&k3= v3 &k4=v4",
+      .vsep = "&",
+      .msep = "=",
+      .trimempty = true,
+      .want_result = {{"k1", "v1"}, {"k2", "v2"}, {"k3", "v3"}, {"k4", "v4"}}});
   test_cases.emplace_back(TestCaseForSplitToMap{
-      "case 3",
-      "k1=v1&k2=v2&k3=v3&&k4=v4",
-      "&",
-      "=",
-      true,
-      {{"k1", "v1"}, {"k2", "v2"}, {"k3", "v3"}, {"k4", "v4"}}});
+      .name = "case 3",
+      .source = "k1=v1&k2=v2&k3=v3&&k4=v4",
+      .vsep = "&",
+      .msep = "=",
+      .trimempty = true,
+      .want_result = {{"k1", "v1"}, {"k2", "v2"}, {"k3", "v3"}, {"k4", "v4"}}});
   test_cases.emplace_back(TestCaseForSplitToMap{
-      "case 4",
-      "k1=v1&k2=v2&k3=v3&k4=v4&k4=v4x",
-      "&",
-      "=",
-      true,
-      {{"k1", "v1"}, {"k2", "v2"}, {"k3", "v3"}, {"k4", "v4x"}}});
+      .name = "case 4",
+      .source = "k1=v1&k2=v2&k3=v3&k4=v4&k4=v4x",
+      .vsep = "&",
+      .msep = "=",
+      .trimempty = true,
+      .want_result = {{"k1", "v1"}, {"k2", "v2"}, {"k3", "v3"}, {"k4", "v4x"}}});
   test_cases.emplace_back(TestCaseForSplitToMap{
-      "case 5",
-      "k1=v1&k2=v2&k3=v3&k4=v4& =v5&k6= &",
-      "&",
-      "=",
-      true,
-      {{"k1", "v1"}, {"k2", "v2"}, {"k3", "v3"}, {"k4", "v4"}, {"", "v5"}, {"k6", ""}}});
-
+      .name = "case 5",
+      .source = "k1=v1&k2=v2&k3=v3&=& =v5&k6= &",
+      .vsep = "&",
+      .msep = "=",
+      .trimempty = true,
+      .want_result = {{"k1", "v1"}, {"k2", "v2"}, {"k3", "v3"}, {"", "v5"}, {"k6", ""}}});
+  test_cases.emplace_back(TestCaseForSplitToMap{
+      .name = "bad case 1",
+      .source = "k1== v1&k2=v2&k3=v3",
+      .vsep = "&",
+      .msep = "=",
+      .trimempty = true,
+      .want_result = {{"k1", "= v1"}, {"k2", "v2"}, {"k3", "v3"}}});
+  test_cases.emplace_back(TestCaseForSplitToMap{
+      .name = "bad case 2",
+      .source = "k1=v1 = v11&k2=v2&k3=v3",
+      .vsep = "&",
+      .msep = "=",
+      .trimempty = true,
+      .want_result = {{"k1", "v1 = v11"}, {"k2", "v2"}, {"k3", "v3"}}});
+  test_cases.emplace_back(TestCaseForSplitToMap{
+      .name = "bad case 3",
+      .source = "&k1=v1&k2=v2&k3=v3",
+      .vsep = "&",
+      .msep = "=",
+      .trimempty = true,
+      .want_result = {{"k1", "v1"}, {"k2", "v2"}, {"k3", "v3"}}});
+  test_cases.emplace_back(TestCaseForSplitToMap{
+      .name = "bad case 4",
+      .source = "k0&k1=v1&k2=v2&k3=v3",
+      .vsep = "&",
+      .msep = "=",
+      .trimempty = true,
+      .want_result = {{"k1", "v1"}, {"k2", "v2"}, {"k3", "v3"}}});
+  test_cases.emplace_back(TestCaseForSplitToMap{
+      .name = "bad case 5",
+      .source = "k1=v1&xx &k2=v2&k3=v3",
+      .vsep = "&",
+      .msep = "=",
+      .trimempty = true,
+      .want_result = {{"k1", "v1"}, {"k2", "v2"}, {"k3", "v3"}}});
+  test_cases.emplace_back(TestCaseForSplitToMap{
+      .name = "bad case 6",
+      .source = "k1=v1&k2&==v2&k3=v3",
+      .vsep = "&",
+      .msep = "=",
+      .trimempty = true,
+      .want_result = {{"k1", "v1"}, {"", "=v2"}, {"k3", "v3"}}});
+  test_cases.emplace_back(TestCaseForSplitToMap{
+      .name = "bad case 7",
+      .source = "",
+      .vsep = "&",
+      .msep = "=",
+      .trimempty = true,
+      .want_result = {}});
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
     auto ret = SplitToMap(
         test_cases[ii].source,
@@ -341,38 +389,148 @@ TEST(STRING_UTIL_TEST, SplitToMap) {
   }
 }
 
-TEST(STRING_UTIL_TEST, Map_BASE) {
-  string str = "k1=v1& k2 =v2&k3= v3 &&k4=v4&k4=v4x& =v5&k6= &";
-  auto remap = SplitToMap(str);
-  EXPECT_STREQ(GetMapItemWithDef(remap, "k1").c_str(), "v1");
-  EXPECT_STREQ(GetMapItemWithDef(remap, "k2").c_str(), "v2");
-  EXPECT_STREQ(GetMapItemWithDef(remap, "k3").c_str(), "v3");
-  EXPECT_STREQ(GetMapItemWithDef(remap, "k4").c_str(), "v4x");
-  EXPECT_STREQ(GetMapItemWithDef(remap, "").c_str(), "v5");
-  EXPECT_STREQ(GetMapItemWithDef(remap, "k6").c_str(), "");
-  EXPECT_STREQ(GetMapItemWithDef(remap, "k7", "default").c_str(), "default");
+TEST(STRING_UTIL_TEST, JoinMap) {
+  struct TestCaseForJoinMap {
+    std::string name;
 
-  string str1 = JoinMap(remap);
-  EXPECT_STREQ(str1.c_str(), "=v5&k1=v1&k2=v2&k3=v3&k4=v4x&k6=");
+    std::map<std::string, std::string> m;
+    std::string vsep;
+    std::string msep;
 
-  AddKV(str1, "k8", "v8");
-  EXPECT_STREQ(str1.c_str(), "=v5&k1=v1&k2=v2&k3=v3&k4=v4x&k6=&k8=v8");
-  string str2 = "";
-  AddKV(str2, "k8", "v8");
-  EXPECT_STREQ(str2.c_str(), "k8=v8");
+    std::string want_result;
+  };
+  std::vector<TestCaseForJoinMap> test_cases;
 
-  string str3 = "k10=v10& k11 = v11 &k12 = v12 ";
-  EXPECT_STREQ(GetValueFromStrKV(str3, "k10").c_str(), "v10");
-  EXPECT_STREQ(GetValueFromStrKV(str3, "k11").c_str(), "v11");
-  EXPECT_STREQ(GetValueFromStrKV(str3, "k12").c_str(), "v12");
-  EXPECT_STREQ(GetValueFromStrKV(str3, "k12", "&", "=", false).c_str(), " v12 ");
+  test_cases.emplace_back(TestCaseForJoinMap{
+      .name = "case 1",
+      .m = {{"k1", "v1"}, {"k2", "v2"}, {"k3", "v3"}, {"k4", "v4"}},
+      .vsep = "&",
+      .msep = "=",
+      .want_result = "k1=v1&k2=v2&k3=v3&k4=v4"});
+  test_cases.emplace_back(TestCaseForJoinMap{
+      .name = "case 2",
+      .m = {{"k1", "v1"}, {"k2", "v2"}, {"k3", ""}, {"", "v4"}},
+      .vsep = "&",
+      .msep = "=",
+      .want_result = "=v4&k1=v1&k2=v2&k3="});
+  test_cases.emplace_back(TestCaseForJoinMap{
+      .name = "case 3",
+      .m = {{"k1", "v1"}},
+      .vsep = "&",
+      .msep = "=",
+      .want_result = "k1=v1"});
+  test_cases.emplace_back(TestCaseForJoinMap{
+      .name = "case 4",
+      .m = {{"", ""}},
+      .vsep = "&",
+      .msep = "=",
+      .want_result = "="});
+  for (size_t ii = 0; ii < test_cases.size(); ++ii) {
+    auto ret = JoinMap(
+        test_cases[ii].m,
+        test_cases[ii].vsep,
+        test_cases[ii].msep);
+    EXPECT_STREQ(ret.c_str(), test_cases[ii].want_result.c_str())
+        << "Test " << test_cases[ii].name << " failed, index " << ii;
+  }
+}
 
-  std::map<std::string, std::map<std::string, std::string> > test_map;
-  test_map["111"].clear();
-  test_map["222"].clear();
-  test_map["333"].clear();
-  std::set<std::string> test_set = GetMapKeys(test_map);
-  EXPECT_EQ(test_set.size(), 3);
+TEST(STRING_UTIL_TEST, GetValueFromStrKV) {
+  struct TestCaseForGetValueFromStrKV {
+    std::string name;
+
+    std::string str;
+    std::string key;
+    std::string vsep;
+    std::string msep;
+    bool trimempty;
+
+    std::string want_result;
+  };
+  std::vector<TestCaseForGetValueFromStrKV> test_cases;
+
+  test_cases.emplace_back(TestCaseForGetValueFromStrKV{
+      .name = "case 1",
+      .str = "k1=v1&k2=v2&k3=v3&k4=v4",
+      .key = "k1",
+      .vsep = "&",
+      .msep = "=",
+      .trimempty = true,
+      .want_result = "v1"});
+  test_cases.emplace_back(TestCaseForGetValueFromStrKV{
+      .name = "case 2",
+      .str = "k1=v1&k2=v2&k3=v3&k4=v4",
+      .key = "k3",
+      .vsep = "&",
+      .msep = "=",
+      .trimempty = true,
+      .want_result = "v3"});
+  test_cases.emplace_back(TestCaseForGetValueFromStrKV{
+      .name = "case 3",
+      .str = "=v1&k2=v2&k3=v3&k4=v4",
+      .key = "",
+      .vsep = "&",
+      .msep = "=",
+      .trimempty = true,
+      .want_result = "v1"});
+  test_cases.emplace_back(TestCaseForGetValueFromStrKV{
+      .name = "case 4",
+      .str = "k1=v1&k2=v2&k3=v3&k4=v4",
+      .key = "k5",
+      .vsep = "&",
+      .msep = "=",
+      .trimempty = true,
+      .want_result = ""});
+  test_cases.emplace_back(TestCaseForGetValueFromStrKV{
+      .name = "case 5",
+      .str = "k1=v1&k2=v2&k2=v3&k2=v4",
+      .key = "k2",
+      .vsep = "&",
+      .msep = "=",
+      .trimempty = true,
+      .want_result = "v2"});
+
+  for (size_t ii = 0; ii < test_cases.size(); ++ii) {
+    auto ret = GetValueFromStrKV(
+        test_cases[ii].str,
+        test_cases[ii].key,
+        test_cases[ii].vsep,
+        test_cases[ii].msep,
+        test_cases[ii].trimempty);
+    EXPECT_STREQ(ret.c_str(), test_cases[ii].want_result.c_str())
+        << "Test " << test_cases[ii].name << " failed, index " << ii;
+  }
+}
+
+TEST(STRING_UTIL_TEST, GetMapKeys) {
+  struct TestCaseForGetMapKeys {
+    std::string name;
+
+    std::map<std::string, std::string> m;
+
+    std::set<std::string> want_result;
+  };
+  std::vector<TestCaseForGetMapKeys> test_cases;
+
+  test_cases.emplace_back(TestCaseForGetMapKeys{
+      .name = "case 1",
+      .m = {{"k1", "v1"}, {"k2", "v2"}, {"k3", "v3"}, {"k4", "v4"}},
+      .want_result = {"k1", "k2", "k3", "k4"}});
+  test_cases.emplace_back(TestCaseForGetMapKeys{
+      .name = "case 2",
+      .m = {{"k1", "v1"}, {"k2", "v2"}, {"k3", "v3"}, {"", "v4"}},
+      .want_result = {"k1", "k2", "k3", ""}});
+  test_cases.emplace_back(TestCaseForGetMapKeys{
+      .name = "case 3",
+      .m = {},
+      .want_result = {}});
+
+  for (size_t ii = 0; ii < test_cases.size(); ++ii) {
+    auto ret = GetMapKeys(
+        test_cases[ii].m);
+    EXPECT_TRUE(CheckSetEqual(ret, test_cases[ii].want_result))
+        << "Test " << test_cases[ii].name << " failed, index " << ii;
+  }
 }
 
 TEST(STRING_UTIL_TEST, SplitToVec) {
@@ -388,53 +546,53 @@ TEST(STRING_UTIL_TEST, SplitToVec) {
   std::vector<TestCaseForSplitToVec> test_cases;
 
   test_cases.emplace_back(TestCaseForSplitToVec{
-      "case 1",
-      "v1,v2, v3,v4",
-      ",",
-      true,
-      {"v1", "v2", "v3", "v4"}});
+      .name = "case 1",
+      .source = "v1,v2, v3,v4",
+      .sep = ",",
+      .trimempty = true,
+      .want_result = {"v1", "v2", "v3", "v4"}});
 
   test_cases.emplace_back(TestCaseForSplitToVec{
-      "case 2",
-      "v1,v2, v3,v4",
-      ",",
-      false,
-      {"v1", "v2", " v3", "v4"}});
+      .name = "case 2",
+      .source = "v1,v2, v3,v4",
+      .sep = ",",
+      .trimempty = false,
+      .want_result = {"v1", "v2", " v3", "v4"}});
 
   test_cases.emplace_back(TestCaseForSplitToVec{
-      "case 3",
-      "v1,v2,, v3 , ,v4,",
-      ",",
-      true,
-      {"v1", "v2", "v3", "v4"}});
+      .name = "case 3",
+      .source = "v1,v2,, v3 , ,v4,",
+      .sep = ",",
+      .trimempty = true,
+      .want_result = {"v1", "v2", "v3", "v4"}});
 
   test_cases.emplace_back(TestCaseForSplitToVec{
-      "case 4",
-      "v1,v2,, v3 , ,v4,",
-      ",",
-      false,
-      {"v1", "v2", " v3 ", " ", "v4"}});
+      .name = "case 4",
+      .source = "v1,v2,, v3 , ,v4,",
+      .sep = ",",
+      .trimempty = false,
+      .want_result = {"v1", "v2", " v3 ", " ", "v4"}});
 
   test_cases.emplace_back(TestCaseForSplitToVec{
-      "bad case 1",
-      " ",
-      ",",
-      true,
-      {}});
+      .name = "bad case 1",
+      .source = " ",
+      .sep = ",",
+      .trimempty = true,
+      .want_result = {}});
 
   test_cases.emplace_back(TestCaseForSplitToVec{
-      "bad case 2",
-      " ",
-      ",",
-      false,
-      {" "}});
+      .name = "bad case 2",
+      .source = " ",
+      .sep = ",",
+      .trimempty = false,
+      .want_result = {" "}});
 
   test_cases.emplace_back(TestCaseForSplitToVec{
-      "bad case 3",
-      " , ",
-      ",",
-      false,
-      {" ", " "}});
+      .name = "bad case 3",
+      .source = " , ",
+      .sep = ",",
+      .trimempty = false,
+      .want_result = {" ", " "}});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
     auto ret = SplitToVec(
@@ -458,35 +616,35 @@ TEST(STRING_UTIL_TEST, JoinVec) {
   std::vector<TestCaseForJoinVec> test_cases;
 
   test_cases.emplace_back(TestCaseForJoinVec{
-      "case 1",
-      {"v1", "v2", "v3", "v4"},
-      "|",
-      "v1|v2|v3|v4"});
+      .name = "case 1",
+      .vec = {"v1", "v2", "v3", "v4"},
+      .sep = "|",
+      .want_result = "v1|v2|v3|v4"});
   test_cases.emplace_back(TestCaseForJoinVec{
-      "case 2",
-      {"v1", "v2", "v3", "v4"},
-      "",
-      "v1v2v3v4"});
+      .name = "case 2",
+      .vec = {"v1", "v2", "v3", "v4"},
+      .sep = "",
+      .want_result = "v1v2v3v4"});
   test_cases.emplace_back(TestCaseForJoinVec{
-      "case 3",
-      {"", "", "", "v4"},
-      "",
-      "v4"});
+      .name = "case 3",
+      .vec = {"", "", "", "v4"},
+      .sep = "",
+      .want_result = "v4"});
   test_cases.emplace_back(TestCaseForJoinVec{
-      "case 4",
-      {"", "", "", ""},
-      "",
-      ""});
+      .name = "case 4",
+      .vec = {"", "", "", ""},
+      .sep = "",
+      .want_result = ""});
   test_cases.emplace_back(TestCaseForJoinVec{
-      "case 5",
-      {"", "", "", "v4"},
-      ",",
-      "v4"});
+      .name = "case 5",
+      .vec = {"", "", "", "v4"},
+      .sep = ",",
+      .want_result = ",,,v4"});
   test_cases.emplace_back(TestCaseForJoinVec{
-      "case 6",
-      {"", "v2", "", "v4"},
-      ",",
-      "v2,v4"});
+      .name = "case 6",
+      .vec = {"", "v2", "", "v4"},
+      .sep = ",",
+      .want_result = ",v2,,v4"});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
     auto ret = JoinVec(
@@ -511,90 +669,89 @@ TEST(STRING_UTIL_TEST, CheckIfInList) {
   std::vector<TestCaseForCheckIfInList> test_cases;
 
   test_cases.emplace_back(TestCaseForCheckIfInList{
-      "case 1",
-      "123456",
-      "123456",
-      ",",
-      true,
-      true});
-
+      .name = "case 1",
+      .strlist = "123456",
+      .key = "123456",
+      .sep = ",",
+      .trimempty = true,
+      .want_result = true});
   test_cases.emplace_back(TestCaseForCheckIfInList{
-      "case 2",
-      "0123456",
-      "123456",
-      ",",
-      true,
-      false});
+      .name = "case 2",
+      .strlist = "0123456",
+      .key = "123456",
+      .sep = ",",
+      .trimempty = true,
+      .want_result = false});
   test_cases.emplace_back(TestCaseForCheckIfInList{
-      "case 3",
-      "1234567",
-      "123456",
-      ",",
-      true,
-      false});
+      .name = "case 3",
+      .strlist = "1234567",
+      .key = "123456",
+      .sep = ",",
+      .trimempty = true,
+      .want_result = false});
   test_cases.emplace_back(TestCaseForCheckIfInList{
-      "case 4",
-      "123456,",
-      "123456",
-      ",",
-      true,
-      true});
+      .name = "case 4",
+      .strlist = "123456,",
+      .key = "123456",
+      .sep = ",",
+      .trimempty = true,
+      .want_result = true});
   test_cases.emplace_back(TestCaseForCheckIfInList{
-      "case 5",
-      ",123456",
-      "123456",
-      ",",
-      true,
-      true});
+      .name = "case 5",
+      .strlist = ",123456",
+      .key = "123456",
+      .sep = ",",
+      .trimempty = true,
+      .want_result = true});
   test_cases.emplace_back(TestCaseForCheckIfInList{
-      "case 6",
-      "aaa,123456,bbb",
-      "123456",
-      ",",
-      true,
-      true});
+      .name = "case 6",
+      .strlist = "aaa,123456,bbb",
+      .key = "123456",
+      .sep = ",",
+      .trimempty = true,
+      .want_result = true});
   test_cases.emplace_back(TestCaseForCheckIfInList{
-      "case 7",
-      "aaa,0123456,bbb",
-      "123456",
-      ",",
-      true,
-      false});
+      .name = "case 7",
+      .strlist = "aaa,0123456,bbb",
+      .key = "123456",
+      .sep = ",",
+      .trimempty = true,
+      .want_result = false});
   test_cases.emplace_back(TestCaseForCheckIfInList{
-      "case 8",
-      "aaa,1234567,bbb",
-      "123456",
-      ",",
-      true,
-      false});
+      .name = "case 8",
+      .strlist = "aaa,1234567,bbb",
+      .key = "123456",
+      .sep = ",",
+      .trimempty = true,
+      .want_result = false});
   test_cases.emplace_back(TestCaseForCheckIfInList{
-      "case 9",
-      "aaa,1234567,123456,bbb",
-      "123456",
-      ",",
-      true,
-      true});
+      .name = "case 9",
+      .strlist = "aaa,1234567,123456,bbb",
+      .key = "123456",
+      .sep = ",",
+      .trimempty = true,
+      .want_result = true});
   test_cases.emplace_back(TestCaseForCheckIfInList{
-      "bad case 1",
-      "123,456",
-      "123,456",
-      ",",
-      true,
-      false});
+      .name = "bad case 1",
+      .strlist = "123,456",
+      .key = "123,456",
+      .sep = ",",
+      .trimempty = true,
+      .want_result = false});
   test_cases.emplace_back(TestCaseForCheckIfInList{
-      "bad case 2",
-      "aaa,,bbb",
-      "",
-      ",",
-      true,
-      false});
+      .name = "bad case 2",
+      .strlist = "aaa,,bbb",
+      .key = "",
+      .sep = ",",
+      .trimempty = true,
+      .want_result = false});
   test_cases.emplace_back(TestCaseForCheckIfInList{
-      "bad case 3",
-      "aaa,bbb",
-      "aaa",
-      "",
-      false,
-      false});
+      .name = "bad case 3",
+      .strlist = "aaa,bbb",
+      .key = "aaa",
+      .sep = "",
+      .trimempty = false,
+      .want_result = false});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
     auto ret = CheckIfInList(
@@ -620,35 +777,35 @@ TEST(STRING_UTIL_TEST, JoinSet) {
   std::vector<TestCaseForJoinSet> test_cases;
 
   test_cases.emplace_back(TestCaseForJoinSet{
-      "case 1",
-      {"v1", "v2", "v3", "v4"},
-      "|",
-      "v1|v2|v3|v4"});
+      .name = "case 1",
+      .st = {"v1", "v2", "v3", "v4"},
+      .sep = "|",
+      .want_result = "v1|v2|v3|v4"});
   test_cases.emplace_back(TestCaseForJoinSet{
-      "case 2",
-      {"v1", "v2", "v3", "v4"},
-      "",
-      "v1v2v3v4"});
+      .name = "case 2",
+      .st = {"v1", "v2", "v3", "v4"},
+      .sep = "",
+      .want_result = "v1v2v3v4"});
   test_cases.emplace_back(TestCaseForJoinSet{
-      "case 3",
-      {"", "", "", "v4"},
-      "",
-      "v4"});
+      .name = "case 3",
+      .st = {"", "v4"},
+      .sep = "",
+      .want_result = "v4"});
   test_cases.emplace_back(TestCaseForJoinSet{
-      "case 4",
-      {"", "", "", ""},
-      "",
-      ""});
+      .name = "case 4",
+      .st = {""},
+      .sep = "",
+      .want_result = ""});
   test_cases.emplace_back(TestCaseForJoinSet{
-      "case 5",
-      {"", "", "", "v4"},
-      ",",
-      "v4"});
+      .name = "case 5",
+      .st = {"", "v4"},
+      .sep = ",",
+      .want_result = ",v4"});
   test_cases.emplace_back(TestCaseForJoinSet{
-      "case 6",
-      {"", "v2", "", "v4"},
-      ",",
-      "v2,v4"});
+      .name = "case 6",
+      .st = {"", "v2", "v4"},
+      .sep = ",",
+      .want_result = ",v2,v4"});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
     auto ret = JoinSet(
@@ -671,30 +828,30 @@ TEST(STRING_UTIL_TEST, CmpVersion) {
   std::vector<TestCaseForCmpVersion> test_cases;
 
   test_cases.emplace_back(TestCaseForCmpVersion{
-      "case 1",
-      "7.6.8.11020",
-      "7.6.8",
-      1});
+      .name = "case 1",
+      .ver1 = "7.6.8.11020",
+      .ver2 = "7.6.8",
+      .want_result = 1});
   test_cases.emplace_back(TestCaseForCmpVersion{
-      "case 2",
-      "7.6.8",
-      "7.6.8",
-      0});
+      .name = "case 2",
+      .ver1 = "7.6.8",
+      .ver2 = "7.6.8",
+      .want_result = 0});
   test_cases.emplace_back(TestCaseForCmpVersion{
-      "case 3",
-      "7.6.8",
-      "7.6.8.11020",
-      -1});
+      .name = "case 3",
+      .ver1 = "7.6.8",
+      .ver2 = "7.6.8.11020",
+      .want_result = -1});
   test_cases.emplace_back(TestCaseForCmpVersion{
-      "bad case 1",
-      "9.8.0",
-      "9..8.0",
-      0});
+      .name = "bad case 1",
+      .ver1 = "9.8.0",
+      .ver2 = "9..8.0",
+      .want_result = 0});
   test_cases.emplace_back(TestCaseForCmpVersion{
-      "bad case 2",
-      "",
-      "0.0.0",
-      -1});
+      .name = "bad case 2",
+      .ver1 = "",
+      .ver2 = "0.0.0",
+      .want_result = -1});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
     auto ret = CmpVersion(
@@ -722,41 +879,41 @@ TEST(STRING_UTIL_TEST, CheckVersionInside) {
   std::vector<TestCaseForCheckVersionInside> test_cases;
 
   test_cases.emplace_back(TestCaseForCheckVersionInside{
-      "case 1",
-      "7.6.8",
-      "7.6.7",
-      "7.6.9",
-      true});
+      .name = "case 1",
+      .ver = "7.6.8",
+      .start_ver = "7.6.7",
+      .end_ver = "7.6.9",
+      .want_result = true});
   test_cases.emplace_back(TestCaseForCheckVersionInside{
-      "case 2",
-      "7.6.8",
-      "7.6.8",
-      "7.6.8",
-      true});
+      .name = "case 2",
+      .ver = "7.6.8",
+      .start_ver = "7.6.8",
+      .end_ver = "7.6.8",
+      .want_result = true});
   test_cases.emplace_back(TestCaseForCheckVersionInside{
-      "case 3",
-      "7.6.5",
-      "7.6.7",
-      "7.6.9",
-      false});
+      .name = "case 3",
+      .ver = "7.6.5",
+      .start_ver = "7.6.7",
+      .end_ver = "7.6.9",
+      .want_result = false});
   test_cases.emplace_back(TestCaseForCheckVersionInside{
-      "bad case 1",
-      "7.6.8",
-      "",
-      "",
-      true});
+      .name = "bad case 1",
+      .ver = "7.6.8",
+      .start_ver = "",
+      .end_ver = "",
+      .want_result = true});
   test_cases.emplace_back(TestCaseForCheckVersionInside{
-      "bad case 2",
-      "0.0.0.0",
-      "",
-      "",
-      true});
+      .name = "bad case 2",
+      .ver = "0.0.0.0",
+      .start_ver = "",
+      .end_ver = "",
+      .want_result = true});
   test_cases.emplace_back(TestCaseForCheckVersionInside{
-      "bad case 3",
-      "999.9.9.9",
-      "",
-      "",
-      true});
+      .name = "bad case 3",
+      .ver = "999.9.9.9",
+      .start_ver = "",
+      .end_ver = "",
+      .want_result = true});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
     auto ret = CheckVersionInside(
@@ -766,6 +923,23 @@ TEST(STRING_UTIL_TEST, CheckVersionInside) {
     EXPECT_EQ(ret, test_cases[ii].want_result)
         << "Test " << test_cases[ii].name << " failed, index " << ii;
   }
+}
+
+TEST(STRING_UTIL_TEST, Map_BASE) {
+  std::map<std::string, std::string> test_map{{"k1", "v1"}, {"k2", ""}, {"", "v3"}};
+
+  EXPECT_STREQ(GetMapItemWithDef(test_map, "k1").c_str(), "v1");
+  EXPECT_STREQ(GetMapItemWithDef(test_map, "k2").c_str(), "");
+  EXPECT_STREQ(GetMapItemWithDef(test_map, "").c_str(), "v3");
+  EXPECT_STREQ(GetMapItemWithDef(test_map, "k4").c_str(), "");
+  EXPECT_STREQ(GetMapItemWithDef(test_map, "k5", "default").c_str(), "default");
+
+  string str1 = "=v5&k1=v1&k2=v2&k3=v3&k4=v4x&k6=";
+  AddKV(str1, "k8", "v8");
+  EXPECT_STREQ(str1.c_str(), "=v5&k1=v1&k2=v2&k3=v3&k4=v4x&k6=&k8=v8");
+  string str2 = "";
+  AddKV(str2, "k8", "v8");
+  EXPECT_STREQ(str2.c_str(), "k8=v8");
 }
 
 TEST(URL_ENCODE_TEST, BASE) {

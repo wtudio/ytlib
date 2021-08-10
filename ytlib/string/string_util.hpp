@@ -2,7 +2,7 @@
  * @file string_util.hpp
  * @author WT
  * @brief 基础字符串库
- * @note 常用字符串工具
+ * @note 常用字符串相关工具
  * @date 2019-07-26
  */
 #pragma once
@@ -19,7 +19,7 @@ namespace ytlib {
  * @brief 修剪字符串
  * 
  * @param[inout] s 待处理字符串
- * @return std::string& 处理后的字符串
+ * @return std::string& 处理后的字符串s的引用
  */
 inline std::string& Trim(std::string& s) {
   if (s.empty()) return s;
@@ -34,7 +34,7 @@ inline std::string& Trim(std::string& s) {
  * @param[in] source 待分割字符串
  * @param[in] vsep 多个kv之间的分隔符
  * @param[in] msep 单个kv内部的分隔符
- * @param[in] trimempty 是否去除空格
+ * @param[in] trimempty 是否去除k和v里的空格
  * @return std::map<std::string, std::string> 解析后的map
  */
 inline std::map<std::string, std::string> SplitToMap(const std::string& source,
@@ -42,25 +42,21 @@ inline std::map<std::string, std::string> SplitToMap(const std::string& source,
                                                      const std::string& msep = "=",
                                                      bool trimempty = true) {
   std::map<std::string, std::string> result;
-  if (source.empty()) return result;
 
-  size_t m, n, pos = 0;
-  std::string str = source;
-  str.append(vsep);
+  const std::string& str = source + vsep;
 
-  std::string sub;
-  std::string first;
-  std::string second;
+  size_t n, pos = 0;
   while ((n = str.find(vsep, pos)) != std::string::npos) {
-    sub = str.substr(pos, n - pos);
+    const std::string& sub = str.substr(pos, n - pos);
     if (!sub.empty()) {
+      size_t m;
       if ((m = sub.find(msep)) != std::string::npos) {
-        first = sub.substr(0, m);
-        second = sub.substr(m + msep.size());
         if (trimempty) {
+          std::string first = sub.substr(0, m);
+          std::string second = sub.substr(m + msep.size());
           result[Trim(first)] = Trim(second);
         } else {
-          result[first] = second;
+          result[sub.substr(0, m)] = sub.substr(m + msep.size());
         }
       }
     }
@@ -95,11 +91,11 @@ inline std::string JoinMap(const std::map<std::string, std::string>& kvmap,
  * 
  * @param[in] m std::map<std::string,std::string>结构体
  * @param[in] key 要获取数据的key
- * @param[in] defval 默认字符串
- * @return std::string 当m中没有对应的key时，返回defval
+ * @param[in] defval 默认字符串，当m中没有对应的key时，返回defval
+ * @return const std::string& 结果的const引用
  */
-inline std::string GetMapItemWithDef(const std::map<std::string, std::string>& m,
-                                     const std::string& key, const std::string& defval = "") {
+inline const std::string& GetMapItemWithDef(const std::map<std::string, std::string>& m,
+                                            const std::string& key, const std::string& defval = "") {
   auto finditr = m.find(key);
   return (finditr != m.end()) ? (finditr->second) : defval;
 }
@@ -107,12 +103,12 @@ inline std::string GetMapItemWithDef(const std::map<std::string, std::string>& m
 /**
  * @brief 向s中添加kv字段
  * 
- * @param[in] s 待处理字符串
+ * @param[inout] s 待处理字符串
  * @param[in] key key
  * @param[in] val val
  * @param[in] vsep 多个kv之间的分隔符
  * @param[in] msep 单个kv内部的分隔符
- * @return std::string& 拼接后的字符串
+ * @return std::string& 拼接后的字符串s的引用
  */
 inline std::string& AddKV(std::string& s, const std::string& key, const std::string& val,
                           const std::string& vsep = "&", const std::string& msep = "=") {
@@ -123,17 +119,20 @@ inline std::string& AddKV(std::string& s, const std::string& key, const std::str
 
 /**
  * @brief 从类似于a=1&b=2&c=3这样的字符串中得到key对应的val
- * 
+ * @note 比直接分割成map再find要快一些，但如果有多次调用，还是建议先分割成map再find
  * @param[in] str 待处理字符串
- * @param[in] key key
+ * @param[in] key key，不能包含vsep或msep，否则返回空结果
  * @param[in] vsep 多个kv之间的分隔符
  * @param[in] msep 单个kv内部的分隔符
- * @param[in] trimempty 是否对每项结果去除空格
+ * @param[in] trimempty 是否不计空格
  * @return std::string key对应的val
  */
 inline std::string GetValueFromStrKV(const std::string& str, const std::string& key,
                                      const std::string& vsep = "&", const std::string& msep = "=",
                                      bool trimempty = true) {
+  if (key.find(vsep) != std::string::npos || key.find(msep) != std::string::npos)
+    return "";
+
   size_t pos = str.find(key);
   if (std::string::npos == pos) return "";
 
@@ -175,16 +174,15 @@ inline std::vector<std::string> SplitToVec(const std::string& source, const std:
 /**
  * @brief 拼接vector到string
  * 
- * @param[in] vec 待处理vector。空字符串不会被join到最终结果中
+ * @param[in] vec 待处理vector
  * @param[in] sep 分隔符
  * @return std::string 拼接后的字符串
  */
 inline std::string JoinVec(const std::vector<std::string>& vec, const std::string& sep) {
   std::string result;
-  for (auto& itr : vec) {
-    if (itr.empty()) continue;
-    if (!result.empty()) result += sep;
-    result += itr;
+  for (auto itr = vec.begin(); itr != vec.end(); ++itr) {
+    if (itr != vec.begin()) result += sep;
+    result += *itr;
   }
   return result;
 }
@@ -220,10 +218,9 @@ inline std::set<std::string> SplitToSet(const std::string& source, const std::st
  */
 inline std::string JoinSet(const std::set<std::string>& st, const std::string& sep) {
   std::string result;
-  for (auto& itr : st) {
-    // 若不为空，则需要增加分隔符
-    if (!result.empty()) result += sep;
-    result += itr;
+  for (auto itr = st.begin(); itr != st.end(); ++itr) {
+    if (itr != st.begin()) result += sep;
+    result += *itr;
   }
   return result;
 }
@@ -305,7 +302,7 @@ inline bool CheckVersionInside(const std::string& ver, const std::string& start_
  * @param[inout] str 待替换字符串
  * @param[in] ov 要被替换的子字符串
  * @param[in] nv 要替换成的子字符串
- * @return std::string& 替换后的字符串
+ * @return std::string& 替换后的字符串str的引用
  */
 inline std::string& ReplaceString(std::string& str, const std::string& ov, const std::string& nv) {
   if (str.empty() || ov.empty()) return str;

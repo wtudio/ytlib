@@ -1,10 +1,11 @@
 /**
  * @file url_encode.hpp
+ * @author WT
  * @brief Url编解码
  * @note UrlEncode、UrlDecode
- * @author WT
  * @date 2019-07-26
  */
+
 #pragma once
 
 #include <string>
@@ -28,9 +29,10 @@ inline unsigned char FromHex(unsigned char x) {
 
 /**
  * @brief UrlEncode
- * @param str 待编码字符串
- * @param up 是否转码为大写字符
- * @return 转码后的结果字符串
+ * 
+ * @param[in] str 待编码字符串
+ * @param[in] up 是否转码为大写字符
+ * @return std::string 转码后的结果字符串
  */
 inline std::string UrlEncode(const std::string& str, bool up = true) {
   std::string strTemp;
@@ -52,8 +54,9 @@ inline std::string UrlEncode(const std::string& str, bool up = true) {
 
 /**
  * @brief UrlDecode
- * @param str 待解码字符串
- * @return 解码后的结果字符串
+ * 
+ * @param[in] str 待解码字符串
+ * @return std::string 解码后的结果字符串
  */
 inline std::string UrlDecode(const std::string& str) {
   std::string strTemp;
