@@ -245,40 +245,40 @@ TEST(MATH_TEST, MATH_UTIL_TEST) {
   std::vector<TestCaseForGcd> test_cases;
 
   test_cases.emplace_back(TestCaseForGcd{
-      "good_case1",
-      42,
-      30,
-      6});
+      .name = "good_case1",
+      .num1 = 42,
+      .num2 = 30,
+      .want_result = 6});
   test_cases.emplace_back(TestCaseForGcd{
-      "good_case2",
-      770,
-      26,
-      2});
+      .name = "good_case2",
+      .num1 = 770,
+      .num2 = 26,
+      .want_result = 2});
   test_cases.emplace_back(TestCaseForGcd{
-      "good_case3",
-      121,
-      132,
-      12});
+      .name = "good_case3",
+      .num1 = 121,
+      .num2 = 132,
+      .want_result = 11});
   test_cases.emplace_back(TestCaseForGcd{
-      "bad_case1",
-      1,
-      1,
-      1});
+      .name = "bad_case1",
+      .num1 = 1,
+      .num2 = 1,
+      .want_result = 1});
   test_cases.emplace_back(TestCaseForGcd{
-      "bad_case2",
-      1,
-      2,
-      1});
+      .name = "bad_case2",
+      .num1 = 1,
+      .num2 = 2,
+      .want_result = 1});
   test_cases.emplace_back(TestCaseForGcd{
-      "bad_case3",
-      1,
-      0,
-      1});
+      .name = "bad_case3",
+      .num1 = 1,
+      .num2 = 0,
+      .want_result = 1});
   test_cases.emplace_back(TestCaseForGcd{
-      "bad_case4",
-      0,
-      0,
-      1});
+      .name = "bad_case4",
+      .num1 = 0,
+      .num2 = 0,
+      .want_result = 1});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
     EXPECT_EQ(Gcd(test_cases[ii].num1, test_cases[ii].num2), test_cases[ii].want_result)
