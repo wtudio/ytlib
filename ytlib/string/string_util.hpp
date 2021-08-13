@@ -30,38 +30,48 @@ inline std::string& Trim(std::string& s) {
 
 /**
  * @brief 将类似于a=1&b=2&c=3这样的字符串解析到map中
- * 
+ * @note 分割原则：在两个vsep之间的子字符串，如果包含msep，则以msep为界分为key、val
  * @param[in] source 待分割字符串
- * @param[in] vsep 多个kv之间的分隔符
- * @param[in] msep 单个kv内部的分隔符
- * @param[in] trimempty 是否去除k和v里的空格
+ * @param[in] vsep 多个kv之间的分隔符，不可为空
+ * @param[in] msep 单个kv内部的分隔符，不可为空
+ * @param[in] trim 是否去除k和v里的空格
+ * @param[in] clear 是否去除key为空的情况
  * @return std::map<std::string, std::string> 解析后的map
  */
 inline std::map<std::string, std::string> SplitToMap(const std::string& source,
                                                      const std::string& vsep = "&",
                                                      const std::string& msep = "=",
-                                                     bool trimempty = true) {
+                                                     bool trim = true,
+                                                     bool clear = true) {
   std::map<std::string, std::string> result;
 
-  const std::string& str = source + vsep;
-
-  size_t n, pos = 0;
-  while ((n = str.find(vsep, pos)) != std::string::npos) {
-    const std::string& sub = str.substr(pos, n - pos);
-    if (!sub.empty()) {
-      size_t m;
-      if ((m = sub.find(msep)) != std::string::npos) {
-        if (trimempty) {
-          std::string first = sub.substr(0, m);
-          std::string second = sub.substr(m + msep.size());
-          result[Trim(first)] = Trim(second);
+  if (source.empty() || vsep.empty() || msep.empty() || vsep == msep) return result;
+  size_t v_pos_end, v_pos_start = 0;
+  do {
+    v_pos_end = source.find(vsep, v_pos_start);
+    if (v_pos_end == std::string::npos) v_pos_end = source.length();
+    if (v_pos_end > v_pos_start) {
+      const std::string& kv_str = source.substr(v_pos_start, v_pos_end - v_pos_start);
+      size_t msep_pos = kv_str.find(msep);
+      if (msep_pos != std::string::npos) {
+        if (trim) {
+          std::string first = kv_str.substr(0, msep_pos);
+          std::string second = kv_str.substr(msep_pos + msep.size());
+          Trim(first);
+          if (!(clear && first.empty())) {
+            result[first] = Trim(second);
+          }
         } else {
-          result[sub.substr(0, m)] = sub.substr(m + msep.size());
+          const std::string& first = kv_str.substr(0, msep_pos);
+          const std::string& second = kv_str.substr(msep_pos + msep.size());
+          if (!(clear && first.empty())) {
+            result[first] = second;
+          }
         }
       }
     }
-    pos = n + vsep.size();
-  }
+    v_pos_start = v_pos_end + vsep.size();
+  } while (v_pos_end < source.length());
 
   return result;
 }
@@ -78,10 +88,9 @@ inline std::string JoinMap(const std::map<std::string, std::string>& kvmap,
                            const std::string& vsep = "&",
                            const std::string& msep = "=") {
   std::string result;
-  for (auto& itr : kvmap) {
-    // 若不为空，则需要增加分隔符
-    if (!result.empty()) result += vsep;
-    result += itr.first + msep + itr.second;
+  for (auto itr = kvmap.begin(); itr != kvmap.end(); ++itr) {
+    if (itr != kvmap.begin()) result += vsep;
+    result += (itr->first + msep + itr->second);
   }
   return result;
 }
@@ -92,10 +101,10 @@ inline std::string JoinMap(const std::map<std::string, std::string>& kvmap,
  * @param[in] m std::map<std::string,std::string>结构体
  * @param[in] key 要获取数据的key
  * @param[in] defval 默认字符串，当m中没有对应的key时，返回defval
- * @return const std::string& 结果的const引用
+ * @return std::string 结果
  */
-inline const std::string& GetMapItemWithDef(const std::map<std::string, std::string>& m,
-                                            const std::string& key, const std::string& defval = "") {
+inline std::string GetMapItemWithDef(const std::map<std::string, std::string>& m,
+                                     const std::string& key, const std::string& defval = "") {
   auto finditr = m.find(key);
   return (finditr != m.end()) ? (finditr->second) : defval;
 }
@@ -121,54 +130,94 @@ inline std::string& AddKV(std::string& s, const std::string& key, const std::str
  * @brief 从类似于a=1&b=2&c=3这样的字符串中得到key对应的val
  * @note 比直接分割成map再find要快一些，但如果有多次调用，还是建议先分割成map再find
  * @param[in] str 待处理字符串
- * @param[in] key key，不能包含vsep或msep，否则返回空结果
- * @param[in] vsep 多个kv之间的分隔符
- * @param[in] msep 单个kv内部的分隔符
- * @param[in] trimempty 是否不计空格
+ * @param[in] key key，不可为空，不能包含vsep或msep，否则返回空结果
+ * @param[in] vsep 多个kv之间的分隔符，不可为空
+ * @param[in] msep 单个kv内部的分隔符，不可为空
+ * @param[in] trim 是否不计空格
  * @return std::string key对应的val
  */
 inline std::string GetValueFromStrKV(const std::string& str, const std::string& key,
                                      const std::string& vsep = "&", const std::string& msep = "=",
-                                     bool trimempty = true) {
+                                     bool trim = true) {
+  if (key.empty() || vsep.empty() || msep.empty() || vsep == msep) return "";
   if (key.find(vsep) != std::string::npos || key.find(msep) != std::string::npos)
     return "";
 
-  size_t pos = str.find(key);
-  if (std::string::npos == pos) return "";
+  size_t key_pos = str.find(key);
+  while (key_pos != std::string::npos) {
+    size_t msep_pos = str.find(msep, key_pos + key.size());
+    if (msep_pos == std::string::npos) return "";
 
-  pos = str.find(msep, pos);
-  if (std::string::npos == pos) return "";
-  pos += msep.length();
+    size_t key_start_pos = str.rfind(vsep, key_pos);
+    if (key_start_pos == std::string::npos)
+      key_start_pos = 0;
+    else
+      key_start_pos += vsep.length();
 
-  size_t pos_end = str.find(vsep, pos);
-  if (std::string::npos == pos_end) pos_end = str.length();
+    bool right_key_flag = false;
+    if (trim) {
+      std::string real_key = str.substr(key_start_pos, msep_pos - key_start_pos);
+      Trim(real_key);
+      if (real_key == key)
+        right_key_flag = true;
+    } else {
+      if ((key_start_pos == key_pos) && (msep_pos == (key_pos + key.size())))
+        right_key_flag = true;
+    }
 
-  std::string re = str.substr(pos, pos_end - pos);
-  if (trimempty) Trim(re);
+    if (right_key_flag) {
+      size_t val_start_pos = msep_pos + msep.size();
+      size_t val_end_pos = str.find(vsep, val_start_pos);
+      if (val_end_pos == std::string::npos) val_end_pos = str.length();
 
-  return re;
+      if (trim) {
+        std::string re = str.substr(val_start_pos, val_end_pos - val_start_pos);
+        return Trim(re);
+      } else {
+        return str.substr(val_start_pos, val_end_pos - val_start_pos);
+      }
+    }
+
+    key_pos = str.find(key, msep_pos + msep.length());
+  }
+  return "";
 }
 
 /**
  * @brief 分割字符串到vector
  * 
- * @param[in] source 待处理字符串。连续分隔符视为1个
+ * @param[in] source 待处理字符串
  * @param[in] sep 分隔符
- * @param[in] trimempty 是否对每项结果去除空格。如果为true则等效为空格也是分隔符。默认true
+ * @param[in] trim 是否对每项结果去除空格
+ * @param[in] clear 是否去除空项
  * @return std::vector<std::string> 分割结果
  */
 inline std::vector<std::string> SplitToVec(const std::string& source, const std::string& sep,
-                                           bool trimempty = true) {
-  std::vector<std::string> re;
-  size_t pos1, pos2 = 0;
-  const std::string& real_sep = trimempty ? (sep + " ") : sep;
+                                           bool trim = true, bool clear = true) {
+  std::vector<std::string> result;
+  if (source.empty() || sep.empty()) return result;
+
+  size_t pos_end, pos_start = 0;
   do {
-    pos1 = source.find_first_not_of(real_sep, pos2);
-    if (pos1 == std::string::npos) break;
-    pos2 = source.find_first_of(real_sep, pos1);
-    re.emplace_back(source.substr(pos1, pos2 - pos1));
-  } while (pos2 != std::string::npos);
-  return re;
+    pos_end = source.find(sep, pos_start);
+    if (pos_end == std::string::npos) pos_end = source.length();
+
+    if (trim) {
+      std::string sub_str = source.substr(pos_start, pos_end - pos_start);
+      Trim(sub_str);
+      if (!(clear && sub_str.empty())) {
+        result.emplace_back(sub_str);
+      }
+    } else {
+      const std::string& sub_str = source.substr(pos_start, pos_end - pos_start);
+      if (!(clear && sub_str.empty())) {
+        result.emplace_back(sub_str);
+      }
+    }
+    pos_start = pos_end + sep.size();
+  } while (pos_end < source.length());
+
+  return result;
 }
 
 /**
@@ -192,21 +241,36 @@ inline std::string JoinVec(const std::vector<std::string>& vec, const std::strin
  * 
  * @param[in] source 待处理字符串
  * @param[in] sep 分隔符
- * @param[in] trimempty 是否对每项结果去除空格
+ * @param[in] trim 是否对每项结果去除空格
+ * @param[in] clear 是否去除空项
  * @return std::set<std::string> 分割结果
  */
 inline std::set<std::string> SplitToSet(const std::string& source, const std::string& sep,
-                                        bool trimempty = true) {
-  std::set<std::string> re;
-  size_t pos1, pos2 = 0;
-  const std::string& real_sep = trimempty ? (sep + " ") : sep;
+                                        bool trim = true, bool clear = true) {
+  std::set<std::string> result;
+  if (source.empty() || sep.empty()) return result;
+
+  size_t pos_end, pos_start = 0;
   do {
-    pos1 = source.find_first_not_of(real_sep, pos2);
-    if (pos1 == std::string::npos) break;
-    pos2 = source.find_first_of(real_sep, pos1);
-    re.emplace(source.substr(pos1, pos2 - pos1));
-  } while (pos2 != std::string::npos);
-  return re;
+    pos_end = source.find(sep, pos_start);
+    if (pos_end == std::string::npos) pos_end = source.length();
+
+    if (trim) {
+      std::string sub_str = source.substr(pos_start, pos_end - pos_start);
+      Trim(sub_str);
+      if (!(clear && sub_str.empty())) {
+        result.emplace(sub_str);
+      }
+    } else {
+      const std::string& sub_str = source.substr(pos_start, pos_end - pos_start);
+      if (!(clear && sub_str.empty())) {
+        result.emplace(sub_str);
+      }
+    }
+    pos_start = pos_end + sep.size();
+  } while (pos_end < source.length());
+
+  return result;
 }
 
 /**
@@ -227,31 +291,43 @@ inline std::string JoinSet(const std::set<std::string>& st, const std::string& s
 
 /**
  * @brief 判断key字符串是否在list字符串中，如"123"是否在"123,456,789"中
- * @note 注意，key中不可包含分隔符，key、sep不可为空，否则返回false
- * @param[in] strlist list字符串
- * @param[in] key key字符串
- * @param[in] sep list的分隔符
- * @param[in] trimempty 是否对每项结果去除空格
+ * @note 比直接分割成vector再find要快一些，但如果有多次调用，还是建议先分割成vector再find
+ * @param[in] str list字符串
+ * @param[in] key key字符串，不可为空，不能包含sep
+ * @param[in] sep list的分隔符，不可为空
+ * @param[in] trim 是否不计空格
  * @return true key在list中
  * @return false key不在list中
  */
-inline bool CheckIfInList(const std::string& strlist, const std::string& key,
-                          const std::string& sep = ",", bool trimempty = true) {
+inline bool CheckIfInList(const std::string& str, const std::string& key,
+                          const std::string& sep = ",", bool trim = true) {
   if (key.empty() || sep.empty()) return false;
+  if (key.find(sep) != std::string::npos) return false;
 
-  const std::string& real_sep = trimempty ? (sep + " ") : sep;
-  if (key.find_first_of(real_sep) != std::string::npos) return false;
+  size_t key_pos = str.find(key);
+  while (key_pos != std::string::npos) {
+    size_t key_start_pos = str.rfind(sep, key_pos);
+    if (key_start_pos == std::string::npos)
+      key_start_pos = 0;
+    else
+      key_start_pos += sep.length();
 
-  size_t pos = strlist.find(key);
-  while (pos != std::string::npos) {
-    if ((pos > 0 && real_sep.find(strlist[pos - 1]) == std::string::npos) ||
-        ((pos + key.length()) < strlist.length() && real_sep.find(strlist[pos + key.length()]) == std::string::npos)) {
-      // 如果前后有不是分割符的情况就查下一个
-      pos = strlist.find(key, pos + key.length());
+    size_t key_end_pos = str.find(sep, key_pos + key.length());
+    if (key_end_pos == std::string::npos) key_end_pos = str.length();
+
+    if (trim) {
+      std::string real_key = str.substr(key_start_pos, key_end_pos - key_start_pos);
+      Trim(real_key);
+      if (real_key == key)
+        return true;
     } else {
-      return true;
+      if ((key_start_pos == key_pos) && (key_end_pos == (key_pos + key.size())))
+        return true;
     }
+
+    key_pos = str.find(key, key_end_pos + sep.length());
   }
+
   return false;
 }
 
@@ -263,8 +339,8 @@ inline bool CheckIfInList(const std::string& strlist, const std::string& key,
  * @return int 返回1是大于，返回0是相等，返回-1是小于
  */
 inline int CmpVersion(const std::string& ver1, const std::string& ver2) {
-  const std::vector<std::string>& version1_detail = SplitToVec(ver1, ".");
-  const std::vector<std::string>& version2_detail = SplitToVec(ver2, ".");
+  const std::vector<std::string>& version1_detail = SplitToVec(ver1, ".", true, true);
+  const std::vector<std::string>& version2_detail = SplitToVec(ver2, ".", true, true);
 
   size_t idx = 0;
   for (idx = 0; idx < version1_detail.size() && idx < version2_detail.size(); ++idx) {

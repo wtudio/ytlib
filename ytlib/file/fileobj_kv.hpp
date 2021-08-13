@@ -32,25 +32,30 @@ class KeyValueFile : public FileObj<std::map<std::string, std::string> > {
     if (!infile) return false;
 
     obj_ptr_ = std::make_shared<std::map<std::string, std::string> >();
+    std::map<std::string, std::string>& kv_map = *obj_ptr_;
 
     std::string buf;
     for (; getline(infile, buf);) {
-      std::size_t pos0 = buf.find_first_not_of(' ');
+      if (buf.empty()) continue;
+      size_t end_pos = buf.find('#');
+      if (end_pos != std::string::npos)
+        buf.erase(end_pos);
 
-      //以#开头的行为注释
-      if (buf[pos0] == '#') continue;
+      size_t key_start_pos = buf.find_first_not_of(' ');
 
       //key不能为空
-      std::size_t pos1 = buf.find_first_of('=', pos0);
-      if (pos1 == std::string::npos || pos1 == pos0) continue;
-      const std::string& key = buf.substr(pos0, buf.find_last_not_of(' ', pos1 - 1) + 1 - pos0);
+      size_t sep_pos = buf.find('=', key_start_pos);
+      if (sep_pos == std::string::npos || sep_pos == key_start_pos) continue;
+
+      size_t key_end_pos = buf.find_last_not_of(' ', sep_pos - 1) + 1;
+      const std::string& key = buf.substr(key_start_pos, key_end_pos - key_start_pos);
 
       //val可以为空
-      std::size_t pos2 = buf.find_first_not_of(' ', pos1 + 1);
-      std::size_t pos3 = buf.find_last_not_of(' ');
-      const std::string& val = (pos2 < pos3) ? buf.substr(pos2, pos3 + 1 - pos2) : "";
+      size_t val_start_pos = buf.find_first_not_of(' ', sep_pos + 1);
+      size_t val_end_pos = buf.find_last_not_of(' ') + 1;
+      const std::string& val = (val_start_pos < val_end_pos) ? buf.substr(val_start_pos, val_end_pos - val_start_pos) : "";
 
-      obj_ptr_->emplace(key, val);
+      kv_map[key] = val;
     }
 
     infile.close();

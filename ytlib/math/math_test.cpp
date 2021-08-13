@@ -210,30 +210,7 @@ TEST(MATH_TEST, BigNum_TEST) {
   cout << g << endl;
 }
 
-TEST(MATH_TEST, MATH_UTIL_TEST) {
-  ASSERT_EQ(CountOne(0b0), 0);
-  ASSERT_EQ(CountOne(0b1000), 1);
-  ASSERT_EQ(CountOne(0b1001), 2);
-  ASSERT_EQ(CountOne(0b1010010001), 4);
-
-  ASSERT_EQ(CountZero(0b0), 64 - 0);
-  ASSERT_EQ(CountZero(0b1000), 64 - 1);
-  ASSERT_EQ(CountZero(0b1001), 64 - 2);
-  ASSERT_EQ(CountZero(0b1010010001), 64 - 4);
-
-  ASSERT_EQ(FindFirstOne(0b101000), 3);
-  ASSERT_EQ(FindFirstOne(0b101001), 0);
-  ASSERT_EQ(FindFirstOne(0b101001, 1), 3);
-
-  ASSERT_FALSE(IsPrime(0));
-  ASSERT_FALSE(IsPrime(1));
-  ASSERT_TRUE(IsPrime(2));
-  ASSERT_TRUE(IsPrime(3));
-  ASSERT_FALSE(IsPrime(4));
-  ASSERT_TRUE(IsPrime(23));
-  ASSERT_TRUE(IsPrime(997));
-  ASSERT_FALSE(IsPrime(997 * 991));
-
+TEST(MATH_UTIL_TEST, Gcd_test) {
   struct TestCaseForGcd {
     std::string name;
 
@@ -245,61 +222,212 @@ TEST(MATH_TEST, MATH_UTIL_TEST) {
   std::vector<TestCaseForGcd> test_cases;
 
   test_cases.emplace_back(TestCaseForGcd{
-      .name = "good_case1",
+      .name = "good case 1",
       .num1 = 42,
       .num2 = 30,
       .want_result = 6});
   test_cases.emplace_back(TestCaseForGcd{
-      .name = "good_case2",
+      .name = "good case 2",
       .num1 = 770,
       .num2 = 26,
       .want_result = 2});
   test_cases.emplace_back(TestCaseForGcd{
-      .name = "good_case3",
+      .name = "good case 3",
       .num1 = 121,
       .num2 = 132,
       .want_result = 11});
   test_cases.emplace_back(TestCaseForGcd{
-      .name = "bad_case1",
+      .name = "bad case 1",
       .num1 = 1,
       .num2 = 1,
       .want_result = 1});
   test_cases.emplace_back(TestCaseForGcd{
-      .name = "bad_case2",
+      .name = "bad case 2",
       .num1 = 1,
       .num2 = 2,
       .want_result = 1});
   test_cases.emplace_back(TestCaseForGcd{
-      .name = "bad_case3",
+      .name = "bad case 3",
       .num1 = 1,
       .num2 = 0,
       .want_result = 1});
   test_cases.emplace_back(TestCaseForGcd{
-      .name = "bad_case4",
+      .name = "bad case 4",
       .num1 = 0,
       .num2 = 0,
       .want_result = 1});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
     EXPECT_EQ(Gcd(test_cases[ii].num1, test_cases[ii].num2), test_cases[ii].want_result)
-        << "Gcd Test " << test_cases[ii].name << " failed";
+        << "Test " << test_cases[ii].name << " failed, index " << ii;
   }
+}
 
-  ASSERT_EQ(Gcd(42, 30), 6);
-  ASSERT_EQ(Gcd(770, 26), 2);
-  ASSERT_EQ(Gcd(121, 132), 11);
-  ASSERT_EQ(Gcd(1, 1), 1);
-  ASSERT_EQ(Gcd(1, 2), 1);
-  ASSERT_EQ(Gcd(1, 0), 1);
-  ASSERT_EQ(Gcd(0, 0), 1);
+TEST(MATH_UTIL_TEST, Lcm_test) {
+  struct TestCaseForLcm {
+    std::string name;
 
-  ASSERT_EQ(Lcm(0, 0), 0);
-  ASSERT_EQ(Lcm(0, 100), 0);
-  ASSERT_EQ(Lcm(1, 1), 1);
-  ASSERT_EQ(Lcm(1, 10), 10);
-  ASSERT_EQ(Lcm(2, 5), 10);
-  ASSERT_EQ(Lcm(4, 10), 20);
+    uint64_t num1;
+    uint64_t num2;
 
+    uint64_t want_result;
+  };
+  std::vector<TestCaseForLcm> test_cases;
+
+  test_cases.emplace_back(TestCaseForLcm{
+      .name = "good case 1",
+      .num1 = 1,
+      .num2 = 10,
+      .want_result = 10});
+  test_cases.emplace_back(TestCaseForLcm{
+      .name = "good case 2",
+      .num1 = 2,
+      .num2 = 5,
+      .want_result = 10});
+  test_cases.emplace_back(TestCaseForLcm{
+      .name = "good case 3",
+      .num1 = 4,
+      .num2 = 10,
+      .want_result = 20});
+  test_cases.emplace_back(TestCaseForLcm{
+      .name = "bad case 1",
+      .num1 = 1,
+      .num2 = 1,
+      .want_result = 1});
+  test_cases.emplace_back(TestCaseForLcm{
+      .name = "bad case 2",
+      .num1 = 0,
+      .num2 = 100,
+      .want_result = 0});
+  test_cases.emplace_back(TestCaseForLcm{
+      .name = "bad case 3",
+      .num1 = 0,
+      .num2 = 0,
+      .want_result = 0});
+
+  for (size_t ii = 0; ii < test_cases.size(); ++ii) {
+    EXPECT_EQ(Lcm(test_cases[ii].num1, test_cases[ii].num2), test_cases[ii].want_result)
+        << "Test " << test_cases[ii].name << " failed, index " << ii;
+  }
+}
+
+TEST(MATH_UTIL_TEST, IsPrime_test) {
+  struct TestCaseForIsPrime {
+    std::string name;
+
+    uint64_t num;
+
+    bool want_result;
+  };
+  std::vector<TestCaseForIsPrime> test_cases;
+
+  test_cases.emplace_back(TestCaseForIsPrime{
+      .name = "case 1",
+      .num = 0,
+      .want_result = false});
+  test_cases.emplace_back(TestCaseForIsPrime{
+      .name = "case 2",
+      .num = 1,
+      .want_result = false});
+  test_cases.emplace_back(TestCaseForIsPrime{
+      .name = "case 3",
+      .num = 2,
+      .want_result = true});
+  test_cases.emplace_back(TestCaseForIsPrime{
+      .name = "case 4",
+      .num = 3,
+      .want_result = true});
+  test_cases.emplace_back(TestCaseForIsPrime{
+      .name = "case 5",
+      .num = 4,
+      .want_result = false});
+  test_cases.emplace_back(TestCaseForIsPrime{
+      .name = "case 6",
+      .num = 23,
+      .want_result = true});
+  test_cases.emplace_back(TestCaseForIsPrime{
+      .name = "case 7",
+      .num = 997,
+      .want_result = true});
+  test_cases.emplace_back(TestCaseForIsPrime{
+      .name = "case 8",
+      .num = 997 * 991,
+      .want_result = false});
+
+  for (size_t ii = 0; ii < test_cases.size(); ++ii) {
+    EXPECT_EQ(IsPrime(test_cases[ii].num), test_cases[ii].want_result)
+        << "Test " << test_cases[ii].name << " failed, index " << ii;
+  }
+}
+
+TEST(MATH_UTIL_TEST, CountOne_test) {
+  struct TestCaseForCountOne {
+    std::string name;
+
+    uint64_t n;
+
+    uint8_t want_result;
+  };
+  std::vector<TestCaseForCountOne> test_cases;
+  test_cases.emplace_back(TestCaseForCountOne{
+      .name = "case 1",
+      .n = 0b0,
+      .want_result = 0});
+  test_cases.emplace_back(TestCaseForCountOne{
+      .name = "case 2",
+      .n = 0b1000,
+      .want_result = 1});
+  test_cases.emplace_back(TestCaseForCountOne{
+      .name = "case 3",
+      .n = 0b1001,
+      .want_result = 2});
+  test_cases.emplace_back(TestCaseForCountOne{
+      .name = "case 4",
+      .n = 0b1010010001,
+      .want_result = 4});
+
+  for (size_t ii = 0; ii < test_cases.size(); ++ii) {
+    EXPECT_EQ(CountOne(test_cases[ii].n), test_cases[ii].want_result)
+        << "Test " << test_cases[ii].name << " failed, index " << ii;
+    EXPECT_EQ(CountZero(test_cases[ii].n), 64 - test_cases[ii].want_result)
+        << "Test " << test_cases[ii].name << " failed, index " << ii;
+  }
+}
+
+TEST(MATH_UTIL_TEST, FindFirstOne_test) {
+  struct TestCaseForFindFirstOne {
+    std::string name;
+
+    uint64_t val;
+    uint8_t pos;
+
+    uint8_t want_result;
+  };
+  std::vector<TestCaseForFindFirstOne> test_cases;
+  test_cases.emplace_back(TestCaseForFindFirstOne{
+      .name = "case 1",
+      .val = 0b101000,
+      .pos = 0,
+      .want_result = 3});
+  test_cases.emplace_back(TestCaseForFindFirstOne{
+      .name = "case 1",
+      .val = 0b101001,
+      .pos = 0,
+      .want_result = 0});
+  test_cases.emplace_back(TestCaseForFindFirstOne{
+      .name = "case 1",
+      .val = 0b101001,
+      .pos = 1,
+      .want_result = 3});
+
+  for (size_t ii = 0; ii < test_cases.size(); ++ii) {
+    auto ret = FindFirstOne(test_cases[ii].val, test_cases[ii].pos);
+    EXPECT_EQ(ret, test_cases[ii].want_result)
+        << "Test " << test_cases[ii].name << " failed, index " << ii;
+  }
+}
+
+TEST(MATH_TEST, MATH_UTIL_TEST) {
   std::vector<uint64_t> v = Factoring2Vec(60);
   std::vector<uint64_t> tgt_v{2, 2, 3, 5};
   ASSERT_EQ(v.size(), tgt_v.size());
