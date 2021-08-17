@@ -5,6 +5,7 @@
 #include "math_util.hpp"
 #include "matrix.hpp"
 #include "sort_algs.hpp"
+#include "ytlib/misc/stl_util.hpp"
 
 namespace ytlib {
 
@@ -410,12 +411,12 @@ TEST(MATH_UTIL_TEST, FindFirstOne_test) {
       .pos = 0,
       .want_result = 3});
   test_cases.emplace_back(TestCaseForFindFirstOne{
-      .name = "case 1",
+      .name = "case 2",
       .val = 0b101001,
       .pos = 0,
       .want_result = 0});
   test_cases.emplace_back(TestCaseForFindFirstOne{
-      .name = "case 1",
+      .name = "case 3",
       .val = 0b101001,
       .pos = 1,
       .want_result = 3});
@@ -427,14 +428,40 @@ TEST(MATH_UTIL_TEST, FindFirstOne_test) {
   }
 }
 
-TEST(MATH_TEST, MATH_UTIL_TEST) {
-  std::vector<uint64_t> v = Factoring2Vec(60);
-  std::vector<uint64_t> tgt_v{2, 2, 3, 5};
-  ASSERT_EQ(v.size(), tgt_v.size());
-  for (uint32_t ii = 0; ii < v.size(); ++ii) {
-    ASSERT_EQ(v[ii], tgt_v[ii]);
-  }
+TEST(MATH_UTIL_TEST, Factoring2Vec_test) {
+  struct TestCaseForFactoring2Vec {
+    std::string name;
 
+    uint64_t num;
+
+    std::vector<uint64_t> want_result;
+  };
+  std::vector<TestCaseForFactoring2Vec> test_cases;
+  test_cases.emplace_back(TestCaseForFactoring2Vec{
+      .name = "case 1",
+      .num = 60,
+      .want_result = {2, 2, 3, 5}});
+  test_cases.emplace_back(TestCaseForFactoring2Vec{
+      .name = "case 2",
+      .num = 0,
+      .want_result = {}});
+  test_cases.emplace_back(TestCaseForFactoring2Vec{
+      .name = "case 3",
+      .num = 1,
+      .want_result = {}});
+  test_cases.emplace_back(TestCaseForFactoring2Vec{
+      .name = "case 4",
+      .num = 2,
+      .want_result = {2}});
+
+  for (size_t ii = 0; ii < test_cases.size(); ++ii) {
+    auto ret = Factoring2Vec(test_cases[ii].num);
+    EXPECT_TRUE(CheckVectorEqual(ret, test_cases[ii].want_result))
+        << "Test " << test_cases[ii].name << " failed, index " << ii;
+  }
+}
+
+TEST(MATH_TEST, MATH_UTIL_TEST) {
   std::map<uint64_t, uint64_t> m = Factoring2Map(60);
   std::map<uint64_t, uint64_t> tgt_m{{2, 2}, {3, 1}, {5, 1}};
   for (const auto &itr : m) {

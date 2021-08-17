@@ -1,10 +1,11 @@
 /**
- * @file math_tools.hpp
+ * @file math_util.hpp
+ * @author WT
  * @brief 基础数学库
  * @note 一些常用的数学工具，包括判断素数、求最大公约数/最小公倍数、分解质因数、排列组合数等
- * @author WT
  * @date 2019-07-26
  */
+
 #pragma once
 
 #include <cinttypes>

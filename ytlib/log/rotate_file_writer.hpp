@@ -18,7 +18,7 @@ enum class RotateType : int {
 
 class RotateFileWriter {
  public:
-  RotateFileWriter() : rotate_type_(RotateType::RotateByTime){};
+  RotateFileWriter() {}
   ~RotateFileWriter() {
     if (ofs_.is_open()) {
       ofs_.flush();
@@ -199,7 +199,7 @@ class RotateFileWriter {
   }
 
  private:
-  RotateType rotate_type_;
+  RotateType rotate_type_ = RotateType::RotateByTime;
   std::string base_file_name_;  // 基础文件路径
   std::ofstream ofs_;
 

@@ -335,7 +335,7 @@ class LogSvr : public std::enable_shared_from_this<LogSvr> {
  private:
   boost::asio::io_context& io_;
   boost::asio::strand<boost::asio::io_context::executor_type> mgr_strand_;  // session池操作strand
-  std::shared_ptr<boost::asio::ip::tcp::acceptor> acceptor_ptr_;            //监听器
+  std::shared_ptr<boost::asio::ip::tcp::acceptor> acceptor_ptr_;            // 监听器
   std::set<std::shared_ptr<LogSession> > session_ptr_set_;                  // session池
   std::atomic_bool run_flag_ = true;
   LogSvrCfg cfg_;  // 配置

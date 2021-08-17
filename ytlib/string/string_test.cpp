@@ -4,7 +4,7 @@
 #include "string_util.hpp"
 #include "tstring.hpp"
 #include "url_encode.hpp"
-#include "ytlib/misc/test_util.hpp"
+#include "ytlib/misc/stl_util.hpp"
 
 namespace ytlib {
 
