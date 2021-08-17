@@ -100,8 +100,8 @@ class Awaitable {
 
   bool await_ready() const noexcept { return false; }
   void await_suspend(std::coroutine_handle<> h) {
-    anyscfun_([=](T&& re) {
-      this->re_ = std::move(re);
+    anyscfun_([this, h](T&& re) {
+      re_ = std::move(re);
       h.resume();
     });
   }
@@ -124,7 +124,7 @@ class Awaitable<void> {
 
   bool await_ready() const noexcept { return false; }
   void await_suspend(std::coroutine_handle<> h) {
-    anyscfun_([=]() {
+    anyscfun_([h]() {
       h.resume();
     });
   }

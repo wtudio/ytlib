@@ -42,15 +42,15 @@ inline uint16_t GetUsablePort(uint16_t start = 60000, uint16_t end = 65535) {
 }
 
 // 大小端判断
-#define ENDIAN_ORDER ('ABCD')
-#define LITTLE_ENDIAN 0x41424344UL
-#define BIG_ENDIAN 0x44434241UL
+#define YT_ENDIAN_ORDER ('ABCD')
+#define YT_LITTLE_ENDIAN 0x41424344UL
+#define YT_BIG_ENDIAN 0x44434241UL
 
 ///大小端转换，将ps中的数据转换到pd中。默认小端
 inline void TransEndian(char* pd, const char* ps, uint32_t len) {
-#if ENDIAN_ORDER == LITTLE_ENDIAN
+#if YT_ENDIAN_ORDER == YT_LITTLE_ENDIAN
   memcpy(pd, ps, len);
-#elif ENDIAN_ORDER == BIG_ENDIAN
+#elif YT_ENDIAN_ORDER == YT_BIG_ENDIAN
   ps += len;
   while (len--) (*(pd++)) = (*(--ps));
 #else
@@ -59,9 +59,9 @@ inline void TransEndian(char* pd, const char* ps, uint32_t len) {
 }
 
 inline void SetBufFromNum(char* p, uint32_t n) {
-#if ENDIAN_ORDER == LITTLE_ENDIAN
+#if YT_ENDIAN_ORDER == YT_LITTLE_ENDIAN
   memcpy(p, &n, 4);
-#elif ENDIAN_ORDER == BIG_ENDIAN
+#elif YT_ENDIAN_ORDER == YT_BIG_ENDIAN
   p[0] = ((char*)&n)[3];
   p[1] = ((char*)&n)[2];
   p[2] = ((char*)&n)[1];
@@ -72,9 +72,9 @@ inline void SetBufFromNum(char* p, uint32_t n) {
 }
 
 inline uint32_t GetNumFromBuf(const char* p) {
-#if ENDIAN_ORDER == LITTLE_ENDIAN
+#if YT_ENDIAN_ORDER == YT_LITTLE_ENDIAN
   return *((uint32_t*)p);
-#elif ENDIAN_ORDER == BIG_ENDIAN
+#elif YT_ENDIAN_ORDER == YT_BIG_ENDIAN
   uint32_t n;
   ((char*)&n)[3] = p[0];
   ((char*)&n)[2] = p[1];

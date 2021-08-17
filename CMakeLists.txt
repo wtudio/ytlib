@@ -51,7 +51,7 @@ set(YTLIB_LIBRARY_DIR ${YTLIB_LIBRARY_DIR} ${YTLIB_OUTPUT_PATH})
 #设置是否依赖boost库
 option(BUILD_WITH_BOOST "Build with boost lib." OFF)
 if(BUILD_WITH_BOOST)
-  find_package(Boost QUIET)
+  find_package(Boost QUIET COMPONENTS log serialization)
   if(NOT Boost_FOUND)
     message(FATAL_ERROR "Cannot find Boost library. please set the Boost_INCLUDE_DIRS to boost root path.")
   endif()
@@ -86,6 +86,12 @@ endif()
 #链接设置
 include_directories(${YTLIB_INCLUDE_DIR})
 link_directories(${YTLIB_LIBRARY_DIR})
+
+#打印信息
+#message(STATUS "YTLIB_LIBRARY: ${YTLIB_LIBRARY}")
+#message(STATUS "YTLIB_LIBRARY_DEPEND: ${YTLIB_LIBRARY_DEPEND}")
+#message(STATUS "YTLIB_INCLUDE_DIR: ${YTLIB_INCLUDE_DIR}")
+#message(STATUS "YTLIB_LIBRARY_DIR: ${YTLIB_LIBRARY_DIR}")
 
 #需要编译的库（保留，应朝head-only方向发展）
 #set(YTLIB_LIBRARY ${YTLIB_LIBRARY} xxx )
