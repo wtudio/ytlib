@@ -13,6 +13,7 @@
 #include "fileobj_inf.hpp"
 
 namespace ytlib {
+
 /**
  * @brief k-v形式文件类
  * @note 使用map格式。涉及到存储的都弄成string。以#开头的行为注释
@@ -26,7 +27,12 @@ class KeyValueFile : public FileObj<std::map<std::string, std::string> > {
   virtual ~KeyValueFile() {}
 
  protected:
-  ///从打开的文件中解析获取文件内容结构体
+  /**
+   * @brief 从打开的文件中解析获取文件内容结构体
+   * 
+   * @return true 
+   * @return false 
+   */
   virtual bool ParseFileObj() {
     std::ifstream infile(filepath_, std::ios::in);
     if (!infile) return false;
@@ -62,7 +68,12 @@ class KeyValueFile : public FileObj<std::map<std::string, std::string> > {
     return true;
   }
 
-  ///将当前的文件内容结构体保存为文件
+  /**
+   * @brief 将当前的文件内容结构体保存为文件
+   * 
+   * @return true 
+   * @return false 
+   */
   virtual bool SaveFileObj() {
     std::ofstream ofile(filepath_, std::ios::trunc);
     if (!ofile) return false;

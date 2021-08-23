@@ -65,7 +65,7 @@ k5 =
 
     auto map_ptr = test_kv_file.GetObjPtr();
     ASSERT_TRUE(map_ptr);
-    EXPECT_TRUE(CheckMapEqual(*map_ptr, test_cases[ii].want_map))
+    EXPECT_STREQ(Map2Str(*map_ptr).c_str(), Map2Str(test_cases[ii].want_map).c_str())
         << "Test " << test_cases[ii].name << " failed, index " << ii;
   }
 }

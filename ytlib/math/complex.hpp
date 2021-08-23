@@ -17,14 +17,23 @@ namespace ytlib {
 
 /**
  * @brief 简易复数类
+ * 
+ * @tparam CFloat 使用的浮点类型
  */
-template <std::floating_point Float = double>
+template <std::floating_point CFloat = double>
 class Complex {
  public:
-  Complex() : real(0.0), imag(0.0) {}
-  Complex(const Float &a, const Float &b) : real(a), imag(b) {}
+  Complex() {}
+  Complex(const CFloat &a, const CFloat &b) : real(a), imag(b) {}
   Complex(const Complex &value) : real(value.real), imag(value.imag) {}
   ~Complex() {}
+
+  bool operator==(const Complex &value) const {
+    return (std::abs(this->real - value.real) < 1e-6 && std::abs(this->imag - value.imag) < 1e-6);
+  }
+  bool operator!=(const Complex &value) const {
+    return !(*this == value);
+  }
 
   Complex operator+(const Complex &value) const {
     return Complex(this->real + value.real, this->imag + value.imag);
@@ -50,39 +59,39 @@ class Complex {
         this->real * value.imag + this->imag * value.real);
   }
   Complex &operator*=(const Complex &value) {
-    const Float &tmp = this->real * value.real - this->imag * value.imag;
+    const CFloat &tmp = this->real * value.real - this->imag * value.imag;
     this->imag = this->real * value.imag + this->imag * value.real;
     this->real = tmp;
     return *this;
   }
 
-  Complex operator*(const Float &s) const {
+  Complex operator*(const CFloat &s) const {
     return Complex(this->real * s, this->imag * s);
   }
-  Complex &operator*=(const Float &s) {
+  Complex &operator*=(const CFloat &s) {
     this->real *= s;
     this->imag *= s;
     return *this;
   }
 
   Complex operator/(const Complex &value) const {
-    const Float &abs_value = Complex::abs(value);
+    const CFloat &tmp_value = value.real * value.real + value.imag * value.imag;
     return Complex(
-        (this->real * value.real + this->imag * value.imag) / abs_value,
-        (this->real * value.imag - this->imag * value.real) / abs_value);
+        (this->real * value.real + this->imag * value.imag) / tmp_value,
+        (this->imag * value.real - this->real * value.imag) / tmp_value);
   }
   Complex &operator/=(const Complex &value) {
-    const Float &abs_value = Complex::abs(value);
-    const Float &tmp = (this->real * value.real + this->imag * value.imag) / abs_value;
-    this->imag = (this->real * value.imag - this->imag * value.real) / abs_value;
+    const CFloat &tmp_value = value.real * value.real + value.imag * value.imag;
+    const CFloat &tmp = (this->real * value.real + this->imag * value.imag) / tmp_value;
+    this->imag = (this->imag * value.real - this->real * value.imag) / tmp_value;
     this->real = tmp;
     return *this;
   }
 
-  Complex operator/(const Float &s) const {
+  Complex operator/(const CFloat &s) const {
     return Complex(this->real / s, this->imag / s);
   }
-  Complex &operator/=(const Float &s) {
+  Complex &operator/=(const CFloat &s) {
     this->real /= s;
     this->imag /= s;
     return *this;
@@ -92,9 +101,9 @@ class Complex {
     return Complex(-(this->real), -(this->imag));
   }
 
-  Complex &swap(Complex &value) {
+  Complex &Swap(Complex &value) {
     if (this != &value) {
-      Float tmp = this->real;
+      CFloat tmp = this->real;
       this->real = value.real;
       value.real = tmp;
       tmp = this->imag;
@@ -104,23 +113,34 @@ class Complex {
     return *this;
   }
 
-  static Complex conj(const Complex &value) {
-    return Complex(value.real, -value.imag);
+  void AssignWithExpForm(const CFloat &r, const CFloat &theta) {
+    real = r * std::cos(theta);
+    imag = r * std::sin(theta);
   }
-  static Float abs(const Complex &value) {
-    return std::sqrt(value.real * value.real + value.imag * value.imag);
+  CFloat Len() const {
+    if (real == 0) return std::abs(imag);
+    if (imag == 0) return std::abs(real);
+    return std::sqrt(real * real + imag * imag);
   }
-  static Float angle(const Complex &value) {
-    return std::atan2(value.imag, value.real);
+  CFloat Angle() const {
+    return std::atan2(imag, real);
   }
 
-  static Complex sqrt(const Complex &value) {
-    const Float &a = std::sqrt(abs(value));
-    const Float &t = angle(value) / 2;
+  static Complex GenWithExpForm(const CFloat &r, const CFloat &theta) {
+    return Complex(r * std::cos(theta), r * std::sin(theta));
+  }
+
+  static Complex Conj(const Complex &value) {
+    return Complex(value.real, -value.imag);
+  }
+
+  static Complex Sqrt(const Complex &value) {
+    const CFloat &a = std::sqrt(value.Len());
+    const CFloat &t = value.Angle() / 2;
     return Complex(a * std::cos(t), a * std::sin(t));
   }
 
-  static Complex pow(const Complex &value, uint32_t n) {
+  static Complex Pow(const Complex &value, uint32_t n) {
     Complex re(1.0, 0.0), tmp = value;
     for (; n; n >>= 1) {
       if (n & 1)
@@ -132,47 +152,73 @@ class Complex {
 
   friend std::ostream &operator<<(std::ostream &output, const Complex &rhs) {
     output << rhs.real;
-    std::string tmp(std::to_string(rhs.imag));
+    const std::string &tmp = std::to_string(rhs.imag);
     if (tmp[0] != '-') {
       output << "+";
     }
-    output << tmp << "i";
+    output << rhs.imag << "i";
     return output;
   }
 
-  // direct data access
-  Float real;
-  Float imag;
+ public:
+  CFloat real = 0.0;
+  CFloat imag = 0.0;
 };
 
-///将实数数组扩展成复数数组
-template <std::floating_point Float = double>
-void GetComplex(uint32_t len, Float in[], Complex<Float> out[]) {
+/**
+ * @brief 将实数数组扩展成复数数组
+ * 
+ * @tparam CFloat 
+ * @param[in] len 
+ * @param[in] in 
+ * @param[out] out 
+ */
+template <std::floating_point CFloat = double>
+void GetComplex(uint32_t len, CFloat in[], Complex<CFloat> out[]) {
   for (uint32_t i = 0; i < len; ++i) {
     out[i].real = in[i];
     out[i].imag = 0;
   }
 }
 
-///取共轭
-template <std::floating_point Float = double>
-void ConjugateComplex(uint32_t len, Complex<Float> in[]) {
+/**
+ * @brief 取共轭
+ * 
+ * @tparam CFloat 
+ * @param[in] len 
+ * @param[inout] in 
+ */
+template <std::floating_point CFloat = double>
+void ConjugateComplex(uint32_t len, Complex<CFloat> in[]) {
   for (uint32_t i = 0; i < len; ++i) {
     in[i].imag = -in[i].imag;
   }
 }
 
-///复数数组取模
-template <std::floating_point Float = double>
-void AbsComplex(uint32_t len, Complex<Float> f[], Float out[]) {
+/**
+ * @brief 复数数组取模
+ * 
+ * @tparam CFloat 
+ * @param[in] len 
+ * @param[in] in 
+ * @param[out] out 
+ */
+template <std::floating_point CFloat = double>
+void AbsComplex(uint32_t len, Complex<CFloat> in[], CFloat out[]) {
   for (uint32_t i = 0; i < len; ++i) {
-    out[i] = Complex<Float>::abs(f[i]);
+    out[i] = in[i].Len();
   }
 }
 
-///傅立叶变换 输出也存在数组f中
-template <std::floating_point Float = double>
-void FFT(uint32_t N, Complex<Float> f[]) {
+/**
+ * @brief 傅立叶变换
+ * 
+ * @tparam CFloat 
+ * @param[in] N 
+ * @param[inout] f 
+ */
+template <std::floating_point CFloat = double>
+void FFT(uint32_t N, Complex<CFloat> f[]) {
   uint32_t k, M = 1;
   /*----计算分解的级数M=log2(N)----*/
   for (uint32_t i = N; (i >>= 1) != 1; ++M) {
@@ -181,7 +227,7 @@ void FFT(uint32_t N, Complex<Float> f[]) {
   /*----按照倒位序重新排列原信号----*/
   for (uint32_t i = 1, j = N >> 1; i <= N - 2; ++i) {
     if (i < j) {
-      f[j].swap(f[i]);
+      f[j].Swap(f[i]);
     }
     k = N >> 1;
     while (k <= j) {
@@ -199,11 +245,11 @@ void FFT(uint32_t N, Complex<Float> f[]) {
     //----碟形运算----
     for (uint32_t l = 0; l < lb; ++l) {
       r = l << (M - m);
-      Complex<Float> tmp(cos(2 * MATH_PI * r / N), -sin(2 * MATH_PI * r / N));
+      Complex<CFloat> tmp(cos(2 * MATH_PI * r / N), -sin(2 * MATH_PI * r / N));
       //遍历每个分组，分组总数为N/la
       for (uint32_t n = l; n < N - 1; n += la) {
         lc = n + lb;  //n,lc分别代表一个碟形单元的上、下节点编号
-        Complex<Float> t(f[lc] * tmp);
+        Complex<CFloat> t(f[lc] * tmp);
         f[lc] = f[n] - t;
         f[n] += t;
       }
@@ -211,9 +257,15 @@ void FFT(uint32_t N, Complex<Float> f[]) {
   }
 }
 
-///傅里叶逆变换
-template <std::floating_point Float = double>
-void IFFT(uint32_t N, Complex<Float> f[]) {
+/**
+ * @brief 傅里叶逆变换
+ * 
+ * @tparam CFloat 
+ * @param[in] N 
+ * @param[inout] f 
+ */
+template <std::floating_point CFloat = double>
+void IFFT(uint32_t N, Complex<CFloat> f[]) {
   ConjugateComplex(N, f);
   FFT(N, f);
   ConjugateComplex(N, f);
@@ -222,21 +274,28 @@ void IFFT(uint32_t N, Complex<Float> f[]) {
   }
 }
 
-/// fftshift
-template <std::floating_point Float = double>
-void FFTShift(uint32_t len, Complex<Float> f[]) {
+/**
+ * @brief fftshift
+ * 
+ * @tparam CFloat 
+ * @param[in] len 
+ * @param[inout] f 
+ */
+template <std::floating_point CFloat = double>
+void FFTShift(uint32_t len, Complex<CFloat> f[]) {
   len /= 2;
   for (uint32_t i = 0; i < len; ++i) {
-    f[i + len].swap(f[i]);
+    f[i + len].Swap(f[i]);
   }
 }
 
-template <std::floating_point Float = double>
-Float abs(const Complex<Float> &value) { return Complex<Float>::abs(value); }
+template <std::floating_point CFloat = double>
+CFloat abs(const Complex<CFloat> &value) { return value.Len(); }
 
-template <std::floating_point Float = double>
-Complex<Float> sqrt(const Complex<Float> &value) { return Complex<Float>::sqrt(value); }
+template <std::floating_point CFloat = double>
+Complex<CFloat> sqrt(const Complex<CFloat> &value) { return Complex<CFloat>::Sqrt(value); }
 
-template <std::floating_point Float = double>
-void swap(Complex<Float> &a, Complex<Float> &b) { a.swap(b); }
+template <std::floating_point CFloat = double>
+void swap(Complex<CFloat> &a, Complex<CFloat> &b) { a.Swap(b); }
+
 }  // namespace ytlib

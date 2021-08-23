@@ -46,6 +46,14 @@ typedef std::basic_ofstream<tchar> tofstream;
 
 #endif  // USE_WCHAR
 
+/**
+ * @brief wstring转string
+ * 
+ * @param[in] src wstring字符串指针
+ * @param[in] size wstring字符串长度
+ * @param[in] loc 
+ * @return std::string string结果
+ */
 inline std::string ToString(const wchar_t* src, std::size_t size, const std::locale& loc) {
   if (size == 0) return "";
 
@@ -69,13 +77,7 @@ inline std::string ToString(const wchar_t* src, std::size_t size, const std::loc
   std::codecvt<wchar_t, char, std::mbstate_t>::result ret;
   std::size_t converted = 0;
   while (from_next != from_last) {
-    ret = cdcvt.out(
-        state, from_first, from_last,
-        from_next, to_first, to_last,
-        to_next);
-    // XXX: Even if only half of the input has been converted the
-    // in() method returns std::codecvt<wchar_t, char, std::mbstate_t>::ok with VC8. I think it should
-    // return std::codecvt<wchar_t, char, std::mbstate_t>::partial.
+    ret = cdcvt.out(state, from_first, from_last, from_next, to_first, to_last, to_next);
     if ((ret == std::codecvt<wchar_t, char, std::mbstate_t>::partial || ret == std::codecvt<wchar_t, char, std::mbstate_t>::ok) && from_next != from_last) {
       to_size = dest.size() * 2;
       dest.resize(to_size);
@@ -100,6 +102,14 @@ inline std::string ToString(const wchar_t* src, std::size_t size, const std::loc
   return std::string(dest.begin(), dest.begin() + converted);
 }
 
+/**
+ * @brief string转wstring
+ * 
+ * @param src string字符串指针
+ * @param size string字符串长度
+ * @param loc 
+ * @return std::wstring wstring结果
+ */
 inline std::wstring ToWString(const char* src, std::size_t size, const std::locale& loc) {
   if (size == 0) return L"";
 
@@ -123,13 +133,7 @@ inline std::wstring ToWString(const char* src, std::size_t size, const std::loca
   std::codecvt<wchar_t, char, std::mbstate_t>::result ret;
   std::size_t converted = 0;
   while (true) {
-    ret = cdcvt.in(
-        state, from_first, from_last,
-        from_next, to_first, to_last,
-        to_next);
-    // XXX: Even if only half of the input has been converted the
-    // in() method returns std::codecvt<wchar_t, char, std::mbstate_t>::ok. I think it should return
-    // std::codecvt<wchar_t, char, std::mbstate_t>::partial.
+    ret = cdcvt.in(state, from_first, from_last, from_next, to_first, to_last, to_next);
     if ((ret == std::codecvt<wchar_t, char, std::mbstate_t>::partial || ret == std::codecvt<wchar_t, char, std::mbstate_t>::ok) && from_next != from_last) {
       to_size = dest.size() * 2;
       dest.resize(to_size);

@@ -13,9 +13,11 @@
 #include "ytlib/misc/error.hpp"
 
 namespace ytlib {
+
 /**
  * @brief 文件基础类
  * @note 制定了文件相关操作的接口，包括Open、New、Save
+ * @tparam T 文件可转换的结构体
  */
 template <class T>
 class FileObj {
@@ -92,16 +94,17 @@ class FileObj {
 
   /**
    * @brief 获取文件结构体智能指针
-   * @return 文件结构体智能指针
+   * 
+   * @return std::shared_ptr<T> 文件结构体智能指针
    */
   std::shared_ptr<T> GetObjPtr() const {
     return obj_ptr_;
   }
 
-  ///获取绝对路径
   /**
    * @brief 获取绝对路径
-   * @return 文件绝对路径
+   * 
+   * @return const std::filesystem::path& 文件绝对路径
    */
   const std::filesystem::path& GetFilePath() const {
     return filepath_;
@@ -109,6 +112,7 @@ class FileObj {
 
   /**
    * @brief 设置路径
+   * 
    * @param[in] path 文件路径
    */
   void SetFilePath(const std::string& path) {
@@ -121,8 +125,9 @@ class FileObj {
   /**
    * @brief 检查文件名称正确性
    * @note 子类可选实现。一般就是检查后缀名
-   * @param filename 文件全路径
-   * @return 是否合法
+   * @param[in] filename 文件全路径
+   * @return true 合法
+   * @return false 不合法
    */
   virtual bool CheckFileName(const std::string& filename) const {
     return !filename.empty();
@@ -131,7 +136,8 @@ class FileObj {
   /**
    * @brief 新建一个文件内容结构体
    * @note 子类可选实现。做一些内容结构体初始化的工作
-   * @return 是否成功
+   * @return true 成功
+   * @return false 不成功
    */
   virtual bool NewFileObj() {
     obj_ptr_ = std::make_shared<T>();
@@ -141,14 +147,16 @@ class FileObj {
   /**
    * @brief 从打开的文件中解析获取文件内容结构体
    * @note 子类必选实现
-   * @return 是否成功
+   * @return true 成功
+   * @return false 不成功
    */
   virtual bool ParseFileObj() = 0;
 
   /**
    * @brief 将当前的文件内容结构体保存为文件
    * @note 子类必选实现
-   * @return 是否成功
+   * @return true 成功
+   * @return false 不成功
    */
   virtual bool SaveFileObj() = 0;
 
