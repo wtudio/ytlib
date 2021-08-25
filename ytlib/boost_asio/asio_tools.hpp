@@ -64,9 +64,9 @@ class AsioExecutor {
    * @note 异步，会调用注册的start方法并启动指定数量的线程
    */
   void Start() {
-    RT_ASSERT(threads_num_ >= 1, "threads_num_ must >= 1");
+    RT_ASSERT(threads_num_ >= 1, "Threads_num_ must >= 1.");
 
-    for (std::size_t ii = 0; ii < start_func_vec_.size(); ++ii) {
+    for (size_t ii = 0; ii < start_func_vec_.size(); ++ii) {
       start_func_vec_[ii]();
     }
 
@@ -109,7 +109,7 @@ class AsioExecutor {
     if (std::atomic_exchange(&stop_flag_, true)) return;
 
     // 并不需要调用io_.stop()。当io_上所有任务都运行完毕后，会自动停止
-    for (std::size_t ii = stop_func_vec_.size() - 1; ii < stop_func_vec_.size(); --ii) {
+    for (size_t ii = stop_func_vec_.size() - 1; ii < stop_func_vec_.size(); --ii) {
       stop_func_vec_[ii]();
     }
 

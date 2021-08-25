@@ -250,7 +250,7 @@ TEST(MATH_UTIL_TEST, Factoring2Vec_test) {
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
     auto ret = Factoring2Vec(test_cases[ii].num);
-    EXPECT_STREQ(Vec2Str(ret).c_str(), Vec2Str(test_cases[ii].want_result).c_str())
+    EXPECT_EQ(ret, test_cases[ii].want_result)
         << "Test " << test_cases[ii].name << " failed, index " << ii;
   }
 }
@@ -279,7 +279,7 @@ TEST(MATH_UTIL_TEST, Factoring2Map_test) {
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
     auto ret = Factoring2Map(test_cases[ii].num);
-    EXPECT_STREQ(Map2Str(ret).c_str(), Map2Str(test_cases[ii].want_result).c_str())
+    EXPECT_EQ(ret, test_cases[ii].want_result)
         << "Test " << test_cases[ii].name << " failed, index " << ii;
   }
 }

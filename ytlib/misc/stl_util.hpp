@@ -203,7 +203,7 @@ std::string Map2Str(const std::map<KeyType, ValType>& m) {
 template <typename T>
 bool CheckVectorEqual(const std::vector<T>& vec1, const std::vector<T>& vec2) {
   if (vec1.size() != vec2.size()) return false;
-  for (std::size_t ii = 0; ii < vec1.size(); ++ii) {
+  for (size_t ii = 0; ii < vec1.size(); ++ii) {
     if (vec1[ii] != vec2[ii]) return false;
   }
   return true;
@@ -223,7 +223,7 @@ bool CheckSetEqual(const std::set<T>& set1, const std::set<T>& set2) {
   if (set1.size() != set2.size()) return false;
   auto itr1 = set1.begin();
   auto itr2 = set2.begin();
-  for (std::size_t ii = 0; ii < set1.size(); ++ii) {
+  for (size_t ii = 0; ii < set1.size(); ++ii) {
     if (*itr1 != *itr2) return false;
     ++itr1;
     ++itr2;
@@ -246,7 +246,7 @@ bool CheckMapEqual(const std::map<KeyType, ValType>& map1, const std::map<KeyTyp
   if (map1.size() != map2.size()) return false;
   auto itr1 = map1.begin();
   auto itr2 = map2.begin();
-  for (std::size_t ii = 0; ii < map1.size(); ++ii) {
+  for (size_t ii = 0; ii < map1.size(); ++ii) {
     if ((itr1->first != itr2->first) || (itr1->second != itr2->second)) return false;
     ++itr1;
     ++itr2;

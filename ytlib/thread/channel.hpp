@@ -29,7 +29,7 @@ class Channel : public BlockQueue<T> {
    * @brief 通道构造函数
    * @param n 阻塞队列容量
    */
-  Channel(std::size_t n = ULONG_MAX) : BlockQueue<T>(n) {}
+  Channel(size_t n = ULONG_MAX) : BlockQueue<T>(n) {}
   virtual ~Channel() { StopProcess(); }
 
   /**

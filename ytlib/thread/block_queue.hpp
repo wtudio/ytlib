@@ -20,14 +20,14 @@ namespace ytlib {
 template <class T>
 class BlockQueue {
  public:
-  BlockQueue(std::size_t n = ULONG_MAX) : maxcount_(n) {}
+  BlockQueue(size_t n = ULONG_MAX) : maxcount_(n) {}
   virtual ~BlockQueue() { Stop(); }
 
   ///获取最大容量
-  std::size_t GetMaxCount() const { return maxcount_; }
+  size_t GetMaxCount() const { return maxcount_; }
 
   ///获取当前容量
-  std::size_t Count() const {
+  size_t Count() const {
     std::lock_guard<std::mutex> lck(mutex_);
     return queue_.size();
   }
@@ -109,7 +109,7 @@ class BlockQueue {
   }
 
  protected:
-  const std::size_t maxcount_;  ///<队列可支持最大个数
+  const size_t maxcount_;  ///<队列可支持最大个数
 
   mutable std::mutex mutex_;      ///<同步锁
   std::condition_variable cond_;  ///<条件锁

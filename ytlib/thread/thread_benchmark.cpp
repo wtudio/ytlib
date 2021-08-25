@@ -78,7 +78,7 @@ static void BM_Channel(benchmark::State& state) {
   for (auto _ : state) {
     state.PauseTiming();  // 暂停计时
     TestChannel ch;
-    ch.Init(f, ch_size);
+    ch.Init(f, static_cast<uint32_t>(ch_size));
     for (uint32_t jj = 0; jj < obj_num; ++jj)
       ch.Enqueue(jj);
     state.ResumeTiming();  // 恢复计时

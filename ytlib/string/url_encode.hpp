@@ -36,9 +36,9 @@ inline unsigned char FromHex(unsigned char x) {
  */
 inline std::string UrlEncode(const std::string& str, bool up = true) {
   std::string strTemp;
-  std::size_t length = str.length();
+  size_t length = str.length();
   strTemp.reserve(length << 1);
-  for (std::size_t i = 0; i < length; ++i) {
+  for (size_t i = 0; i < length; ++i) {
     if (isalnum((unsigned char)str[i]) || (str[i] == '-') || (str[i] == '_') || (str[i] == '.') || (str[i] == '~'))
       strTemp += str[i];
     else if (str[i] == ' ')
@@ -60,9 +60,9 @@ inline std::string UrlEncode(const std::string& str, bool up = true) {
  */
 inline std::string UrlDecode(const std::string& str) {
   std::string strTemp;
-  std::size_t length = str.length();
+  size_t length = str.length();
   strTemp.reserve(length);
-  for (std::size_t i = 0; i < length; ++i) {
+  for (size_t i = 0; i < length; ++i) {
     if (str[i] == '+')
       strTemp += ' ';
     else if (str[i] == '%') {

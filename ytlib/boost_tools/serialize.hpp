@@ -103,7 +103,7 @@ uint32_t Serialize(const T& obj, char* buf, uint32_t len, SerializeType Type = S
   class ostreambuf : public std::basic_streambuf<char, std::char_traits<char> > {
    public:
     ostreambuf(char* buf, std::streamsize len) { setp(buf, buf + len); }
-    uint32_t getlen() const { return pptr() - pbase(); }
+    size_t getlen() const { return pptr() - pbase(); }
   };
 
   ostreambuf obuf(buf, len);
@@ -115,7 +115,7 @@ uint32_t Serialize(const T& obj, char* buf, uint32_t len, SerializeType Type = S
     boost::archive::binary_oarchive oar(oss);
     oar << obj;
   }
-  return obuf.getlen();
+  return static_cast<uint32_t>(obuf.getlen());
 }
 
 /**
@@ -160,7 +160,7 @@ void Serialize(const T& obj, const std::filesystem::path& filepath, SerializeTyp
     std::filesystem::create_directories(parent_path);
 
   std::ofstream oss(filepath, std::ios::trunc | std::ios::binary);
-  RT_ASSERT(oss, "open file failed.");
+  RT_ASSERT(oss, "Open file failed.");
 
   if (Type == SerializeType::TextType) {
     boost::archive::text_oarchive oar(oss);
@@ -183,7 +183,7 @@ void Serialize(const T& obj, const std::filesystem::path& filepath, SerializeTyp
 template <class T>
 void Deserialize(T& obj, const std::filesystem::path& filepath, SerializeType Type = SerializeType::TextType) {
   std::ifstream iss(filepath, std::ios::binary);
-  RT_ASSERT(iss, "open file failed.");
+  RT_ASSERT(iss, "Open file failed.");
 
   if (Type == SerializeType::TextType) {
     boost::archive::text_iarchive iar(iss);

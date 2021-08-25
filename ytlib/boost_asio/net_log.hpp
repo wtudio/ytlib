@@ -64,7 +64,7 @@ class NetLogClient : public std::enable_shared_from_this<NetLogClient> {
             }
 
             while (log_buf->size()) {
-              std::size_t n = co_await sock_.async_write_some(log_buf->data(), boost::asio::use_awaitable);
+              size_t n = co_await sock_.async_write_some(log_buf->data(), boost::asio::use_awaitable);
               log_buf->consume(n);
             }
 
@@ -99,7 +99,7 @@ struct LogSvrCfg {
 
   uint16_t port = 50001;
   std::filesystem::path log_path;
-  std::size_t max_file_size;
+  size_t max_file_size;
 
   uint32_t timer_dt = 5;           // 定时器间隔，秒
   uint32_t max_no_data_time = 60;  // 最长无数据时间，秒
@@ -128,7 +128,7 @@ class LogSvr : public std::enable_shared_from_this<LogSvr> {
   LogSvr& operator=(const LogSvr&) = delete;  ///<no copy
 
   void Start() {
-    RT_ASSERT(CheckPort(cfg_.port), "port is used.");
+    RT_ASSERT(CheckPort(cfg_.port), "Port is used.");
 
     acceptor_ptr_ = std::make_shared<boost::asio::ip::tcp::acceptor>(io_, TcpEp{IPV4(), cfg_.port});
 
@@ -214,10 +214,10 @@ class LogSvr : public std::enable_shared_from_this<LogSvr> {
           strand_,
           [this, self]() -> boost::asio::awaitable<void> {
             try {
-              const std::size_t data_size = 1024;
+              const size_t data_size = 1024;
               char data[data_size];
               while (run_flag_) {
-                std::size_t n = co_await sock_.async_read_some(boost::asio::buffer(data, data_size), boost::asio::use_awaitable);
+                size_t n = co_await sock_.async_read_some(boost::asio::buffer(data, data_size), boost::asio::use_awaitable);
 
                 if (!ofs_.is_open())
                   ofs_.open(log_file_, std::ios::app);

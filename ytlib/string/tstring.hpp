@@ -54,7 +54,7 @@ typedef std::basic_ofstream<tchar> tofstream;
  * @param[in] loc 
  * @return std::string string结果
  */
-inline std::string ToString(const wchar_t* src, std::size_t size, const std::locale& loc) {
+inline std::string ToString(const wchar_t* src, size_t size, const std::locale& loc) {
   if (size == 0) return "";
 
   //typedef std::codecvt<wchar_t, char, std::mbstate_t> std::codecvt<wchar_t, char, std::mbstate_t>;
@@ -63,19 +63,19 @@ inline std::string ToString(const wchar_t* src, std::size_t size, const std::loc
   std::memset(&state, 0, sizeof(std::mbstate_t));
 
   wchar_t const* from_first = src;
-  std::size_t const from_size = size;
+  size_t const from_size = size;
   wchar_t const* const from_last = from_first + from_size;
   wchar_t const* from_next = from_first;
 
   std::vector<char> dest(from_size);
 
   char* to_first = &dest.front();
-  std::size_t to_size = dest.size();
+  size_t to_size = dest.size();
   char* to_last = to_first + to_size;
   char* to_next = to_first;
 
   std::codecvt<wchar_t, char, std::mbstate_t>::result ret;
-  std::size_t converted = 0;
+  size_t converted = 0;
   while (from_next != from_last) {
     ret = cdcvt.out(state, from_first, from_last, from_next, to_first, to_last, to_next);
     if ((ret == std::codecvt<wchar_t, char, std::mbstate_t>::partial || ret == std::codecvt<wchar_t, char, std::mbstate_t>::ok) && from_next != from_last) {
@@ -110,7 +110,7 @@ inline std::string ToString(const wchar_t* src, std::size_t size, const std::loc
  * @param loc 
  * @return std::wstring wstring结果
  */
-inline std::wstring ToWString(const char* src, std::size_t size, const std::locale& loc) {
+inline std::wstring ToWString(const char* src, size_t size, const std::locale& loc) {
   if (size == 0) return L"";
 
   //typedef std::codecvt<wchar_t, char, std::mbstate_t> std::codecvt<wchar_t, char, std::mbstate_t>;
@@ -119,19 +119,19 @@ inline std::wstring ToWString(const char* src, std::size_t size, const std::loca
   std::memset(&state, 0, sizeof(std::mbstate_t));
 
   char const* from_first = src;
-  std::size_t const from_size = size;
+  size_t const from_size = size;
   char const* const from_last = from_first + from_size;
   char const* from_next = from_first;
 
   std::vector<wchar_t> dest(from_size);
 
   wchar_t* to_first = &dest.front();
-  std::size_t to_size = dest.size();
+  size_t to_size = dest.size();
   wchar_t* to_last = to_first + to_size;
   wchar_t* to_next = to_first;
 
   std::codecvt<wchar_t, char, std::mbstate_t>::result ret;
-  std::size_t converted = 0;
+  size_t converted = 0;
   while (true) {
     ret = cdcvt.in(state, from_first, from_last, from_next, to_first, to_last, to_next);
     if ((ret == std::codecvt<wchar_t, char, std::mbstate_t>::partial || ret == std::codecvt<wchar_t, char, std::mbstate_t>::ok) && from_next != from_last) {
@@ -177,11 +177,11 @@ inline std::wstring ToWString(const char* str) {
 }
 
 #if defined(USE_WCHAR)
-  #define T_TEXT(STRING) L##STRING
-  #define T_STR_TO_TSTR(STRING) ytlib::ToWString(STRING)
-  #define T_TSTR_TO_STR(STRING) ytlib::ToString(STRING)
+  #define T_TEXT(s) L##s
+  #define T_STR_TO_TSTR(s) ytlib::ToWString(s)
+  #define T_TSTR_TO_STR(s) ytlib::ToString(s)
 #else
-  #define T_TEXT(STRING) STRING
+  #define T_TEXT(s) s
   #define T_STR_TO_TSTR
   #define T_TSTR_TO_STR
 #endif

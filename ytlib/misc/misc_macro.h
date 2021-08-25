@@ -1,10 +1,9 @@
 #pragma once
 
-#define _STRING(x) #x
-#define STRING(x) _STRING(x)
-
 #ifdef _DEBUG
-  #define DBG_PRINT(fmt, ...) printf("[" __FILE__ ":" STRING(__LINE__) "@%s]" fmt "\n", __FUNCTION__, ##__VA_ARGS__)
+  #define _DBG_PRINT_STRING(x) #x
+  #define DBG_PRINT_STRING(x) _DBG_PRINT_STRING(x)
+  #define DBG_PRINT(fmt, ...) printf("[" __FILE__ ":" DBG_PRINT_STRING(__LINE__) "@%s]" fmt "\n", __FUNCTION__, ##__VA_ARGS__)
 #else
   #define DBG_PRINT(fmt, ...)
 #endif

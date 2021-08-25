@@ -78,8 +78,8 @@ bool isUndirGraph(const std::vector<Graph<T>*>& vec) {
 
 ///辅助函数，获取节点在vector中的下标，上层需保证节点在p在vec中
 template <typename T>
-inline std::size_t getPos(const Graph<T>* p, const std::vector<Graph<T>*>& vec) {
-  std::size_t pos = find(vec.begin(), vec.end(), p) - vec.begin();
+inline size_t getPos(const Graph<T>* p, const std::vector<Graph<T>*>& vec) {
+  size_t pos = find(vec.begin(), vec.end(), p) - vec.begin();
   assert(pos < vec.size());
   return pos;
 }
@@ -103,13 +103,13 @@ inline void releaseGraphVec(std::vector<Graph<T>*>& vec) {
  */
 template <typename T>
 g_sideMatrix createAdjMatrix(const std::vector<Graph<T>*>& vec) {
-  std::size_t Vnum = vec.size();
+  size_t Vnum = vec.size();
   g_sideMatrix M((int32_t)Vnum, (int32_t)Vnum);
-  M.setVal(-1);  //-1表示不连接
-  for (std::size_t ii = 0; ii < Vnum; ++ii) {
+  M.SetVal(-1);  //-1表示不连接
+  for (size_t ii = 0; ii < Vnum; ++ii) {
     M.val[ii][ii] = 0;
     for (auto itr = vec[ii]->sides.begin(); itr != vec[ii]->sides.end(); ++itr) {
-      std::size_t pos = getPos(itr->first, vec);
+      size_t pos = getPos(itr->first, vec);
       M.val[ii][pos] = itr->second;
     }
   }
@@ -125,13 +125,13 @@ g_sideMatrix createAdjMatrix(const std::vector<Graph<T>*>& vec) {
 template <typename T>
 std::vector<Graph<T>*> copyGraph(const std::vector<Graph<T>*>& vec) {
   std::vector<Graph<T>*> re;
-  std::size_t len = vec.size();
-  for (std::size_t ii = 0; ii < len; ++ii) {
+  size_t len = vec.size();
+  for (size_t ii = 0; ii < len; ++ii) {
     re.push_back(new Graph<T>(vec[ii]->obj));
   }
-  for (std::size_t ii = 0; ii < len; ++ii) {
+  for (size_t ii = 0; ii < len; ++ii) {
     for (auto itr = vec[ii]->sides.begin(); itr != vec[ii]->sides.end(); ++itr) {
-      std::size_t pos = getPos(itr->first, vec);
+      size_t pos = getPos(itr->first, vec);
       re[ii]->sides.insert(std::pair<Graph<T>*, g_sideType>(re[pos], itr->second));
     }
   }
@@ -176,8 +176,8 @@ void BFS(Graph<T>& val, std::vector<Graph<T>*>& vec) {
       tmpvec.push_back(itr->first);
     }
   }
-  std::size_t len = tmpvec.size();
-  for (std::size_t ii = 0; ii < len; ++ii) {
+  size_t len = tmpvec.size();
+  for (size_t ii = 0; ii < len; ++ii) {
     BFS(*tmpvec[ii], vec);
   }
 }
@@ -192,19 +192,19 @@ void BFS(Graph<T>& val, std::vector<Graph<T>*>& vec) {
  */
 template <typename T>
 std::pair<std::vector<g_sideType>, std::vector<int32_t> > dijkstra(const Graph<T>& beginNode, const std::vector<Graph<T>*>& vec) {
-  std::size_t len = vec.size();
+  size_t len = vec.size();
   std::vector<g_sideType> re(len, -1);
   std::vector<uint8_t> flag(len, 0);
   std::vector<int32_t> path(len, -1);
 
-  std::size_t curPos = getPos(&beginNode, vec), nextPos = curPos;
+  size_t curPos = getPos(&beginNode, vec), nextPos = curPos;
   re[curPos] = 0;
   path[curPos] = (int32_t)curPos;
   do {
     curPos = nextPos;
     flag[curPos] = 1;
     for (auto itr = vec[curPos]->sides.begin(); itr != vec[curPos]->sides.end(); ++itr) {
-      std::size_t pos = find(vec.begin(), vec.end(), itr->first) - vec.begin();
+      size_t pos = find(vec.begin(), vec.end(), itr->first) - vec.begin();
       if (flag[pos] == 0) {
         g_sideType sideLen = ((re[curPos] < 0) ? 0 : re[curPos]) + itr->second;
         if (re[pos] < 0 || re[pos] > sideLen) {
@@ -214,7 +214,7 @@ std::pair<std::vector<g_sideType>, std::vector<int32_t> > dijkstra(const Graph<T
       }
     }
     g_sideType minLen = -1;
-    for (std::size_t ii = 0; ii < len; ++ii) {
+    for (size_t ii = 0; ii < len; ++ii) {
       if (flag[ii] == 0 && re[ii] >= 0 && (minLen < 0 || minLen > re[ii])) {
         minLen = re[ii];
         nextPos = ii;
@@ -247,21 +247,21 @@ inline std::vector<int32_t> dijkstraPath(int32_t dstIdx, const std::vector<int32
  * @return 距离矩阵和路径矩阵
  */
 template <typename T>
-std::pair<g_sideMatrix, Matrix_i> floyd(const std::vector<Graph<T>*>& vec) {
-  std::size_t len = vec.size();
+std::pair<g_sideMatrix, Matrix_i32> floyd(const std::vector<Graph<T>*>& vec) {
+  size_t len = vec.size();
   g_sideMatrix distanceM = createAdjMatrix(vec);
-  Matrix_i pathM((int32_t)len, (int32_t)len);
-  pathM.setVal(-1);
+  Matrix_i32 pathM((int32_t)len, (int32_t)len);
+  pathM.SetVal(-1);
 
-  for (std::size_t ii = 0; ii < len; ++ii) {
-    for (std::size_t jj = 0; jj < len; ++jj) {
+  for (size_t ii = 0; ii < len; ++ii) {
+    for (size_t jj = 0; jj < len; ++jj) {
       if (distanceM.val[ii][jj] >= 0) pathM.val[ii][jj] = (int32_t)ii;
     }
   }
-  for (std::size_t kk = 0; kk < len; ++kk) {
-    for (std::size_t ii = 0; ii < len; ++ii) {
+  for (size_t kk = 0; kk < len; ++kk) {
+    for (size_t ii = 0; ii < len; ++ii) {
       if (ii == kk) continue;
-      for (std::size_t jj = 0; jj < len; ++jj) {
+      for (size_t jj = 0; jj < len; ++jj) {
         if (ii == jj || jj == kk) continue;
         if (distanceM.val[ii][kk] >= 0 && distanceM.val[kk][jj] >= 0) {
           g_sideType d = distanceM.val[ii][kk] + distanceM.val[kk][jj];
@@ -273,7 +273,7 @@ std::pair<g_sideMatrix, Matrix_i> floyd(const std::vector<Graph<T>*>& vec) {
       }
     }
   }
-  return std::pair<g_sideMatrix, Matrix_i>(std::move(distanceM), std::move(pathM));
+  return std::pair<g_sideMatrix, Matrix_i32>(std::move(distanceM), std::move(pathM));
 }
 /**
  * @brief floyd算法求特定节点到另一个节点的最短路径
@@ -283,7 +283,7 @@ std::pair<g_sideMatrix, Matrix_i> floyd(const std::vector<Graph<T>*>& vec) {
  * @param path floyd函数返回的路径矩阵
  * @return 正推的路径
  */
-inline std::vector<int32_t> floydPath(int32_t srcIdx, int32_t dstIdx, const Matrix_i& path) {
+inline std::vector<int32_t> floydPath(int32_t srcIdx, int32_t dstIdx, const Matrix_i32& path) {
   std::vector<int32_t> re;
   assert(path.val[srcIdx][dstIdx] >= 0);
   re.push_back(srcIdx);

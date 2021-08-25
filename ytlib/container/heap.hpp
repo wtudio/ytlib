@@ -29,13 +29,13 @@ class Heap {
   Heap(const std::vector<T>& a, bool _type = true) : container(a), type(_type) {
     adjust();
   }
-  Heap(const T* a, std::size_t sz, bool _type = true) : type(_type) {
+  Heap(const T* a, size_t sz, bool _type = true) : type(_type) {
     container.reserve(sz);
     container.assign(a, a + sz);
     adjust();
   }
   ///使用数组初始化
-  void assign(const T* a, std::size_t sz) {
+  void assign(const T* a, size_t sz) {
     container.clear();
     container.reserve(sz);
     container.assign(a, a + sz);
@@ -60,16 +60,16 @@ class Heap {
   ///调整为堆
   void adjust() {
     if (container.empty()) return;
-    for (std::size_t ii = ((container.size() - 2) >> 1); ii > 0; --ii) {
+    for (size_t ii = ((container.size() - 2) >> 1); ii > 0; --ii) {
       adjustDown(ii);
     }
     adjustDown(0);
   }
 
-  void adjustDown(std::size_t index, std::size_t len = 0) {
+  void adjustDown(size_t index, size_t len = 0) {
     using std::swap;
-    std::size_t& parent = index;
-    std::size_t child = LEFT_CHILD(parent);
+    size_t& parent = index;
+    size_t child = LEFT_CHILD(parent);
     if (len == 0) len = container.size();
     while (child < len) {
       //选取左右子节点中大/小的
@@ -86,10 +86,10 @@ class Heap {
     }
   }
 
-  void adjustUp(std::size_t index) {
+  void adjustUp(size_t index) {
     using std::swap;
-    std::size_t& child = index;
-    std::size_t parent = PARENT(child);
+    size_t& child = index;
+    size_t parent = PARENT(child);
     while (child > 0) {
       //如果子节点大/小于父节点
       if ((container[child] > container[parent]) ^ type) {
@@ -103,7 +103,7 @@ class Heap {
   ///堆排序。最小堆倒序排，最大堆正序排，排完序之后堆类型反转
   void sort() {
     using std::swap;
-    for (std::size_t ii = container.size() - 1; ii > 0; --ii) {
+    for (size_t ii = container.size() - 1; ii > 0; --ii) {
       swap(container[0], container[ii]);
       adjustDown(0, ii);
     }

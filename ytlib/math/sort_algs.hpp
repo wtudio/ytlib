@@ -9,7 +9,6 @@
 #pragma once
 
 #include <algorithm>
-#include <cassert>
 #include <cinttypes>
 #include <cstring>
 #include <map>
@@ -20,14 +19,13 @@ namespace ytlib {
 
 /**
  * @brief 排序工具类
- * 重载了比较符号的类，可以继承或改造它来实现自定义类型的排序
+ * @note 重载了比较符号的类，可以继承或改造它来实现自定义类型的排序
  */
 class SortObj {
  public:
-  SortObj() : key(0) {}
+  SortObj() {}
+  explicit SortObj(uint32_t k_) : key(k_) {}
   virtual ~SortObj() {}
-
-  SortObj(uint32_t k_) : key(k_) {}
 
   //关系运算符重载
   bool operator<(const SortObj& val) const { return key < val.key; }
@@ -35,26 +33,25 @@ class SortObj {
   bool operator<=(const SortObj& val) const { return key <= val.key; }
   bool operator>=(const SortObj& val) const { return key >= val.key; }
   bool operator==(const SortObj& val) const { return key == val.key; }
+  bool operator!=(const SortObj& val) const { return key != val.key; }
 
-  //成员
-  uint32_t key;
-  //成员如果较大的话用指针指着
+ public:
+  uint32_t key = 0;  ///<key
 };
 
 /**
  * @brief 冒泡排序
  * @note in-place/稳定
- * @param T 模板参数，待排序数据类型，要保证有大小比较函数
- * @param arr 待排序数组头指针
- * @param len 待排序数组大小
- * @return 无
+ * @tparam T 待排序数据类型，要保证有大小比较函数
+ * @param[inout] arr 待排序数组头指针
+ * @param[in] len 待排序数组大小
  */
 template <typename T>
-void BubbleSort(T* arr, std::size_t len) {
+void BubbleSort(T* arr, size_t len) {
   if (len < 2) return;
   using std::swap;
-  for (std::size_t ii = 0; ii < len; ++ii) {
-    for (std::size_t jj = 0; jj < len - 1 - ii; ++jj) {
+  for (size_t ii = 0; ii < len; ++ii) {
+    for (size_t jj = 0; jj < len - 1 - ii; ++jj) {
       if (arr[jj] > arr[jj + 1]) {
         swap(arr[jj], arr[jj + 1]);
       }
@@ -64,44 +61,41 @@ void BubbleSort(T* arr, std::size_t len) {
 
 /**
  * @brief 归并排序
- * @note out-place/稳定
- * @param T 模板参数，待排序数据类型，要保证有大小比较函数
- * @param arr 待排序数组头指针
- * @param len 待排序数组大小
- * @return 无
+ * @note out-place/稳定，递归形式
+ * @tparam T 待排序数据类型，要保证有大小比较函数
+ * @param[inout] arr 待排序数组头指针
+ * @param[in] len 待排序数组大小
  */
 template <typename T>
-void MergeSort(T* arr, std::size_t len) {
+void MergeSort(T* arr, size_t len) {
   if (len < 2) return;
   if (len == 2) {
     using std::swap;
     if (arr[0] > arr[1]) swap(arr[0], arr[1]);
     return;
   }
-  std::size_t middle = len / 2;
+  size_t middle = len / 2;
   MergeSort(arr, middle);
   MergeSort(arr + middle, len - middle);
-  //在另外的空间排序好了再复制回来
-  T* tmpArr = new T[len];
-  std::size_t lc = 0, rc = middle, tc = 0;
+
+  std::vector<T> tmp_vec(len);
+  size_t lc = 0, rc = middle, tc = 0;
   while ((lc < middle) && (rc < len)) {
-    tmpArr[tc++] = (arr[lc] < arr[rc]) ? arr[lc++] : arr[rc++];
+    tmp_vec[tc++] = (arr[lc] < arr[rc]) ? arr[lc++] : arr[rc++];
   }
   if (rc == len) memcpy(arr + tc, arr + lc, (middle - lc) * sizeof(T));
-  memcpy(arr, tmpArr, tc * sizeof(T));
-  delete[] tmpArr;
+  memcpy(arr, tmp_vec.data(), tc * sizeof(T));
 }
 
 /**
  * @brief 归并排序
  * @note out-place/稳定，非递归形式，空间复杂度O(n)
- * @param T 模板参数，待排序数据类型，要保证有大小比较函数
- * @param arr 待排序数组头指针
- * @param len 待排序数组大小
- * @return 无
+ * @tparam T 待排序数据类型，要保证有大小比较函数
+ * @param[inout] arr 待排序数组头指针
+ * @param[in] len 待排序数组大小
  */
 template <typename T>
-void MergeSort2(T* arr, std::size_t len) {
+void MergeSort2(T* arr, size_t len) {
   if (len < 2) return;
   using std::swap;
   if (len == 2) {
@@ -109,20 +103,21 @@ void MergeSort2(T* arr, std::size_t len) {
     return;
   }
 
-  T *tmpArr1 = new T[len], *tmpArr0 = arr;
-  for (std::size_t ii = 1; ii < len; ii <<= 1) {
-    std::size_t jj = 0;
+  std::vector<T> tmp_vec(len);
+  T *tmp_arr1 = tmp_vec.data(), *tmp_arr0 = arr;
+  for (size_t ii = 1; ii < len; ii <<= 1) {
+    size_t jj = 0;
     while (jj + ii < len) {
-      std::size_t lc = jj, rc = jj + ii, tc = jj, middle = jj + ii, last = jj + 2 * ii;
+      size_t lc = jj, rc = jj + ii, tc = jj, middle = jj + ii, last = jj + 2 * ii;
       if (last > len) last = len;
 
       while ((lc < middle) && (rc < last)) {
-        tmpArr1[tc++] = (tmpArr0[lc] < tmpArr0[rc]) ? tmpArr0[lc++] : tmpArr0[rc++];
+        tmp_arr1[tc++] = (tmp_arr0[lc] < tmp_arr0[rc]) ? tmp_arr0[lc++] : tmp_arr0[rc++];
       }
       if (rc == last)
-        memcpy(tmpArr1 + tc, tmpArr0 + lc, (middle - lc) * sizeof(T));
+        memcpy(tmp_arr1 + tc, tmp_arr0 + lc, (middle - lc) * sizeof(T));
       else if (lc == middle)
-        memcpy(tmpArr1 + tc, tmpArr0 + rc, (last - rc) * sizeof(T));
+        memcpy(tmp_arr1 + tc, tmp_arr0 + rc, (last - rc) * sizeof(T));
 
       if (last == len) {
         jj = len;
@@ -131,35 +126,31 @@ void MergeSort2(T* arr, std::size_t len) {
       jj += 2 * ii;
     }
     if (jj < len) {
-      memcpy(tmpArr1 + jj, tmpArr0 + jj, (len - jj) * sizeof(T));
+      memcpy(tmp_arr1 + jj, tmp_arr0 + jj, (len - jj) * sizeof(T));
     }
-    swap(tmpArr1, tmpArr0);
+    swap(tmp_arr1, tmp_arr0);
   }
-  if (tmpArr0 != arr) {
-    memcpy(arr, tmpArr0, len * sizeof(T));
-    delete[] tmpArr0;
-  } else {
-    delete[] tmpArr1;
+  if (tmp_arr0 != arr) {
+    memcpy(arr, tmp_arr0, len * sizeof(T));
   }
 }
 
 /**
  * @brief 快速排序
  * @note in-place/不稳定
- * @param T 模板参数，待排序数据类型，要保证有大小比较函数
- * @param arr 待排序数组头指针
- * @param len 待排序数组大小
- * @return 无
+ * @tparam T 待排序数据类型，要保证有大小比较函数
+ * @param[inout] arr 待排序数组头指针
+ * @param[in] len 待排序数组大小
  */
 template <typename T>
-void QuickSort(T* arr, std::size_t len) {
+void QuickSort(T* arr, size_t len) {
   if (len < 2) return;
   using std::swap;
   if (len == 2) {
     if (arr[0] > arr[1]) swap(arr[0], arr[1]);
     return;
   }
-  std::size_t first = 0, last = len - 1, cur = first;
+  size_t first = 0, last = len - 1, cur = first;
   while (first < last) {
     while (first < last && arr[last] >= arr[cur]) --last;
     if (cur != last) {
@@ -179,18 +170,18 @@ void QuickSort(T* arr, std::size_t len) {
 /**
  * @brief 二分查找
  * @note 应用于从小到大排序好的数组中，如有重复则找首先出现的那个
- * @param T 模板参数，待查找数据类型，要保证有大小比较函数
- * @param arr 待查找数组头指针，需保证已经从小到大排序
- * @param len 待查找数组大小
- * @param key 待查找数据
- * @return 数据key在数组arr中首次出现的位置，没找到则返回len
+ * @tparam T 待查找数据类型，要保证有大小比较函数
+ * @param[in] arr 待查找数组头指针，需保证已经从小到大排序
+ * @param[in] len 待查找数组大小
+ * @param[in] key 待查找数据
+ * @return size_t 数据key在数组arr中首次出现的位置，没找到则返回len
  */
 template <typename T>
-std::size_t BinarySearch(T* arr, std::size_t len, const T& key) {
-  assert(len);
-  std::size_t low = 0, high = len - 1;
+size_t BinarySearch(T* arr, size_t len, const T& key) {
+  if (len == 0) return 0;
+  size_t low = 0, high = len - 1;
   while (low < high) {
-    std::size_t mid = low + (high - low) / 2;
+    size_t mid = low + (high - low) / 2;
     if (arr[mid] < key)
       low = mid + 1;
     else
@@ -203,18 +194,18 @@ std::size_t BinarySearch(T* arr, std::size_t len, const T& key) {
 /**
  * @brief 二分查找
  * @note 应用于从小到大排序好的数组中，如有重复则找最后出现的那个
- * @param T 模板参数，待查找数据类型，要保证有大小比较函数
- * @param arr 待查找数组头指针，需保证已经从小到大排序
- * @param len 待查找数组大小
- * @param key 待查找数据
- * @return 数据key在数组arr中首次出现的位置，没找到则返回len
+ * @tparam T 待查找数据类型，要保证有大小比较函数
+ * @param[in] arr 待查找数组头指针，需保证已经从小到大排序
+ * @param[in] len 待查找数组大小
+ * @param[in] key 待查找数据
+ * @return size_t 数据key在数组arr中首次出现的位置，没找到则返回len
  */
 template <typename T>
-std::size_t BinarySearchLast(T* arr, std::size_t len, const T& key) {
-  assert(len);
-  std::size_t low = 0, high = len - 1;
+size_t BinarySearchLast(T* arr, size_t len, const T& key) {
+  if (len == 0) return 0;
+  size_t low = 0, high = len - 1;
   while (low < high) {
-    std::size_t mid = low + (high - low + 1) / 2;
+    size_t mid = low + (high - low + 1) / 2;
     if (arr[mid] <= key)
       low = mid;
     else

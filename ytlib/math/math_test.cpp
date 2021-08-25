@@ -1,16 +1,11 @@
 #include <gtest/gtest.h>
 
-#include "big_num.hpp"
 #include "complex.hpp"
+#include "math_def.h"
 #include "matrix.hpp"
-#include "sort_algs.hpp"
 #include "ytlib/misc/stl_util.hpp"
 
 namespace ytlib {
-
-using std::cout;
-using std::endl;
-using std::vector;
 
 TEST(COMPLEX_TEST, BASE_test) {
   Complex c;
@@ -373,7 +368,7 @@ TEST(COMPLEX_TEST, GetComplex_test) {
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
     GetComplex(test_cases[ii].len, test_cases[ii].in_vec.data(), test_cases[ii].out_vec.data());
-    EXPECT_STREQ(Vec2Str(test_cases[ii].out_vec).c_str(), Vec2Str(test_cases[ii].want_result).c_str())
+    EXPECT_EQ(test_cases[ii].out_vec, test_cases[ii].want_result)
         << "Test " << test_cases[ii].name << " failed, index " << ii;
   }
 }
@@ -396,7 +391,7 @@ TEST(COMPLEX_TEST, ConjugateComplex_test) {
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
     ConjugateComplex(test_cases[ii].len, test_cases[ii].in_vec.data());
-    EXPECT_STREQ(Vec2Str(test_cases[ii].in_vec).c_str(), Vec2Str(test_cases[ii].want_result).c_str())
+    EXPECT_EQ(test_cases[ii].in_vec, test_cases[ii].want_result)
         << "Test " << test_cases[ii].name << " failed, index " << ii;
   }
 }
@@ -421,7 +416,7 @@ TEST(COMPLEX_TEST, AbsComplex_test) {
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
     AbsComplex(test_cases[ii].len, test_cases[ii].in_vec.data(), test_cases[ii].out_vec.data());
-    EXPECT_STREQ(Vec2Str(test_cases[ii].out_vec).c_str(), Vec2Str(test_cases[ii].want_result).c_str())
+    EXPECT_EQ(test_cases[ii].out_vec, test_cases[ii].want_result)
         << "Test " << test_cases[ii].name << " failed, index " << ii;
   }
 }
@@ -449,10 +444,10 @@ TEST(COMPLEX_TEST, FFT_test) {
     TestCase test_case{
         .name = "case 2",
         .N = 16};
-    test_case.in_vec.resize(test_case.N);
-
     double A = 2.0;
     uint32_t k = 2;
+
+    test_case.in_vec.resize(test_case.N);
     for (uint32_t ii = 0; ii < test_case.N; ++ii) {
       test_case.in_vec[ii].AssignWithExpForm(A, k * ii * MATH_PI / test_case.N);
     }
@@ -467,243 +462,901 @@ TEST(COMPLEX_TEST, FFT_test) {
     TestCase test_case{
         .name = "case 3",
         .N = 16};
-    test_case.in_vec.resize(test_case.N);
+    double A1 = 10.0;
+    uint32_t k1 = 4;
+    double A2 = 20.0;
+    uint32_t k2 = 12;
 
-    double A = 5.0;
-    uint32_t k = 4;
+    test_case.in_vec.resize(test_case.N);
     for (uint32_t ii = 0; ii < test_case.N; ++ii) {
-      test_case.in_vec[ii].AssignWithExpForm(A, k * ii * MATH_PI / test_case.N);
+      test_case.in_vec[ii] = Complex<double>::GenWithExpForm(A1, k1 * ii * MATH_PI / test_case.N) +
+                             Complex<double>::GenWithExpForm(A2, k2 * ii * MATH_PI / test_case.N);
     }
 
     test_case.want_result.resize(test_case.N);
-    test_case.want_result[k / 2] = Complex<double>(A * test_case.N, 0.0);
+    test_case.want_result[k1 / 2] = Complex<double>(A1 * test_case.N, 0.0);
+    test_case.want_result[k2 / 2] = Complex<double>(A2 * test_case.N, 0.0);
+
+    test_cases.emplace_back(std::move(test_case));
+  }
+
+  for (size_t ii = 0; ii < test_cases.size(); ++ii) {
+    std::stringstream err_info;
+    err_info << "Test " << test_cases[ii].name << " failed, index " << ii << "\n"
+             << "in_vec : " << Vec2Str(test_cases[ii].in_vec) << "\n"
+             << "want_result : " << Vec2Str(test_cases[ii].want_result);
+
+    FFT(test_cases[ii].N, test_cases[ii].in_vec.data());
+    for (uint32_t jj = 0; jj < test_cases[ii].N; ++jj) {
+      EXPECT_NEAR(test_cases[ii].in_vec[jj].real, test_cases[ii].want_result[jj].real, 1e-6)
+          << err_info.str();
+      EXPECT_NEAR(test_cases[ii].in_vec[jj].imag, test_cases[ii].want_result[jj].imag, 1e-6)
+          << err_info.str();
+    }
+  }
+}
+
+TEST(COMPLEX_TEST, IFFT_test) {
+  struct TestCase {
+    std::string name;
+
+    uint32_t N;
+    std::vector<Complex<double> > in_vec;
+
+    std::vector<Complex<double> > want_result;
+  };
+  std::vector<TestCase> test_cases;
+  {
+    TestCase test_case{
+        .name = "case 1",
+        .N = 16};
+    test_case.in_vec.resize(test_case.N);
+    test_case.want_result.resize(test_case.N);
+    test_cases.emplace_back(std::move(test_case));
+  }
+
+  {
+    TestCase test_case{
+        .name = "case 2",
+        .N = 16};
+    double A = 2.0;
+    uint32_t k = 2;
+
+    test_case.in_vec.resize(test_case.N);
+    test_case.in_vec[k / 2] = Complex<double>(A * test_case.N, 0.0);
+
+    test_case.want_result.resize(test_case.N);
+    for (uint32_t ii = 0; ii < test_case.N; ++ii) {
+      test_case.want_result[ii].AssignWithExpForm(A, k * ii * MATH_PI / test_case.N);
+    }
 
     test_cases.emplace_back(std::move(test_case));
   }
 
   {
     TestCase test_case{
-        .name = "case 4",
+        .name = "case 3",
         .N = 16};
-    test_case.in_vec.resize(test_case.N);
+    double A1 = 10.0;
+    uint32_t k1 = 4;
+    double A2 = 20.0;
+    uint32_t k2 = 12;
 
-    double A = 10.0;
-    uint32_t k = 12;
-    for (uint32_t ii = 0; ii < test_case.N; ++ii) {
-      test_case.in_vec[ii].AssignWithExpForm(A, k * ii * MATH_PI / test_case.N);
-    }
+    test_case.in_vec.resize(test_case.N);
+    test_case.in_vec[k1 / 2] = Complex<double>(A1 * test_case.N, 0.0);
+    test_case.in_vec[k2 / 2] = Complex<double>(A2 * test_case.N, 0.0);
 
     test_case.want_result.resize(test_case.N);
-    test_case.want_result[k / 2] = Complex<double>(A * test_case.N, 0.0);
+    for (uint32_t ii = 0; ii < test_case.N; ++ii) {
+      test_case.want_result[ii] = Complex<double>::GenWithExpForm(A1, k1 * ii * MATH_PI / test_case.N) +
+                                  Complex<double>::GenWithExpForm(A2, k2 * ii * MATH_PI / test_case.N);
+    }
 
     test_cases.emplace_back(std::move(test_case));
   }
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
-    FFT(test_cases[ii].N, test_cases[ii].in_vec.data());
+    std::stringstream err_info;
+    err_info << "Test " << test_cases[ii].name << " failed, index " << ii << "\n"
+             << "in_vec : " << Vec2Str(test_cases[ii].in_vec) << "\n"
+             << "want_result : " << Vec2Str(test_cases[ii].want_result);
+
+    IFFT(test_cases[ii].N, test_cases[ii].in_vec.data());
     for (uint32_t jj = 0; jj < test_cases[ii].N; ++jj) {
       EXPECT_NEAR(test_cases[ii].in_vec[jj].real, test_cases[ii].want_result[jj].real, 1e-6)
-          << "Test " << test_cases[ii].name << " failed, index " << ii << "\n"
-          << "in_vec : " << Vec2Str(test_cases[ii].in_vec) << "\n"
-          << "want_result : " << Vec2Str(test_cases[ii].want_result);
+          << err_info.str();
       EXPECT_NEAR(test_cases[ii].in_vec[jj].imag, test_cases[ii].want_result[jj].imag, 1e-6)
-          << "Test " << test_cases[ii].name << " failed, index " << ii << "\n"
-          << "in_vec : " << Vec2Str(test_cases[ii].in_vec) << "\n"
-          << "want_result : " << Vec2Str(test_cases[ii].want_result);
+          << err_info.str();
     }
   }
 }
 
-TEST(MATH_TEST, Matrix_TEST) {
-  int32_t count = 9;
-  Matrix m;
-  cout << m << endl;
-  Matrix m1(3, 2);
-  cout << m1 << endl;
-  double *f = new double[count];
-  for (int32_t ii = 0; ii < count; ++ii) {
-    f[ii] = ii * ii;
+TEST(COMPLEX_TEST, FFTShift_test) {
+  struct TestCase {
+    std::string name;
+
+    uint32_t len;
+    std::vector<Complex<double> > in_vec;
+
+    std::vector<Complex<double> > want_result;
+  };
+  std::vector<TestCase> test_cases;
+  test_cases.emplace_back(TestCase{
+      .name = "case 1",
+      .len = 4,
+      .in_vec = {{1.0, 1.0}, {2.0, 2.0}, {3.0, 3.0}, {4.0, 4.0}},
+      .want_result = {{3.0, 3.0}, {4.0, 4.0}, {1.0, 1.0}, {2.0, 2.0}}});
+  test_cases.emplace_back(TestCase{
+      .name = "case 2",
+      .len = 5,
+      .in_vec = {{1.0, 1.0}, {2.0, 2.0}, {3.0, 3.0}, {4.0, 4.0}, {5.0, 5.0}},
+      .want_result = {{3.0, 3.0}, {4.0, 4.0}, {1.0, 1.0}, {2.0, 2.0}, {5.0, 5.0}}});
+
+  for (size_t ii = 0; ii < test_cases.size(); ++ii) {
+    FFTShift(test_cases[ii].len, test_cases[ii].in_vec.data());
+    EXPECT_EQ(test_cases[ii].in_vec, test_cases[ii].want_result)
+        << "Test " << test_cases[ii].name << " failed, index " << ii;
   }
-
-  Matrix m2(3, 3, f);
-  cout << m2 << endl;
-  Matrix m3(m2);
-  cout << m3 << endl;
-
-  m = m3;
-  cout << m << endl;
-
-  double *f2 = new double[count];
-  m3.getData(f2, 1, 1, 1, 2);
-  for (int32_t ii = 0; ii < count; ++ii) {
-    cout << f2[ii] << endl;
-  }
-
-  Matrix m4 = m3.getMat(0, 0);
-  cout << m4 << endl;
-
-  Matrix m5(5, 6);
-  m5.setMat(m4);
-  cout << m5 << endl;
-  m5.setMat(m4, 2, 2);
-  cout << m5 << endl;
-
-  m5.setVal(55.5, 4, 4);
-  cout << m5 << endl;
-
-  m5.setDiag(77.5);
-  cout << m5 << endl;
-
-  cout << m << endl;
-  std::swap(m5, m);
-  cout << m5 << endl;
-  cout << m << endl;
-
-  int32_t ii[3] = {1, 2, 3};
-  Matrix m6 = m.extractCols(ii, 3);
-  cout << m6 << endl;
-
-  m5.zero();
-  cout << m5 << endl;
-
-  Matrix m7 = Matrix::eye(5);
-  cout << m7 << endl;
-
-  m.eye();
-  cout << m << endl;
-
-  Matrix m8 = Matrix::ones(6, 7);
-  cout << m8 << endl;
-
-  Matrix m9 = Matrix::reshape(m, 6, 5);
-  cout << m9 << endl;
-
-  cout << Matrix::rotMatX(0.5) << endl;
-  cout << Matrix::rotMatY(0.5) << endl;
-  cout << Matrix::rotMatZ(0.5) << endl;
-
-  Matrix m10 = Matrix::ones(4, 4);
-  m10 = Matrix::pow(m10, 3);
-  cout << m10 << endl;
-
-  Matrix m11 = Matrix::ones(4, 4);
-  cout << m11 << endl;
-
-  cout << m11 + m10 << endl;
-  m11 += m10;
-  cout << m11 << endl;
-
-  cout << m11 - m10 << endl;
-  m11 -= m10;
-  cout << m11 << endl;
-
-  cout << m11 * 3 << endl;
-  m11 *= 3;
-  cout << m11 << endl;
-
-  cout << m11 / 3 << endl;
-  m11 /= 3;
-  cout << m11 << endl;
-
-  cout << -m11 << endl;
-
-  Matrix m12 = Matrix::ones(2, 3);
-  cout << m12 << endl;
-  Matrix m13 = Matrix::ones(3, 4);
-  cout << m13 << endl;
-
-  cout << m12 * m13 << endl;
-
-  m12 *= m13;
-  cout << m12 << endl;
-
-  cout << ~m12 << endl;
-
-  delete[] f;
-  delete[] f2;
 }
 
-TEST(MATH_TEST, BigNum_TEST) {
-  BigNum a((int64_t(1) << 32) + 1);
-  cout << a << endl;
-  BigNum b((int64_t(1) << 32) + 1, 10);
-  cout << b << endl;
+TEST(MATRIX_TEST, BASE_test) {
+  const uint32_t kRow = 3;
+  const uint32_t kCol = 4;
 
-  BigNum c("123456789ABCDEF");
-  cout << c << endl;
+  Matrix_i32 m1(kRow, kCol);
+  m1.val[0][0] = 100;
+  EXPECT_EQ(m1.val[0][0], 100);
 
-  BigNum d("123456789123456789", 10);
-  cout << d << endl;
+  Matrix_i32 m2(m1);
+  EXPECT_EQ(m2.val[0][0], 100);
 
-  BigNum e("-123456789123456789", 10);
-  cout << e << endl;
+  Matrix_i32 m3;
+  m3 = m1;
+  EXPECT_EQ(m3.val[0][0], 100);
 
-  BigNum f = e + d;
-  cout << f << endl;
+  Matrix_i32 m4(std::move(m2));
+  EXPECT_EQ(m4.val[0][0], 100);
+  EXPECT_EQ(m2.val, nullptr);
 
-  BigNum g("9999", 10);
-  BigNum h("111", 10);
-  cout << g + h << endl;
+  Matrix_i32 m5;
+  m5 = std::move(m3);
+  EXPECT_EQ(m5.val[0][0], 100);
+  EXPECT_EQ(m3.val, nullptr);
 
-  BigNum g1("10000", 10);
-  BigNum h1("-111", 10);
-  cout << g1 + h1 << endl;
+  EXPECT_TRUE(m4 == m5);
+  EXPECT_FALSE(m4 != m5);
 
-  cout << g * h << endl;
-  g *= h;
-  cout << g << endl;
+  m4.val[0][1] = 200;
+  EXPECT_TRUE(m4 != m5);
+  EXPECT_FALSE(m4 == m5);
+
+  Matrix_i32 m4_1 = m4;
+  Matrix_i32 m5_1 = m5;
+  m4_1.Swap(m5_1);
+  EXPECT_EQ(m4_1, m5);
+  EXPECT_EQ(m5_1, m4);
 }
 
-TEST(MATH_TEST, SORT_ALGS_TEST) {
-  const uint32_t num = 10;
-  int answer[num] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
-  //冒泡
-  int data1[num] = {1, 4, 2, 8, 5, 9, 0, 7, 6, 3};
-  BubbleSort(data1, num);
-  for (uint32_t ii = 0; ii < num; ++ii) {
-    ASSERT_EQ(data1[ii], answer[ii]);
+TEST(MATRIX_TEST, DATA_test) {
+  const uint32_t kRow = 2;
+  const uint32_t kCol = 3;
+  Matrix_i32 target_m(kRow, kCol);
+  target_m.val[0][0] = 1;
+  target_m.val[0][1] = 2;
+  target_m.val[0][2] = 3;
+  target_m.val[1][0] = 4;
+  target_m.val[1][1] = 5;
+  target_m.val[1][2] = 6;
+
+  Matrix_i32 m1{kRow, kCol, {1, 2, 3, 4, 5, 6}};
+  EXPECT_EQ(m1, target_m);
+
+  Matrix_i32 m2{kRow, kCol, {{1, 2, 3}, {4, 5, 6}}};
+  EXPECT_EQ(m2, target_m);
+
+  Matrix_i32 m3(kRow, kCol);
+  m3.Assgin(std::vector<int32_t>{1, 2, 3, 4, 5, 6});
+  EXPECT_EQ(m3, target_m);
+
+  Matrix_i32 m4(kRow, kCol);
+  m4.Assgin(std::vector<std::vector<int32_t> >{{1, 2, 3}, {4, 5, 6}});
+  EXPECT_EQ(m4, target_m);
+
+  Matrix_i32 m5{kRow, kCol, {1, 2, 3, 4, 5, 6, 7}};
+  EXPECT_EQ(m5, target_m);
+
+  Matrix_i32 m6{kRow, kCol, {{1, 2, 3, 4}, {4, 5, 6, 7, 8}, {7}}};
+  EXPECT_EQ(m6, target_m);
+
+  Matrix_i32 m7(target_m);
+  m7.Zero();
+  EXPECT_EQ(m7, Matrix_i32(kRow, kCol));
+
+  Matrix_i32 m8 = -target_m;
+  Matrix_i32 target_m8{kRow, kCol, {{-1, -2, -3}, {-4, -5, -6}}};
+  EXPECT_EQ(m8, target_m8);
+
+  Matrix_i32 m9 = ~target_m;
+  Matrix_i32 target_m9{kCol, kRow, {{1, 4}, {2, 5}, {3, 6}}};
+  EXPECT_EQ(m9, target_m9);
+
+  Matrix_i32 m10 = Matrix_i32::Eye(1, 3);
+  Matrix_i32 target_m10{3, 3, {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}}};
+  EXPECT_EQ(m10, target_m10);
+}
+
+TEST(MATRIX_TEST, GetData_test) {
+  struct TestCase {
+    std::string name;
+
+    Matrix_i32 M;
+    uint32_t row_begin;
+    uint32_t col_begin;
+    uint32_t row_end;
+    uint32_t col_end;
+
+    std::vector<int32_t> want_result;
+  };
+  std::vector<TestCase> test_cases;
+  test_cases.emplace_back(TestCase{
+      .name = "case 1",
+      .M = {},
+      .row_begin = 0,
+      .col_begin = 0,
+      .row_end = 0,
+      .col_end = 0,
+      .want_result = {}});
+  test_cases.emplace_back(TestCase{
+      .name = "case 2",
+      .M = {3, 3, {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}}},
+      .row_begin = 0,
+      .col_begin = 0,
+      .row_end = 0,
+      .col_end = 0,
+      .want_result = {1}});
+  test_cases.emplace_back(TestCase{
+      .name = "case 3",
+      .M = {3, 3, {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}}},
+      .row_begin = 0,
+      .col_begin = 0,
+      .row_end = 100,
+      .col_end = 100,
+      .want_result = {1, 2, 3, 4, 5, 6, 7, 8, 9}});
+  test_cases.emplace_back(TestCase{
+      .name = "case 4",
+      .M = {3, 3, {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}}},
+      .row_begin = 3,
+      .col_begin = 3,
+      .row_end = 100,
+      .col_end = 100,
+      .want_result = {}});
+  test_cases.emplace_back(TestCase{
+      .name = "case 5",
+      .M = {3, 3, {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}}},
+      .row_begin = 1,
+      .col_begin = 1,
+      .row_end = 100,
+      .col_end = 100,
+      .want_result = {5, 6, 8, 9}});
+
+  for (size_t ii = 0; ii < test_cases.size(); ++ii) {
+    auto ret = test_cases[ii].M.GetData(test_cases[ii].row_begin, test_cases[ii].col_begin,
+                                        test_cases[ii].row_end, test_cases[ii].col_end);
+    EXPECT_EQ(ret, test_cases[ii].want_result)
+        << "Test " << test_cases[ii].name << " failed, index " << ii;
   }
+}
 
-  //归并
-  int data2[num] = {1, 4, 2, 8, 5, 9, 0, 7, 6, 3};
-  MergeSort(data2, num);
-  for (uint32_t ii = 0; ii < num; ++ii) {
-    ASSERT_EQ(data2[ii], answer[ii]);
+TEST(MATRIX_TEST, GetMat_test) {
+  struct TestCase {
+    std::string name;
+
+    Matrix_i32 M;
+    uint32_t row_begin;
+    uint32_t col_begin;
+    uint32_t row_end;
+    uint32_t col_end;
+
+    Matrix_i32 want_result;
+  };
+  std::vector<TestCase> test_cases;
+  test_cases.emplace_back(TestCase{
+      .name = "case 1",
+      .M = {},
+      .row_begin = 0,
+      .col_begin = 0,
+      .row_end = 0,
+      .col_end = 0,
+      .want_result = {}});
+  test_cases.emplace_back(TestCase{
+      .name = "case 2",
+      .M = {3, 3, {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}}},
+      .row_begin = 0,
+      .col_begin = 0,
+      .row_end = 0,
+      .col_end = 0,
+      .want_result = {1, 1, std::vector<int32_t>{1}}});
+  test_cases.emplace_back(TestCase{
+      .name = "case 3",
+      .M = {3, 3, {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}}},
+      .row_begin = 0,
+      .col_begin = 0,
+      .row_end = 100,
+      .col_end = 100,
+      .want_result = {3, 3, {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}}}});
+  test_cases.emplace_back(TestCase{
+      .name = "case 4",
+      .M = {3, 3, {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}}},
+      .row_begin = 3,
+      .col_begin = 3,
+      .row_end = 100,
+      .col_end = 100,
+      .want_result = {}});
+  test_cases.emplace_back(TestCase{
+      .name = "case 5",
+      .M = {3, 3, {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}}},
+      .row_begin = 1,
+      .col_begin = 1,
+      .row_end = 100,
+      .col_end = 100,
+      .want_result = {2, 2, {{5, 6}, {8, 9}}}});
+
+  for (size_t ii = 0; ii < test_cases.size(); ++ii) {
+    auto ret = test_cases[ii].M.GetMat(test_cases[ii].row_begin, test_cases[ii].col_begin,
+                                       test_cases[ii].row_end, test_cases[ii].col_end);
+    EXPECT_EQ(ret, test_cases[ii].want_result)
+        << "Test " << test_cases[ii].name << " failed, index " << ii;
   }
+}
 
-  //归并，非递归
-  int data2_2[num] = {1, 4, 2, 8, 5, 9, 0, 7, 6, 3};
-  MergeSort2(data2_2, num);
-  for (uint32_t ii = 0; ii < num; ++ii) {
-    ASSERT_EQ(data2_2[ii], answer[ii]);
+TEST(MATRIX_TEST, SetMat_test) {
+  struct TestCase {
+    std::string name;
+
+    Matrix_i32 M;
+    Matrix_i32 input_M;
+    uint32_t row_begin;
+    uint32_t col_begin;
+    uint32_t row_end;
+    uint32_t col_end;
+
+    Matrix_i32 want_result;
+  };
+  std::vector<TestCase> test_cases;
+  test_cases.emplace_back(TestCase{
+      .name = "case 1",
+      .M = {},
+      .input_M = {},
+      .row_begin = 0,
+      .col_begin = 0,
+      .row_end = 0,
+      .col_end = 0,
+      .want_result = {}});
+  test_cases.emplace_back(TestCase{
+      .name = "case 2",
+      .M = {3, 3, {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}}},
+      .input_M = {},
+      .row_begin = 0,
+      .col_begin = 0,
+      .row_end = 1,
+      .col_end = 1,
+      .want_result = {3, 3, {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}}}});
+  test_cases.emplace_back(TestCase{
+      .name = "case 3",
+      .M = {3, 3, {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}}},
+      .input_M = {1, 1, std::vector<int32_t>{100}},
+      .row_begin = 0,
+      .col_begin = 0,
+      .row_end = 1,
+      .col_end = 1,
+      .want_result = {3, 3, {{100, 2, 3}, {4, 5, 6}, {7, 8, 9}}}});
+  test_cases.emplace_back(TestCase{
+      .name = "case 4",
+      .M = {3, 3, {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}}},
+      .input_M = {3, 3, {{100, 200, 300}, {400, 500, 600}, {700, 800, 900}}},
+      .row_begin = 0,
+      .col_begin = 0,
+      .row_end = 1,
+      .col_end = 1,
+      .want_result = {3, 3, {{100, 200, 3}, {400, 500, 6}, {7, 8, 9}}}});
+
+  for (size_t ii = 0; ii < test_cases.size(); ++ii) {
+    test_cases[ii].M.SetMat(test_cases[ii].input_M,
+                            test_cases[ii].row_begin, test_cases[ii].col_begin,
+                            test_cases[ii].row_end, test_cases[ii].col_end);
+    EXPECT_EQ(test_cases[ii].M, test_cases[ii].want_result)
+        << "Test " << test_cases[ii].name << " failed, index " << ii;
   }
+}
 
-  //快排
-  int data3[num] = {1, 4, 2, 8, 5, 9, 0, 7, 6, 3};
-  QuickSort(data3, num);
-  for (uint32_t ii = 0; ii < num; ++ii) {
-    ASSERT_EQ(data3[ii], answer[ii]);
+TEST(MATRIX_TEST, SetVal_test) {
+  struct TestCase {
+    std::string name;
+
+    Matrix_i32 M;
+    int32_t in_val;
+    uint32_t row_begin;
+    uint32_t col_begin;
+    uint32_t row_end;
+    uint32_t col_end;
+
+    Matrix_i32 want_result;
+  };
+  std::vector<TestCase> test_cases;
+  test_cases.emplace_back(TestCase{
+      .name = "case 1",
+      .M = {},
+      .in_val = 123,
+      .row_begin = 0,
+      .col_begin = 0,
+      .row_end = 0,
+      .col_end = 0,
+      .want_result = {}});
+  test_cases.emplace_back(TestCase{
+      .name = "case 2",
+      .M = {3, 3, {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}}},
+      .in_val = 123,
+      .row_begin = 0,
+      .col_begin = 0,
+      .row_end = 1,
+      .col_end = 1,
+      .want_result = {3, 3, {{123, 123, 3}, {123, 123, 6}, {7, 8, 9}}}});
+  test_cases.emplace_back(TestCase{
+      .name = "case 3",
+      .M = {3, 3, {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}}},
+      .in_val = 123,
+      .row_begin = 2,
+      .col_begin = 2,
+      .row_end = 100,
+      .col_end = 100,
+      .want_result = {3, 3, {{1, 2, 3}, {4, 5, 6}, {7, 8, 123}}}});
+
+  for (size_t ii = 0; ii < test_cases.size(); ++ii) {
+    test_cases[ii].M.SetVal(test_cases[ii].in_val,
+                            test_cases[ii].row_begin, test_cases[ii].col_begin,
+                            test_cases[ii].row_end, test_cases[ii].col_end);
+    EXPECT_EQ(test_cases[ii].M, test_cases[ii].want_result)
+        << "Test " << test_cases[ii].name << " failed, index " << ii;
   }
+}
 
-  //二分查找
-  ASSERT_EQ(BinarySearch(answer, num, 6), 6);
-  ASSERT_EQ(BinarySearch(answer, num, -1), num);
+TEST(MATRIX_TEST, SetDiag_test) {
+  struct TestCase {
+    std::string name;
 
-  int data4[num] = {0, 0, 1, 1, 2, 2, 2, 3, 3, 4};
-  ASSERT_EQ(BinarySearch(data4, num, 2), 4);
-  ASSERT_EQ(BinarySearch(data4, num, 1), 2);
+    Matrix_i32 M;
+    int32_t in_val;
+    uint32_t idx_begin;
+    uint32_t idx_end;
 
-  int data5[num] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-  int data6[num] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
-  int data7[num] = {2, 2, 2, 2, 2, 2, 2, 2, 2, 2};
+    Matrix_i32 want_result;
+  };
+  std::vector<TestCase> test_cases;
+  test_cases.emplace_back(TestCase{
+      .name = "case 1",
+      .M = {},
+      .in_val = 123,
+      .idx_begin = 0,
+      .idx_end = 0,
+      .want_result = {}});
+  test_cases.emplace_back(TestCase{
+      .name = "case 2",
+      .M = {3, 3, {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}}},
+      .in_val = 123,
+      .idx_begin = 0,
+      .idx_end = 0,
+      .want_result = {3, 3, {{123, 2, 3}, {4, 5, 6}, {7, 8, 9}}}});
+  test_cases.emplace_back(TestCase{
+      .name = "case 3",
+      .M = {3, 3, {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}}},
+      .in_val = 123,
+      .idx_begin = 0,
+      .idx_end = 100,
+      .want_result = {3, 3, {{123, 2, 3}, {4, 123, 6}, {7, 8, 123}}}});
+  test_cases.emplace_back(TestCase{
+      .name = "case 4",
+      .M = {4, 3, {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}, {10, 11, 12}}},
+      .in_val = 123,
+      .idx_begin = 0,
+      .idx_end = 100,
+      .want_result = {4, 3, {{123, 2, 3}, {4, 123, 6}, {7, 8, 123}, {10, 11, 12}}}});
 
-  ASSERT_EQ(BinarySearch(data5, num, 1), num);
-  ASSERT_EQ(BinarySearch(data6, num, 1), 0);
-  ASSERT_EQ(BinarySearch(data7, num, 1), num);
+  for (size_t ii = 0; ii < test_cases.size(); ++ii) {
+    test_cases[ii].M.SetDiag(test_cases[ii].in_val,
+                             test_cases[ii].idx_begin, test_cases[ii].idx_end);
+    EXPECT_EQ(test_cases[ii].M, test_cases[ii].want_result)
+        << "Test " << test_cases[ii].name << " failed, index " << ii;
+  }
+}
 
-  ASSERT_EQ(BinarySearchLast(data5, num, 1), num);
-  ASSERT_EQ(BinarySearchLast(data6, num, 1), 9);
-  ASSERT_EQ(BinarySearchLast(data7, num, 1), num);
+TEST(MATRIX_TEST, SetDiag2_test) {
+  struct TestCase {
+    std::string name;
+
+    Matrix_i32 M;
+    std::vector<int32_t> input_vec;
+    uint32_t idx_begin;
+    uint32_t idx_end;
+
+    Matrix_i32 want_result;
+  };
+  std::vector<TestCase> test_cases;
+  test_cases.emplace_back(TestCase{
+      .name = "case 1",
+      .M = {},
+      .input_vec = {123, 456},
+      .idx_begin = 0,
+      .idx_end = 0,
+      .want_result = {}});
+  test_cases.emplace_back(TestCase{
+      .name = "case 2",
+      .M = {3, 3, {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}}},
+      .input_vec = {123, 456},
+      .idx_begin = 0,
+      .idx_end = 0,
+      .want_result = {3, 3, {{123, 2, 3}, {4, 5, 6}, {7, 8, 9}}}});
+  test_cases.emplace_back(TestCase{
+      .name = "case 3",
+      .M = {3, 3, {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}}},
+      .input_vec = {123, 456},
+      .idx_begin = 0,
+      .idx_end = 100,
+      .want_result = {3, 3, {{123, 2, 3}, {4, 456, 6}, {7, 8, 9}}}});
+  test_cases.emplace_back(TestCase{
+      .name = "case 4",
+      .M = {4, 3, {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}, {10, 11, 12}}},
+      .input_vec = {123, 456, 789, 123},
+      .idx_begin = 0,
+      .idx_end = 100,
+      .want_result = {4, 3, {{123, 2, 3}, {4, 456, 6}, {7, 8, 789}, {10, 11, 12}}}});
+
+  for (size_t ii = 0; ii < test_cases.size(); ++ii) {
+    test_cases[ii].M.SetDiag(test_cases[ii].input_vec,
+                             test_cases[ii].idx_begin, test_cases[ii].idx_end);
+    EXPECT_EQ(test_cases[ii].M, test_cases[ii].want_result)
+        << "Test " << test_cases[ii].name << " failed, index " << ii;
+  }
+}
+
+TEST(MATRIX_TEST, Add_test) {
+  struct TestCase {
+    std::string name;
+
+    Matrix_i32 M1;
+    Matrix_i32 M2;
+
+    Matrix_i32 want_result;
+    bool want_exp;
+  };
+  std::vector<TestCase> test_cases;
+  test_cases.emplace_back(TestCase{
+      .name = "case 1",
+      .M1 = {},
+      .M2 = {},
+      .want_result = {},
+      .want_exp = false});
+  test_cases.emplace_back(TestCase{
+      .name = "case 2",
+      .M1 = {},
+      .M2 = {1, 1},
+      .want_result = {},
+      .want_exp = true});
+  test_cases.emplace_back(TestCase{
+      .name = "case 3",
+      .M1 = {3, 3, {{1, 1, 1}, {2, 2, 2}, {3, 3, 3}}},
+      .M2 = {3, 3, {{10, 10, 10}, {20, 20, 20}, {30, 30, 30}}},
+      .want_result = {3, 3, {{11, 11, 11}, {22, 22, 22}, {33, 33, 33}}},
+      .want_exp = false});
+
+  for (size_t ii = 0; ii < test_cases.size(); ++ii) {
+    bool get_exp = false;
+    try {
+      auto ret = test_cases[ii].M1 + test_cases[ii].M2;
+      EXPECT_EQ(ret, test_cases[ii].want_result)
+          << "Test " << test_cases[ii].name << " failed, index " << ii;
+
+      test_cases[ii].M1 += test_cases[ii].M2;
+      EXPECT_EQ(test_cases[ii].M1, test_cases[ii].want_result)
+          << "Test " << test_cases[ii].name << " failed, index " << ii;
+    } catch (const std::exception&) {
+      get_exp = true;
+    }
+    EXPECT_EQ(get_exp, test_cases[ii].want_exp)
+        << "Test " << test_cases[ii].name << " failed, index " << ii;
+  }
+}
+
+TEST(MATRIX_TEST, Sub_test) {
+  struct TestCase {
+    std::string name;
+
+    Matrix_i32 M1;
+    Matrix_i32 M2;
+
+    Matrix_i32 want_result;
+    bool want_exp;
+  };
+  std::vector<TestCase> test_cases;
+  test_cases.emplace_back(TestCase{
+      .name = "case 1",
+      .M1 = {},
+      .M2 = {},
+      .want_result = {},
+      .want_exp = false});
+  test_cases.emplace_back(TestCase{
+      .name = "case 2",
+      .M1 = {},
+      .M2 = {1, 1},
+      .want_result = {},
+      .want_exp = true});
+  test_cases.emplace_back(TestCase{
+      .name = "case 3",
+      .M1 = {3, 3, {{1, 1, 1}, {2, 2, 2}, {3, 3, 3}}},
+      .M2 = {3, 3, {{10, 10, 10}, {20, 20, 20}, {30, 30, 30}}},
+      .want_result = {3, 3, {{-9, -9, -9}, {-18, -18, -18}, {-27, -27, -27}}},
+      .want_exp = false});
+
+  for (size_t ii = 0; ii < test_cases.size(); ++ii) {
+    bool get_exp = false;
+    try {
+      auto ret = test_cases[ii].M1 - test_cases[ii].M2;
+      EXPECT_EQ(ret, test_cases[ii].want_result)
+          << "Test " << test_cases[ii].name << " failed, index " << ii;
+
+      test_cases[ii].M1 -= test_cases[ii].M2;
+      EXPECT_EQ(test_cases[ii].M1, test_cases[ii].want_result)
+          << "Test " << test_cases[ii].name << " failed, index " << ii;
+    } catch (const std::exception&) {
+      get_exp = true;
+    }
+    EXPECT_EQ(get_exp, test_cases[ii].want_exp)
+        << "Test " << test_cases[ii].name << " failed, index " << ii;
+  }
+}
+
+TEST(MATRIX_TEST, Multiply_test) {
+  struct TestCase {
+    std::string name;
+
+    Matrix_i32 M1;
+    Matrix_i32 M2;
+
+    Matrix_i32 want_result;
+    bool want_exp;
+  };
+  std::vector<TestCase> test_cases;
+  test_cases.emplace_back(TestCase{
+      .name = "case 1",
+      .M1 = {},
+      .M2 = {},
+      .want_result = {},
+      .want_exp = false});
+  test_cases.emplace_back(TestCase{
+      .name = "case 2",
+      .M1 = {2, 2},
+      .M2 = {3, 3},
+      .want_result = {},
+      .want_exp = true});
+  test_cases.emplace_back(TestCase{
+      .name = "case 3",
+      .M1 = {2, 3, {{1, 1, 1}, {2, 2, 2}}},
+      .M2 = {3, 4, {{3, 3, 3, 3}, {4, 4, 4, 4}, {5, 5, 5, 5}}},
+      .want_result = {2, 4, {{12, 12, 12, 12}, {24, 24, 24, 24}}},
+      .want_exp = false});
+
+  for (size_t ii = 0; ii < test_cases.size(); ++ii) {
+    bool get_exp = false;
+    try {
+      auto ret = test_cases[ii].M1 * test_cases[ii].M2;
+      EXPECT_EQ(ret, test_cases[ii].want_result)
+          << "Test " << test_cases[ii].name << " failed, index " << ii;
+
+      test_cases[ii].M1 *= test_cases[ii].M2;
+      EXPECT_EQ(test_cases[ii].M1, test_cases[ii].want_result)
+          << "Test " << test_cases[ii].name << " failed, index " << ii;
+    } catch (const std::exception&) {
+      get_exp = true;
+    }
+    EXPECT_EQ(get_exp, test_cases[ii].want_exp)
+        << "Test " << test_cases[ii].name << " failed, index " << ii;
+  }
+}
+
+TEST(MATRIX_TEST, MultiplyNum_test) {
+  struct TestCase {
+    std::string name;
+
+    Matrix_i32 M;
+    int32_t in_val;
+
+    Matrix_i32 want_result;
+  };
+  std::vector<TestCase> test_cases;
+  test_cases.emplace_back(TestCase{
+      .name = "case 1",
+      .M = {},
+      .in_val = 2,
+      .want_result = {}});
+  test_cases.emplace_back(TestCase{
+      .name = "case 2",
+      .M = {2, 2},
+      .in_val = 2,
+      .want_result = {2, 2}});
+  test_cases.emplace_back(TestCase{
+      .name = "case 3",
+      .M = {2, 3, {{1, 1, 1}, {2, 2, 2}}},
+      .in_val = 2,
+      .want_result = {2, 3, {{2, 2, 2}, {4, 4, 4}}}});
+
+  for (size_t ii = 0; ii < test_cases.size(); ++ii) {
+    auto ret = test_cases[ii].M * test_cases[ii].in_val;
+    EXPECT_EQ(ret, test_cases[ii].want_result)
+        << "Test " << test_cases[ii].name << " failed, index " << ii;
+
+    test_cases[ii].M *= test_cases[ii].in_val;
+    EXPECT_EQ(test_cases[ii].M, test_cases[ii].want_result)
+        << "Test " << test_cases[ii].name << " failed, index " << ii;
+  }
+}
+
+TEST(MATRIX_TEST, DivideNum_test) {
+  struct TestCase {
+    std::string name;
+
+    Matrix_i32 M;
+    int32_t in_val;
+
+    Matrix_i32 want_result;
+  };
+  std::vector<TestCase> test_cases;
+  test_cases.emplace_back(TestCase{
+      .name = "case 1",
+      .M = {},
+      .in_val = 2,
+      .want_result = {}});
+  test_cases.emplace_back(TestCase{
+      .name = "case 2",
+      .M = {2, 2},
+      .in_val = 2,
+      .want_result = {2, 2}});
+  test_cases.emplace_back(TestCase{
+      .name = "case 3",
+      .M = {2, 3, {{2, 2, 2}, {4, 4, 4}}},
+      .in_val = 2,
+      .want_result = {2, 3, {{1, 1, 1}, {2, 2, 2}}}});
+
+  for (size_t ii = 0; ii < test_cases.size(); ++ii) {
+    auto ret = test_cases[ii].M / test_cases[ii].in_val;
+    EXPECT_EQ(ret, test_cases[ii].want_result)
+        << "Test " << test_cases[ii].name << " failed, index " << ii;
+
+    test_cases[ii].M /= test_cases[ii].in_val;
+    EXPECT_EQ(test_cases[ii].M, test_cases[ii].want_result)
+        << "Test " << test_cases[ii].name << " failed, index " << ii;
+  }
+}
+
+TEST(MATRIX_TEST, Pow_test) {
+  struct TestCase {
+    std::string name;
+
+    int32_t in_val;
+    Matrix_i32 M;
+    uint32_t n;
+
+    Matrix_i32 want_result;
+  };
+  std::vector<TestCase> test_cases;
+  test_cases.emplace_back(TestCase{
+      .name = "case 1",
+      .in_val = 1,
+      .M = {},
+      .n = 10,
+      .want_result = {}});
+  test_cases.emplace_back(TestCase{
+      .name = "case 2",
+      .in_val = 1,
+      .M = {2, 2, {{1, 0}, {0, 1}}},
+      .n = 10,
+      .want_result = {2, 2, {{1, 0}, {0, 1}}}});
+  test_cases.emplace_back(TestCase{
+      .name = "case 3",
+      .in_val = 1,
+      .M = {2, 2, {{2, 0}, {0, 2}}},
+      .n = 10,
+      .want_result = {2, 2, {{1024, 0}, {0, 1024}}}});
+
+  for (size_t ii = 0; ii < test_cases.size(); ++ii) {
+    auto ret = Matrix_i32::Pow(test_cases[ii].in_val, test_cases[ii].M, test_cases[ii].n);
+    EXPECT_EQ(ret, test_cases[ii].want_result)
+        << "Test " << test_cases[ii].name << " failed, index " << ii;
+  }
+}
+
+TEST(MATRIX_TEST, ostream_test) {
+  struct TestCase {
+    std::string name;
+
+    Matrix_i32 value;
+
+    std::string want_result;
+  };
+  std::vector<TestCase> test_cases;
+  test_cases.emplace_back(TestCase{
+      .name = "case 1",
+      .value = {},
+      .want_result = "[empty matrix]"});
+  test_cases.emplace_back(TestCase{
+      .name = "case 2",
+      .value = {1, 0},
+      .want_result = "[empty matrix]"});
+  test_cases.emplace_back(TestCase{
+      .name = "case 3",
+      .value = {2, 3},
+      .want_result = R"str([row 2, col 3]
+0	0	0
+0	0	0
+)str"});
+  test_cases.emplace_back(TestCase{
+      .name = "case 4",
+      .value = {2, 3, {{1, 2, 3}, {4, 5, 6}}},
+      .want_result = R"str([row 2, col 3]
+1	2	3
+4	5	6
+)str"});
+
+  for (size_t ii = 0; ii < test_cases.size(); ++ii) {
+    std::stringstream ss;
+    ss << test_cases[ii].value;
+    EXPECT_STREQ(ss.str().c_str(), test_cases[ii].want_result.c_str())
+        << "Test " << test_cases[ii].name << " failed, index " << ii;
+  }
+}
+
+TEST(MATRIX_TEST, ROTMAT_test) {
+  struct TestCase {
+    std::string name;
+
+    double angle;
+
+    Matrix want_result_rotX;
+    Matrix want_result_rotY;
+    Matrix want_result_rotZ;
+  };
+  std::vector<TestCase> test_cases;
+  test_cases.emplace_back(TestCase{
+      .name = "case 1",
+      .angle = 0.0,
+      .want_result_rotX = {3, 3, {{1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}, {0.0, 0.0, 1.0}}},
+      .want_result_rotY = {3, 3, {{1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}, {0.0, 0.0, 1.0}}},
+      .want_result_rotZ = {3, 3, {{1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}, {0.0, 0.0, 1.0}}}});
+  test_cases.emplace_back(TestCase{
+      .name = "case 2",
+      .angle = MATH_PI_2,
+      .want_result_rotX = {3, 3, {{1.0, 0.0, 0.0}, {0.0, 0.0, -1.0}, {0.0, 1.0, 0.0}}},
+      .want_result_rotY = {3, 3, {{0.0, 0.0, 1.0}, {0.0, 1.0, 0.0}, {-1.0, 0.0, 0.0}}},
+      .want_result_rotZ = {3, 3, {{0.0, -1.0, 0.0}, {1.0, 0.0, 0.0}, {0.0, 0.0, 1.0}}}});
+
+  for (size_t ii = 0; ii < test_cases.size(); ++ii) {
+    auto ret_x = RotMatX(test_cases[ii].angle);
+
+    for (size_t jj = 0; jj < 9; ++jj) {
+      EXPECT_NEAR(ret_x.val[0][jj], test_cases[ii].want_result_rotX.val[0][jj], 1e-6)
+          << "Test " << test_cases[ii].name << " failed, index " << ii;
+    }
+
+    auto ret_y = RotMatY(test_cases[ii].angle);
+    for (size_t jj = 0; jj < 9; ++jj) {
+      EXPECT_NEAR(ret_y.val[0][jj], test_cases[ii].want_result_rotY.val[0][jj], 1e-6)
+          << "Test " << test_cases[ii].name << " failed, index " << ii;
+    }
+
+    auto ret_z = RotMatZ(test_cases[ii].angle);
+    for (size_t jj = 0; jj < 9; ++jj) {
+      EXPECT_NEAR(ret_z.val[0][jj], test_cases[ii].want_result_rotZ.val[0][jj], 1e-6)
+          << "Test " << test_cases[ii].name << " failed, index " << ii;
+    }
+  }
 }
 
 }  // namespace ytlib

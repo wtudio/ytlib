@@ -5,79 +5,158 @@
  * @author WT
  * @date 2019-07-26
  */
+
 #pragma once
 
 #include <algorithm>
-#include <cassert>
+#include <concepts>
 #include <iostream>
 #include <vector>
 
 namespace ytlib {
 /**
  * @brief 大整数工具
- * todo待完善
+ * 
  */
+
 class BigNum {
  public:
-  ///从一个int64_t初始化，默认进制2^32,_up：进制，order：指数，最终val=num*（up^order）
-  explicit BigNum(int64_t num = 0, uint32_t _up = 0, uint32_t order = 0) : _symbol(num >= 0), up(_up) {
-    assert(_up != 1);
-    num = std::abs(num);
-    if (num != 0 && order != 0) {
-      while (order--) _content.push_back(0);
+  /**
+   * @brief 典型进制
+   * 
+   */
+  enum class BaseType : uint8_t {
+    BIN = 2,
+    OCT = 8,
+    DEC = 10,
+    HEX = 16,
+  };
+
+ public:
+  BigNum() { content_.emplace_back(0); }
+
+  /**
+   * @brief 从一个int64_t构建
+   * @note 使用默认进制为10。最终值为num*(base^order)
+   * @param num 有效数字部分
+   * @param base 进制。不可小于2，否则按默认值10处理
+   * @param order 进制乘方
+   */
+  explicit BigNum(int64_t num, uint32_t base = 10, uint32_t order = 0) {
+    base_ = (base < 2) ? 10 : base;
+
+    if (num < 0) {
+      symbol_ = false;
+      num = -num;
     }
-    if (up == 0) {
-      _content.push_back(static_cast<uint32_t>(num));
-      if (num >>= 32) _content.push_back(static_cast<uint32_t>(num));
+
+    if (num != 0) {
+      while (order--) content_.push_back(0);
+    }
+
+    do {
+      content_.push_back(num % base_);
+      num /= base_;
+    } while (num);
+  }
+
+  /**
+   * @brief 从一个string构建
+   * @note 使用默认进制为16
+   * @param str 
+   * @param base 进制
+   */
+  explicit BigNum(const std::string& str, BaseType base = BaseType::DEC) {
+    base_ = static_cast<uint32_t>(base);
+
+    if (str.empty()) {
+      content_.emplace_back(0);
+      return;
+    }
+
+    size_t pos = 0;
+    if (str[0] == '-') {
+      symbol_ = false;
+      pos = 1;
+    } else if (str[0] == '+') {
+      pos = 1;
+    }
+
+    while (pos < str.size()) {
+      uint32_t curNum = base_;
+      if (str[pos] >= '0' && str[pos] <= '9')
+        curNum = (str[pos] - '0');
+      else if (str[pos] >= 'A' && str[pos] <= 'F')
+        curNum = (str[pos] - 'A') + 10;
+      else if (str[pos] >= 'a' && str[pos] <= 'f')
+        curNum = (str[pos] - 'a') + 10;
+
+      if (curNum >= base_) break;
+
+      content_.emplace_back(curNum);
+      ++pos;
+    }
+
+    if (content_.empty()) {
+      content_.emplace_back(0);
     } else {
-      do {
-        _content.push_back(num % up);
-        num /= up;
-      } while (num);
+      std::reverse(content_.begin(), content_.end());
     }
   }
-  ///从一个string初始化，进制大于1小于等于16，默认进制16
-  explicit BigNum(std::string s, uint32_t _up = 16) : _symbol(true), up(_up) {
-    assert(!s.empty());
-    assert(_up > 1 && _up <= 16);
-    const char* p = s.c_str();
-    if (*p == '-') {
-      _symbol = false;
-      ++p;
-    }
-    while (true) {
-      uint32_t curNum = up;
-      if (*p >= '0' && *p <= '9')
-        curNum = (*p - '0');
-      else if (*p >= 'A' && *p <= 'F')
-        curNum = (*p - 'A') + 10;
-      else if (*p >= 'a' && *p <= 'f')
-        curNum = (*p - 'a') + 10;
 
-      if (curNum < up) {
-        _content.push_back(curNum);
-        ++p;
-      } else
-        break;
+  ~BigNum() {}
+
+  void ReBase(uint32_t base) {
+    if (base < 2) return;
+    if (base_ == base) return;
+  }
+
+  void Clear() {
+    symbol_ = true;
+    content_.clear();
+    content_.emplace_back(0);
+  }
+
+  bool Empty() const {
+    return ((content_.size() == 1) && (content_[0] == 0));
+  }
+
+  operator bool() const {
+    return !Empty();
+  }
+
+  bool operator==(const BigNum& value) const {
+    if (base_ != value.base_) return false;
+
+    if (Empty() && value.Empty()) return true;
+    if (symbol_ != value.symbol_) return false;
+    if (content_.size() != value.content_.size()) return false;
+
+    const size_t& len = content_.size();
+    for (size_t ii = 0; ii < len; ++ii) {
+      if (content_[ii] != value.content_[ii]) return false;
     }
-    assert(_content.size());
-    std::reverse(_content.begin(), _content.end());
+
+    return true;
+  }
+  bool operator!=(const BigNum& value) const {
+    return !(*this == value);
   }
 
   BigNum operator+(const BigNum& value) const {
     //需要确保进制相同
-    assert(up == value.up);
+    //assert(base_ == value.base_);
     const BigNum *pNum1 = this, *pNum2 = &value;
-    std::size_t len1 = pNum1->_content.size(), len2 = pNum2->_content.size();
-    BigNum re(0, up);
-    if (_symbol ^ value._symbol) {
+    size_t len1 = pNum1->content_.size(), len2 = pNum2->content_.size();
+    BigNum re(0, base_);
+    if (symbol_ ^ value.symbol_) {
       //异符号相加，用绝对值大的减小的，符号与大的相同。默认num1的绝对值大
       if (len1 == len2) {
         //从高位开始判断
-        for (std::size_t ii = len1 - 1; ii > 0; --ii) {
-          if (pNum1->_content[ii] > pNum2->_content[ii])
+        for (size_t ii = len1 - 1; ii > 0; --ii) {
+          if (pNum1->content_[ii] > pNum2->content_[ii])
             break;
-          else if (pNum1->_content[ii] < pNum2->_content[ii]) {
+          else if (pNum1->content_[ii] < pNum2->content_[ii]) {
             std::swap(len1, len2);
             std::swap(pNum1, pNum2);
             break;
@@ -87,77 +166,78 @@ class BigNum {
         std::swap(len1, len2);
         std::swap(pNum1, pNum2);
       }
-      re._symbol = pNum1->_symbol;
+      re.symbol_ = pNum1->symbol_;
       bool flag = false;  //借位标志
-      for (std::size_t ii = 0; ii < len2; ++ii) {
+      for (size_t ii = 0; ii < len2; ++ii) {
         //需要借位的情况
-        if (flag && pNum1->_content[ii] == 0) {
+        if (flag && pNum1->content_[ii] == 0) {
           flag = true;
-          re._content[ii] = up - 1 - pNum2->_content[ii];
-        } else if ((pNum1->_content[ii] - (flag ? 1 : 0)) < pNum2->_content[ii]) {
-          re._content[ii] = up - pNum2->_content[ii] + (pNum1->_content[ii] - (flag ? 1 : 0));
+          re.content_[ii] = base_ - 1 - pNum2->content_[ii];
+        } else if ((pNum1->content_[ii] - (flag ? 1 : 0)) < pNum2->content_[ii]) {
+          re.content_[ii] = base_ - pNum2->content_[ii] + (pNum1->content_[ii] - (flag ? 1 : 0));
           flag = true;
         } else {
           flag = false;
-          re._content[ii] = pNum1->_content[ii] - pNum2->_content[ii];
+          re.content_[ii] = pNum1->content_[ii] - pNum2->content_[ii];
         }
-        re._content.push_back(0);
+        re.content_.push_back(0);
       }
-      for (std::size_t ii = len2; ii < len1; ++ii) {
-        if (flag && pNum1->_content[ii] == 0) {
+      for (size_t ii = len2; ii < len1; ++ii) {
+        if (flag && pNum1->content_[ii] == 0) {
           flag = true;
-          re._content[ii] = up - 1;
+          re.content_[ii] = base_ - 1;
         } else {
           flag = false;
-          re._content[ii] = pNum1->_content[ii] - 1;
+          re.content_[ii] = pNum1->content_[ii] - 1;
         }
-        re._content.push_back(0);
+        re.content_.push_back(0);
       }
     } else {
       //同符号相加
-      re._symbol = _symbol;
+      re.symbol_ = symbol_;
       //被加数num1的位数较大
       if (len1 < len2) {
         std::swap(len1, len2);
         std::swap(pNum1, pNum2);
       }
       //从低位开始加
-      for (std::size_t ii = 0; ii < len2; ++ii) {
-        uint32_t tmp = pNum1->_content[ii] + pNum2->_content[ii] + re._content[ii];
-        if ((up && tmp >= up) || tmp < pNum1->_content[ii] || (tmp == pNum1->_content[ii] && re._content[ii] == 1)) {
-          re._content.push_back(1);
-          tmp -= up;
+      for (size_t ii = 0; ii < len2; ++ii) {
+        uint32_t tmp = pNum1->content_[ii] + pNum2->content_[ii] + re.content_[ii];
+        if ((base_ && tmp >= base_) || tmp < pNum1->content_[ii] || (tmp == pNum1->content_[ii] && re.content_[ii] == 1)) {
+          re.content_.push_back(1);
+          tmp -= base_;
         } else
-          re._content.push_back(0);
-        re._content[ii] = tmp;
+          re.content_.push_back(0);
+        re.content_[ii] = tmp;
       }
-      for (std::size_t ii = len2; ii < len1; ++ii) {
-        if (pNum1->_content[ii] == (up - 1) && re._content[ii] == 1) {
-          re._content[ii] = 0;
-          re._content.push_back(1);
+      for (size_t ii = len2; ii < len1; ++ii) {
+        if (pNum1->content_[ii] == (base_ - 1) && re.content_[ii] == 1) {
+          re.content_[ii] = 0;
+          re.content_.push_back(1);
         } else {
-          re._content[ii] += pNum1->_content[ii];
-          re._content.push_back(0);
+          re.content_[ii] += pNum1->content_[ii];
+          re.content_.push_back(0);
         }
       }
     }
     //去除最后端的0
-    while (re._content.size() > 1 && re._content[re._content.size() - 1] == 0) re._content.pop_back();
+    while (re.content_.size() > 1 && re.content_[re.content_.size() - 1] == 0) re.content_.pop_back();
     return re;
   }
   BigNum& operator+=(const BigNum& value) {
     (*this) = operator+(value);
     return *this;
   }
-  //++i
+
+  ///++i
   BigNum& operator++() {
-    operator+=(BigNum(1, up));
+    operator+=(BigNum(1, base_));
     return *this;
   }
-  //i++
+  ///i++
   const BigNum operator++(int) {
     BigNum re(*this);
-    operator+=(BigNum(1, up));
+    operator+=(BigNum(1, base_));
     return re;
   }
 
@@ -169,82 +249,45 @@ class BigNum {
     return *this;
   }
 
+  ///--i
   BigNum& operator--() {
-    operator+=(BigNum(-1, up));
+    operator+=(BigNum(-1, base_));
     return *this;
   }
+  ///i--
   const BigNum operator--(int) {
     BigNum re(*this);
-    operator+=(BigNum(-1, up));
+    operator+=(BigNum(-1, base_));
+    return re;
+  }
+
+  BigNum operator-() const {
+    BigNum re(*this);
+    re.symbol_ = !re.symbol_;
     return re;
   }
 
   BigNum operator*(const BigNum& value) const {
-    assert(up == value.up);
-    BigNum re(0, up);
-    std::size_t len1 = this->_content.size(), len2 = value._content.size();
-    for (std::size_t ii = 0; ii < len1; ++ii) {
-      if (this->_content[ii] != 0) {
-        for (std::size_t jj = 0; jj < len2; ++jj) {
-          if (value._content[jj] != 0)
-            re += BigNum(int64_t(this->_content[ii]) * value._content[jj], up, ii + jj);
+    //assert(base_ == value.base_);
+    BigNum re(0, base_);
+    size_t len1 = this->content_.size(), len2 = value.content_.size();
+    for (size_t ii = 0; ii < len1; ++ii) {
+      if (this->content_[ii] != 0) {
+        for (size_t jj = 0; jj < len2; ++jj) {
+          if (value.content_[jj] != 0)
+            re += BigNum(int64_t(this->content_[ii]) * value.content_[jj], base_, static_cast<uint32_t>(ii + jj));
         }
       }
     }
-    re._symbol = !(this->_symbol ^ value._symbol);
-    while (re._content.size() > 1 && re._content[re._content.size() - 1] == 0) re._content.pop_back();
+    re.symbol_ = !(this->symbol_ ^ value.symbol_);
+    while (re.content_.size() > 1 && re.content_[re.content_.size() - 1] == 0) re.content_.pop_back();
     return re;
   }
   BigNum& operator*=(const BigNum& value) {
     (*this) = operator*(value);
     return *this;
   }
-  //----------------------------------
-  //移位计算
-  BigNum operator<<(std::size_t n) const {
-    BigNum re = *this;
-    re._content.insert(re._content.begin(), 0);
-    return re;
-  }
-  BigNum& operator<<=(std::size_t n) {
-    _content.insert(_content.begin(), 0);
-    return *this;
-  }
-  BigNum operator>>(std::size_t n) const {
-    BigNum re = *this;
-    if (re._content.size()) re._content.erase(re._content.begin());
-    return re;
-  }
-  BigNum& operator>>=(std::size_t n) {
-    if (_content.size()) _content.erase(_content.begin());
-    return *this;
-  }
 
-  /*
-int div(const int x, const int y)
-{
-  int dividend = x, multi, result = 0;
-  while(dividend >= y)
-  {
-    multi = 1;
-    while( multi * y <= (dividend >> 1) )
-    {
-      multi <<= 1;
-    }
-    result += multi;
-    dividend -= multi * y;
-  }
-  return result;
-}
-*/
-  //除，同时返回结果和余数
-  std::pair<BigNum, BigNum> div(const BigNum& val) const {
-    assert(up == val.up && val);
-
-    return std::make_pair(BigNum(), BigNum());
-  }
-
-  //整除
   BigNum operator/(const BigNum& value) const {
     std::pair<BigNum, BigNum> re = div(value);
     return re.first;
@@ -253,6 +296,7 @@ int div(const int x, const int y)
     (*this) = operator/(value);
     return (*this);
   }
+
   BigNum operator%(const BigNum& value) const {
     std::pair<BigNum, BigNum> re = div(value);
     return re.second;
@@ -262,43 +306,39 @@ int div(const int x, const int y)
     return (*this);
   }
 
-  //-------------------------------------
-  BigNum operator-() const {
-    BigNum re(*this);
-    re._symbol = !re._symbol;
+  BigNum operator<<(size_t n) const {
+    BigNum re = *this;
+    re.content_.insert(re.content_.begin(), 0);
     return re;
   }
-  bool operator==(const BigNum& value) const {
-    assert(up == value.up);
-    //如果都是0
-    if (BigNum::operator bool() && value) return true;
-    if (_symbol != value._symbol) return false;
-    if (_content.size() != value._content.size()) return false;
-    std::size_t len = _content.size();
-    for (std::size_t ii = 0; ii < len; ++ii) {
-      if (_content[ii] != value._content[ii]) return false;
-    }
-    return true;
+  BigNum& operator<<=(size_t n) {
+    content_.insert(content_.begin(), 0);
+    return *this;
   }
-  //是否为0。0为false
-  operator bool() const {
-    return !((_content.size() == 1) && (_content[0] == 0));
+  BigNum operator>>(size_t n) const {
+    BigNum re = *this;
+    if (re.content_.size()) re.content_.erase(re.content_.begin());
+    return re;
+  }
+  BigNum& operator>>=(size_t n) {
+    if (content_.size()) content_.erase(content_.begin());
+    return *this;
   }
 
   bool operator<(const BigNum& value) const {
-    assert(up == value.up);
+    //assert(base_ == value.base_);
     if (BigNum::operator bool() && value) return false;
-    if (!_symbol && value._symbol) return true;
-    if (_symbol && !(value._symbol)) return false;
-    if (_content.size() != value._content.size()) return _symbol ^ (_content.size() > value._content.size());
-    std::size_t len = _content.size();
+    if (!symbol_ && value.symbol_) return true;
+    if (symbol_ && !(value.symbol_)) return false;
+    if (content_.size() != value.content_.size()) return symbol_ ^ (content_.size() > value.content_.size());
+    size_t len = content_.size();
     //从高位开始判断
-    for (std::size_t ii = len - 1; ii > 0; --ii) {
-      if (_content[ii] == value._content[ii]) continue;
-      if (_symbol ^ (_content[ii] > value._content[ii])) return true;
+    for (size_t ii = len - 1; ii > 0; --ii) {
+      if (content_[ii] == value.content_[ii]) continue;
+      if (symbol_ ^ (content_[ii] > value.content_[ii])) return true;
       return false;
     }
-    return _symbol ^ (_content[0] >= value._content[0]);
+    return symbol_ ^ (content_[0] >= value.content_[0]);
   }
   bool operator>(const BigNum& value) const {
     return value < (*this);
@@ -310,46 +350,68 @@ int div(const int x, const int y)
     return BigNum::operator>(value) || BigNum::operator==(value);
   }
 
-  //输出到字符流，格式：[进制]数据
+  BigNum& Swap(BigNum& value) {
+    return *this;
+  }
+
+  /**
+   * @brief 除，同时获取商和余数
+   * 
+   * @param val 除数
+   * @return std::pair<BigNum, BigNum> <商, 余数>
+   */
+  std::pair<BigNum, BigNum> div(const BigNum& val) const {
+    // assert(base_ == val.base_ && val);
+
+    return std::make_pair(BigNum(), BigNum());
+  }
+
   friend std::ostream& operator<<(std::ostream& out, const BigNum& val) {
     //先输出进制
-    out << '[' << val.up << ']';
+    out << '[' << val.base_ << ']';
     //符号位
-    if (!val._symbol && val) out << '-';
+    if (!val.symbol_ && val) out << '-';
 
-    if (val.up > 1 && val.up <= 16) {
+    if (val.base_ > 1 && val.base_ <= 16) {
       //如果进制在16之内则采用16进制的符号
-      std::size_t len = val._content.size();
+      size_t len = val.content_.size();
       out << std::hex;
-      for (std::size_t ii = len - 1; ii < len; --ii) {
-        out << val._content[ii];
+      for (size_t ii = len - 1; ii < len; --ii) {
+        out << val.content_[ii];
       }
       out << std::dec;
     } else {
       //否则需要在各个位之间空开一格，以十进制输出数据
-      std::size_t len = val._content.size();
-      for (std::size_t ii = len - 1; ii < len; --ii) {
-        out << val._content[ii] << ' ';
+      size_t len = val.content_.size();
+      for (size_t ii = len - 1; ii < len; --ii) {
+        out << val.content_[ii] << ' ';
       }
     }
     return out;
   }
-  static BigNum abs(const BigNum& val) {
+
+  bool get_symbol() const { return symbol_; }
+  const std::vector<uint32_t>& get_content() const { return content_; }
+  uint32_t get_base() const { return base_; }
+
+  static BigNum Abs(const BigNum& val) {
     BigNum re(val);
-    re._symbol = true;
+    re.symbol_ = true;
     return re;
   }
 
-  //改变进制
-  void changeNumSys(uint32_t up_) {
-    assert(up_ != 1);
-    if (up_ == up) return;
+  static BigNum Pow(const BigNum& num, uint32_t n) {
+    return BigNum();
   }
 
- protected:
-  bool _symbol;                    //正负
-  std::vector<uint32_t> _content;  //采用大端存储，越高位在越后面，方便增加位数
-  uint32_t up;                     //进制，不能等于1。0表示就是以2^32为进制
+ private:
+  bool symbol_ = true;             //正负
+  std::vector<uint32_t> content_;  //采用大端存储，越高位在越后面，方便增加位数
+  uint32_t base_ = 10;             //进制，不能小于2
 };
+
+BigNum abs(const BigNum& value) { return BigNum::Abs(value); }
+
+void swap(BigNum& a, BigNum& b) { a.Swap(b); }
 
 }  // namespace ytlib

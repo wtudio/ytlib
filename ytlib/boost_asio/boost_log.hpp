@@ -35,7 +35,6 @@
 
 #include "net_log.hpp"
 #include "net_util.hpp"
-#include "ytlib/misc/misc_macro.h"
 
 namespace ytlib {
 
@@ -160,7 +159,10 @@ class YTBLCtr {
 ///设置日志级别：trace | debug | info | warning | error | fatal
 #define YTBL_SET_LEVEL(lvl) (boost::log::core::get())->set_filter(boost::log::trivial::severity >= boost::log::trivial::lvl);
 
-#define YTBL_FMT "[" __FILE__ ":" STRING(__LINE__) "@" << __FUNCTION__ << "]"
+#define _YTBL_FMT_STRING(x) #x
+#define YTBL_FMT_STRING(x) _YTBL_FMT_STRING(x)
+#define YTBL_FMT "[" __FILE__ ":" YTBL_FMT_STRING(__LINE__) "@" << __FUNCTION__ << "]"
+
 #define YTBL_TRACE BOOST_LOG_TRIVIAL(trace) << YTBL_FMT
 #define YTBL_DEBUG BOOST_LOG_TRIVIAL(debug) << YTBL_FMT
 #define YTBL_INFO BOOST_LOG_TRIVIAL(info) << YTBL_FMT

@@ -12,338 +12,379 @@
 #include <iostream>
 #include <string>
 
-#include "complex.hpp"
-#include "math_def.h"
-
-#define MAXSIZE 268435456
+#include "ytlib/misc/error.hpp"
 
 namespace ytlib {
 /**
  * @brief 简易矩阵类
- * 模板形式的简易矩阵类，可以放复数、int、float、double、自定义类型等等
+ * @note 模板形式的简易矩阵类，可以放复数、int、float、double、自定义类型等等
  */
-template <typename T>
+template <typename T = double>
 class Basic_Matrix {
  public:
-  // direct data access
-  T** val;
-  int32_t m, n;  //m行n列。每行的数据是连续的，应尽量使行号为索引
+  Basic_Matrix() {}
+  Basic_Matrix(const uint32_t input_max_row, const uint32_t input_max_col) {
+    AllocateMemory(input_max_row, input_max_col, true);
+  }
+  Basic_Matrix(const Basic_Matrix& M) {
+    AllocateMemory(M.max_row, M.max_col);
+    if (val != nullptr) memcpy(val[0], M.val[0], max_col * max_row * sizeof(T));
+  }
+  Basic_Matrix(Basic_Matrix&& M) : val(M.val), max_row(M.max_row), max_col(M.max_col) {
+    M.val = nullptr;
+    M.max_row = M.max_col = 0;
+  }
 
-  Basic_Matrix() : m(0), n(0), val(NULL) {}
-  Basic_Matrix(const int32_t m_, const int32_t n_) : val(NULL) {
-    _allocateMemory(m_, n_);
+  Basic_Matrix(const uint32_t input_max_row, const uint32_t input_max_col,
+               const std::vector<T>& input_data) {
+    AllocateMemory(input_max_row, input_max_col);
+    Assgin(input_data);
   }
-  Basic_Matrix(const int32_t m_, const int32_t n_, const T* val_, int32_t N_ = 0) : val(NULL) {
-    _allocateMemory(m_, n_);
-    if (N_ == 0) N_ = m * n;
-    int32_t k = 0;
-    for (int32_t i = 0; i < m_; ++i)
-      for (int32_t j = 0; j < n_; ++j) {
-        if (k >= N_) return;
-        val[i][j] = val_[k++];
-      }
+  Basic_Matrix(const uint32_t input_max_row, const uint32_t input_max_col,
+               const std::vector<std::vector<T> >& input_data) {
+    AllocateMemory(input_max_row, input_max_col);
+    Assgin(input_data);
   }
-  Basic_Matrix(const Basic_Matrix& M) : val(NULL) {
-    _allocateMemory(M.m, M.n);
-    memcpy(val[0], M.val[0], M.n * M.m * sizeof(T));
-  }
-  ~Basic_Matrix() {
-    _releaseMemory();
-  }
+
+  ~Basic_Matrix() { ReleaseMemory(); }
+
   Basic_Matrix& operator=(const Basic_Matrix& M) {
     if (this != &M) {
-      if (M.m != m || M.n != n) {
-        _releaseMemory();
-        _allocateMemory(M.m, M.n);
+      if (M.max_row != max_row || M.max_col != max_col) {
+        ReleaseMemory();
+        AllocateMemory(M.max_row, M.max_col);
       }
-      memcpy(val[0], M.val[0], M.n * M.m * sizeof(T));
+      if (val != nullptr) memcpy(val[0], M.val[0], max_col * max_row * sizeof(T));
     }
     return *this;
   }
-  //右值引用
-  Basic_Matrix(Basic_Matrix&& M) : val(M.val), m(M.m), n(M.n) {
-    M.val = NULL;
-    M.m = M.n = 0;
-  }
+
   Basic_Matrix& operator=(Basic_Matrix&& M) {
     if (this != &M) {
       //先释放自己的资源
-      _releaseMemory();
+      ReleaseMemory();
       val = M.val;
-      m = M.m;
-      n = M.n;
-      M.val = NULL;
-      M.m = M.n = 0;
+      max_row = M.max_row;
+      max_col = M.max_col;
+      M.val = nullptr;
+      M.max_row = M.max_col = 0;
     }
     return *this;
   }
 
-  /// copies submatrix of M into array 'val', default values copy whole row/column/matrix
-  void getData(T* val_, int32_t i1 = 0, int32_t j1 = 0, int32_t i2 = -1, int32_t j2 = -1, int32_t N_ = 0) const {
-    if (i2 == -1) i2 = m - 1;
-    if (j2 == -1) j2 = n - 1;
-    assert(i1 >= 0 && i2 < m && j1 >= 0 && j2 < n && i2 >= i1 && j2 >= j1);
-    if (N_ == 0) N_ = (i2 - i1 + 1) * (j2 - j1 + 1);
-    int32_t k = 0;
-    for (int32_t i = i1; i <= i2; ++i)
-      for (int32_t j = j1; j <= j2; ++j) {
-        if (k >= N_) return;
-        val_[k++] = val[i][j];
-      }
+  void Assgin(const std::vector<T>& input_data) {
+    if (val == nullptr) return;
+    memcpy(val[0], input_data.data(),
+           std::min(max_row * max_col, static_cast<uint32_t>(input_data.size())) * sizeof(T));
   }
 
-  /// set or get submatrices of current matrix
-  Basic_Matrix getMat(int32_t i1, int32_t j1, int32_t i2 = -1, int32_t j2 = -1) const {
-    if (i2 == -1) i2 = m - 1;
-    if (j2 == -1) j2 = n - 1;
-    assert(i1 >= 0 && i2 < m && j1 >= 0 && j2 < n && i2 >= i1 && j2 >= j1);
-    Basic_Matrix M(i2 - i1 + 1, j2 - j1 + 1);
-    for (int32_t i = 0; i < M.m; ++i)
-      for (int32_t j = 0; j < M.n; ++j)
-        M.val[i][j] = val[i1 + i][j1 + j];
+  void Assgin(const std::vector<std::vector<T> >& input_data) {
+    uint32_t real_row = std::min(max_row, static_cast<uint32_t>(input_data.size()));
+    for (uint32_t cur_row = 0; cur_row < real_row; ++cur_row) {
+      uint32_t real_col = std::min(max_col, static_cast<uint32_t>(input_data[cur_row].size()));
+      for (uint32_t cur_col = 0; cur_col < real_col; ++cur_col) {
+        val[cur_row][cur_col] = input_data[cur_row][cur_col];
+      }
+    }
+  }
+
+  /**
+   * @brief 将矩阵中部分区域数据按行展开
+   * 
+   * @param[in] row_begin 
+   * @param[in] col_begin 
+   * @param[in] row_end 
+   * @param[in] col_end 
+   * @return std::vector<T> 展开后的数据
+   */
+  std::vector<T> GetData(uint32_t row_begin = 0, uint32_t col_begin = 0,
+                         uint32_t row_end = UINT32_MAX, uint32_t col_end = UINT32_MAX) const {
+    std::vector<T> ret;
+
+    uint32_t real_row_end = (row_end >= max_row) ? max_row : (row_end + 1);
+    uint32_t real_col_end = (col_end >= max_col) ? max_col : (col_end + 1);
+
+    if (row_begin >= real_row_end || col_begin >= real_col_end) return ret;
+
+    ret.resize((real_row_end - row_begin) * (real_col_end - col_begin));
+    uint32_t ct = 0;
+    for (uint32_t cur_row = row_begin; cur_row < real_row_end; ++cur_row) {
+      for (uint32_t cur_col = col_begin; cur_col < real_col_end; ++cur_col) {
+        ret[ct++] = val[cur_row][cur_col];
+      }
+    }
+    return ret;
+  }
+
+  /**
+   * @brief 获取子矩阵
+   * 
+   * @param[in] row_begin 
+   * @param[in] col_begin 
+   * @param[in] row_end 
+   * @param[in] col_end 
+   * @return Basic_Matrix 子矩阵
+   */
+  Basic_Matrix GetMat(uint32_t row_begin, uint32_t col_begin,
+                      uint32_t row_end = UINT32_MAX, uint32_t col_end = UINT32_MAX) const {
+    Basic_Matrix M;
+
+    uint32_t real_row_end = (row_end >= max_row) ? max_row : (row_end + 1);
+    uint32_t real_col_end = (col_end >= max_col) ? max_col : (col_end + 1);
+    if (row_begin >= real_row_end || col_begin >= real_col_end) return M;
+
+    M.AllocateMemory(real_row_end - row_begin, real_col_end - col_begin);
+    for (uint32_t cur_row = 0; cur_row < M.max_row; ++cur_row) {
+      for (uint32_t cur_col = 0; cur_col < M.max_col; ++cur_col) {
+        M.val[cur_row][cur_col] = val[row_begin + cur_row][col_begin + cur_col];
+      }
+    }
+
     return M;
   }
 
-  void setMat(const Basic_Matrix& M, const int32_t i1 = 0, const int32_t j1 = 0) {
-    assert(i1 >= 0 && j1 >= 0 && (i1 + M.m) <= m && (j1 + M.n) <= n);
-    for (int32_t i = 0; i < M.m; ++i)
-      for (int32_t j = 0; j < M.n; ++j)
-        val[i1 + i][j1 + j] = M.val[i][j];
+  /**
+   * @brief 设置子矩阵
+   * 
+   * @param[in] M 
+   * @param[in] row_begin 
+   * @param[in] col_begin 
+   * @param[in] row_end 
+   * @param[in] col_end 
+   */
+  void SetMat(const Basic_Matrix& M, const uint32_t row_begin = 0, const uint32_t col_begin = 0,
+              uint32_t row_end = UINT32_MAX, uint32_t col_end = UINT32_MAX) {
+    uint32_t real_row_end = (row_end >= max_row) ? max_row : (row_end + 1);
+    uint32_t real_col_end = (col_end >= max_col) ? max_col : (col_end + 1);
+
+    uint32_t tmp_max_row = std::min(real_row_end, row_begin + M.max_row);
+    uint32_t tmp_max_col = std::min(real_col_end, col_begin + M.max_col);
+    for (uint32_t cur_row = row_begin; cur_row < tmp_max_row; ++cur_row) {
+      for (uint32_t cur_col = col_begin; cur_col < tmp_max_col; ++cur_col) {
+        val[cur_row][cur_col] = M.val[cur_row - row_begin][cur_col - col_begin];
+      }
+    }
   }
 
-  /// set sub-matrix to scalar (default 0), -1 as end replaces whole row/column/matrix
-  void setVal(const T& s, int32_t i1 = 0, int32_t j1 = 0, int32_t i2 = -1, int32_t j2 = -1) {
-    if (i2 == -1) i2 = m - 1;
-    if (j2 == -1) j2 = n - 1;
-    assert(i1 >= 0 && i2 < m && j1 >= 0 && j2 < n && i2 >= i1 && j2 >= j1);
-    for (int32_t i = i1; i <= i2; ++i)
-      for (int32_t j = j1; j <= j2; ++j)
-        val[i][j] = s;
+  /**
+   * @brief 将矩阵一定区域内都设置为一个常量
+   * 
+   * @param[in] in_val 
+   * @param[in] row_begin 
+   * @param[in] col_begin 
+   * @param[in] row_end 
+   * @param[in] col_end 
+   */
+  void SetVal(const T& in_val, uint32_t row_begin = 0, uint32_t col_begin = 0,
+              uint32_t row_end = UINT32_MAX, uint32_t col_end = UINT32_MAX) {
+    uint32_t real_row_end = (row_end >= max_row) ? max_row : (row_end + 1);
+    uint32_t real_col_end = (col_end >= max_col) ? max_col : (col_end + 1);
+
+    if (row_begin >= real_row_end || col_begin >= real_col_end) return;
+
+    for (uint32_t cur_row = row_begin; cur_row < real_row_end; ++cur_row) {
+      for (uint32_t cur_col = col_begin; cur_col < real_col_end; ++cur_col) {
+        val[cur_row][cur_col] = in_val;
+      }
+    }
   }
 
-  /// set (part of) diagonal to scalar, -1 as end replaces whole diagonal
-  void setDiag(const T& s, int32_t i1 = 0, int32_t i2 = -1) {
-    if (i2 == -1) i2 = std::min(m, n) - 1;
-    assert(i1 >= 0 && i2 < std::min(m, n) && i2 >= i1);
-    for (int32_t i = i1; i <= i2; ++i)
-      val[i][i] = s;
+  /**
+   * @brief 设置对角矩阵
+   * 
+   * @param[in] in_val 
+   * @param[in] idx_begin 
+   * @param[in] idx_end 
+   */
+  void SetDiag(const T& in_val, uint32_t idx_begin = 0, uint32_t idx_end = UINT32_MAX) {
+    uint32_t real_idx_end = (idx_end >= max_row || idx_end >= max_col) ? std::min(max_row, max_col) : (idx_end + 1);
+
+    if (idx_begin >= real_idx_end) return;
+
+    for (uint32_t ii = idx_begin; ii < real_idx_end; ++ii)
+      val[ii][ii] = in_val;
   }
 
-  /// clear matrix
-  void zero() {
-    for (int32_t i = 0; i < m; ++i)
-      for (int32_t j = 0; j < n; ++j)
-        val[i][j] = T();
+  /**
+   * @brief 设置对角矩阵
+   * 
+   * @param[in] input_vec 
+   * @param[in] idx_begin 
+   * @param[in] idx_end 
+   */
+  void SetDiag(const std::vector<T>& input_vec, uint32_t idx_begin = 0, uint32_t idx_end = UINT32_MAX) {
+    uint32_t real_idx_end = (idx_end >= max_row || idx_end >= max_col) ? std::min(max_row, max_col) : (idx_end + 1);
+
+    if (idx_begin >= real_idx_end) return;
+
+    uint32_t ct = 0;
+    for (uint32_t ii = idx_begin; ii < real_idx_end; ++ii) {
+      if (ct >= input_vec.size()) return;
+      val[ii][ii] = input_vec[ct++];
+    }
   }
-  Basic_Matrix& swap(Basic_Matrix& value) {
-    if (this != &value) {
-      int32_t tmp = value.m;
-      value.m = this->m;
-      this->m = tmp;
-      tmp = value.n;
-      value.n = this->n;
-      this->n = tmp;
-      T** ptmp = value.val;
-      value.val = this->val;
+
+  /**
+   * @brief 设置零矩阵
+   * 
+   */
+  void Zero() {
+    if (val == nullptr) return;
+    memset(val[0], 0, max_row * max_col * sizeof(T));
+  }
+
+  Basic_Matrix& Swap(Basic_Matrix& M) {
+    if (this != &M) {
+      uint32_t tmp = M.max_row;
+      M.max_row = this->max_row;
+      this->max_row = tmp;
+      tmp = M.max_col;
+      M.max_col = this->max_col;
+      this->max_col = tmp;
+      T** ptmp = M.val;
+      M.val = this->val;
       this->val = ptmp;
     }
     return *this;
   }
-  /// extract columns with given index
-  Basic_Matrix extractCols(const int32_t* idx, const int32_t N_) const {
-    Basic_Matrix M(m, N_);
-    for (int32_t j = 0; j < N_; ++j) {
-      assert((idx[j] < n) && (idx[j] >= 0));
-      for (int32_t i = 0; i < m; ++i)
-        M.val[i][j] = val[i][idx[j]];
+
+  bool operator==(const Basic_Matrix& M) const {
+    if (max_row != M.max_row) return false;
+    if (max_col != M.max_col) return false;
+    if (max_row > 0 && max_col > 0) {
+      uint32_t len = max_row * max_col;
+      for (uint32_t ii = 0; ii < len; ++ii) {
+        if (val[0][ii] != M.val[0][ii]) return false;
+      }
     }
-    return M;
+
+    return true;
   }
-  /// create identity matrix
-  static Basic_Matrix eye(const int32_t m) {
-    Basic_Matrix M(m, m);
-    for (int32_t i = 0; i < m; ++i)
-      M.val[i][i] = T(1);
-    return M;
+  bool operator!=(const Basic_Matrix& M) const {
+    return !(*this == M);
   }
 
-  void eye() {
-    zero();
-    int32_t min_d = std::min(m, n);
-    for (int32_t i = 0; i < min_d; ++i)
-      val[i][i] = T(1);
+  Basic_Matrix operator+(const Basic_Matrix& M) const {
+    RT_ASSERT(max_row == M.max_row && max_col == M.max_col, "The matrix must be the same size.");
+    Basic_Matrix ret(max_row, max_col);
+    for (uint32_t cur_row = 0; cur_row < max_row; ++cur_row)
+      for (uint32_t cur_col = 0; cur_col < max_col; ++cur_col)
+        ret.val[cur_row][cur_col] = val[cur_row][cur_col] + M.val[cur_row][cur_col];
+    return ret;
   }
-
-  /// create matrix with ones
-  static Basic_Matrix ones(const int32_t m, const int32_t n) {
-    Basic_Matrix M(m, n);
-    for (int32_t i = 0; i < m; ++i)
-      for (int32_t j = 0; j < n; ++j)
-        M.val[i][j] = T(1);
-    return M;
-  }
-  /// create diagonal matrix with nx1 or 1xn matrix M as elements
-  static Basic_Matrix diag(const Basic_Matrix& M) {
-    assert((M.m > 1 && M.n == 1) || (M.m == 1 && M.n > 1));
-    if (M.n == 1) {
-      Basic_Matrix D(M.m, M.m);
-      for (int32_t i = 0; i < M.m; ++i)
-        D.val[i][i] = M.val[i][0];
-      return D;
-    } else {
-      Basic_Matrix D(M.n, M.n);
-      for (int32_t i = 0; i < M.n; ++i)
-        D.val[i][i] = M.val[0][i];
-      return D;
-    }
-  }
-
-  /// returns the m-by-n matrix whose elements are taken column-wise from M
-  static Basic_Matrix reshape(const Basic_Matrix& M, const int32_t m_, const int32_t n_) {
-    assert(M.m * M.n == m_ * n_);
-    Basic_Matrix M2(m_, n_);
-    int32_t size_ = m_ * n_;
-    for (int32_t k = 0; k < size_; ++k) {
-      M2.val[k / n_][k % n_] = M.val[k / M.n][k % M.n];
-    }
-    return M2;
-  }
-
-  /// create 3x3 rotation matrices (convention: http://en.wikipedia.org/wiki/Rotation_matrix)
-  static Basic_Matrix rotMatX(const double angle) {
-    double s = sin(angle);
-    double c = cos(angle);
-    Basic_Matrix R(3, 3);
-    R.val[0][0] = T(+1);
-    R.val[1][1] = T(+c);
-    R.val[1][2] = T(-s);
-    R.val[2][1] = T(+s);
-    R.val[2][2] = T(+c);
-    return R;
-  }
-  static Basic_Matrix rotMatY(const double angle) {
-    double s = sin(angle);
-    double c = cos(angle);
-    Basic_Matrix R(3, 3);
-    R.val[0][0] = T(+c);
-    R.val[0][2] = T(+s);
-    R.val[1][1] = T(+1);
-    R.val[2][0] = T(-s);
-    R.val[2][2] = T(+c);
-    return R;
-  }
-  static Basic_Matrix rotMatZ(const double angle) {
-    double s = sin(angle);
-    double c = cos(angle);
-    Basic_Matrix R(3, 3);
-    R.val[0][0] = T(+c);
-    R.val[0][1] = T(-s);
-    R.val[1][0] = T(+s);
-    R.val[1][1] = T(+c);
-    R.val[2][2] = T(+1);
-    return R;
-  }
-
-  Basic_Matrix operator+(const Basic_Matrix& B) const {
-    assert(m == B.m && n == B.n);
-    Basic_Matrix C(m, n);
-    for (int32_t i = 0; i < m; ++i)
-      for (int32_t j = 0; j < n; ++j)
-        C.val[i][j] = val[i][j] + B.val[i][j];
-    return C;
-  }
-  Basic_Matrix& operator+=(const Basic_Matrix& B) {
-    assert(m == B.m && n == B.n);
-    for (int32_t i = 0; i < m; ++i)
-      for (int32_t j = 0; j < n; ++j)
-        val[i][j] += B.val[i][j];
+  Basic_Matrix& operator+=(const Basic_Matrix& M) {
+    RT_ASSERT(max_row == M.max_row && max_col == M.max_col, "The matrix must be the same size.");
+    for (uint32_t cur_row = 0; cur_row < max_row; ++cur_row)
+      for (uint32_t cur_col = 0; cur_col < max_col; ++cur_col)
+        val[cur_row][cur_col] += M.val[cur_row][cur_col];
     return *this;
   }
 
-  Basic_Matrix operator-(const Basic_Matrix& B) const {
-    assert(m == B.m && n == B.n);
-    Basic_Matrix C(m, n);
-    for (int32_t i = 0; i < m; ++i)
-      for (int32_t j = 0; j < n; ++j)
-        C.val[i][j] = val[i][j] - B.val[i][j];
-    return C;
+  Basic_Matrix operator-(const Basic_Matrix& M) const {
+    RT_ASSERT(max_row == M.max_row && max_col == M.max_col, "The matrix must be the same size.");
+    Basic_Matrix ret(max_row, max_col);
+    for (uint32_t cur_row = 0; cur_row < max_row; ++cur_row)
+      for (uint32_t cur_col = 0; cur_col < max_col; ++cur_col)
+        ret.val[cur_row][cur_col] = val[cur_row][cur_col] - M.val[cur_row][cur_col];
+    return ret;
   }
-  Basic_Matrix& operator-=(const Basic_Matrix& B) {
-    assert(m == B.m && n == B.n);
-    for (int32_t i = 0; i < m; ++i)
-      for (int32_t j = 0; j < n; ++j)
-        val[i][j] -= B.val[i][j];
+  Basic_Matrix& operator-=(const Basic_Matrix& M) {
+    RT_ASSERT(max_row == M.max_row && max_col == M.max_col, "The matrix must be the same size.");
+    for (uint32_t cur_row = 0; cur_row < max_row; ++cur_row)
+      for (uint32_t cur_col = 0; cur_col < max_col; ++cur_col)
+        val[cur_row][cur_col] -= M.val[cur_row][cur_col];
     return *this;
   }
 
-  Basic_Matrix operator*(const Basic_Matrix& B) const {
-    assert(n == B.m);
-    Basic_Matrix C(m, B.n);
-    for (int32_t i = 0; i < m; ++i)
-      for (int32_t j = 0; j < B.n; ++j)
-        for (int32_t k = 0; k < n; ++k)
-          C.val[i][j] += val[i][k] * B.val[k][j];
-    return C;
+  Basic_Matrix operator*(const Basic_Matrix& M) const {
+    RT_ASSERT(max_col == M.max_row, "M.max_row must be equal to this->max_col");
+    Basic_Matrix ret(max_row, M.max_col);
+    for (uint32_t cur_row = 0; cur_row < max_row; ++cur_row)
+      for (uint32_t cur_col = 0; cur_col < M.max_col; ++cur_col)
+        for (uint32_t k = 0; k < max_col; ++k)
+          ret.val[cur_row][cur_col] += val[cur_row][k] * M.val[k][cur_col];
+    return ret;
   }
-  Basic_Matrix& operator*=(const Basic_Matrix& B) {
-    assert(n == B.m);
-    Basic_Matrix C(m, B.n);
-    for (int32_t i = 0; i < m; ++i)
-      for (int32_t j = 0; j < B.n; ++j)
-        for (int32_t k = 0; k < n; ++k)
-          C.val[i][j] += val[i][k] * B.val[k][j];
+  Basic_Matrix& operator*=(const Basic_Matrix& M) {
+    RT_ASSERT(max_col == M.max_row, "M.max_row must be equal to this->max_col");
+    Basic_Matrix ret(max_row, M.max_col);
+    for (uint32_t cur_row = 0; cur_row < max_row; ++cur_row)
+      for (uint32_t cur_col = 0; cur_col < M.max_col; ++cur_col)
+        for (uint32_t k = 0; k < max_col; ++k)
+          ret.val[cur_row][cur_col] += val[cur_row][k] * M.val[k][cur_col];
 
-    return this->swap(C);
+    return this->Swap(ret);
   }
 
-  Basic_Matrix operator*(const T& s) const {
-    Basic_Matrix C(m, n);
-    for (int32_t i = 0; i < m; ++i)
-      for (int32_t j = 0; j < n; ++j)
-        C.val[i][j] = val[i][j] * s;
-    return C;
+  Basic_Matrix operator*(const T& in_val) const {
+    Basic_Matrix ret(max_row, max_col);
+    for (uint32_t cur_row = 0; cur_row < max_row; ++cur_row)
+      for (uint32_t cur_col = 0; cur_col < max_col; ++cur_col)
+        ret.val[cur_row][cur_col] = val[cur_row][cur_col] * in_val;
+    return ret;
   }
-  Basic_Matrix& operator*=(const T& s) {
-    for (int32_t i = 0; i < m; ++i)
-      for (int32_t j = 0; j < n; ++j)
-        val[i][j] *= s;
+  Basic_Matrix& operator*=(const T& in_val) {
+    for (uint32_t cur_row = 0; cur_row < max_row; ++cur_row)
+      for (uint32_t cur_col = 0; cur_col < max_col; ++cur_col)
+        val[cur_row][cur_col] *= in_val;
     return *this;
   }
 
-  /// divide by scalar, make sure s!=0
-  Basic_Matrix operator/(const T& s) const {
-    Basic_Matrix C(m, n);
-    for (int32_t i = 0; i < m; ++i)
-      for (int32_t j = 0; j < n; ++j)
-        C.val[i][j] = val[i][j] / s;
-    return C;
+  Basic_Matrix operator/(const T& in_val) const {
+    Basic_Matrix ret(max_row, max_col);
+    for (uint32_t cur_row = 0; cur_row < max_row; ++cur_row)
+      for (uint32_t cur_col = 0; cur_col < max_col; ++cur_col)
+        ret.val[cur_row][cur_col] = val[cur_row][cur_col] / in_val;
+    return ret;
   }
-  Basic_Matrix& operator/=(const T& s) {
-    for (int32_t i = 0; i < m; ++i)
-      for (int32_t j = 0; j < n; ++j)
-        val[i][j] /= s;
+  Basic_Matrix& operator/=(const T& in_val) {
+    for (uint32_t cur_row = 0; cur_row < max_row; ++cur_row)
+      for (uint32_t cur_col = 0; cur_col < max_col; ++cur_col)
+        val[cur_row][cur_col] /= in_val;
     return *this;
   }
-  /// negative matrix
+
   Basic_Matrix operator-() const {
-    Basic_Matrix C(m, n);
-    for (int32_t i = 0; i < m; ++i)
-      for (int32_t j = 0; j < n; ++j)
-        C.val[i][j] = -val[i][j];
-    return C;
+    Basic_Matrix ret(max_row, max_col);
+    for (uint32_t cur_row = 0; cur_row < max_row; ++cur_row)
+      for (uint32_t cur_col = 0; cur_col < max_col; ++cur_col)
+        ret.val[cur_row][cur_col] = -val[cur_row][cur_col];
+    return ret;
   }
-  /// transpose
+
+  /// 转置
   Basic_Matrix operator~() const {
-    Basic_Matrix C(n, m);
-    for (int32_t i = 0; i < m; ++i)
-      for (int32_t j = 0; j < n; ++j)
-        C.val[j][i] = val[i][j];
-    return C;
+    Basic_Matrix ret(max_col, max_row);
+    for (uint32_t cur_row = 0; cur_row < max_row; ++cur_row)
+      for (uint32_t cur_col = 0; cur_col < max_col; ++cur_col)
+        ret.val[cur_col][cur_row] = val[cur_row][cur_col];
+    return ret;
   }
-  /// pow
-  static Basic_Matrix pow(const Basic_Matrix& value, uint32_t n) {
-    Basic_Matrix tmp = value, re(value.m, value.n);
-    re.eye();
+
+  /**
+   * @brief 创建单位矩阵
+   * 
+   * @param[in] in_val 单位值
+   * @param[in] max_idx 矩阵大小
+   * @return Basic_Matrix 
+   */
+  static Basic_Matrix Eye(const T& in_val, const uint32_t max_idx) {
+    Basic_Matrix M(max_idx, max_idx);
+    M.SetDiag(in_val);
+    return M;
+  }
+
+  /**
+   * @brief 乘方
+   * @note 矩阵必须长宽相等
+   * @param[in] in_val 单位值
+   * @param[in] M 底数
+   * @param[in] n 次方数
+   * @return Basic_Matrix 
+   */
+  static Basic_Matrix Pow(const T& in_val, const Basic_Matrix& M, uint32_t n) {
+    Basic_Matrix tmp = M, re(M.max_row, M.max_col);
+    re.SetDiag(in_val);
     for (; n; n >>= 1) {
       if (n & 1)
         re *= tmp;
@@ -352,50 +393,116 @@ class Basic_Matrix {
     return re;
   }
 
-  /// print matrix to stream
   friend std::ostream& operator<<(std::ostream& out, const Basic_Matrix& M) {
-    if (M.m == 0 || M.n == 0) {
+    if (M.max_row == 0 || M.max_col == 0) {
       out << "[empty matrix]";
     } else {
-      for (int32_t i = 0; i < M.m; ++i) {
-        for (int32_t j = 0; j < M.n; ++j) {
-          out << M.val[i][j];
-          if (j != M.n - 1) out << "\t";
+      out << "[row " << M.max_row << ", col " << M.max_col << "]\n";
+      for (uint32_t cur_row = 0; cur_row < M.max_row; ++cur_row) {
+        for (uint32_t cur_col = 0; cur_col < M.max_col; ++cur_col) {
+          out << M.val[cur_row][cur_col];
+          if (cur_col != M.max_col - 1) out << '\t';
         }
-        out << std::endl;
+        out << '\n';
       }
     }
     return out;
   }
 
  private:
-  void _allocateMemory(const int32_t m_, const int32_t n_) {
-    assert((m_ * n_ < MAXSIZE) && val == NULL);
-    m = m_;
-    n = n_;
-    if (m == 0 || n == 0) return;
+  void AllocateMemory(const uint32_t input_max_row, const uint32_t input_max_col, bool need_init = false) {
+    if (input_max_row == 0 || input_max_col == 0) return;
 
-    val = (T**)malloc(m * sizeof(T*));
-    val[0] = (T*)calloc(m * n, sizeof(T));
-    for (int32_t i = 1; i < m; ++i)
-      val[i] = val[i - 1] + n;
+    max_row = input_max_row;
+    max_col = input_max_col;
+    val = (T**)malloc(max_row * sizeof(T*));
+
+    if (need_init) {
+      val[0] = (T*)calloc(max_row * max_col, sizeof(T));
+    } else {
+      val[0] = (T*)malloc(max_row * max_col * sizeof(T));
+    }
+
+    for (uint32_t ii = 1; ii < max_row; ++ii)
+      val[ii] = val[ii - 1] + max_col;
   }
 
-  void _releaseMemory() {
-    if (val != NULL) {
+  void ReleaseMemory() {
+    if (val != nullptr) {
       free(val[0]);
       free(val);
+      val = nullptr;
     }
   }
+
+ public:
+  T** val = nullptr;
+  uint32_t max_row = 0;  ///<行。每行的数据是连续的，应尽量使行号为索引
+  uint32_t max_col = 0;  ///<列
 };
 
-template <typename T>
-void swap(Basic_Matrix<T>& a, Basic_Matrix<T>& b) {
-  a.swap(b);
+template <typename T = double>
+void swap(Basic_Matrix<T>& a, Basic_Matrix<T>& b) { a.Swap(b); }
+
+typedef Basic_Matrix<double> Matrix;  //default
+typedef Basic_Matrix<float> Matrix_f;
+typedef Basic_Matrix<int32_t> Matrix_i32;
+typedef Basic_Matrix<uint32_t> Matrix_u32;
+typedef Basic_Matrix<int64_t> Matrix_i64;
+typedef Basic_Matrix<uint64_t> Matrix_u64;
+
+/**
+ * @brief 获取3x3旋转矩阵
+ * @note 参考http://en.wikipedia.org/wiki/Rotation_matrix
+ * @param[in] angle 
+ * @return Matrix 
+ */
+inline Matrix RotMatX(const double angle) {
+  double s = std::sin(angle);
+  double c = std::cos(angle);
+  Matrix R(3, 3);
+  R.val[0][0] = 1.0;
+  R.val[1][1] = c;
+  R.val[1][2] = -s;
+  R.val[2][1] = s;
+  R.val[2][2] = c;
+  return R;
 }
 
-typedef Basic_Matrix<double> Matrix;
-typedef Basic_Matrix<int32_t> Matrix_i;
-typedef Basic_Matrix<uint32_t> Matrix_u;
-// typedef Basic_Matrix<Complex> Matrix_c;
+/**
+ * @brief 获取3x3旋转矩阵
+ * @note 参考http://en.wikipedia.org/wiki/Rotation_matrix
+ * @param[in] angle 
+ * @return Matrix 
+ */
+inline Matrix RotMatY(const double angle) {
+  double s = sin(angle);
+  double c = cos(angle);
+  Matrix R(3, 3);
+  R.val[0][0] = c;
+  R.val[0][2] = s;
+  R.val[1][1] = 1.0;
+  R.val[2][0] = -s;
+  R.val[2][2] = c;
+  return R;
+}
+
+/**
+ * @brief 获取3x3旋转矩阵
+ * @note 参考http://en.wikipedia.org/wiki/Rotation_matrix
+ * @param[in] angle 
+ * @return Matrix 
+ */
+inline Matrix RotMatZ(const double angle) {
+  double s = sin(angle);
+  double c = cos(angle);
+  Matrix R(3, 3);
+  R.val[0][0] = c;
+  R.val[0][1] = -s;
+  R.val[1][0] = s;
+  R.val[1][1] = c;
+  R.val[2][2] = 1.0;
+  return R;
+}
+
 }  // namespace ytlib

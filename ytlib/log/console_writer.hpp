@@ -118,8 +118,6 @@ inline LogWriter GetConsoleWriter(const std::map<std::string, std::string>& cfg)
 
 #endif
 
-  fprintf(stderr, "init ConsoleWriter, color:%s\n", (pw->print_color_) ? "true" : "false");
-
   return [pw](const LogData& data) {
     pw->Write(data);
   };

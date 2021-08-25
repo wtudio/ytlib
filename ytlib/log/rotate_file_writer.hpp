@@ -7,6 +7,7 @@
 #include <map>
 
 #include "log.hpp"
+#include "ytlib/misc/misc_macro.h"
 #include "ytlib/string/string_util.hpp"
 
 namespace ytlib {
@@ -117,7 +118,7 @@ class RotateFileWriter {
 
     ofs_.open(name_buf, std::ios::app);
     if (!ofs_.is_open()) {
-      fprintf(stderr, "open file %s failed.", name_buf);
+      DBG_PRINT("open file %s failed.", name_buf);
       return -1;
     }
 
@@ -164,7 +165,7 @@ class RotateFileWriter {
 
       if (log_files.size() <= max_file_num_) return;
 
-      uint32_t del_num = log_files.size() - max_file_num_;
+      uint32_t del_num = static_cast<uint32_t>(log_files.size()) - max_file_num_;
       auto itr = log_files.begin();
       do {
         std::filesystem::remove(itr->second);
@@ -190,7 +191,7 @@ class RotateFileWriter {
 
       if (log_files.size() <= max_file_num_) return;
 
-      uint32_t del_num = log_files.size() - max_file_num_;
+      uint32_t del_num = static_cast<uint32_t>(log_files.size()) - max_file_num_;
       auto itr = log_files.begin();
       do {
         std::filesystem::remove(itr->second);
@@ -219,12 +220,12 @@ inline LogWriter GetRotateFileWriter(const std::map<std::string, std::string>& c
   std::filesystem::path log_path(path.c_str());
   const std::string& full_path = (log_path / filename).string();
 
-  fprintf(stderr, "init RotateFileWriter, file path:%s\n", full_path.c_str());
+  DBG_PRINT("init RotateFileWriter, file path:%s\n", full_path.c_str());
 
   if (!(std::filesystem::exists(log_path) && std::filesystem::is_directory(log_path))) {
     std::error_code errCode;
     if (!std::filesystem::create_directories(log_path, errCode)) {
-      fprintf(stderr, "create_directories(%s) fail, error:%s\n", path.c_str(), errCode.message().c_str());
+      DBG_PRINT("create_directories(%s) fail, error:%s\n", path.c_str(), errCode.message().c_str());
       return LogWriter();
     }
   }
@@ -250,7 +251,6 @@ inline LogWriter GetRotateFileWriter(const std::map<std::string, std::string>& c
   }
 
   if (pw->Open(full_path) != 0) {
-    fprintf(stderr, "RotateFileWriter.Open %s fail: %s\n", full_path.c_str(), strerror(errno));
     return LogWriter();
   }
 

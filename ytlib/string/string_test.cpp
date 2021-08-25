@@ -15,7 +15,7 @@ TEST(STRING_ALGS_TEST, KMP_test) {
     std::string ss;
     std::string ps;
 
-    std::size_t want_result;
+    size_t want_result;
   };
   std::vector<TestCaseForKMP> test_cases;
 
@@ -76,7 +76,7 @@ TEST(STRING_ALGS_TEST, StrDif_test) {
     std::string s1;
     std::string s2;
 
-    std::size_t want_result;
+    size_t want_result;
   };
   std::vector<TestCaseForStrDif> test_cases;
 
@@ -125,7 +125,7 @@ TEST(STRING_ALGS_TEST, LongestSubStrWithoutDup_test) {
 
     std::string s;
 
-    std::pair<std::size_t, std::size_t> want_result;
+    std::pair<size_t, size_t> want_result;
   };
   std::vector<TestCaseForLongestSubStrWithoutDup> test_cases;
 

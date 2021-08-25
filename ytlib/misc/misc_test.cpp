@@ -71,7 +71,7 @@ TEST(MISC_TEST, DynamicLib_BASE) {
 
 TEST(MISC_TEST, sharedBuf_BASE) {
   std::string s = "test test";
-  size_t n = s.size();
+  uint32_t n = static_cast<uint32_t>(s.size());
   SharedBuf buf1(n);
   ASSERT_EQ(buf1.Size(), n);
 

@@ -43,10 +43,10 @@ class FileObj {
    * @note 打开并解析文件内容到obj，使用设置好的path
    */
   void OpenFile() {
-    RT_ASSERT(!filepath_.empty(), "path has not been set.");
-    RT_ASSERT(std::filesystem::status(filepath_).type() == std::filesystem::file_type::regular, "file not exist.");
+    RT_ASSERT(!filepath_.empty(), "Path has not been set.");
+    RT_ASSERT(std::filesystem::status(filepath_).type() == std::filesystem::file_type::regular, "File not exist.");
     obj_ptr_.reset();
-    RT_ASSERT(ParseFileObj(), "parse file failed.");
+    RT_ASSERT(ParseFileObj(), "Parse file failed.");
   }
 
   /**
@@ -65,7 +65,7 @@ class FileObj {
    */
   void NewFile() {
     obj_ptr_.reset();
-    RT_ASSERT(NewFileObj(), "new file failed.");
+    RT_ASSERT(NewFileObj(), "New file failed.");
   }
 
   /**
@@ -83,13 +83,13 @@ class FileObj {
    * @note 保存内容结构体，使用设置好的path
    */
   void SaveFile() {
-    RT_ASSERT(!filepath_.empty(), "path has not been set.");
-    RT_ASSERT(obj_ptr_, "obj has not been created.");
+    RT_ASSERT(!filepath_.empty(), "Path has not been set.");
+    RT_ASSERT(obj_ptr_, "Obj has not been created.");
     const auto& parent_path = filepath_.parent_path();
     if (std::filesystem::status(parent_path).type() != std::filesystem::file_type::directory)
-      RT_ASSERT(std::filesystem::create_directories(parent_path), "create dir failed");
+      RT_ASSERT(std::filesystem::create_directories(parent_path), "Create dir failed.");
 
-    RT_ASSERT(SaveFileObj(), "save file failed.");
+    RT_ASSERT(SaveFileObj(), "Save file failed.");
   }
 
   /**
@@ -117,7 +117,7 @@ class FileObj {
    */
   void SetFilePath(const std::string& path) {
     const std::filesystem::path& p = std::filesystem::absolute(path);
-    RT_ASSERT(CheckFileName(p.string()), "invalid file path.");
+    RT_ASSERT(CheckFileName(p.string()), "Invalid file path.");
     filepath_ = p;
   }
 

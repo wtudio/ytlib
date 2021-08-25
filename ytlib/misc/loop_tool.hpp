@@ -25,19 +25,19 @@ namespace ytlib {
 class LoopTool {
  public:
   explicit LoopTool(const std::vector<uint32_t>& up_) : m_vecUp(up_) {
-    std::size_t len = m_vecUp.size();
+    size_t len = m_vecUp.size();
     assert(len);
     m_vecContent.resize(len);
-    for (std::size_t ii = 0; ii < len; ++ii) {
+    for (size_t ii = 0; ii < len; ++ii) {
       m_vecContent[ii] = 0;
     }
   }
 
   ///++i
   LoopTool& operator++() {
-    std::size_t len = m_vecUp.size();
+    size_t len = m_vecUp.size();
     //从低位开始加
-    for (std::size_t ii = 0; ii < len; ++ii) {
+    for (size_t ii = 0; ii < len; ++ii) {
       m_vecContent[ii] += 1;
       if (m_vecContent[ii] == m_vecUp[ii])
         m_vecContent[ii] = 0;
@@ -48,9 +48,9 @@ class LoopTool {
   }
   ///--i
   LoopTool& operator--() {
-    std::size_t len = m_vecUp.size();
+    size_t len = m_vecUp.size();
     //从低位开始减
-    for (std::size_t ii = 0; ii < len; ++ii) {
+    for (size_t ii = 0; ii < len; ++ii) {
       if (m_vecContent[ii] == 0)
         m_vecContent[ii] = m_vecUp[ii] - 1;
       else {
@@ -62,8 +62,8 @@ class LoopTool {
   }
   ///是否为0。0为false
   operator bool() const {
-    std::size_t len = m_vecUp.size();
-    for (std::size_t ii = 0; ii < len; ++ii) {
+    size_t len = m_vecUp.size();
+    for (size_t ii = 0; ii < len; ++ii) {
       if (m_vecContent[ii]) return true;
     }
     return false;

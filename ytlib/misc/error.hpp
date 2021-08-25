@@ -3,8 +3,6 @@
 #include <exception>
 #include <string>
 
-#include "misc_macro.h"
-
 namespace ytlib {
 
 /**
@@ -25,9 +23,12 @@ class Exception : public std::exception {
   const char* msg_;
 };
 
+#define _ASSERT_PRINT_STRING(x) #x
+#define ASSERT_PRINT_STRING(x) _ASSERT_PRINT_STRING(x)
+
 // runtime assert
 #define RT_ASSERT(exp, ...) \
   if (!(exp)) [[unlikely]]  \
-    throw ytlib::Exception("[" __FILE__ ":" STRING(__LINE__) "] assert ( " #exp " ) failed. " __VA_ARGS__);
+    throw ytlib::Exception("[" __FILE__ ":" ASSERT_PRINT_STRING(__LINE__) "] assert ( " #exp " ) failed. " __VA_ARGS__);
 
 }  // namespace ytlib

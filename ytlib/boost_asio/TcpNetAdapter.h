@@ -193,7 +193,7 @@ class TcpConnection : public ConnBase {
     delete p;
   }
   ///读取解析报头，缓存跟着回调走
-  void on_read_head(RecvDataPtr& RData_, const boost::system::error_code& err, std::size_t read_bytes) {
+  void on_read_head(RecvDataPtr& RData_, const boost::system::error_code& err, size_t read_bytes) {
     if (read_get_err(err)) return;
     if (header[0] == TCPHEAD1 && header[1] == TCPHEAD2 && read_bytes == HEAD_SIZE) {
       uint32_t pack_size = GetNumFromBuf(&header[4]);
@@ -252,19 +252,19 @@ class TcpConnection : public ConnBase {
     errcb_(remote_ep);
     return;
   }
-  void on_read_obj(RecvDataPtr& RData_, buff_Ptr& buff_, const boost::system::error_code& err, std::size_t read_bytes) {
+  void on_read_obj(RecvDataPtr& RData_, buff_Ptr& buff_, const boost::system::error_code& err, size_t read_bytes) {
     if (read_get_err(err)) return;
     do_read_head(RData_);
     boost::archive::binary_iarchive iar(*buff_);
     iar >> RData_->pdata->obj;
   }
-  void on_read_quick_data(RecvDataPtr& RData_, boost::shared_array<char>& buff_, const boost::system::error_code& err, std::size_t read_bytes) {
+  void on_read_quick_data(RecvDataPtr& RData_, boost::shared_array<char>& buff_, const boost::system::error_code& err, size_t read_bytes) {
     if (read_get_err(err)) return;
     do_read_head(RData_);
     RData_->pdata->quick_data.buf = buff_;
     RData_->pdata->quick_data.buf_size = (uint32_t)read_bytes;
   }
-  void on_read_data_tips(RecvDataPtr& RData_, boost::shared_array<char>& buff_, const boost::system::error_code& err, std::size_t read_bytes) {
+  void on_read_data_tips(RecvDataPtr& RData_, boost::shared_array<char>& buff_, const boost::system::error_code& err, size_t read_bytes) {
     if (read_get_err(err)) return;
     //一定要先建立好map再do_read_head
     uint32_t pos = 0;
@@ -276,7 +276,7 @@ class TcpConnection : public ConnBase {
     }
     do_read_head(RData_);
   }
-  void on_read_data(RecvDataPtr& RData_, boost::shared_array<char>& buff_, const boost::system::error_code& err, std::size_t read_bytes) {
+  void on_read_data(RecvDataPtr& RData_, boost::shared_array<char>& buff_, const boost::system::error_code& err, size_t read_bytes) {
     if (read_get_err(err)) return;
     uint8_t pos = header[3];
     if (pos > RData_->pdata->map_datas.size()) {
@@ -290,7 +290,7 @@ class TcpConnection : public ConnBase {
     itr->second.buf = buff_;
     itr->second.buf_size = static_cast<uint32_t>(read_bytes);
   }
-  void on_read_file_tips(RecvDataPtr& RData_, boost::shared_array<char>& buff_, const boost::system::error_code& err, std::size_t read_bytes) {
+  void on_read_file_tips(RecvDataPtr& RData_, boost::shared_array<char>& buff_, const boost::system::error_code& err, size_t read_bytes) {
     if (read_get_err(err)) return;
     //一定要先建立好map再do_read_head
     uint32_t pos = 0, pos1 = 0;
@@ -306,7 +306,7 @@ class TcpConnection : public ConnBase {
     }
     do_read_head(RData_);
   }
-  void on_read_file(RecvDataPtr& RData_, boost::shared_array<char>& buff_, const boost::system::error_code& err, std::size_t read_bytes) {
+  void on_read_file(RecvDataPtr& RData_, boost::shared_array<char>& buff_, const boost::system::error_code& err, size_t read_bytes) {
     if (read_get_err(err)) return;
     uint8_t pos = header[3];
     if (pos > RData_->pdata->map_files.size()) {
@@ -388,12 +388,12 @@ class TcpNetAdapter : public ConnPool<TcpConnection<T>> {
   bool Send(const dataPtr& Tdata_, const std::vector<IDType>& dst_, bool delfiles = false) {
     //做一些检查
     if (BaseClass::stopflag) return false;
-    std::size_t size = dst_.size();
+    size_t size = dst_.size();
     if (size == 0) return false;
     if (Tdata_->map_datas.size() > 255 || Tdata_->map_files.size() > 255) return false;  //最大支持255个数据包/文件
     std::vector<TcpEp> vec_hosts;
     std::shared_lock<std::shared_mutex> lck(m_hostInfoMutex);
-    for (std::size_t ii = 0; ii < size; ++ii) {
+    for (size_t ii = 0; ii < size; ++ii) {
       if (dst_[ii] == m_myid) return false;  //不能发给自己。上层做好检查
       typename std::map<IDType, TcpEp>::const_iterator itr = m_mapHostInfo.find(dst_[ii]);
       if (itr == m_mapHostInfo.end()) return false;
@@ -524,7 +524,7 @@ class TcpNetAdapter : public ConnPool<TcpConnection<T>> {
         }
         std::ifstream f(file_path.string<tstring>(), std::ios::in | std::ios::binary);
         if (f) {
-          std::size_t cur_offerset = ii * HEAD_SIZE;
+          size_t cur_offerset = ii * HEAD_SIZE;
           memcpy(&f_head_buff[cur_offerset], f0_head_buff, 3);
           f_head_buff[cur_offerset + 3] = static_cast<char>(ii);
           f.seekg(0, f.end);
@@ -566,7 +566,7 @@ class TcpNetAdapter : public ConnPool<TcpConnection<T>> {
       uint8_t ii = 0;
       for (std::map<std::string, SharedBuf>::const_iterator itr = map_datas.begin(); itr != map_datas.end(); ++itr) {
         if (itr->second.buf_size > 0) {
-          std::size_t cur_offerset = ii * HEAD_SIZE;
+          size_t cur_offerset = ii * HEAD_SIZE;
           memcpy(&d_head_buff[cur_offerset], d0_head_buff, 3);
           d_head_buff[cur_offerset + 3] = static_cast<char>(ii);
           SetBufFromNum(&d_head_buff[cur_offerset + 4], itr->second.buf_size);
@@ -587,12 +587,12 @@ class TcpNetAdapter : public ConnPool<TcpConnection<T>> {
     }
     //否则使用多线程并行群发
     std::vector<std::future<bool>> v;
-    std::size_t len = vec_hosts.size();
-    for (std::size_t ii = 0; ii < len; ii++) {
+    size_t len = vec_hosts.size();
+    for (size_t ii = 0; ii < len; ii++) {
       v.push_back(std::async(std::launch::async, &TcpNetAdapter::_send_one, this, buffersPtr, vec_hosts[ii]));
     }
     bool result = true;
-    for (std::size_t ii = 0; ii < len; ii++) {
+    for (size_t ii = 0; ii < len; ii++) {
       result = result && (v[ii].get());
     }
     return result;
@@ -700,7 +700,7 @@ class DemoConn {
   }
 
   //示例包头读取回调
-  virtual void OnReadHead(const boost::system::error_code& err, std::size_t read_bytes) {
+  virtual void OnReadHead(const boost::system::error_code& err, size_t read_bytes) {
     if (stopflag_) return;
 
     if (err) {

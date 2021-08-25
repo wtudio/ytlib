@@ -15,6 +15,7 @@
 #include <string>
 
 #include "error.hpp"
+#include "misc_macro.h"
 
 namespace ytlib {
 
@@ -67,7 +68,7 @@ class DynamicLib {
     hnd_ = dlopen(libname_.c_str(), RTLD_NOW | RTLD_GLOBAL);
 #endif
     if (NULL == hnd_)
-      fprintf(stderr, "load dynamic lib failed, lib path:%s, err:%s\n", libname_.c_str(), GetErr().c_str());
+      DBG_PRINT("load dynamic lib failed, lib path:%s, err:%s\n", libname_.c_str(), GetErr().c_str());
 
     return (NULL != hnd_);
   }
@@ -83,7 +84,7 @@ class DynamicLib {
     ret = (0 == dlclose(hnd_));
 #endif
     if (!ret) {
-      fprintf(stderr, "free dynamic lib failed, lib path:%s, err:%s\n", libname_.c_str(), GetErr().c_str());
+      DBG_PRINT("free dynamic lib failed, lib path:%s, err:%s\n", libname_.c_str(), GetErr().c_str());
       return false;
     }
 

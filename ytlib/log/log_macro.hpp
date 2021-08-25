@@ -1,11 +1,12 @@
 #pragma once
 
 #include "log.hpp"
-#include "ytlib/misc/misc_macro.h"
 
 #define CTX(x, ...) ytlib::Ctx(new std::map<std::string, std::string>{x, ##__VA_ARGS__})
 
-#define LOG_FMT(fmt) "[" __FILE__ ":" STRING(__LINE__) "@%s]" fmt, __FUNCTION__
+#define _YT_LOG_STRING(x) #x
+#define YT_LOG_STRING(x) _YT_LOG_STRING(x)
+#define LOG_FMT(fmt) "[" __FILE__ ":" YT_LOG_STRING(__LINE__) "@%s]" fmt, __FUNCTION__
 
 #define YT_LOG(lvl, fmt, ...) Log::Ins().Trace(lvl, LOG_FMT(fmt), ##__VA_ARGS__)
 

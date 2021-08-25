@@ -69,7 +69,7 @@ int32_t main(int32_t argc, char** argv) {
 
   std::list<std::thread> threads_;
 
-  for (int ii = 0; ii < n; ++ii) {
+  for (uint32_t ii = 0; ii < n; ++ii) {
     threads_.emplace(threads_.end(), [&io] {
       std::cerr << "thread " << std::this_thread::get_id() << " start.\n";
       io.run();

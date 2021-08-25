@@ -215,19 +215,19 @@ void AbsComplex(uint32_t len, Complex<CFloat> in[], CFloat out[]) {
  * 
  * @tparam CFloat 
  * @param[in] N 
- * @param[inout] f 
+ * @param[inout] data 
  */
 template <std::floating_point CFloat = double>
-void FFT(uint32_t N, Complex<CFloat> f[]) {
+void FFT(uint32_t N, Complex<CFloat> data[]) {
   uint32_t k, M = 1;
-  /*----计算分解的级数M=log2(N)----*/
+  // 计算分解的级数M=log2(N)
   for (uint32_t i = N; (i >>= 1) != 1; ++M) {
   }
 
-  /*----按照倒位序重新排列原信号----*/
+  // 按照倒位序重新排列原信号
   for (uint32_t i = 1, j = N >> 1; i <= N - 2; ++i) {
     if (i < j) {
-      f[j].Swap(f[i]);
+      data[j].Swap(data[i]);
     }
     k = N >> 1;
     while (k <= j) {
@@ -236,22 +236,23 @@ void FFT(uint32_t N, Complex<CFloat> f[]) {
     }
     j += k;
   }
-  /*----FFT算法----*/
+
+  // fft
   uint32_t r, la, lb, lc;
   for (uint32_t m = 1; m <= M; ++m) {
     la = 1 << m;
-    //la=2^m代表第m级每个分组所含节点数
-    lb = la >> 1;  //lb代表第m级每个分组所含碟形单元数,同时它也表示每个碟形单元上下节点之间的距离
-    //----碟形运算----
+    // la=2^m代表第m级每个分组所含节点数
+    lb = la >> 1;  // lb代表第m级每个分组所含碟形单元数,同时它也表示每个碟形单元上下节点之间的距离
+    // 碟形运算
     for (uint32_t l = 0; l < lb; ++l) {
       r = l << (M - m);
       Complex<CFloat> tmp(cos(2 * MATH_PI * r / N), -sin(2 * MATH_PI * r / N));
-      //遍历每个分组，分组总数为N/la
+      // 遍历每个分组，分组总数为N/la
       for (uint32_t n = l; n < N - 1; n += la) {
-        lc = n + lb;  //n,lc分别代表一个碟形单元的上、下节点编号
-        Complex<CFloat> t(f[lc] * tmp);
-        f[lc] = f[n] - t;
-        f[n] += t;
+        lc = n + lb;  // n,lc分别代表一个碟形单元的上、下节点编号
+        Complex<CFloat> t(data[lc] * tmp);
+        data[lc] = data[n] - t;
+        data[n] += t;
       }
     }
   }
@@ -262,15 +263,15 @@ void FFT(uint32_t N, Complex<CFloat> f[]) {
  * 
  * @tparam CFloat 
  * @param[in] N 
- * @param[inout] f 
+ * @param[inout] data 
  */
 template <std::floating_point CFloat = double>
-void IFFT(uint32_t N, Complex<CFloat> f[]) {
-  ConjugateComplex(N, f);
-  FFT(N, f);
-  ConjugateComplex(N, f);
+void IFFT(uint32_t N, Complex<CFloat> data[]) {
+  ConjugateComplex(N, data);
+  FFT(N, data);
+  ConjugateComplex(N, data);
   for (uint32_t i = 0; i < N; ++i) {
-    f[i] /= N;
+    data[i] /= N;
   }
 }
 
@@ -279,13 +280,13 @@ void IFFT(uint32_t N, Complex<CFloat> f[]) {
  * 
  * @tparam CFloat 
  * @param[in] len 
- * @param[inout] f 
+ * @param[inout] data 
  */
 template <std::floating_point CFloat = double>
-void FFTShift(uint32_t len, Complex<CFloat> f[]) {
+void FFTShift(uint32_t len, Complex<CFloat> data[]) {
   len /= 2;
   for (uint32_t i = 0; i < len; ++i) {
-    f[i + len].Swap(f[i]);
+    data[i + len].Swap(data[i]);
   }
 }
 
