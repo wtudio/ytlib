@@ -101,18 +101,6 @@ class Complex {
     return Complex(-(this->real), -(this->imag));
   }
 
-  Complex &Swap(Complex &value) {
-    if (this != &value) {
-      CFloat tmp = this->real;
-      this->real = value.real;
-      value.real = tmp;
-      tmp = this->imag;
-      this->imag = value.imag;
-      value.imag = tmp;
-    }
-    return *this;
-  }
-
   void AssignWithExpForm(const CFloat &r, const CFloat &theta) {
     real = r * std::cos(theta);
     imag = r * std::sin(theta);
@@ -227,7 +215,7 @@ void FFT(uint32_t N, Complex<CFloat> data[]) {
   // 按照倒位序重新排列原信号
   for (uint32_t i = 1, j = N >> 1; i <= N - 2; ++i) {
     if (i < j) {
-      data[j].Swap(data[i]);
+      std::swap(data[j], data[i]);
     }
     k = N >> 1;
     while (k <= j) {
@@ -286,7 +274,7 @@ template <std::floating_point CFloat = double>
 void FFTShift(uint32_t len, Complex<CFloat> data[]) {
   len /= 2;
   for (uint32_t i = 0; i < len; ++i) {
-    data[i + len].Swap(data[i]);
+    std::swap(data[i + len], data[i]);
   }
 }
 
@@ -295,8 +283,5 @@ CFloat abs(const Complex<CFloat> &value) { return value.Len(); }
 
 template <std::floating_point CFloat = double>
 Complex<CFloat> sqrt(const Complex<CFloat> &value) { return Complex<CFloat>::Sqrt(value); }
-
-template <std::floating_point CFloat = double>
-void swap(Complex<CFloat> &a, Complex<CFloat> &b) { a.Swap(b); }
 
 }  // namespace ytlib

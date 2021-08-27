@@ -31,17 +31,11 @@ TEST(COMPLEX_TEST, BASE_test) {
   EXPECT_DOUBLE_EQ(c4.real, -3.0);
   EXPECT_DOUBLE_EQ(c4.imag, -4.0);
 
-  c4.Swap(c3);
+  std::swap(c4, c3);
   EXPECT_DOUBLE_EQ(c4.real, 3.0);
   EXPECT_DOUBLE_EQ(c4.imag, 4.0);
   EXPECT_DOUBLE_EQ(c3.real, -3.0);
   EXPECT_DOUBLE_EQ(c3.imag, -4.0);
-
-  swap(c4, c3);
-  EXPECT_DOUBLE_EQ(c4.real, -3.0);
-  EXPECT_DOUBLE_EQ(c4.imag, -4.0);
-  EXPECT_DOUBLE_EQ(c3.real, 3.0);
-  EXPECT_DOUBLE_EQ(c3.imag, 4.0);
 
   Complex c5 = Complex<>::Conj(Complex(1.0, 1.0));
   EXPECT_DOUBLE_EQ(c5.real, 1.0);
@@ -632,7 +626,7 @@ TEST(MATRIX_TEST, BASE_test) {
 
   Matrix_i32 m4_1 = m4;
   Matrix_i32 m5_1 = m5;
-  m4_1.Swap(m5_1);
+  swap(m4_1, m5_1);
   EXPECT_EQ(m4_1, m5);
   EXPECT_EQ(m5_1, m4);
 }
