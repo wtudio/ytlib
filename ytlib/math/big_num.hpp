@@ -65,15 +65,17 @@ class BigNum {
    * @brief 从一个string构建
    * @note 使用默认进制为16
    * @param[in] str 如 "+123","-fff"
-   * @param[in] base 进制
+   * @param[in] str_base 输入的字符串的进制
+   * @param[in] base 实际运算时的进制
    */
-  explicit BigNum(const std::string& str, BaseType base = BaseType::DEC) {
-    base_ = static_cast<uint32_t>(base);
-
+  explicit BigNum(const std::string& str, BaseType str_base = BaseType::DEC, uint32_t base = UINT32_MAX) {
     if (str.empty()) {
       content_.emplace_back(0);
+      base_ = (base < 2) ? static_cast<uint32_t>(str_base) : base;
       return;
     }
+
+    base_ = static_cast<uint32_t>(str_base);
 
     size_t pos = 0;
     if (str[0] == '-') {
@@ -107,6 +109,8 @@ class BigNum {
     }
 
     while (content_.size() > 1 && content_.back() == 0) content_.pop_back();
+
+    ReBase(base);
   }
 
   ~BigNum() {}

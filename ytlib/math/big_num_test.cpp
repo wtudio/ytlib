@@ -53,55 +53,55 @@ TEST(BIG_NUM_TEST, Construct_test) {
       .want_base = 10});
   test_cases.emplace_back(TestCase{
       .name = "case 7",
-      .num = BigNum("10110", BigNum::BaseType::BIN),
+      .num = BigNum("10110", BigNum::BaseType::BIN, 2),
       .want_symbol = true,
       .want_content = {0, 1, 1, 0, 1},
       .want_base = 2});
   test_cases.emplace_back(TestCase{
       .name = "case 8",
-      .num = BigNum("-12345", BigNum::BaseType::OCT),
+      .num = BigNum("-12345", BigNum::BaseType::OCT, 0),
       .want_symbol = false,
       .want_content = {5, 4, 3, 2, 1},
       .want_base = 8});
   test_cases.emplace_back(TestCase{
       .name = "case 9",
-      .num = BigNum("987"),
+      .num = BigNum("987", BigNum::BaseType::DEC, 0),
       .want_symbol = true,
       .want_content = {7, 8, 9},
       .want_base = 10});
   test_cases.emplace_back(TestCase{
       .name = "case 10",
-      .num = BigNum("-0ABc9", BigNum::BaseType::HEX),
+      .num = BigNum("-0ABc9", BigNum::BaseType::HEX, 0),
       .want_symbol = false,
       .want_content = {9, 12, 11, 10},
       .want_base = 16});
   test_cases.emplace_back(TestCase{
       .name = "case 11",
-      .num = BigNum("", BigNum::BaseType::HEX),
+      .num = BigNum("", BigNum::BaseType::HEX, 0),
       .want_symbol = true,
       .want_content = {0},
       .want_base = 16});
   test_cases.emplace_back(TestCase{
       .name = "case 12",
-      .num = BigNum("-", BigNum::BaseType::HEX),
+      .num = BigNum("-", BigNum::BaseType::HEX, 0),
       .want_symbol = false,
       .want_content = {0},
       .want_base = 16});
   test_cases.emplace_back(TestCase{
       .name = "case 13",
-      .num = BigNum("-000kkk", BigNum::BaseType::HEX),
+      .num = BigNum("-000kkk", BigNum::BaseType::HEX, 0),
       .want_symbol = false,
       .want_content = {0},
       .want_base = 16});
   test_cases.emplace_back(TestCase{
       .name = "case 14",
-      .num = BigNum("-9abc@123", BigNum::BaseType::HEX),
+      .num = BigNum("-9abc@123", BigNum::BaseType::HEX, 0),
       .want_symbol = false,
       .want_content = {12, 11, 10, 9},
       .want_base = 16});
   test_cases.emplace_back(TestCase{
       .name = "case 15",
-      .num = BigNum("+009abc@123", BigNum::BaseType::DEC),
+      .num = BigNum("+009abc@123", BigNum::BaseType::DEC, 0),
       .want_symbol = true,
       .want_content = {9},
       .want_base = 10});
@@ -110,6 +110,12 @@ TEST(BIG_NUM_TEST, Construct_test) {
       .num = BigNum::AssignU64(static_cast<uint64_t>(UINT32_MAX - 1) * (UINT32_MAX - 1), false),
       .want_symbol = false,
       .want_content = {1, UINT32_MAX - 2},
+      .want_base = UINT32_MAX});
+  test_cases.emplace_back(TestCase{
+      .name = "case 17",
+      .num = BigNum("987"),
+      .want_symbol = true,
+      .want_content = {987},
       .want_base = UINT32_MAX});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
@@ -725,12 +731,12 @@ TEST(BIG_NUM_TEST, LeftShift_test) {
       .want_result = BigNum("0")});
   test_cases.emplace_back(TestCase{
       .name = "case 2",
-      .num = BigNum("123"),
+      .num = BigNum("123", BigNum::BaseType::DEC, 0),
       .n = 3,
       .want_result = BigNum("123000")});
   test_cases.emplace_back(TestCase{
       .name = "case 3",
-      .num = BigNum("-123"),
+      .num = BigNum("-123", BigNum::BaseType::DEC, 0),
       .n = 3,
       .want_result = BigNum("-123000")});
 
@@ -762,22 +768,22 @@ TEST(BIG_NUM_TEST, RightShift_test) {
       .want_result = BigNum("0")});
   test_cases.emplace_back(TestCase{
       .name = "case 2",
-      .num = BigNum("123"),
+      .num = BigNum("123", BigNum::BaseType::DEC, 0),
       .n = 2,
       .want_result = BigNum("1")});
   test_cases.emplace_back(TestCase{
       .name = "case 3",
-      .num = BigNum("123"),
+      .num = BigNum("123", BigNum::BaseType::DEC, 0),
       .n = 3,
       .want_result = BigNum("0")});
   test_cases.emplace_back(TestCase{
       .name = "case 4",
-      .num = BigNum("123"),
+      .num = BigNum("123", BigNum::BaseType::DEC, 0),
       .n = 4,
       .want_result = BigNum("0")});
   test_cases.emplace_back(TestCase{
       .name = "case 4",
-      .num = BigNum("-123"),
+      .num = BigNum("-123", BigNum::BaseType::DEC, 0),
       .n = 1,
       .want_result = BigNum("-12")});
 
