@@ -49,7 +49,8 @@ class NetLogBackend : public boost::log::sinks::basic_sink_backend<boost::log::s
    * @param[in] net_log_cli_ptr 网络日志客户端的智能指针
    */
   explicit NetLogBackend(std::shared_ptr<NetLogClient> net_log_cli_ptr) : net_log_cli_ptr_(net_log_cli_ptr) {
-    RT_ASSERT(net_log_cli_ptr_, "net_log_cli_ptr is nullptr.");
+    if (!net_log_cli_ptr_)
+      throw std::invalid_argument("net_log_cli_ptr can not be nullptr.");
   }
 
   ///析构函数

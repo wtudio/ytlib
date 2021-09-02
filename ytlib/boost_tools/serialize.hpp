@@ -31,8 +31,6 @@
 #include <boost/serialization/utility.hpp>
 #include <boost/serialization/vector.hpp>
 
-#include "ytlib/misc/error.hpp"
-
 namespace ytlib {
 
 ///侵入式序列化类头
@@ -160,7 +158,7 @@ void Serialize(const T& obj, const std::filesystem::path& filepath, SerializeTyp
     std::filesystem::create_directories(parent_path);
 
   std::ofstream oss(filepath, std::ios::trunc | std::ios::binary);
-  RT_ASSERT(oss, "Open file failed.");
+  if (!oss) throw std::runtime_error("Open file failed.");
 
   if (Type == SerializeType::TextType) {
     boost::archive::text_oarchive oar(oss);
@@ -183,7 +181,7 @@ void Serialize(const T& obj, const std::filesystem::path& filepath, SerializeTyp
 template <class T>
 void Deserialize(T& obj, const std::filesystem::path& filepath, SerializeType Type = SerializeType::TextType) {
   std::ifstream iss(filepath, std::ios::binary);
-  RT_ASSERT(iss, "Open file failed.");
+  if (!iss) throw std::runtime_error("Open file failed.");
 
   if (Type == SerializeType::TextType) {
     boost::archive::text_iarchive iar(iss);

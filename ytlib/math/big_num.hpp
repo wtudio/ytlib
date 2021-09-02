@@ -5,7 +5,6 @@
  * @author WT
  * @date 2019-07-26
  */
-
 #pragma once
 
 #include <algorithm>
@@ -13,14 +12,11 @@
 #include <iostream>
 #include <vector>
 
-#include "ytlib/misc/error.hpp"
-
 namespace ytlib {
 /**
  * @brief 大整数工具
  * @note 考虑运算效率的话，最好使用UINT32_MAX作为进制数，这样普通运算都会退化成uint32_t数值运算
  */
-
 class BigNum {
  public:
   /**
@@ -359,7 +355,8 @@ class BigNum {
    * @return std::pair<BigNum, BigNum> <商, 余数>
    */
   std::pair<BigNum, BigNum> Div(const BigNum& value) const {
-    RT_ASSERT(!value.Empty(), "Divisor cannot be 0.")
+    if (value.Empty())
+      throw std::invalid_argument("Divisor cannot be 0.");
 
     const BigNum& divisor = Abs((base_ == value.base_) ? value : ChangeBase(value, base_));
 

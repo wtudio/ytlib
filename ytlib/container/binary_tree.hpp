@@ -1,229 +1,228 @@
 /**
  * @file binary_tree.hpp
  * @brief 二叉树
- * @note 提供模板化的一些树的实现和相关的算法，包括AVL树、红黑树。不能使用继承，因为有成员是自身类型的智能指针
+ * @note 提供模板化的一些树的实现和相关的算法，包括AVL树、红黑树
  * @author WT
  * @date 2019-07-26
  */
 #pragma once
 
 #include <algorithm>
-#include <cassert>
 #include <memory>
 #include <vector>
+
+#include "ytlib/misc/error.hpp"
 
 namespace ytlib {
 
 /**
  * @brief 二叉树
- * 模板参数T为实际节点值。
- * 一个BinTreeNode实例表示一个二叉树节点，也表示以此节点为根节点的一棵二叉树。
+ * @note 一个BinTreeNode实例表示一个二叉树节点，也表示以此节点为根节点的一棵二叉树。
  * 如果根节点被析构，那么整个树中所有子节点将被析构，除非子节点有另外的智能指针指着
+ * @tparam T 实际节点类型
  */
 template <typename T>
-class BinTreeNode {
- private:
-  typedef std::shared_ptr<BinTreeNode<T> > nodePtr;
+class BinTreeNode : public std::enable_shared_from_this<BinTreeNode<T> > {
+ public:
+  typedef std::shared_ptr<BinTreeNode<T> > NodePtr;
+  typedef std::weak_ptr<BinTreeNode<T> > NodeWeakPtr;
 
  public:
-  BinTreeNode() : pf(NULL) {}
-  explicit BinTreeNode(const T& _obj) : obj(_obj), pf(NULL) {}
+  BinTreeNode() {}
+  explicit BinTreeNode(const T& input_obj) : obj(input_obj) {}
 
-  T obj;               ///<实际节点值
-  BinTreeNode<T>* pf;  ///<父节点。父节点不可使用智能指针，否则会造成循环引用
-  nodePtr pl;          ///<左子节点
-  nodePtr pr;          ///<右子节点
+ public:
+  T obj;           ///<实际节点值
+  NodeWeakPtr pf;  ///<父节点
+  NodePtr pl;      ///<左子节点
+  NodePtr pr;      ///<右子节点
 };
+
 /**
  * @brief 二叉查找树
- * 与BinTreeNode类似，但模板参数T需要支持比较运算
+ * @note 与BinTreeNode类似，但模板参数T需要支持比较运算
+ * @tparam T 实际节点类型，需要支持比较运算
  */
 template <typename T>
-class BinSearchTreeNode {
- private:
-  typedef std::shared_ptr<BinSearchTreeNode<T> > BSTNodePtr;
+class BinSearchTreeNode : public std::enable_shared_from_this<BinSearchTreeNode<T> > {
+ public:
+  typedef std::shared_ptr<BinSearchTreeNode<T> > NodePtr;
+  typedef std::weak_ptr<BinSearchTreeNode<T> > NodeWeakPtr;
 
  public:
-  BinSearchTreeNode() : pf(NULL) {}
-  explicit BinSearchTreeNode(const T& _obj) : obj(_obj), pf(NULL) {}
-
-  T obj;                     ///<实际节点值
-  BinSearchTreeNode<T>* pf;  ///<父节点。父节点不可使用智能指针，否则会造成循环引用
-  BSTNodePtr pl;             ///<左子节点
-  BSTNodePtr pr;             ///<右子节点
+  BinSearchTreeNode() {}
+  explicit BinSearchTreeNode(const T& input_obj) : obj(input_obj) {}
 
   ///向当前节点为根节点的二叉查找树中插入一个节点
-  void insert(BSTNodePtr ndptr) {
-    assert(ndptr);
-    if (ndptr->obj < obj) {
-      if (pl)
-        pl->insert(ndptr);
-      else
-        setLChild(this, ndptr);
+  void Insert(NodePtr node) {
+    if (!node) return;
+
+    if (node->obj < obj) {
+      if (pl) {
+        pl->Insert(node);
+      } else {
+        SetLChild(this->shared_from_this(), node);
+      }
     } else {
-      if (pr)
-        pr->insert(ndptr);
-      else
-        setRChild(this, ndptr);
+      if (pr) {
+        pr->Insert(node);
+      } else {
+        SetRChild(this->shared_from_this(), node);
+      }
     }
   }
 
   ///删除当前节点，并返回替代的节点
-  BSTNodePtr erase() {
+  NodePtr Erase() {
     if (!pl && !pr) {
       //左右都为空，为叶子节点
-      if (pf != NULL) {
-        if (getLR(this))
-          breakLChild(pf);
-        else
-          breakRChild(pf);
-      }
-      return BSTNodePtr();
+      BreakFather(this->shared_from_this());
+      return NodePtr();
     }
+    auto real_pf = pf.lock();
     if (pl && !pr) {
       //只有左子树
-      BSTNodePtr re = pl;
-      if (pf == NULL)
-        breakLChild(this);
-      else {
-        pl->pf = pf;
-        pf->pl = pl;
-        pf = NULL;
+      NodePtr re = pl;
+      if (!real_pf) {
+        BreakLChild(this->shared_from_this());
+      } else {
+        pl->pf = real_pf;
+        real_pf->pl = pl;
+        pf.reset();
         pl.reset();
       }
       return re;
     }
     if (!pl && pr) {
       //只有右子树
-      BSTNodePtr re = pr;
-      if (pf == NULL)
-        breakRChild(this);
-      else {
-        pr->pf = pf;
-        pf->pr = pr;
-        pf = NULL;
+      NodePtr re = pr;
+      if (!real_pf) {
+        BreakRChild(this->shared_from_this());
+      } else {
+        pr->pf = real_pf;
+        real_pf->pr = pr;
+        pf.reset();
         pr.reset();
       }
       return re;
     }
     //换左子树的前驱
-    BSTNodePtr tmp = pl;
-    if (tmp->pr) {
+    NodePtr re = pl;
+    if (re->pr) {
       //左子节点有右子树，找到其前驱
-      while (tmp->pr) tmp = tmp->pr;
-      tmp->pf->pr = tmp->pl;
-      if (tmp->pl) tmp->pl->pf = tmp->pf;
-      tmp->pl = pl;
-      pl->pf = tmp.get();
+      while (re->pr) re = re->pr;
+      auto re_pf = re->pf.lock();
+      re_pf->pr = re->pl;
+      if (re->pl) re->pl->pf = re_pf;
+      re->pl = pl;
+      pl->pf = re;
     }
-    tmp->pf = pf;
-    tmp->pr = pr;
-    pr->pf = tmp.get();
-    if (pf != NULL) {
-      if (getLR(this))
-        pf->pl = tmp;
-      else
-        pf->pr = tmp;
+    re->pf = real_pf;
+    re->pr = pr;
+    pr->pf = re;
+    if (real_pf) {
+      if (GetLR(this->shared_from_this())) {
+        real_pf->pl = re;
+      } else {
+        real_pf->pr = re;
+      }
     }
-    pf = NULL;
+    pf.reset();
     pl.reset();
     pr.reset();
-    return tmp;
+    return re;
   }
+
+ public:
+  T obj;           ///<实际节点值
+  NodeWeakPtr pf;  ///<父节点
+  NodePtr pl;      ///<左子节点
+  NodePtr pr;      ///<右子节点
 };
 
 /**
- * @brief 在二叉搜索树中进行查找
- * @note 使用递归方法
- * @param NodeType 模板参数，节点类型
- * @param ValType 模板参数，节点obj类型
- * @return 查找到的节点的智能指针，若没有查到则返回空智能指针
- */
-template <typename NodeType, typename ValType>
-std::shared_ptr<NodeType> binSearch(const std::shared_ptr<NodeType>& proot, const ValType& val) {
-  std::shared_ptr<NodeType> p = proot;
-  while (p) {
-    if (p->obj == val) return p;
-    if (val < p->obj)
-      p = p->pl;
-    else if (val > p->obj)
-      p = p->pr;
-    else
-      return std::shared_ptr<NodeType>();
-  }
-  return std::shared_ptr<NodeType>();
-}
-
-/**
- * @brief AVL树
- * 二叉平衡树。模板参数T需要支持比较运算
+ * @brief AVL树(todo待完善)
+ * @note 二叉平衡树。模板参数T需要支持比较运算。节点obj值不能重复
+ * @tparam T 实际节点类型，需要支持比较运算
  */
 template <typename T>
 class AVLTreeNode : public std::enable_shared_from_this<AVLTreeNode<T> > {
- private:
-  typedef std::shared_ptr<AVLTreeNode<T> > AVLTNodePtr;
+ public:
+  typedef std::shared_ptr<AVLTreeNode<T> > NodePtr;
+  typedef std::weak_ptr<AVLTreeNode<T> > NodeWeakPtr;
 
  public:
-  AVLTreeNode() : pf(NULL), hgt(1) {}
-  explicit AVLTreeNode(const T& _obj) : obj(_obj), pf(NULL), hgt(1) {}
+  AVLTreeNode() {}
+  explicit AVLTreeNode(const T& input_obj) : obj(input_obj) {}
 
-  T obj;               ///<实际节点值
-  AVLTreeNode<T>* pf;  ///<父节点
-  AVLTNodePtr pl;      ///<左子节点
-  AVLTNodePtr pr;      ///<右子节点
-  size_t hgt;          ///<节点高度
+  ///获取节点hgt值
+  static size_t GetHgt(const NodePtr& p) {
+    return (p ? (p->hgt) : 0);
+  }
 
-#define HGT(p) ((p) ? p->hgt : 0)
+  ///刷新节点hgt值
+  void RefreshHgt() {
+    hgt = std::max(GetHgt(pl), GetHgt(pr)) + 1;
+  }
 
-  ///插入，因为根节点可能会变，所以返回根节点
-  AVLTNodePtr insert(AVLTNodePtr ndptr) {
-    assert(ndptr);
+  ///插入，必须是根节点才能进行此操作。因为根节点可能会变，所以返回插入后的新根节点
+  NodePtr Insert(NodePtr node) {
+    RT_ASSERT(pf.expired(), "must insert to a root node.");
+
+    if (!node)
+      return this->shared_from_this();
+
     //找到最终要插入的地方的父节点
-    AVLTreeNode<T>*pos = this, *tmppos = (ndptr->obj < obj) ? pl.get() : pr.get();
-    while (tmppos != NULL) {
+    NodePtr pos;
+    NodePtr tmppos = this->shared_from_this();
+    do {
       pos = tmppos;
-      tmppos = (ndptr->obj < pos->obj) ? pos->pl.get() : pos->pr.get();
-    }
-    if (ndptr->obj == pos->obj) return this->shared_from_this();  //不允许重复
-    if (ndptr->obj < pos->obj)
-      setLChild(pos, ndptr);
-    else
-      setRChild(pos, ndptr);
+      if (pos->obj == node->obj) {
+        return this->shared_from_this();
+      }
+      tmppos = (node->obj < pos->obj) ? (pos->pl) : (pos->pr);
+    } while (tmppos);
 
-    ndptr->hgt = 1;
+    if (node->obj < pos->obj) {
+      SetLChild(pos, node);
+    } else {
+      SetRChild(pos, node);
+    }
+    node->hgt = 1;
+
     //更新高度，进行旋转
-    AVLTNodePtr re;
-    AVLTreeNode<T>* end = pf;
+    NodePtr re;
+    NodePtr end = pf.lock();
     while (pos != end) {
       re.reset();
       size_t curhgt = pos->hgt;
-      size_t lh = HGT(pos->pl), lr = HGT(pos->pr);
+      size_t lh = GetHgt(pos->pl), lr = GetHgt(pos->pr);
       if (lh >= lr + 2) {
         //左边比右边高了2
-        if (HGT(pos->pl->pl) >= HGT(pos->pl->pr))
-          re = pos->rotateL();
-        else {
-          pos->pl->rotateR();
-          re = pos->rotateL();
+        if (GetHgt(pos->pl->pl) >= GetHgt(pos->pl->pr)) {
+          re = pos->RotateL();
+        } else {
+          pos->pl->RotateR();
+          re = pos->RotateL();
         }
       } else if (lr >= lh + 2) {
         //右边比左边高了2
-        if (HGT(pos->pr->pr) >= HGT(pos->pr->pl))
-          re = pos->rotateR();
-        else {
-          pos->pr->rotateL();
-          re = pos->rotateR();
+        if (GetHgt(pos->pr->pr) >= GetHgt(pos->pr->pl)) {
+          re = pos->RotateR();
+        } else {
+          pos->pr->RotateL();
+          re = pos->RotateR();
         }
       }
       //如果发生旋转了，说明之前左右高度相差2，说明该节点高度一定发生改变
       size_t cghgt;
       if (re) {
         cghgt = re->hgt;
-        pos = re->pf;
+        pos = re->pf.lock();
       } else {
         cghgt = pos->hgt = std::max(lh, lr) + 1;
         if (curhgt == cghgt) return this->shared_from_this();
-        pos = pos->pf;
+        pos = pos->pf.lock();
       }
     }
     if (re) return re;
@@ -231,227 +230,237 @@ class AVLTreeNode : public std::enable_shared_from_this<AVLTreeNode<T> > {
   }
 
   ///在当前节点为根节点的树中删除一个节点，并返回删除后的根节点
-  AVLTNodePtr erase(AVLTNodePtr ndptr) {
-    if (!ndptr) return this->shared_from_this();
+  NodePtr Erase(NodePtr node) {
+    RT_ASSERT(pf.expired(), "must erase from a root node.");
+
+    if (!node) return this->shared_from_this();
+
     //先确定要删除的节点是自己的子节点
-    AVLTreeNode<T>* pos = ndptr.get();
-    while (pos != NULL) {
-      if (pos == this) break;
-      pos = pos->pf;
-    }
-    if (pos == this) return _erase(ndptr);
-    return this->shared_from_this();
+    RT_ASSERT(GetRootNode(node) == this->shared_from_this(), "node must belong to root node.");
+
+    return EraseImp(node);
   }
   ///在当前节点中删除节点值为val的节点。会先搜索再删除
-  AVLTNodePtr erase(const T& val) {
-    return _erase(binSearch<AVLTreeNode<T>, T>(this->shared_from_this(), val));
+  NodePtr Erase(const T& val) {
+    RT_ASSERT(pf.expired(), "must erase from a root node.");
+
+    NodePtr node = BinSearch<AVLTreeNode<T>, T>(this->shared_from_this(), val);
+    if (!node) return this->shared_from_this();
+
+    return EraseImp(node);
   }
 
  private:
   ///假如有重复的，删除第一个找到的
-  AVLTNodePtr _erase(AVLTNodePtr ndptr) {
-    assert(pf == NULL);  //自身需要是根节点
-    if (!ndptr) return this->shared_from_this();
-    AVLTNodePtr proot = this->shared_from_this();  //如果要删除的是自身，则需要一个指针来保存root节点
-    AVLTreeNode<T>* pos = ndptr->pf;
-    if (!(ndptr->pl) && !(ndptr->pr)) {
+  NodePtr EraseImp(NodePtr node) {
+    //调用者保证自身是根节点，node不为空且属于自身节点所在树
+    NodePtr root_node = this->shared_from_this();  //如果要删除的是自身，则需要一个指针来保存root节点
+    NodePtr node_pf = node->pf.lock();
+    NodePtr pos = node_pf;
+    if (!(node->pl) && !(node->pr)) {
       //左右都为空，为叶子节点
-      if (ndptr->pf != NULL) {
-        if (getLR(ndptr.get()))
-          breakLChild(ndptr->pf);
-        else
-          breakRChild(ndptr->pf);
+      if (node_pf) {
+        BreakFather(node);
       } else {
         //整个树就一个要删除的根节点
-        return AVLTNodePtr();
+        return NodePtr();
       }
-    } else if (ndptr->pl && !(ndptr->pr)) {
+    } else if (node->pl && !(node->pr)) {
       //只有左子树
-      if (ndptr->pf == NULL) {
-        proot = ndptr->pl;
-        breakLChild(ndptr.get());
+      if (!node_pf) {
+        root_node = node->pl;
+        BreakLChild(node);
       } else {
-        ndptr->pl->pf = ndptr->pf;
-        ndptr->pf->pl = ndptr->pl;
-        ndptr->pf = NULL;
-        ndptr->pl.reset();
+        node->pl->pf = node_pf;
+        node_pf->pl = node->pl;
+        node->pf.reset();
+        node->pl.reset();
       }
-    } else if (!(ndptr->pl) && ndptr->pr) {
+    } else if (!(node->pl) && node->pr) {
       //只有右子树
-      if (ndptr->pf == NULL) {
-        proot = ndptr->pr;
-        breakRChild(ndptr.get());
+      if (!node_pf) {
+        root_node = node->pr;
+        BreakRChild(node);
       } else {
-        ndptr->pr->pf = ndptr->pf;
-        ndptr->pf->pr = ndptr->pr;
-        ndptr->pf = NULL;
-        ndptr->pr.reset();
+        node->pr->pf = node_pf;
+        node_pf->pr = node->pr;
+        node->pf.reset();
+        node->pr.reset();
       }
     } else {
       //换左子树的前驱
-      AVLTNodePtr tmp = ndptr->pl;
+      NodePtr tmp = node->pl;
       if (tmp->pr) {
         //左子节点有右子树，找到其前驱
         while (tmp->pr) tmp = tmp->pr;
-        tmp->pf->pr = tmp->pl;
-        if (tmp->pl) tmp->pl->pf = tmp->pf;
-        tmp->pl = ndptr->pl;
-        ndptr->pl->pf = tmp.get();
-        pos = tmp->pf;
-      } else
-        pos = tmp.get();
-      tmp->pf = ndptr->pf;
-      tmp->pr = ndptr->pr;
-      ndptr->pr->pf = tmp.get();
-      if (ndptr->pf != NULL) {
-        if (getLR(ndptr.get()))
-          ndptr->pf->pl = tmp;
+        NodePtr tmp_pf = tmp->pf.lock();
+        tmp_pf->pr = tmp->pl;
+        if (tmp->pl) tmp->pl->pf = tmp_pf;
+        tmp->pl = node->pl;
+        node->pl->pf = tmp;
+        pos = tmp_pf;
+      } else {
+        pos = tmp;
+      }
+
+      tmp->pf = node_pf;
+      tmp->pr = node->pr;
+      node->pr->pf = tmp;
+      if (node_pf) {
+        if (GetLR(node))
+          node_pf->pl = tmp;
         else
-          ndptr->pf->pr = tmp;
+          node_pf->pr = tmp;
       } else
-        proot = tmp;
-      ndptr->pf = NULL;
-      ndptr->pl.reset();
-      ndptr->pr.reset();
-      tmp->hgt = ndptr->hgt;
+        root_node = tmp;
+      node->pf.reset();
+      node->pl.reset();
+      node->pr.reset();
+      tmp->hgt = node->hgt;
     }
     //更新高度，进行旋转
-    AVLTNodePtr re;
+    NodePtr re;
     while (pos != NULL) {
       re.reset();
       size_t curhgt = pos->hgt;
-      size_t lh = HGT(pos->pl), lr = HGT(pos->pr);
+      size_t lh = GetHgt(pos->pl), lr = GetHgt(pos->pr);
       if (lh >= lr + 2) {
         //左边比右边高了2
-        if (HGT(pos->pl->pl) >= HGT(pos->pl->pr))
-          re = pos->rotateL();
+        if (GetHgt(pos->pl->pl) >= GetHgt(pos->pl->pr))
+          re = pos->RotateL();
         else {
-          pos->pl->rotateR();
-          re = pos->rotateL();
+          pos->pl->RotateR();
+          re = pos->RotateL();
         }
       } else if (lr >= lh + 2) {
         //右边比左边高了2
-        if (HGT(pos->pr->pr) >= HGT(pos->pr->pl))
-          re = pos->rotateR();
+        if (GetHgt(pos->pr->pr) >= GetHgt(pos->pr->pl))
+          re = pos->RotateR();
         else {
-          pos->pr->rotateL();
-          re = pos->rotateR();
+          pos->pr->RotateL();
+          re = pos->RotateR();
         }
       }
       //如果发生旋转了，说明之前左右高度相差2，说明该节点高度一定发生改变
       size_t cghgt;
       if (re) {
         cghgt = re->hgt;
-        pos = re->pf;
+        pos = re->pf.lock();
       } else {
         cghgt = pos->hgt = std::max(lh, lr) + 1;
         if (curhgt == cghgt) break;
-        pos = pos->pf;
+        pos = pos->pf.lock();
       }
     }
     if (re) return re;
-    return proot;
-  }
-  ///获取当前节点高度
-  inline size_t getHgt() {
-    size_t lh = (pl) ? pl->hgt : 0;
-    size_t lr = (pr) ? pr->hgt : 0;
-    return std::max(lh, lr) + 1;
+    return root_node;
   }
 
   ///左旋转，顺时针
-  AVLTNodePtr rotateL() {
-    AVLTNodePtr re = pl;
-    if (re->pr) re->pr->pf = this;
+  NodePtr RotateL() {
+    NodePtr re = pl;
+    if (re->pr) re->pr->pf = this->shared_from_this();
     pl = re->pr;
-    if (pf == NULL)
+
+    NodePtr real_pf = pf.lock();
+    if (!real_pf) {
       re->pr = this->shared_from_this();
-    else {
-      if (getLR(this)) {
-        re->pr = pf->pl;
-        pf->pl = re;
+    } else {
+      if (GetLR(this->shared_from_this())) {
+        re->pr = real_pf->pl;
+        real_pf->pl = re;
       } else {
-        re->pr = pf->pr;
-        pf->pr = re;
+        re->pr = real_pf->pr;
+        real_pf->pr = re;
       }
     }
-    re->pf = pf;
-    pf = re.get();
-    hgt = getHgt();
-    re->hgt = re->getHgt();
+    re->pf = real_pf;
+    pf = re;
+    RefreshHgt();
+    re->RefreshHgt();
     return re;
   }
   ///右旋转，逆时针
-  AVLTNodePtr rotateR() {
-    AVLTNodePtr re = pr;
-    if (re->pl) re->pl->pf = this;
+  NodePtr RotateR() {
+    NodePtr re = pr;
+    if (re->pl) re->pl->pf = this->shared_from_this();
     pr = re->pl;
-    if (pf == NULL)
+
+    NodePtr real_pf = pf.lock();
+    if (!real_pf) {
       re->pl = this->shared_from_this();
-    else {
-      if (getLR(this)) {
-        re->pl = pf->pl;
-        pf->pl = re;
+    } else {
+      if (GetLR(this->shared_from_this())) {
+        re->pl = real_pf->pl;
+        real_pf->pl = re;
       } else {
-        re->pl = pf->pr;
-        pf->pr = re;
+        re->pl = real_pf->pr;
+        real_pf->pr = re;
       }
     }
-    re->pf = pf;
-    pf = re.get();
-    hgt = getHgt();
-    re->hgt = re->getHgt();
+    re->pf = real_pf;
+    pf = re;
+    RefreshHgt();
+    re->RefreshHgt();
     return re;
   }
+
+ public:
+  T obj;           ///<实际节点值
+  NodeWeakPtr pf;  ///<父节点
+  NodePtr pl;      ///<左子节点
+  NodePtr pr;      ///<右子节点
+
+  size_t hgt = 1;  ///<节点高度
 };
+
 /**
- * @brief 红黑树
- * 二叉平衡树。模板参数T需要支持比较运算
- * todo待完善
+ * @brief 红黑树(todo待完善)
+ * @note 二叉平衡树。模板参数T需要支持比较运算
+ * @tparam T 实际节点类型，需要支持比较运算
  */
 template <typename T>
 class BRTreeNode : public std::enable_shared_from_this<BRTreeNode<T> > {
- private:
-  typedef std::shared_ptr<BRTreeNode<T> > BRTreeNodePtr;
+ public:
+  typedef std::shared_ptr<BRTreeNode<T> > NodePtr;
+  typedef std::weak_ptr<BRTreeNode<T> > NodeWeakPtr;
 
  public:
-  BRTreeNode() : pf(NULL), color(false) {}
-  explicit BRTreeNode(const T& _obj) : obj(_obj), pf(NULL), color(false) {}
+  BRTreeNode() {}
+  explicit BRTreeNode(const T& input_obj) : obj(input_obj) {}
 
-  T obj;              ///<实际节点值
-  BRTreeNode<T>* pf;  ///<父节点
-  BRTreeNodePtr pl;   ///<左子节点
-  BRTreeNodePtr pr;   ///<右子节点
-  bool color;         ///<颜色，true为红，false为黑
+  ///插入，必须是根节点才能进行此操作。因为根节点可能会变，所以返回插入后的新根节点
+  NodePtr Insert(NodePtr node) {
+    RT_ASSERT(pf.expired(), "must insert to a root node.");
 
-  ///插入，因为根节点可能会变，所以返回根节点
-  BRTreeNodePtr insert(BRTreeNodePtr ndptr) {
-    assert(ndptr && !color);
+    if (!node)
+      return this->shared_from_this();
+
     //找到最终要插入的地方的父节点
-    BRTreeNode<T>*pos = this, *tmppos = (ndptr->obj < obj) ? pl.get() : pr.get();
+    BRTreeNode<T>*pos = this, *tmppos = (node->obj < obj) ? pl.get() : pr.get();
     while (tmppos != NULL) {
       pos = tmppos;
-      tmppos = (ndptr->obj < pos->obj) ? pos->pl.get() : pos->pr.get();
+      tmppos = (node->obj < pos->obj) ? pos->pl.get() : pos->pr.get();
     }
-    if (ndptr->obj == pos->obj) return this->shared_from_this();  //不允许重复
-    if (ndptr->obj < pos->obj)
-      setLChild(pos, ndptr);
+    if (node->obj == pos->obj) return this->shared_from_this();  //不允许重复
+    if (node->obj < pos->obj)
+      SetLChild(pos, node);
     else
-      setRChild(pos, ndptr);
+      SetRChild(pos, node);
 
     //插入节点的颜色总是红色
-    ndptr->color = true;
+    node->color = true;
 
-    BRTreeNodePtr re;
+    NodePtr re;
     BRTreeNode<T>* end = pf;
-    tmppos = ndptr.get();
+    tmppos = node.get();
     while (pos != end) {
       re.reset();
       //父节点是黑色
       if (!(pos->color)) {
         return this->shared_from_this();
       }
-      BRTreeNode<T>* uncle = (getLR(pos) ? pos->pf->pr.get() : pos->pf->pl.get());
+      BRTreeNode<T>* uncle = (GetLR(pos) ? pos->pf->pr.get() : pos->pf->pl.get());
       if (uncle != NULL && uncle->color) {
         //插入节点的父节点和其叔叔节点均为红色的
         pos->color = uncle->color = false;
@@ -460,32 +469,32 @@ class BRTreeNode : public std::enable_shared_from_this<BRTreeNode<T> > {
         pos = tmppos->pf;
       } else {
         //插入节点的父节点是红色，叔叔节点是黑色
-        if (getLR(pos)) {
+        if (GetLR(pos)) {
           //父节点是祖父节点的左支
-          if (getLR(tmppos)) {
+          if (GetLR(tmppos)) {
             //插入节点是其父节点的左子节点
             pos->color = false;
             pos->pf->color = true;
-            re = pos->pf->rotateL();
+            re = pos->pf->RotateL();
             break;
           } else {
             //插入节点是其父节点的右子节点
-            pos->rotateR();
+            pos->RotateR();
             tmppos = pos;
             pos = tmppos->pf;
           }
         } else {
           //父节点是祖父节点的右支
-          if (getLR(tmppos)) {
+          if (GetLR(tmppos)) {
             //插入节点是其父节点的左子节点
-            pos->rotateL();
+            pos->RotateL();
             tmppos = pos;
             pos = tmppos->pf;
           } else {
             //插入节点是其父节点的右子节点
             pos->color = false;
             pos->pf->color = true;
-            re = pos->pf->rotateR();
+            re = pos->pf->RotateR();
             break;
           }
         }
@@ -497,99 +506,103 @@ class BRTreeNode : public std::enable_shared_from_this<BRTreeNode<T> > {
   }
 
   ///在当前节点为根节点的树中删除一个节点，并返回删除后的根节点
-  BRTreeNodePtr erase(BRTreeNodePtr ndptr) {
-    if (!ndptr) return this->shared_from_this();
+  NodePtr Erase(NodePtr node) {
+    RT_ASSERT(pf.expired(), "must erase from a root node.");
+
+    if (!node) return this->shared_from_this();
+
     //先确定要删除的节点是自己的子节点
-    BRTreeNode<T>* pos = ndptr.get();
-    while (pos != NULL) {
-      if (pos == this) break;
-      pos = pos->pf;
-    }
-    if (pos == this) return _erase(ndptr);
-    return this->shared_from_this();
+    RT_ASSERT(GetRootNode(node) == this->shared_from_this(), "node must belong to root node.");
+
+    return EraseImp(node);
   }
   ///在当前节点中删除节点值为val的节点。会先搜索再删除
-  BRTreeNodePtr erase(const T& val) {
-    return _erase(binSearch<BRTreeNode<T>, T>(this->shared_from_this(), val));
+  NodePtr Erase(const T& val) {
+    RT_ASSERT(pf.expired(), "must erase from a root node.");
+
+    NodePtr node = BinSearch<BRTreeNode<T>, T>(this->shared_from_this(), val);
+    if (!node) return this->shared_from_this();
+
+    return EraseImp(node);
   }
 
  private:
-  BRTreeNodePtr _erase(BRTreeNodePtr ndptr) {
-    assert(pf == NULL);  //自身需要是根节点
-    if (!ndptr) return this->shared_from_this();
-    BRTreeNodePtr proot = this->shared_from_this();  //如果要删除的是自身，则需要一个指针来保存root节点
-    BRTreeNode<T>* pos = ndptr->pf;
-    if (!(ndptr->pl) && !(ndptr->pr)) {
+  NodePtr EraseImp(NodePtr node) {
+    //调用者保证自身是根节点，node不为空且属于自身节点所在树
+    if (!node) return this->shared_from_this();
+    NodePtr root_node = this->shared_from_this();  //如果要删除的是自身，则需要一个指针来保存root节点
+    BRTreeNode<T>* pos = node->pf;
+    if (!(node->pl) && !(node->pr)) {
       //左右都为空，为叶子节点
-      if (ndptr->pf != NULL) {
-        if (getLR(ndptr.get()))
-          breakLChild(ndptr->pf);
+      if (node->pf != NULL) {
+        if (GetLR(node.get()))
+          BreakLChild(node->pf);
         else
-          breakRChild(ndptr->pf);
+          BreakRChild(node->pf);
       } else {
         //整个树就一个要删除的根节点
-        return BRTreeNodePtr();
+        return NodePtr();
       }
-    } else if (ndptr->pl && !(ndptr->pr)) {
+    } else if (node->pl && !(node->pr)) {
       //只有左子树
-      if (ndptr->pf == NULL) {
-        proot = ndptr->pl;
-        breakLChild(ndptr.get());
+      if (node->pf == NULL) {
+        root_node = node->pl;
+        BreakLChild(node.get());
       } else {
-        ndptr->pl->pf = ndptr->pf;
-        ndptr->pf->pl = ndptr->pl;
-        ndptr->pf = NULL;
-        ndptr->pl.reset();
+        node->pl->pf = node->pf;
+        node->pf->pl = node->pl;
+        node->pf = NULL;
+        node->pl.reset();
       }
-    } else if (!(ndptr->pl) && ndptr->pr) {
+    } else if (!(node->pl) && node->pr) {
       //只有右子树
-      if (ndptr->pf == NULL) {
-        proot = ndptr->pr;
-        breakRChild(ndptr.get());
+      if (node->pf == NULL) {
+        root_node = node->pr;
+        BreakRChild(node.get());
       } else {
-        ndptr->pr->pf = ndptr->pf;
-        ndptr->pf->pr = ndptr->pr;
-        ndptr->pf = NULL;
-        ndptr->pr.reset();
+        node->pr->pf = node->pf;
+        node->pf->pr = node->pr;
+        node->pf = NULL;
+        node->pr.reset();
       }
     } else {
       //换左子树的前驱
-      BRTreeNodePtr tmp = ndptr->pl;
+      NodePtr tmp = node->pl;
       if (tmp->pr) {
         //左子节点有右子树，找到其前驱
         while (tmp->pr) tmp = tmp->pr;
         tmp->pf->pr = tmp->pl;
         if (tmp->pl) tmp->pl->pf = tmp->pf;
-        tmp->pl = ndptr->pl;
-        ndptr->pl->pf = tmp.get();
+        tmp->pl = node->pl;
+        node->pl->pf = tmp.get();
         pos = tmp->pf;
       } else
         pos = tmp.get();
-      tmp->pf = ndptr->pf;
-      tmp->pr = ndptr->pr;
-      ndptr->pr->pf = tmp.get();
-      if (ndptr->pf != NULL) {
-        if (getLR(ndptr.get()))
-          ndptr->pf->pl = tmp;
+      tmp->pf = node->pf;
+      tmp->pr = node->pr;
+      node->pr->pf = tmp.get();
+      if (node->pf != NULL) {
+        if (GetLR(node.get()))
+          node->pf->pl = tmp;
         else
-          ndptr->pf->pr = tmp;
+          node->pf->pr = tmp;
       } else
-        proot = tmp;
-      ndptr->pf = NULL;
-      ndptr->pl.reset();
-      ndptr->pr.reset();
-      tmp->hgt = ndptr->hgt;
+        root_node = tmp;
+      node->pf = NULL;
+      node->pl.reset();
+      node->pr.reset();
+      tmp->hgt = node->hgt;
     }
   }
   ///<左旋转，顺时针
-  BRTreeNodePtr rotateL() {
-    BRTreeNodePtr re = pl;
+  NodePtr RotateL() {
+    NodePtr re = pl;
     if (re->pr) re->pr->pf = this;
     pl = re->pr;
     if (pf == NULL)
       re->pr = this->shared_from_this();
     else {
-      if (getLR(this)) {
+      if (GetLR(this)) {
         re->pr = pf->pl;
         pf->pl = re;
       } else {
@@ -602,14 +615,14 @@ class BRTreeNode : public std::enable_shared_from_this<BRTreeNode<T> > {
     return re;
   }
   ///<右旋转，逆时针
-  BRTreeNodePtr rotateR() {
-    BRTreeNodePtr re = pr;
+  NodePtr RotateR() {
+    NodePtr re = pr;
     if (re->pl) re->pl->pf = this;
     pr = re->pl;
     if (pf == NULL)
       re->pl = this->shared_from_this();
     else {
-      if (getLR(this)) {
+      if (GetLR(this)) {
         re->pl = pf->pl;
         pf->pl = re;
       } else {
@@ -621,303 +634,482 @@ class BRTreeNode : public std::enable_shared_from_this<BRTreeNode<T> > {
     pf = re.get();
     return re;
   }
+
+ public:
+  T obj;           ///<实际节点值
+  NodeWeakPtr pf;  ///<父节点
+  NodePtr pl;      ///<左子节点
+  NodePtr pr;      ///<右子节点
+
+  bool color = false;  ///<颜色，true为红，false为黑
 };
+
+/**
+ * @brief 检查子节点是否为目标节点的左子节点
+ * 
+ * @tparam T 
+ * @param target_node 
+ * @param child_node 
+ * @return true child_node是target_node左子节点
+ * @return false child_node不是target_node左子节点
+ */
+template <typename T>
+bool CheckLChild(const std::shared_ptr<T>& target_node, const std::shared_ptr<T>& child_node) {
+  return (target_node && child_node && (target_node->pl == child_node) && (child_node->pf.lock() == target_node));
+}
+
+/**
+ * @brief 检查子节点是否为目标节点的右子节点
+ * 
+ * @tparam T 
+ * @param target_node 
+ * @param child_node 
+ * @return true child_node是target_node右子节点
+ * @return false child_node不是target_node右子节点
+ */
+template <typename T>
+bool CheckRChild(std::shared_ptr<T> target_node, std::shared_ptr<T> child_node) {
+  return (target_node && child_node && (target_node->pr == child_node) && (child_node->pf.lock() == target_node));
+}
+
+/**
+ * @brief 判断是父节点的左节点还是右节点
+ * @note 如果既不是左节点也不是右节点，将抛出异常
+ * @tparam T 节点类型
+ * @param target_node 目标节点
+ * @return true 目标节点是其父节点的左节点
+ * @return false 目标节点是其父节点的右节点
+ */
+template <typename T>
+bool GetLR(const std::shared_ptr<T> target_node) {
+  RT_ASSERT(target_node, "target_node can not be empty.");
+
+  auto target_pf = target_node->pf.lock();
+  RT_ASSERT(target_pf, "target_pf can not be empty.");
+
+  if (target_node == target_pf->pl) return true;
+  if (target_node == target_pf->pr) return false;
+  RT_ASSERT(false, "target_node is not the child of father node");
+
+  return true;
+}
+
+/**
+ * @brief 与左子树断开
+ * 
+ * @tparam T 节点类型
+ * @param target_node 待处理节点
+ */
+template <typename T>
+void BreakLChild(std::shared_ptr<T> target_node) {
+  if (!target_node || !(target_node->pl)) return;
+  target_node->pl->pf.reset();
+  target_node->pl.reset();
+}
+
+/**
+ * @brief 与右子树断开
+ * 
+ * @tparam T 节点类型
+ * @param target_node 待处理节点
+ */
+template <typename T>
+void BreakRChild(std::shared_ptr<T> target_node) {
+  if (!target_node || !(target_node->pr)) return;
+  target_node->pr->pf.reset();
+  target_node->pr.reset();
+}
+
+/**
+ * @brief 与父节点断开
+ * 
+ * @tparam T 
+ * @param target_node 待处理节点
+ */
+template <typename T>
+void BreakFather(std::shared_ptr<T> target_node) {
+  if (!target_node) return;
+
+  auto target_node_pf = target_node->pf.lock();
+  if (!target_node_pf) return;
+
+  target_node->pf.reset();
+
+  if (target_node_pf->pl == target_node)
+    target_node_pf->pl.reset();
+  else if (target_node_pf->pr == target_node)
+    target_node_pf->pr.reset();
+}
+
+/**
+ * @brief 设置左子节点
+ * @note 将一个节点作为左子节点，与原左子节点断开。插入的节点与其原父节点断开
+ * @tparam T 节点类型
+ * @param target_node 父节点shared_ptr
+ * @param child_node 子节点shared_ptr
+ */
+template <typename T>
+void SetLChild(std::shared_ptr<T> target_node, std::shared_ptr<T> child_node) {
+  RT_ASSERT(target_node, "target_node can not be empty.");
+  RT_ASSERT(target_node != child_node, "target_node can not be equal to child_node.");
+
+  if (!child_node) {
+    if (target_node->pl) {
+      target_node->pl->pf.reset();
+      target_node->pl.reset();
+    }
+    return;
+  }
+
+  auto child_node_pf = child_node->pf.lock();
+  if ((target_node->pl == child_node) && (child_node_pf == target_node)) return;
+
+  if (target_node->pl) {
+    target_node->pl->pf.reset();
+  }
+
+  if (child_node_pf) {
+    if (child_node_pf->pl == child_node)
+      child_node_pf->pl.reset();
+    else if (child_node_pf->pr == child_node)
+      child_node_pf->pr.reset();
+  }
+
+  target_node->pl = child_node;
+  if (child_node_pf != target_node) {
+    child_node->pf = target_node;
+  }
+}
+
+/**
+ * @brief 设置右子节点
+ * @note 将一个节点作为右子节点，与原右子节点断开。插入的节点与其原父节点断开
+ * @tparam T 节点类型
+ * @param target_node 父节点shared_ptr
+ * @param child_node 子节点shared_ptr
+ */
+template <typename T>
+void SetRChild(std::shared_ptr<T> target_node, std::shared_ptr<T> child_node) {
+  RT_ASSERT(target_node, "target_node can not be empty.");
+  RT_ASSERT(target_node != child_node, "target_node can not be equal to child_node.");
+
+  if (!child_node) {
+    if (target_node->pr) {
+      target_node->pr->pf.reset();
+      target_node->pr.reset();
+    }
+    return;
+  }
+
+  auto child_node_pf = child_node->pf.lock();
+  if ((target_node->pr == child_node) && (child_node_pf == target_node)) return;
+
+  if (target_node->pr) {
+    target_node->pr->pf.reset();
+  }
+
+  if (child_node_pf) {
+    if (child_node_pf->pl == child_node)
+      child_node_pf->pl.reset();
+    else if (child_node_pf->pr == child_node)
+      child_node_pf->pr.reset();
+  }
+
+  target_node->pr = child_node;
+  if (child_node_pf != target_node) {
+    child_node->pf = target_node;
+  }
+}
+
+/**
+ * @brief 二叉树序列化
+ * @note 根据前序遍历进行的二叉树序列化，存储为vector<pair<bool,T> >
+ * @tparam NodeType 节点类型
+ * @tparam ValType 节点obj类型
+ * @param[in] root_node 待序列化的树的根节点
+ * @param[out] vec 要返回的序列化结果
+ */
+template <typename NodeType, typename ValType>
+void SerializeTree(const std::shared_ptr<NodeType>& root_node, std::vector<std::pair<bool, ValType> >& vec) {
+  if (root_node) {
+    vec.emplace_back(true, root_node->obj);
+    SerializeTree<NodeType, ValType>(root_node->pl, vec);
+    SerializeTree<NodeType, ValType>(root_node->pr, vec);
+  } else {
+    vec.emplace_back(false, ValType());
+  }
+}
+
+/**
+ * @brief 二叉树反序列化
+ * @note 根据前序遍历进行的二叉树反序列化，根据vector<pair<bool,T> >反序列化
+ * @tparam NodeType 节点类型
+ * @tparam ValType 节点obj类型
+ * @param[out] root_node 待存放反序列化结果的树的根节点
+ * @param[in] vec 根据其存储的数据进行反序列化
+ */
+template <typename NodeType, typename ValType>
+void DeserializeTree(std::shared_ptr<NodeType>& root_node, const std::vector<std::pair<bool, ValType> >& vec) {
+  typename std::vector<std::pair<bool, ValType> >::const_iterator itr = vec.begin();
+  DeserializeTree<NodeType, ValType>(root_node, itr);
+}
+
+/**
+ * @brief 二叉树反序列化
+ * @note 根据前序遍历进行的二叉树反序列化，根据vector<pair<bool,T> >::const_iterator反序列化
+ * @tparam NodeType 节点类型
+ * @tparam ValType 节点obj类型
+ * @param[out] root_node 待存放反序列化结果的树的根节点
+ * @param[in] itr 指向要进行反序列化的vector开头的迭代器
+ */
+template <typename NodeType, typename ValType>
+void DeserializeTree(std::shared_ptr<NodeType>& root_node, typename std::vector<std::pair<bool, ValType> >::const_iterator& itr) {
+  if (itr->first) {
+    root_node = std::make_shared<NodeType>(itr->second);
+    DeserializeTree<NodeType, ValType>(root_node->pl, ++itr);
+    if (root_node->pl) root_node->pl->pf = root_node;
+    DeserializeTree<NodeType, ValType>(root_node->pr, ++itr);
+    if (root_node->pr) root_node->pr->pf = root_node;
+  }
+}
+
 /**
  * @brief 前序遍历
  * @note 以当前节点为根节点，递归前序遍历，返回一个指针数组。中-左-右
- * @param T 模板参数，节点类型
- * @param nd 要前序遍历的根节点
- * @param vec 指针数组，要返回的遍历结果
- * @return 无
+ * @tparam T 节点类型
+ * @param[in] node 要前序遍历的根节点
+ * @param[out] vec 指针数组，要返回的遍历结果
  */
 template <typename T>
-void DLR(std::shared_ptr<T> nd, std::vector<std::shared_ptr<T> >& vec) {
-  assert(nd);
-  vec.push_back(nd);
-  if (nd->pl) DLR(nd->pl, vec);
-  if (nd->pr) DLR(nd->pr, vec);
+void DLR(const std::shared_ptr<T>& node, std::vector<std::shared_ptr<T> >& vec) {
+  if (!node) return;
+  vec.emplace_back(node);
+  DLR(node->pl, vec);
+  DLR(node->pr, vec);
 }
+
 /**
  * @brief 中序遍历
  * @note 以当前节点为根节点，递归中序遍历，返回一个指针数组。左-中-右
- * @param T 模板参数，节点类型
- * @param nd 要前序遍历的根节点
- * @param vec 指针数组，要返回的遍历结果
- * @return 无
+ * @tparam T 节点类型
+ * @param[in] node 要遍历的根节点
+ * @param[out] vec 指针数组，要返回的遍历结果
  */
 template <typename T>
-void LDR(std::shared_ptr<T> nd, std::vector<std::shared_ptr<T> >& vec) {
-  assert(nd);
-  if (nd->pl) LDR(nd->pl, vec);
-  vec.push_back(nd);
-  if (nd->pr) LDR(nd->pr, vec);
+void LDR(const std::shared_ptr<T>& node, std::vector<std::shared_ptr<T> >& vec) {
+  if (!node) return;
+  LDR(node->pl, vec);
+  vec.emplace_back(node);
+  LDR(node->pr, vec);
 }
+
 /**
  * @brief 后序遍历
  * @note 以当前节点为根节点，递归后序遍历，返回一个指针数组。左-右-中
- * @param T 模板参数，节点类型
- * @param nd 要前序遍历的根节点
- * @param vec 指针数组，要返回的遍历结果
- * @return 无
+ * @tparam T 节点类型
+ * @param[in] node 要遍历的根节点
+ * @param[out] vec 指针数组，要返回的遍历结果
  */
 template <typename T>
-void LRD(std::shared_ptr<T> nd, std::vector<std::shared_ptr<T> >& vec) {
-  assert(nd);
-  if (nd->pl) LRD(nd->pl, vec);
-  if (nd->pr) LRD(nd->pr, vec);
-  vec.push_back(nd);
+void LRD(const std::shared_ptr<T>& node, std::vector<std::shared_ptr<T> >& vec) {
+  if (!node) return;
+  LRD(node->pl, vec);
+  LRD(node->pr, vec);
+  vec.emplace_back(node);
 }
-/**
- * @brief 获取一个节点的深度
- * @note 获取一个节点的深度，根节点深度为0
- * @param T 模板参数，节点类型
- * @param pnode 要获取深度的节点
- * @return 节点深度
- */
-template <typename T>
-size_t getDepth(const T* pnode) {
-  assert(pnode != NULL);
-  pnode = pnode->pf;
-  size_t count = 0;
-  while (pnode != NULL) {
-    ++count;
-    pnode = pnode->pf;
-  }
-  return count;
-}
-/**
- * @brief 获取一个节点的高度
- * @note 获取一个节点的高度，叶子节点高度为1
- * @param T 模板参数，节点类型
- * @param pnode 要获取高度的节点
- * @return 节点高度
- */
-template <typename T>
-size_t getHeight(const T* pnode) {
-  assert(pnode != NULL);
-  size_t lh = 0, rh = 0;
-  if (pnode->pl) lh = getHeight(pnode->pl.get());
-  if (pnode->pr) rh = getHeight(pnode->pr.get());
-  return std::max(lh, rh) + 1;
-}
-/**
- * @brief 获取一个树中最长根-叶链长度
- * @note 获取一个树中从根节点到叶子节点的最长节点个数。实际调用getHeight
- * @param T 模板参数，节点类型
- * @param pnode 要获取最长链长度的树的根节点
- * @return 最长链长度
- */
-template <typename T>
-size_t getMaxChain(const T* pnode) {
-  return getHeight(pnode);
-}
-/**
- * @brief 获取一个树中最短根-叶链长度
- * @note 获取一个树中从根节点到叶子节点的最短节点个数
- * @param T 模板参数，节点类型
- * @param pnode 要获取最短链长度的树的根节点
- * @return 最短链长度
- */
-template <typename T>
-size_t getMinChain(const T* pnode) {
-  assert(pnode != NULL);
-  size_t lh = 0, rh = 0;
-  if (pnode->pl) lh = getHeight(pnode->pl.get());
-  if (pnode->pr) rh = getHeight(pnode->pr.get());
-  return std::min(lh, rh) + 1;
-}
-/**
- * @brief 获取树中节点个数
- * @note 获取树中节点个数
- * @param T 模板参数，节点类型
- * @param pnode 要获取节点个数的树的根节点
- * @return 节点个数
- */
-template <typename T>
-size_t getNodeNum(const T* pnode) {
-  assert(pnode != NULL);
-  size_t num = 1;
-  if (pnode->pl) num += getNodeNum(pnode->pl.get());
-  if (pnode->pr) num += getNodeNum(pnode->pr.get());
-  return num;
-}
-/**
- * @brief 设置子节点
- * @note 将一个节点作为左子节点，与原左子节点断开。插入的节点与其原父节点断开
- * @param T 模板参数，节点类型
- * @param pfather 父节点
- * @param pchild 子节点
- * @return 无
- */
-template <typename T>
-void setLChild(T* pfather, std::shared_ptr<T> pchild) {
-  assert((pfather != NULL) && pchild);
-  pchild->pf = pfather;
-  if (pfather->pl) pfather->pl->pf = NULL;
-  pfather->pl = pchild;
-}
-/**
- * @brief 设置子节点
- * @note 将一个节点作为右子节点，与原右子节点断开。插入的节点与其原父节点断开
- * @param T 模板参数，节点类型
- * @param pfather 父节点
- * @param pchild 子节点
- * @return 无
- */
-template <typename T>
-void setRChild(T* pfather, std::shared_ptr<T> pchild) {
-  assert((pfather != NULL) && pchild);
-  pchild->pf = pfather;
-  if (pfather->pr) pfather->pr->pf = NULL;
-  pfather->pr = pchild;
-}
-/**
- * @brief 与左子树断开
- * @note 与左子树断开
- * @param T 模板参数，节点类型
- * @param pnode 待处理节点
- * @return 无
- */
-template <typename T>
-void breakLChild(T* pnode) {
-  assert((pnode != NULL) && pnode->pl);
-  pnode->pl->pf = NULL;
-  pnode->pl.reset();
-}
-/**
- * @brief 与右子树断开
- * @note 与右子树断开
- * @param T 模板参数，节点类型
- * @param pnode 待处理节点
- * @return 无
- */
-template <typename T>
-void breakRChild(T* pnode) {
-  assert((pnode != NULL) && pnode->pr);
-  pnode->pr->pf = NULL;
-  pnode->pr.reset();
-}
-/**
- * @brief 判断是否为父节点的左节点
- * @note 判断是父节点的左节点还是右节点。true表示左。使用前应检查父节点是否为空
- * @param T 模板参数，节点类型
- * @param pnode 待处理节点
- * @return 无
- */
-template <typename T>
-bool getLR(const T* pnode) {
-  assert(pnode && pnode->pf != NULL);
-  if (pnode == pnode->pf->pl.get()) return true;
-  if (pnode == pnode->pf->pr.get()) return false;
-  assert(0);  //不是父节点的左右节点。报错
-  return true;
-}
+
 /**
  * @brief 分层遍历
  * @note 分层遍历二叉树，将结果输出到vector数组中
- * @param T 模板参数，节点类型
- * @param nd 待分层遍历的树的根节点
- * @param vec 要返回的遍历结果
- * @return 无
+ * @tparam T 节点类型
+ * @param[in] node 待分层遍历的树的根节点
+ * @param[out] vec 要返回的遍历结果
  */
 template <typename T>
-void traByLevel(std::shared_ptr<T> nd, std::vector<std::shared_ptr<T> >& vec) {
-  assert(nd);
+void TraByLevel(const std::shared_ptr<T>& node, std::vector<std::shared_ptr<T> >& vec) {
+  if (!node) return;
   size_t pos1 = vec.size(), pos2;
-  vec.push_back(nd);
+  vec.emplace_back(node);
   while (pos1 < vec.size()) {
     pos2 = vec.size();
     while (pos1 < pos2) {
-      if (vec[pos1]->pl) vec.push_back(vec[pos1]->pl);
-      if (vec[pos1]->pr) vec.push_back(vec[pos1]->pr);
+      if (vec[pos1]->pl) vec.emplace_back(vec[pos1]->pl);
+      if (vec[pos1]->pr) vec.emplace_back(vec[pos1]->pr);
       ++pos1;
     }
   }
 }
+
 /**
- * @brief 二叉树序列化
- * @note 根据前序遍历进行的二叉树序列化，存储为vector<pair<bool,T> >
- * @param NodeType 模板参数，节点类型
- * @param ValType 模板参数，节点obj类型
- * @param proot 待序列化的树的根节点
- * @param vec 要返回的序列化结果
- * @return 无
- */
-template <typename NodeType, typename ValType>
-void SerializeTree(const std::shared_ptr<NodeType>& proot, std::vector<std::pair<bool, ValType> >& vec) {
-  if (proot) {
-    vec.push_back(std::pair<bool, ValType>(true, proot->obj));
-    SerializeTree(proot->pl, vec);
-    SerializeTree(proot->pr, vec);
-  } else {
-    vec.push_back(std::pair<bool, ValType>(false, ValType()));
-  }
-}
-/**
- * @brief 二叉树反序列化
- * @note 根据前序遍历进行的二叉树反序列化，根据vector<pair<bool,T> >反序列化
- * @param NodeType 模板参数，节点类型
- * @param ValType 模板参数，节点obj类型
- * @param proot 待存放反序列化结果的树的根节点
- * @param vec 根据其存储的数据进行反序列化
- * @return 无
- */
-template <typename NodeType, typename ValType>
-void DeserializeTree(std::shared_ptr<NodeType>& proot, const std::vector<std::pair<bool, ValType> >& vec) {
-  typename std::vector<std::pair<bool, ValType> >::const_iterator itr = vec.begin();
-  DeserializeTree<NodeType, ValType>(proot, itr);
-}
-/**
- * @brief 二叉树反序列化
- * @note 根据前序遍历进行的二叉树反序列化，根据vector<pair<bool,T> >::const_iterator反序列化
- * @param NodeType 模板参数，节点类型
- * @param ValType 模板参数，节点obj类型
- * @param proot 待存放反序列化结果的树的根节点
- * @param itr 指向要进行反序列化的vector开头的迭代器
- * @return 无
- */
-template <typename NodeType, typename ValType>
-void DeserializeTree(std::shared_ptr<NodeType>& proot, typename std::vector<std::pair<bool, ValType> >::const_iterator& itr) {
-  if (itr->first) {
-    proot = std::make_shared<NodeType>(itr->second);
-    DeserializeTree<NodeType, ValType>(proot->pl, ++itr);
-    if (proot->pl) proot->pl->pf = proot.get();
-    DeserializeTree<NodeType, ValType>(proot->pr, ++itr);
-    if (proot->pr) proot->pr->pf = proot.get();
-  }
-}
-/**
- * @brief 二叉树深拷贝
- * @note 对二叉树进行深拷贝
- * @param T 模板参数，节点类型
- * @param proot 待拷贝的树的根节点
- * @return 深拷贝结果
+ * @brief 获取一个节点的深度
+ * @note 获取一个节点的深度，根节点深度为0，空节点深度为0
+ * @tparam T 节点类型
+ * @param node 要获取深度的节点
+ * @return size_t 节点深度
  */
 template <typename T>
-std::shared_ptr<T> copyTree(const std::shared_ptr<T>& proot) {
-  std::shared_ptr<T> p = std::make_shared<T>(T(proot->obj));
-  if (proot->pl) setLChild(p.get(), copyTree(proot->pl));
-  if (proot->pr) setRChild(p.get(), copyTree(proot->pr));
-  return p;
+size_t GetDepth(const std::shared_ptr<T>& node) {
+  if (!node) return 0;
+
+  std::shared_ptr<T> itr_node = node->pf.lock();
+  size_t count = 0;
+  while (itr_node) {
+    ++count;
+    itr_node = itr_node->pf.lock();
+  }
+  return count;
+}
+
+/**
+ * @brief 获取一个节点的高度
+ * @note 获取一个节点的高度，叶子节点高度为1，空节点高度为0
+ * @tparam T 节点类型
+ * @param node 要获取高度的节点
+ * @return size_t 节点高度
+ */
+template <typename T>
+size_t GetHeight(const std::shared_ptr<T>& node) {
+  if (!node) return 0;
+  return std::max(GetHeight(node->pl), GetHeight(node->pr)) + 1;
+}
+
+/**
+ * @brief 获取一个树中最长根-叶链长度
+ * @note 获取一个树中从根节点到叶子节点的最长节点个数。实际调用GetHeight
+ * @tparam T 节点类型
+ * @param node 要获取最长链长度的树的根节点
+ * @return size_t 最长链长度
+ */
+template <typename T>
+size_t GetMaxChain(const std::shared_ptr<T>& node) {
+  return GetHeight(node);
+}
+
+/**
+ * @brief 获取一个树中最短根-叶链长度
+ * @note 获取一个树中从根节点到叶子节点的最短节点个数
+ * @tparam T 节点类型
+ * @param node 要获取最短链长度的树的根节点
+ * @return size_t 最短链长度
+ */
+template <typename T>
+size_t GetMinChain(const std::shared_ptr<T>& node) {
+  if (!node) return 0;
+  if (!node->pl)
+    return GetMinChain(node->pr) + 1;
+  else if (!node->pr)
+    return GetMinChain(node->pl) + 1;
+  else
+    return std::min(GetMinChain(node->pl), GetMinChain(node->pr)) + 1;
+}
+
+/**
+ * @brief 获取树中节点个数
+ * 
+ * @tparam T 节点类型
+ * @param node 要获取节点个数的树的根节点
+ * @return size_t 节点个数
+ */
+template <typename T>
+size_t GetNodeNum(const std::shared_ptr<T>& node) {
+  if (!node) return 0;
+  return GetNodeNum(node->pl) + GetNodeNum(node->pr) + 1;
+}
+
+/**
+ * @brief 获取所在树的根节点
+ * 
+ * @tparam T 
+ * @param node 
+ * @return std::shared_ptr<T> 
+ */
+template <typename T>
+std::shared_ptr<T> GetRootNode(const std::shared_ptr<T>& node) {
+  if (!node) return std::shared_ptr<T>();
+  std::shared_ptr<T> re = node;
+  std::shared_ptr<T> re_pf = re->pf.lock();
+  while (re_pf) {
+    re = re_pf;
+    re_pf = re->pf.lock();
+  }
+  return re;
+}
+
+/**
+ * @brief 二叉树深拷贝
+ * @note 对二叉树进行深拷贝，可以在不同类型之间拷贝
+ * @tparam NodeTypeFrom 
+ * @tparam NodeTypeTo 
+ * @param[in] root_node_from 
+ * @param[out] root_node_to 
+ */
+template <typename NodeTypeFrom, typename NodeTypeTo>
+void CopyTree(const std::shared_ptr<NodeTypeFrom>& root_node_from, std::shared_ptr<NodeTypeTo>& root_node_to) {
+  if (!root_node_from) return;
+  root_node_to = std::make_shared<NodeTypeTo>(root_node_from->obj);
+  CopyTree(root_node_from->pl, root_node_to->pl);
+  if (root_node_to->pl) root_node_to->pl->pf = root_node_to;
+  CopyTree(root_node_from->pr, root_node_to->pr);
+  if (root_node_to->pr) root_node_to->pr->pf = root_node_to;
+}
+
+/**
+ * @brief 比较两个二叉树的结构和obj是否相等
+ * 
+ * @tparam T 
+ * @param root_node1 
+ * @param root_node2 
+ * @return true 
+ * @return false 
+ */
+template <typename T>
+bool CompareTreeObj(const std::shared_ptr<T>& root_node1, const std::shared_ptr<T>& root_node2) {
+  if (!root_node1 && !root_node2) return true;
+  if (!root_node1 || !root_node2) return false;
+
+  if (root_node1->obj != root_node2->obj) return false;
+  if (!CompareTreeObj(root_node1->pl, root_node2->pl)) return false;
+  if (!CompareTreeObj(root_node1->pr, root_node2->pr)) return false;
+  return true;
+}
+
+/**
+ * @brief 在二叉搜索树中进行查找
+ * 
+ * @tparam NodeType 节点类型
+ * @tparam ValType 节点obj类型
+ * @param root_node 
+ * @param val 
+ * @return std::shared_ptr<NodeType> 查找到的节点的智能指针，若没有查到则返回空智能指针
+ */
+template <typename NodeType, typename ValType>
+std::shared_ptr<NodeType> BinSearch(const std::shared_ptr<NodeType>& root_node, const ValType& val) {
+  std::shared_ptr<NodeType> p = root_node;
+  while (p) {
+    if (p->obj == val) return p;
+    p = (val < p->obj) ? (p->pl) : (p->pr);
+  }
+  return std::shared_ptr<NodeType>();
 }
 
 /**
  * @brief 检查是否为二叉树
  * @note 检查一颗二叉树是否合法，子节点、父节点是否对应相连
- * @param T 模板参数，节点类型
- * @param proot 待检查的树的根节点
- * @return 二叉树是否合法
+ * @tparam T 节点类型
+ * @param root_node 待检查的树的根节点
+ * @return true 合法
+ * @return false 不合法
  */
 template <typename T>
-bool checkBinTree(const std::shared_ptr<T>& proot) {
-  if (proot) {
-    if (proot->pl) {
-      if (proot->pl->pf != proot.get()) return false;
-      if (!checkBinTree(proot->pl)) return false;
+bool CheckBinTree(const std::shared_ptr<T>& root_node) {
+  if (root_node) {
+    if (root_node->pl) {
+      if (root_node->pl->pf.lock() != root_node) return false;
+      if (!CheckBinTree(root_node->pl)) return false;
     }
-    if (proot->pr) {
-      if (proot->pr->pf != proot.get()) return false;
-      if (!checkBinTree(proot->pr)) return false;
+    if (root_node->pr) {
+      if (root_node->pr->pf.lock() != root_node) return false;
+      if (!CheckBinTree(root_node->pr)) return false;
     }
   }
   return true;
@@ -926,51 +1118,57 @@ bool checkBinTree(const std::shared_ptr<T>& proot) {
 /**
  * @brief 检查是否为搜索二叉树
  * @note 检查一颗二叉树是否为搜索二叉树，要求左<中<=右
- * @param T 模板参数，节点类型
- * @param proot 待检查的树的根节点
- * @return 是否为搜索二叉树
+ * @tparam T 节点类型
+ * @param root_node 待检查的树的根节点
+ * @return true 是搜索二叉树
+ * @return false 不是搜索二叉树
  */
 template <typename T>
-bool checkBinSearchTree(const std::shared_ptr<T>& proot) {
-  if (proot) {
-    if (proot->pl) {
-      if (proot->pl->pf != proot.get()) return false;
-      if (proot->pl->obj >= proot->obj) return false;
-      if (!checkBinSearchTree(proot->pl)) return false;
+bool CheckBinSearchTree(const std::shared_ptr<T>& root_node) {
+  if (root_node) {
+    if (root_node->pl) {
+      if (root_node->pl->pf.lock() != root_node) return false;
+      if (root_node->pl->obj >= root_node->obj) return false;
+      if (!CheckBinSearchTree(root_node->pl)) return false;
     }
-    if (proot->pr) {
-      if (proot->pr->pf != proot.get()) return false;
-      if (proot->pr->obj < proot->obj) return false;
-      if (!checkBinSearchTree(proot->pr)) return false;
+    if (root_node->pr) {
+      if (root_node->pr->pf.lock() != root_node) return false;
+      if (root_node->pr->obj < root_node->obj) return false;
+      if (!CheckBinSearchTree(root_node->pr)) return false;
     }
   }
   return true;
 }
+
 /**
  * @brief 检查是否为AVL树
- * @note 检查一颗二叉树是否为AVL树，要求各叶子节点深度相差<=1
- * @param T 模板参数，节点类型
- * @param proot 待检查的树的根节点
- * @return 是否为AVL树
+ * @note 要求各叶子节点深度相差<=1
+ * @tparam T 节点类型
+ * @param root_node 待检查的树的根节点
+ * @return true 是AVL树
+ * @return false 不是AVL树
  */
 template <typename T>
-bool checkAVLTree(const std::shared_ptr<T>& proot) {
-  if (!checkBinSearchTree(proot)) return false;
-  if (getMaxChain(proot.get()) > getMinChain(proot.get()) + 1) return false;
+bool CheckAVLTree(const std::shared_ptr<T>& root_node) {
+  if (!CheckBinSearchTree(root_node)) return false;
+  if (GetMaxChain(root_node) > (GetMinChain(root_node) + 1)) return false;
   return true;
 }
+
 /**
- * @brief 检查是否为红黑树
+ * @brief 检查是否为红黑树(todo待完善)
  * @note 检查一颗二叉树是否为红黑树，要求根节点黑、没有连续红节点、所有路径有相同数目黑节点
- * @param T 模板参数，节点类型
- * @param proot 待检查的树的根节点
- * @return 是否为红黑树
+ * @tparam T 节点类型
+ * @param root_node 待检查的树的根节点
+ * @return true 是红黑树
+ * @return false 不是红黑树
  */
 template <typename T>
-bool checkBRTree(const std::shared_ptr<T>& proot) {
-  if (!checkBinSearchTree(proot)) return false;
-  if (proot->color != false) return false;  //根节点要为黑
+bool CheckBRTree(const std::shared_ptr<T>& root_node) {
+  if (!CheckBinSearchTree(root_node)) return false;
+  if (root_node->color != false) return false;  //根节点要为黑
 
   return true;
 }
+
 }  // namespace ytlib

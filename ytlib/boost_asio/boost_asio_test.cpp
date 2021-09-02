@@ -22,9 +22,9 @@ TEST(BOOST_ASIO_TEST, UTIL) {
 }
 
 TEST(BOOST_ASIO_TEST, LOG) {
-  auto cli_sys_ptr = std::make_shared<AsioExecutor>(1);
-  auto svr1_sys_ptr = std::make_shared<AsioExecutor>(1);
-  auto svr2_sys_ptr = std::make_shared<AsioExecutor>(1);
+  auto cli_sys_ptr = std::make_shared<AsioExecutor<1> >();
+  auto svr1_sys_ptr = std::make_shared<AsioExecutor<1> >();
+  auto svr2_sys_ptr = std::make_shared<AsioExecutor<1> >();
 
   // cli
   auto net_log_cli_ptr = std::make_shared<NetLogClient>(cli_sys_ptr->IO(), TcpEp{IPV4({127, 0, 0, 1}), 50001});

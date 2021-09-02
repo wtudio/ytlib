@@ -14,7 +14,6 @@
 
 #include <boost/asio.hpp>
 
-#include "ytlib/misc/error.hpp"
 #include "ytlib/misc/misc_macro.h"
 #include "ytlib/thread/thread_id.hpp"
 
@@ -25,18 +24,16 @@ namespace ytlib {
  * @note 使用时先调用RegisterSvrFunc注册子服务的启动、停止方法，
  * 然后调用Start方法异步启动，之后可以调用join方法，等待kill信号或其他异步程序里调用Stop方法结束整个服务。
  * 并不会调用asio的stop方法，只会调用注册的stop方法，等各个子服务自己停止。
+ * @tparam THREADS_NUM 线程数
  */
+template <std::uint32_t THREADS_NUM = 1>
 class AsioExecutor {
  public:
-  /**
-   * @brief 构造函数
-   * @param[in] threads_num 服务要启动的线程数
-   */
-  explicit AsioExecutor(uint32_t threads_num) : threads_num_(threads_num),
-                                                io_(threads_num),
-                                                signals_(io_, SIGINT, SIGTERM) {}
+  AsioExecutor() : io_(THREADS_NUM),
+                   signals_(io_, SIGINT, SIGTERM) {
+    static_assert(THREADS_NUM >= 1);
+  }
 
-  ///析构函数
   ~AsioExecutor() noexcept {
     try {
       Join();
@@ -64,8 +61,6 @@ class AsioExecutor {
    * @note 异步，会调用注册的start方法并启动指定数量的线程
    */
   void Start() {
-    RT_ASSERT(threads_num_ >= 1, "Threads_num_ must >= 1.");
-
     for (size_t ii = 0; ii < start_func_vec_.size(); ++ii) {
       start_func_vec_[ii]();
     }
@@ -84,7 +79,7 @@ class AsioExecutor {
       DBG_PRINT("AsioExecutor thread %llu exit.", ytlib::GetThreadId());
     };
 
-    for (uint32_t ii = 0; ii < threads_num_; ++ii) {
+    for (uint32_t ii = 0; ii < THREADS_NUM; ++ii) {
       threads_.emplace(threads_.end(), run_func);
     }
   }
@@ -124,7 +119,6 @@ class AsioExecutor {
   boost::asio::io_context& IO() { return io_; }
 
  private:
-  const uint32_t threads_num_;
   boost::asio::io_context io_;
   boost::asio::signal_set signals_;
   std::list<std::thread> threads_;

@@ -14,7 +14,6 @@
 #include <set>
 
 #include "net_util.hpp"
-#include "ytlib/misc/error.hpp"
 #include "ytlib/misc/misc_macro.h"
 #include "ytlib/misc/time.hpp"
 
@@ -128,8 +127,6 @@ class LogSvr : public std::enable_shared_from_this<LogSvr> {
   LogSvr& operator=(const LogSvr&) = delete;  ///<no copy
 
   void Start() {
-    RT_ASSERT(CheckPort(cfg_.port), "Port is used.");
-
     acceptor_ptr_ = std::make_shared<boost::asio::ip::tcp::acceptor>(io_, TcpEp{IPV4(), cfg_.port});
 
     if (std::filesystem::status(cfg_.log_path).type() != std::filesystem::file_type::directory)

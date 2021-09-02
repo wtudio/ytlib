@@ -9,8 +9,7 @@
 
 #include <cinttypes>
 #include <cstring>
-
-#include "ytlib/misc/error.hpp"
+#include <stdexcept>
 
 namespace ytlib {
 
@@ -54,12 +53,16 @@ class RingBuf {
   }
 
   T& Top() {
-    RT_ASSERT(!Empty(), "Buf is empty.");
+    if (Empty())
+      throw std::runtime_error("Buf is empty.");
+
     return content_[rpos_];
   }
 
   T& Get(const uint32_t& pos) {
-    RT_ASSERT(!Empty() && pos < Size(), "Pos is invalid.");
+    if (pos >= Size())
+      throw std::invalid_argument("Pos is invalid.");
+
     const uint32_t& cur_rpos = rpos_ + pos;
     return content_[((cur_rpos < BUF_SIZE) ? cur_rpos : (cur_rpos - BUF_SIZE))];
   }

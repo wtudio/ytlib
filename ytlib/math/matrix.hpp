@@ -5,7 +5,6 @@
  * @note 基于模板的简易矩阵类型
  * @date 2019-07-26
  */
-
 #pragma once
 
 #include <cstring>

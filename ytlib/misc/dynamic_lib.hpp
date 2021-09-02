@@ -14,7 +14,6 @@
 #include <memory>
 #include <string>
 
-#include "error.hpp"
 #include "misc_macro.h"
 
 namespace ytlib {
@@ -94,7 +93,8 @@ class DynamicLib {
 
   /// 获取函数地址
   SYMBOL_TYPE GetSymbol(const std::string& name) {
-    RT_ASSERT(NULL != hnd_, "DynamicLib does not load any lib.");
+    if (hnd_ == NULL)
+      throw std::runtime_error("DynamicLib does not load any lib.");
 
 #if defined(_WIN32)
     return GetProcAddress(hnd_, name.c_str());
