@@ -9,6 +9,7 @@
 
 #include <functional>
 #include <list>
+#include <memory>
 #include <thread>
 #include <vector>
 
@@ -29,8 +30,8 @@ namespace ytlib {
 template <std::uint32_t THREADS_NUM = 1>
 class AsioExecutor {
  public:
-  AsioExecutor() : io_(THREADS_NUM),
-                   signals_(io_, SIGINT, SIGTERM) {
+  AsioExecutor() : io_ptr_(std::make_shared<boost::asio::io_context>(THREADS_NUM)),
+                   signals_(*io_ptr_, SIGINT, SIGTERM) {
     static_assert(THREADS_NUM >= 1);
   }
 
@@ -61,9 +62,12 @@ class AsioExecutor {
    * @note 异步，会调用注册的start方法并启动指定数量的线程
    */
   void Start() {
+    if (std::atomic_exchange(&start_flag_, true)) return;
+
     for (size_t ii = 0; ii < start_func_vec_.size(); ++ii) {
       start_func_vec_[ii]();
     }
+    start_func_vec_.clear();
 
     signals_.async_wait([&](auto, auto) { Stop(); });
 
@@ -71,7 +75,7 @@ class AsioExecutor {
       DBG_PRINT("AsioExecutor thread %llu start.", ytlib::GetThreadId());
 
       try {
-        io_.run();
+        io_ptr_->run();
       } catch (const std::exception& e) {
         DBG_PRINT("AsioExecutor thread %llu get exception %s.", ytlib::GetThreadId(), e.what());
       }
@@ -107,6 +111,7 @@ class AsioExecutor {
     for (size_t ii = stop_func_vec_.size() - 1; ii < stop_func_vec_.size(); --ii) {
       stop_func_vec_[ii]();
     }
+    stop_func_vec_.clear();
 
     signals_.cancel();
     signals_.clear();
@@ -116,15 +121,16 @@ class AsioExecutor {
    * @brief 获取io
    * @return io_context
    */
-  boost::asio::io_context& IO() { return io_; }
+  std::shared_ptr<boost::asio::io_context> IO() { return io_ptr_; }
 
  private:
-  boost::asio::io_context io_;
+  std::atomic_bool start_flag_ = false;
+  std::atomic_bool stop_flag_ = false;
+  std::shared_ptr<boost::asio::io_context> io_ptr_;
   boost::asio::signal_set signals_;
   std::list<std::thread> threads_;
   std::vector<std::function<void()> > start_func_vec_;
   std::vector<std::function<void()> > stop_func_vec_;
-  std::atomic_bool stop_flag_ = false;
 };
 
 }  // namespace ytlib

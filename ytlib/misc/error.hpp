@@ -1,13 +1,12 @@
 #pragma once
 
 #include <exception>
-#include <string>
 
 namespace ytlib {
 
 /**
  * @brief 自定义异常类
- * 重载了std::exception
+ * @note 重载了std::exception
  */
 class Exception : public std::exception {
  public:

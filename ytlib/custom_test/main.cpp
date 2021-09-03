@@ -20,7 +20,6 @@
 #include <boost/asio.hpp>
 
 #include "ytlib/boost_asio/net_util.hpp"
-#include "ytlib/misc/error.hpp"
 #include "ytlib/misc/misc_macro.h"
 
 using namespace std;

@@ -10,8 +10,6 @@
 #include <filesystem>
 #include <memory>
 
-#include "ytlib/misc/error.hpp"
-
 namespace ytlib {
 
 /**
@@ -43,10 +41,13 @@ class FileObj {
    * @note 打开并解析文件内容到obj，使用设置好的path
    */
   void OpenFile() {
-    RT_ASSERT(!filepath_.empty(), "Path has not been set.");
-    RT_ASSERT(std::filesystem::status(filepath_).type() == std::filesystem::file_type::regular, "File not exist.");
+    if (filepath_.empty() || std::filesystem::status(filepath_).type() != std::filesystem::file_type::regular)
+      throw std::logic_error("File path invalid.");
+
     obj_ptr_.reset();
-    RT_ASSERT(ParseFileObj(), "Parse file failed.");
+
+    if (!ParseFileObj())
+      throw std::logic_error("Parse file failed.");
   }
 
   /**
@@ -65,7 +66,9 @@ class FileObj {
    */
   void NewFile() {
     obj_ptr_.reset();
-    RT_ASSERT(NewFileObj(), "New file failed.");
+
+    if (!NewFileObj())
+      throw std::logic_error("New file failed.");
   }
 
   /**
@@ -83,13 +86,17 @@ class FileObj {
    * @note 保存内容结构体，使用设置好的path
    */
   void SaveFile() {
-    RT_ASSERT(!filepath_.empty(), "Path has not been set.");
-    RT_ASSERT(obj_ptr_, "Obj has not been created.");
-    const auto& parent_path = filepath_.parent_path();
-    if (std::filesystem::status(parent_path).type() != std::filesystem::file_type::directory)
-      RT_ASSERT(std::filesystem::create_directories(parent_path), "Create dir failed.");
+    if (filepath_.empty())
+      throw std::logic_error("File path is empty.");
 
-    RT_ASSERT(SaveFileObj(), "Save file failed.");
+    const auto& parent_path = filepath_.parent_path();
+    if (std::filesystem::status(parent_path).type() != std::filesystem::file_type::directory &&
+        !std::filesystem::create_directories(parent_path)) {
+      throw std::logic_error("Create dir failed.");
+    }
+
+    if (!SaveFileObj())
+      throw std::logic_error("Save file failed.");
   }
 
   /**
@@ -117,7 +124,9 @@ class FileObj {
    */
   void SetFilePath(const std::string& path) {
     const std::filesystem::path& p = std::filesystem::absolute(path);
-    RT_ASSERT(CheckFileName(p.string()), "Invalid file path.");
+    if (!CheckFileName(p.string()))
+      throw std::logic_error("Invalid file path.");
+
     filepath_ = p;
   }
 

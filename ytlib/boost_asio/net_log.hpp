@@ -21,9 +21,11 @@ namespace ytlib {
 
 class NetLogClient : public std::enable_shared_from_this<NetLogClient> {
  public:
-  NetLogClient(boost::asio::io_context& io, const TcpEp& log_svr_ep) : strand_(boost::asio::make_strand(io)),
-                                                                       log_svr_ep_(log_svr_ep),
-                                                                       sock_(strand_) {}
+  NetLogClient(std::shared_ptr<boost::asio::io_context> io_ptr,
+               const TcpEp& log_svr_ep) : log_svr_ep_(log_svr_ep),
+                                          io_ptr_(io_ptr),
+                                          strand_(boost::asio::make_strand(*io_ptr_)),
+                                          sock_(strand_) {}
 
   ~NetLogClient() {}
 
@@ -83,10 +85,10 @@ class NetLogClient : public std::enable_shared_from_this<NetLogClient> {
 
  private:
   const TcpEp log_svr_ep_;
-
+  std::atomic_bool stop_flag_ = false;
+  std::shared_ptr<boost::asio::io_context> io_ptr_;
   boost::asio::strand<boost::asio::io_context::executor_type> strand_;
   TcpSocket sock_;
-  std::atomic_bool stop_flag_ = false;
 };
 
 /**
@@ -112,9 +114,10 @@ struct LogSvrCfg {
  */
 class LogSvr : public std::enable_shared_from_this<LogSvr> {
  public:
-  LogSvr(boost::asio::io_context& io, const LogSvrCfg& cfg) : io_(io),
-                                                              mgr_strand_(boost::asio::make_strand(io_)),
-                                                              cfg_(cfg) {
+  LogSvr(std::shared_ptr<boost::asio::io_context> io_ptr,
+         const LogSvrCfg& cfg) : cfg_(cfg),
+                                 io_ptr_(io_ptr),
+                                 mgr_strand_(boost::asio::make_strand(*io_ptr_)) {
     if (cfg_.port > 65535 || cfg_.port < 1000) cfg_.port = 50001;
 
     if (cfg_.max_file_size < 100 * 1024) cfg_.max_file_size = 100 * 1024;
@@ -127,7 +130,7 @@ class LogSvr : public std::enable_shared_from_this<LogSvr> {
   LogSvr& operator=(const LogSvr&) = delete;  ///<no copy
 
   void Start() {
-    acceptor_ptr_ = std::make_shared<boost::asio::ip::tcp::acceptor>(io_, TcpEp{IPV4(), cfg_.port});
+    acceptor_ptr_ = std::make_shared<boost::asio::ip::tcp::acceptor>(*io_ptr_, TcpEp{IPV4(), cfg_.port});
 
     if (std::filesystem::status(cfg_.log_path).type() != std::filesystem::file_type::directory)
       std::filesystem::create_directories(cfg_.log_path);
@@ -182,9 +185,9 @@ class LogSvr : public std::enable_shared_from_this<LogSvr> {
  private:
   class LogSession : public std::enable_shared_from_this<LogSession> {
    public:
-    LogSession(TcpSocket&& sock, std::shared_ptr<LogSvr> logsvr_ptr) : sock_(std::move(sock)),
-                                                                       logsvr_ptr_(logsvr_ptr),
-                                                                       strand_(boost::asio::make_strand(logsvr_ptr_->io_)),
+    LogSession(TcpSocket&& sock, std::shared_ptr<LogSvr> logsvr_ptr) : logsvr_ptr_(logsvr_ptr),
+                                                                       strand_(boost::asio::make_strand(*(logsvr_ptr_->io_ptr_))),
+                                                                       sock_(std::move(sock)),
                                                                        timer_(strand_) {
       const TcpEp& ep = sock_.remote_endpoint();
       session_name_ = (ep.address().to_string() + "_" + std::to_string(ep.port()));
@@ -316,11 +319,11 @@ class LogSvr : public std::enable_shared_from_this<LogSvr> {
     }
 
    private:
+    std::atomic_bool run_flag_ = true;
     std::shared_ptr<LogSvr> logsvr_ptr_;
     boost::asio::strand<boost::asio::io_context::executor_type> strand_;
-    boost::asio::steady_timer timer_;
     TcpSocket sock_;
-    std::atomic_bool run_flag_ = true;
+    boost::asio::steady_timer timer_;
 
     std::string session_name_;
     std::filesystem::path log_file_;  // 当前日志文件路径
@@ -330,12 +333,12 @@ class LogSvr : public std::enable_shared_from_this<LogSvr> {
   };
 
  private:
-  boost::asio::io_context& io_;
+  std::atomic_bool run_flag_ = true;
+  LogSvrCfg cfg_;  // 配置
+  std::shared_ptr<boost::asio::io_context> io_ptr_;
   boost::asio::strand<boost::asio::io_context::executor_type> mgr_strand_;  // session池操作strand
   std::shared_ptr<boost::asio::ip::tcp::acceptor> acceptor_ptr_;            // 监听器
   std::set<std::shared_ptr<LogSession> > session_ptr_set_;                  // session池
-  std::atomic_bool run_flag_ = true;
-  LogSvrCfg cfg_;  // 配置
 };
 
 }  // namespace ytlib

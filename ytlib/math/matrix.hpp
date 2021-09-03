@@ -11,8 +11,6 @@
 #include <iostream>
 #include <string>
 
-#include "ytlib/misc/error.hpp"
-
 namespace ytlib {
 /**
  * @brief 简易矩阵类
@@ -264,7 +262,9 @@ class Basic_Matrix {
   }
 
   Basic_Matrix operator+(const Basic_Matrix& M) const {
-    RT_ASSERT(max_row == M.max_row && max_col == M.max_col, "The matrix must be the same size.");
+    if (max_row != M.max_row || max_col != M.max_col)
+      throw std::logic_error("The matrix must be the same size.");
+
     Basic_Matrix ret(max_row, max_col);
     for (uint32_t cur_row = 0; cur_row < max_row; ++cur_row)
       for (uint32_t cur_col = 0; cur_col < max_col; ++cur_col)
@@ -272,7 +272,9 @@ class Basic_Matrix {
     return ret;
   }
   Basic_Matrix& operator+=(const Basic_Matrix& M) {
-    RT_ASSERT(max_row == M.max_row && max_col == M.max_col, "The matrix must be the same size.");
+    if (max_row != M.max_row || max_col != M.max_col)
+      throw std::logic_error("The matrix must be the same size.");
+
     for (uint32_t cur_row = 0; cur_row < max_row; ++cur_row)
       for (uint32_t cur_col = 0; cur_col < max_col; ++cur_col)
         val[cur_row][cur_col] += M.val[cur_row][cur_col];
@@ -280,7 +282,9 @@ class Basic_Matrix {
   }
 
   Basic_Matrix operator-(const Basic_Matrix& M) const {
-    RT_ASSERT(max_row == M.max_row && max_col == M.max_col, "The matrix must be the same size.");
+    if (max_row != M.max_row || max_col != M.max_col)
+      throw std::logic_error("The matrix must be the same size.");
+
     Basic_Matrix ret(max_row, max_col);
     for (uint32_t cur_row = 0; cur_row < max_row; ++cur_row)
       for (uint32_t cur_col = 0; cur_col < max_col; ++cur_col)
@@ -288,7 +292,9 @@ class Basic_Matrix {
     return ret;
   }
   Basic_Matrix& operator-=(const Basic_Matrix& M) {
-    RT_ASSERT(max_row == M.max_row && max_col == M.max_col, "The matrix must be the same size.");
+    if (max_row != M.max_row || max_col != M.max_col)
+      throw std::logic_error("The matrix must be the same size.");
+
     for (uint32_t cur_row = 0; cur_row < max_row; ++cur_row)
       for (uint32_t cur_col = 0; cur_col < max_col; ++cur_col)
         val[cur_row][cur_col] -= M.val[cur_row][cur_col];
@@ -296,7 +302,9 @@ class Basic_Matrix {
   }
 
   Basic_Matrix operator*(const Basic_Matrix& M) const {
-    RT_ASSERT(max_col == M.max_row, "M.max_row must be equal to this->max_col");
+    if (max_col != M.max_row)
+      throw std::logic_error("M.max_row must be equal to this->max_col.");
+
     Basic_Matrix ret(max_row, M.max_col);
     for (uint32_t cur_row = 0; cur_row < max_row; ++cur_row)
       for (uint32_t cur_col = 0; cur_col < M.max_col; ++cur_col)
@@ -305,7 +313,9 @@ class Basic_Matrix {
     return ret;
   }
   Basic_Matrix& operator*=(const Basic_Matrix& M) {
-    RT_ASSERT(max_col == M.max_row, "M.max_row must be equal to this->max_col");
+    if (max_col != M.max_row)
+      throw std::logic_error("M.max_row must be equal to this->max_col.");
+
     Basic_Matrix ret(max_row, M.max_col);
     for (uint32_t cur_row = 0; cur_row < max_row; ++cur_row)
       for (uint32_t cur_col = 0; cur_col < M.max_col; ++cur_col)

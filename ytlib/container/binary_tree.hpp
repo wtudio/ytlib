@@ -11,8 +11,6 @@
 #include <memory>
 #include <vector>
 
-#include "ytlib/misc/error.hpp"
-
 namespace ytlib {
 
 /**
@@ -167,7 +165,8 @@ class AVLTreeNode : public std::enable_shared_from_this<AVLTreeNode<T> > {
 
   ///插入，必须是根节点才能进行此操作。因为根节点可能会变，所以返回插入后的新根节点
   NodePtr Insert(NodePtr node) {
-    RT_ASSERT(pf.expired(), "must insert to a root node.");
+    if (!pf.expired())
+      throw std::logic_error("Must insert to a root node.");
 
     if (!node)
       return this->shared_from_this();
@@ -231,18 +230,21 @@ class AVLTreeNode : public std::enable_shared_from_this<AVLTreeNode<T> > {
 
   ///在当前节点为根节点的树中删除一个节点，并返回删除后的根节点
   NodePtr Erase(NodePtr node) {
-    RT_ASSERT(pf.expired(), "must erase from a root node.");
+    if (!pf.expired())
+      throw std::logic_error("Must erase from a root node.");
 
     if (!node) return this->shared_from_this();
 
     //先确定要删除的节点是自己的子节点
-    RT_ASSERT(GetRootNode(node) == this->shared_from_this(), "node must belong to root node.");
+    if (GetRootNode(node) != this->shared_from_this())
+      throw std::logic_error("Node must belong to root node.");
 
     return EraseImp(node);
   }
   ///在当前节点中删除节点值为val的节点。会先搜索再删除
   NodePtr Erase(const T& val) {
-    RT_ASSERT(pf.expired(), "must erase from a root node.");
+    if (!pf.expired())
+      throw std::logic_error("Must erase from a root node.");
 
     NodePtr node = BinSearch<AVLTreeNode<T>, T>(this->shared_from_this(), val);
     if (!node) return this->shared_from_this();
@@ -431,7 +433,8 @@ class BRTreeNode : public std::enable_shared_from_this<BRTreeNode<T> > {
 
   ///插入，必须是根节点才能进行此操作。因为根节点可能会变，所以返回插入后的新根节点
   NodePtr Insert(NodePtr node) {
-    RT_ASSERT(pf.expired(), "must insert to a root node.");
+    if (!pf.expired())
+      throw std::logic_error("Must insert to a root node.");
 
     if (!node)
       return this->shared_from_this();
@@ -507,18 +510,21 @@ class BRTreeNode : public std::enable_shared_from_this<BRTreeNode<T> > {
 
   ///在当前节点为根节点的树中删除一个节点，并返回删除后的根节点
   NodePtr Erase(NodePtr node) {
-    RT_ASSERT(pf.expired(), "must erase from a root node.");
+    if (!pf.expired())
+      throw std::logic_error("Must erase from a root node.");
 
     if (!node) return this->shared_from_this();
 
     //先确定要删除的节点是自己的子节点
-    RT_ASSERT(GetRootNode(node) == this->shared_from_this(), "node must belong to root node.");
+    if (GetRootNode(node) != this->shared_from_this())
+      throw std::logic_error("Node must belong to root node.");
 
     return EraseImp(node);
   }
   ///在当前节点中删除节点值为val的节点。会先搜索再删除
   NodePtr Erase(const T& val) {
-    RT_ASSERT(pf.expired(), "must erase from a root node.");
+    if (!pf.expired())
+      throw std::logic_error("Must erase from a root node.");
 
     NodePtr node = BinSearch<BRTreeNode<T>, T>(this->shared_from_this(), val);
     if (!node) return this->shared_from_this();
@@ -682,14 +688,14 @@ bool CheckRChild(std::shared_ptr<T> target_node, std::shared_ptr<T> child_node) 
  */
 template <typename T>
 bool GetLR(const std::shared_ptr<T> target_node) {
-  RT_ASSERT(target_node, "target_node can not be empty.");
+  if (!target_node) throw std::logic_error("target_node can not be empty.");
 
   auto target_pf = target_node->pf.lock();
-  RT_ASSERT(target_pf, "target_pf can not be empty.");
+  if (!target_pf) throw std::logic_error("target->pf can not be empty.");
 
   if (target_node == target_pf->pl) return true;
   if (target_node == target_pf->pr) return false;
-  RT_ASSERT(false, "target_node is not the child of father node");
+  throw std::logic_error("Invalid target_node.");
 
   return true;
 }
@@ -750,8 +756,8 @@ void BreakFather(std::shared_ptr<T> target_node) {
  */
 template <typename T>
 void SetLChild(std::shared_ptr<T> target_node, std::shared_ptr<T> child_node) {
-  RT_ASSERT(target_node, "target_node can not be empty.");
-  RT_ASSERT(target_node != child_node, "target_node can not be equal to child_node.");
+  if (!target_node) throw std::logic_error("target_node can not be empty.");
+  if (target_node == child_node) throw std::logic_error("Can not set child to self.");
 
   if (!child_node) {
     if (target_node->pl) {
@@ -790,8 +796,8 @@ void SetLChild(std::shared_ptr<T> target_node, std::shared_ptr<T> child_node) {
  */
 template <typename T>
 void SetRChild(std::shared_ptr<T> target_node, std::shared_ptr<T> child_node) {
-  RT_ASSERT(target_node, "target_node can not be empty.");
-  RT_ASSERT(target_node != child_node, "target_node can not be equal to child_node.");
+  if (!target_node) throw std::logic_error("target_node can not be empty.");
+  if (target_node == child_node) throw std::logic_error("Can not set child to self.");
 
   if (!child_node) {
     if (target_node->pr) {
