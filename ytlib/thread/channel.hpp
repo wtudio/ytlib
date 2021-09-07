@@ -37,8 +37,8 @@ class Channel : public BlockQueue<T> {
    * @param f 处理内容的函数。参数推荐使用（智能）指针
    * @param th_size 消费者线程数
    */
-  void Init(std::function<void(T &&)> f, uint32_t th_size = 1) {
-    f_ = f;
+  void Init(std::function<void(T &&)> &&f, uint32_t th_size = 1) {
+    f_ = std::move(f);
     th_size_ = th_size;
   }
 

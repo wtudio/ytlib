@@ -47,7 +47,7 @@ class PrintCtr {
    */
   template <typename T>
   std::string PrintStruct(const std::string& msg, const T& obj,
-                          std::function<std::string(const T&)> f) const {
+                          const std::function<std::string(const T&)>& f) const {
     if (!if_print_) return "";
 
     const size_t MAX_LINE_LEN = 32;
@@ -101,7 +101,7 @@ class PrintCtr {
    */
   template <typename T>
   std::string PrintVec(const std::string& msg, const std::vector<T>& v,
-                       std::function<std::string(const T&)> f) const {
+                       const std::function<std::string(const T&)>& f) const {
     return if_print_ ? (msg + ":\n" + Vec2Str(v, f)) : "";
   }
 
@@ -129,7 +129,7 @@ class PrintCtr {
    */
   template <typename T>
   std::string PrintSet(const std::string& msg, const std::set<T>& s,
-                       std::function<std::string(const T&)> f) const {
+                       const std::function<std::string(const T&)>& f) const {
     return if_print_ ? (msg + ":\n" + Set2Str(s, f)) : "";
   }
 
@@ -159,8 +159,8 @@ class PrintCtr {
    */
   template <typename KeyType, typename ValType>
   std::string PrintMap(const std::string& msg, const std::map<KeyType, ValType>& m,
-                       std::function<std::string(const KeyType&)> fkey,
-                       std::function<std::string(const ValType&)> fval) const {
+                       const std::function<std::string(const KeyType&)>& fkey,
+                       const std::function<std::string(const ValType&)>& fval) const {
     return if_print_ ? (msg + ":\n" + Map2Str(m, fkey, fval)) : "";
   }
 

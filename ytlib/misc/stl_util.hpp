@@ -26,7 +26,7 @@ namespace ytlib {
  * @return std::string 结果字符串
  */
 template <typename T>
-std::string Vec2Str(const std::vector<T>& v, std::function<std::string(const T&)> f) {
+std::string Vec2Str(const std::vector<T>& v, const std::function<std::string(const T&)>& f) {
   std::stringstream ss;
   ss << "vec size = " << v.size() << '\n';
   if (!f) return ss.str();
@@ -76,7 +76,7 @@ std::string Vec2Str(const std::vector<T>& v) {
  * @return std::string 结果字符串
  */
 template <typename T>
-std::string Set2Str(const std::set<T>& s, std::function<std::string(const T&)> f) {
+std::string Set2Str(const std::set<T>& s, const std::function<std::string(const T&)>& f) {
   std::stringstream ss;
   ss << "set size = " << s.size() << '\n';
   if (!f) return ss.str();
@@ -129,8 +129,8 @@ std::string Set2Str(const std::set<T>& s) {
  */
 template <typename KeyType, typename ValType>
 std::string Map2Str(const std::map<KeyType, ValType>& m,
-                    std::function<std::string(const KeyType&)> fkey,
-                    std::function<std::string(const ValType&)> fval) {
+                    const std::function<std::string(const KeyType&)>& fkey,
+                    const std::function<std::string(const ValType&)>& fval) {
   std::stringstream ss;
   ss << "map size = " << m.size() << '\n';
   if (!fkey) return ss.str();

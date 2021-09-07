@@ -105,8 +105,8 @@ class Log {
     va_end(argp);
   }
 
-  void AddWriter(LogWriter func) {
-    writers_.emplace_back(func);
+  void AddWriter(LogWriter&& func) {
+    writers_.emplace_back(std::move(func));
   }
 
   void PushCtx(const Ctx& ctx) {

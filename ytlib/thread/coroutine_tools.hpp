@@ -96,7 +96,8 @@ class Awaitable {
  public:
   using RetCallback = std::function<void(T&&)>;
 
-  Awaitable(std::function<void(RetCallback)> anyscfun) : anyscfun_(anyscfun) {}
+  Awaitable(const std::function<void(RetCallback)>& anyscfun) : anyscfun_(anyscfun) {}
+  Awaitable(std::function<void(RetCallback)>&& anyscfun) : anyscfun_(std::move(anyscfun)) {}
 
   bool await_ready() const noexcept { return false; }
   void await_suspend(std::coroutine_handle<> h) {
@@ -120,7 +121,8 @@ class Awaitable<void> {
  public:
   using RetCallback = std::function<void()>;
 
-  Awaitable(std::function<void(RetCallback)> anyscfun) : anyscfun_(anyscfun) {}
+  Awaitable(const std::function<void(RetCallback)>& anyscfun) : anyscfun_(anyscfun) {}
+  Awaitable(std::function<void(RetCallback)>&& anyscfun) : anyscfun_(std::move(anyscfun)) {}
 
   bool await_ready() const noexcept { return false; }
   void await_suspend(std::coroutine_handle<> h) {

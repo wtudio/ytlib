@@ -93,7 +93,7 @@ class BlockQueue {
   }
 
   ///阻塞式取出元素
-  bool BlockDequeue(std::function<void(T &&)> f) {
+  bool BlockDequeue(const std::function<void(T &&)> &f) {
     std::unique_lock<std::mutex> lck(mutex_);
     if (queue_.empty()) {
       if (!running_flag_) return false;

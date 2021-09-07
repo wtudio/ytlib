@@ -104,6 +104,7 @@ message(STATUS "YTLIB_LIBRARY_DIR: ${YTLIB_LIBRARY_DIR}")
 #set(YTLIB_LIBRARY ${YTLIB_LIBRARY} xxx )
 
 #设置下一级目录
+add_subdirectory(ytlib/cache)
 add_subdirectory(ytlib/container)
 add_subdirectory(ytlib/file)
 add_subdirectory(ytlib/log)

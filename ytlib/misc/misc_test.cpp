@@ -7,6 +7,7 @@
 #include "dynamic_lib.hpp"
 #include "guid.hpp"
 #include "loop_tool.hpp"
+#include "rule_tool.hpp"
 #include "shared_buf.hpp"
 #include "stl_util.hpp"
 #include "time.hpp"
@@ -352,6 +353,29 @@ TEST(STL_UTIL_TEST, CheckMapEqual_test) {
     EXPECT_EQ(ret, test_cases[ii].want_result)
         << "Test " << test_cases[ii].name << " failed, index " << ii;
   }
+}
+
+TEST(RULE_TOOL_TEST, RunRules) {
+  int rule_result = 0;
+  std::string hit_rule;
+
+  std::map<std::string, std::function<bool()> > rule_map;
+  rule_map.emplace("r1", [&]() {
+    rule_result = 1;
+    return false;
+  });
+  rule_map.emplace("r2", [&]() {
+    rule_result = 2;
+    return true;
+  });
+  rule_map.emplace("r3", [&]() {
+    rule_result = 3;
+    return true;
+  });
+
+  hit_rule = RunRules(std::vector<std::string>{"r1", "r2", "r3"}, rule_map);
+  EXPECT_STREQ(hit_rule.c_str(), "r2");
+  EXPECT_EQ(rule_result, 2);
 }
 
 }  // namespace ytlib
