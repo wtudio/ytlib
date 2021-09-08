@@ -9,9 +9,7 @@ File(GLOB_RECURSE test_files *_test.cpp)
 File(GLOB_RECURSE benchmark_files *_benchmark.cpp)
 
 # 设置测试
-if(WIN32)
-  SET(TARGET_DEP_LIB)
-else()
+if(UNIX)
   SET(TARGET_DEP_LIB dl)
 endif()
 add_gtest_for_hpp(TEST_TARGET ${CUR_TARGET_NAME} TEST_SRC ${test_files} DEP_LIB ${TARGET_DEP_LIB})

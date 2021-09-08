@@ -1,18 +1,29 @@
 cmake_minimum_required(VERSION 3.10)
-#cmake_policy设置（如果有）
 
 project(ytlib VERSION 0.1.0 LANGUAGES C CXX)
-message(STATUS "start cmake ytlib...")
+message(STATUS "start cmake ytlib ...")
+
+#设置cmake工具
+set(YTLIB_CMAKE_TOOL_PATH ${CMAKE_SOURCE_DIR}/CMake)
+list(APPEND CMAKE_MODULE_PATH ${YTLIB_CMAKE_TOOL_PATH})
+include(${YTLIB_CMAKE_TOOL_PATH}/util.cmake)
+include(FetchContent)
 
 #设定c++版本
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-#设置cmake工具目录
-set(YTLIB_CMAKE_TOOL_PATH ${CMAKE_SOURCE_DIR}/CMake)
-list(APPEND CMAKE_MODULE_PATH ${YTLIB_CMAKE_TOOL_PATH})
-include(${YTLIB_CMAKE_TOOL_PATH}/util.cmake)
+#设置文档
+option(YTLIB_BUILD_DOC "Build ytlib doc." OFF)
+if(YTLIB_BUILD_DOC)
+  set(YTLIB_DOC_DIR ${CMAKE_SOURCE_DIR}/doc)
+  if(WIN32)
+    execute_process(COMMAND ${YTLIB_DOC_DIR}/buildDoc.bat ${YTLIB_DOC_DIR} WORKING_DIRECTORY ${YTLIB_DOC_DIR})
+  elseif(UNIX)
+    execute_process(COMMAND ${YTLIB_DOC_DIR}/buildDoc.sh ${YTLIB_DOC_DIR} WORKING_DIRECTORY ${YTLIB_DOC_DIR})
+  endif()
+endif()
 
 #设置默认编译类型
 if(NOT CMAKE_BUILD_TYPE)
@@ -21,10 +32,18 @@ if(NOT CMAKE_BUILD_TYPE)
   set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 endif()
 
-#设置库类型
+#设置动态库还是静态库
 option(BUILD_SHARED_LIBS "Build with shared libraries." OFF)
 if(BUILD_SHARED_LIBS)
   ADD_DEFINITIONS(-DBUILD_SHARED_LIBS)
+endif()
+
+#设置杂项
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+set_property(GLOBAL PROPERTY POSITION_INDEPENDENT_CODE ON)
+
+if(WIN32)
+  add_compile_options(/wd4819)
 endif()
 
 #要导出给引用者的变量
@@ -33,13 +52,9 @@ set(YTLIB_LIBRARY_DEPEND)                   # ytlib依赖的库
 set(YTLIB_INCLUDE_DIR ${CMAKE_SOURCE_DIR})  # ytlib头文件目录
 set(YTLIB_LIBRARY_DIR)                      # ytlib库文件目录
 
-#平台特化
-if(WIN32)
-  add_compile_options(/wd4819)
-else()
+if(UNIX)
   set(YTLIB_LIBRARY_DEPEND ${YTLIB_LIBRARY_DEPEND} dl)
 endif()
-set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 # 设置输出路径
 set(YTLIB_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
@@ -72,22 +87,31 @@ endif()
 #设置测试
 option(BUILD_TESTS "Build tests." OFF)
 if(BUILD_TESTS)
-  set(googletest_ROOT_DIR "googletest_ROOT_DIR-NOTFOUND" CACHE PATH "path to gtest install path.")
-  find_package(googletest QUIET)
-  if(NOT googletest_FOUND)
-    message(FATAL_ERROR "Cannot find googletest library. please set the googletest_ROOT_DIR to googletest install path.")
+  FetchContent_Declare(
+    googletest
+    GIT_REPOSITORY  https://github.com/google/googletest.git
+    GIT_TAG         release-1.11.0
+  )
+  if(WIN32)
+    set(gtest_force_shared_crt ON CACHE BOOL "")
   endif()
+  set(INSTALL_GTEST OFF CACHE BOOL "")
+  FetchContent_MakeAvailable(googletest)
   enable_testing()
 endif()
 
 #设置benchmark测试
 option(BUILD_BENCH_TESTS "Build benchmark tests." OFF)
 if(BUILD_BENCH_TESTS)
-  set(benchmark_ROOT_DIR "benchmark_ROOT_DIR-NOTFOUND" CACHE PATH "path to googlebenchmark install path.")
-  find_package(benchmark QUIET)
-  if(NOT benchmark_FOUND)
-    message(FATAL_ERROR "Cannot find googlebenchmark library. please set the benchmark_ROOT_DIR to googlebenchmark install path.")
-  endif()
+  FetchContent_Declare(
+    googlebenchmark
+    GIT_REPOSITORY  https://github.com/google/benchmark.git
+    GIT_TAG         v1.6.0
+  )
+  set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "")
+  set(BENCHMARK_ENABLE_GTEST_TESTS OFF CACHE BOOL "")
+  set(BENCHMARK_ENABLE_INSTALL OFF CACHE BOOL "")
+  FetchContent_MakeAvailable(googlebenchmark)
 endif()
 
 #链接设置
@@ -118,21 +142,13 @@ if(BUILD_WITH_BOOST)
   add_subdirectory(ytlib/boost_tools)
 endif()
 
-if(BUILD_TESTS AND BUILD_WITH_BOOST)
-  add_subdirectory(ytlib/custom_test)
-endif()
-
-if(BUILD_BENCH_TESTS AND BUILD_WITH_BOOST)
-  add_subdirectory(ytlib/custom_bench_test)
+#设置个性化测试（ytlib开发测试专用）
+option(BUILD_CUSTOM_TESTS "Build custom tests." OFF)
+if(BUILD_CUSTOM_TESTS)
+  add_subdirectory(ytlib/custom_test/custom_bench)
+  add_subdirectory(ytlib/custom_test/testlib)
+  add_subdirectory(ytlib/custom_test/testprj)
 endif()
 
 #提供给使用者的配置文件config.in
 configure_file(${YTLIB_CMAKE_TOOL_PATH}/UseYTLIB.cmake.in  ${CMAKE_BINARY_DIR}/UseYTLIB.cmake @ONLY)
-
-#导出文档
-set(ytlib_DOC_DIR ${CMAKE_SOURCE_DIR}/doc)
-if(WIN32)
-  execute_process(COMMAND ${ytlib_DOC_DIR}/buildDoc.bat ${ytlib_DOC_DIR} WORKING_DIRECTORY ${ytlib_DOC_DIR})
-else()
-  execute_process(COMMAND ${ytlib_DOC_DIR}/buildDoc.sh ${ytlib_DOC_DIR} WORKING_DIRECTORY ${ytlib_DOC_DIR})
-endif()

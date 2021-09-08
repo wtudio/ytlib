@@ -1,7 +1,7 @@
 /**
  * @file dynamic_lib.hpp
  * @brief 动态库加载工具
- * @note 跨平台的动态库加载工具。
+ * @note 跨平台的动态库加载工具。linux下需要链接dl
  * 动态库运行时链接有两种方式：
  * 1、用的时候链接，用完即free：单纯使用DynamicLib类即可。
  * 2、类似于插件一样，一直保存着句柄，随时要用：使用DynamicLibContainer类。

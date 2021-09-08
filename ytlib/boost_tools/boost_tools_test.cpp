@@ -1,18 +1,11 @@
 #include <gtest/gtest.h>
 
 #include "serialize.hpp"
-#include "uuid.hpp"
 #include "xml_tools.hpp"
 
 namespace ytlib {
 
 using std::string;
-
-TEST(BOOST_TOOLS_TEST, UUID_BASE) {
-  string u1 = GenUUID();
-  string u2 = GenUUID();
-  ASSERT_STRNE(u1.c_str(), u2.c_str());
-}
 
 class CTest {
   T_CLASS_SERIALIZE(&name &age &m &v &dbl_arr)
