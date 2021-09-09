@@ -12,12 +12,13 @@ LIST(REMOVE_ITEM src ${test_files} ${benchmark_files})
 
 # 添加目标
 add_library(${CUR_TARGET_NAME} INTERFACE)
+add_library(ytlib::${CUR_TARGET_NAME} ALIAS ${CUR_TARGET_NAME})
 
 # 设置源文件
 target_sources(${CUR_TARGET_NAME} INTERFACE ${src})
 
 # 设置头文件路径
-target_include_directories(${CUR_TARGET_NAME} INTERFACE ${CMAKE_SOURCE_DIR})
+target_include_directories(${CUR_TARGET_NAME} INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../>)
 
 # 设置依赖
 # add_dependencies(${CUR_TARGET_NAME} xxx)

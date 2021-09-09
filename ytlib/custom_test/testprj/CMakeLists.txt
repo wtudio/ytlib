@@ -14,13 +14,13 @@ add_executable(${CUR_TARGET_NAME})
 target_sources(${CUR_TARGET_NAME} PRIVATE ${src})
 
 # 设置头文件路径
-target_include_directories(${CUR_TARGET_NAME} PRIVATE ${CMAKE_SOURCE_DIR})
+target_include_directories(${CUR_TARGET_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
 # 设置依赖
-add_dependencies(${CUR_TARGET_NAME} boost_asio)
+add_dependencies(${CUR_TARGET_NAME} ytlib::boost_asio)
 
 # 设置链接库
-target_link_libraries(${CUR_TARGET_NAME} PRIVATE boost_asio)
+target_link_libraries(${CUR_TARGET_NAME} PRIVATE ytlib::boost_asio)
 
 # 设置编译选项
 # target_compile_definitions(${CUR_TARGET_NAME} PRIVATE xxx)

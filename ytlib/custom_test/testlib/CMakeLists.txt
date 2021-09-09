@@ -9,19 +9,20 @@ File(GLOB_RECURSE src *.cpp *.hpp *.h)
 
 # 添加目标，设置库类型SHARED/STATIC
 add_library(${CUR_TARGET_NAME})
+add_library(ytlib::${CUR_TARGET_NAME} ALIAS ${CUR_TARGET_NAME})
 
 # 设置源文件
 target_sources(${CUR_TARGET_NAME} PRIVATE ${src})
 
 # 设置头文件路径
-target_include_directories(${CUR_TARGET_NAME} INTERFACE ${CMAKE_SOURCE_DIR})
-target_include_directories(${CUR_TARGET_NAME} PRIVATE ${CMAKE_SOURCE_DIR})
+target_include_directories(${CUR_TARGET_NAME} INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(${CUR_TARGET_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
 # 设置依赖
-# add_dependencies(${CUR_TARGET_NAME} xxx)
+add_dependencies(${CUR_TARGET_NAME} ytlib::dll_tools)
 
 # 设置链接库
-# target_link_libraries(${CUR_TARGET_NAME} PRIVATE xxx)
+target_link_libraries(${CUR_TARGET_NAME} PRIVATE ytlib::dll_tools)
 
 # 设置编译选项
 # target_compile_definitions(${CUR_TARGET_NAME} PRIVATE xxx)

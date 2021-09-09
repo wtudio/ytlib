@@ -4,7 +4,7 @@ project(ytlib VERSION 0.1.0 LANGUAGES C CXX)
 message(STATUS "start cmake ytlib ...")
 
 #设置cmake工具
-set(YTLIB_CMAKE_TOOL_PATH ${CMAKE_SOURCE_DIR}/CMake)
+set(YTLIB_CMAKE_TOOL_PATH ${CMAKE_CURRENT_SOURCE_DIR}/CMake)
 list(APPEND CMAKE_MODULE_PATH ${YTLIB_CMAKE_TOOL_PATH})
 include(${YTLIB_CMAKE_TOOL_PATH}/util.cmake)
 include(FetchContent)
@@ -17,7 +17,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 #设置文档
 option(YTLIB_BUILD_DOC "Build ytlib doc." OFF)
 if(YTLIB_BUILD_DOC)
-  set(YTLIB_DOC_DIR ${CMAKE_SOURCE_DIR}/doc)
+  set(YTLIB_DOC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/doc)
   if(WIN32)
     execute_process(COMMAND ${YTLIB_DOC_DIR}/buildDoc.bat ${YTLIB_DOC_DIR} WORKING_DIRECTORY ${YTLIB_DOC_DIR})
   elseif(UNIX)

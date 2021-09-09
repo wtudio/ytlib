@@ -12,12 +12,13 @@ LIST(REMOVE_ITEM src ${test_files} ${benchmark_files})
 
 # 添加目标
 add_library(${CUR_TARGET_NAME} INTERFACE)
+add_library(ytlib::${CUR_TARGET_NAME} ALIAS ${CUR_TARGET_NAME})
 
 # 设置源文件
 target_sources(${CUR_TARGET_NAME} INTERFACE ${src})
 
 # 设置头文件路径
-target_include_directories(${CUR_TARGET_NAME} INTERFACE ${CMAKE_SOURCE_DIR})
+target_include_directories(${CUR_TARGET_NAME} INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../>)
 
 # 设置依赖
 # add_dependencies(${CUR_TARGET_NAME} xxx)
@@ -33,7 +34,7 @@ set_property(TARGET ${CUR_TARGET_NAME} PROPERTY FOLDER ${CUR_TARGET_NAME})
 
 # 设置测试
 if (YTLIB_BUILD_TESTS)
-  add_gtest(TEST_TARGET ${CUR_TARGET_NAME} TEST_SRC ${test_files} DEP_LIB misc)
+  add_gtest(TEST_TARGET ${CUR_TARGET_NAME} TEST_SRC ${test_files} DEP_LIB ytlib::misc)
 endif()
 
 if (YTLIB_BUILD_BENCH_TESTS)
