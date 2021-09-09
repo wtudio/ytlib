@@ -10,25 +10,27 @@ File(GLOB_RECURSE test_files *_test.cpp)
 File(GLOB_RECURSE benchmark_files *_benchmark.cpp)
 LIST(REMOVE_ITEM src ${test_files} ${benchmark_files})
 
-# 添加目标
-add_library(${CUR_TARGET_NAME} INTERFACE)
+# 添加目标，设置库类型SHARED/STATIC
+add_library(${CUR_TARGET_NAME})
 
 # 设置源文件
-target_sources(${CUR_TARGET_NAME} INTERFACE ${src})
+target_sources(${CUR_TARGET_NAME} PRIVATE ${src})
 
 # 设置头文件路径
 target_include_directories(${CUR_TARGET_NAME} INTERFACE ${CMAKE_SOURCE_DIR})
+target_include_directories(${CUR_TARGET_NAME} PRIVATE ${CMAKE_SOURCE_DIR})
 
 # 设置依赖
 # add_dependencies(${CUR_TARGET_NAME} xxx)
 
 # 设置链接库
-target_link_libraries(${CUR_TARGET_NAME} INTERFACE Boost::boost Boost::date_time Boost::log)
+# target_link_libraries(${CUR_TARGET_NAME} PRIVATE xxx)
 
 # 设置编译选项
-# target_compile_definitions(${CUR_TARGET_NAME} INTERFACE xxx)
+# target_compile_definitions(${CUR_TARGET_NAME} PRIVATE xxx)
 
 # 设置其他属性
+set_property(TARGET ${CUR_TARGET_NAME} PROPERTY UNITY_BUILD ON)
 set_property(TARGET ${CUR_TARGET_NAME} PROPERTY FOLDER ${CUR_TARGET_NAME})
 
 # 设置测试

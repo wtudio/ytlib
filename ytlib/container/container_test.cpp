@@ -4,6 +4,7 @@
 #include "graph.hpp"
 #include "heap.hpp"
 #include "ring_buf.hpp"
+#include "shared_buf.hpp"
 
 #include "ytlib/misc/stl_util.hpp"
 
@@ -1006,6 +1007,31 @@ TEST(RSTUDIO_CONTAINER_TEST, Heap_TEST) {
     std::cout << h1.container[ii] << " ";
   }
   std::cout << std::endl;
+}
+
+TEST(MISC_TEST, sharedBuf_BASE) {
+  std::string s = "test test";
+  uint32_t n = static_cast<uint32_t>(s.size());
+  SharedBuf buf1(n);
+  ASSERT_EQ(buf1.Size(), n);
+
+  buf1 = SharedBuf(s);
+  ASSERT_STREQ(std::string(buf1.Get(), n).c_str(), s.c_str());
+
+  // 浅拷贝
+  SharedBuf buf2(buf1.GetSharedPtr(), n);
+  ASSERT_STREQ(std::string(buf2.Get(), n).c_str(), s.c_str());
+  ASSERT_EQ(buf1.Get(), buf2.Get());
+
+  // 深拷贝
+  SharedBuf buf3(buf1.Get(), n);
+  ASSERT_STREQ(std::string(buf3.Get(), n).c_str(), s.c_str());
+  ASSERT_NE(buf1.Get(), buf3.Get());
+
+  // 深拷贝
+  SharedBuf buf4 = SharedBuf::GetDeepCopy(buf1);
+  ASSERT_STREQ(std::string(buf4.Get(), n).c_str(), s.c_str());
+  ASSERT_NE(buf1.Get(), buf4.Get());
 }
 
 }  // namespace ytlib

@@ -23,7 +23,9 @@ target_include_directories(${CUR_TARGET_NAME} INTERFACE ${CMAKE_SOURCE_DIR})
 # add_dependencies(${CUR_TARGET_NAME} xxx)
 
 # 设置链接库
-target_link_libraries(${CUR_TARGET_NAME} INTERFACE Boost::boost Boost::date_time Boost::log)
+if(UNIX)
+  target_link_libraries(${CUR_TARGET_NAME} INTERFACE dl)
+endif()
 
 # 设置编译选项
 # target_compile_definitions(${CUR_TARGET_NAME} INTERFACE xxx)
@@ -37,5 +39,5 @@ if (YTLIB_BUILD_TESTS)
 endif()
 
 if (YTLIB_BUILD_BENCH_TESTS)
-  add_benchmark_test(TEST_TARGET ${CUR_TARGET_NAME} TEST_SRC ${benchmark_files})
+#   add_benchmark_test(TEST_TARGET ${CUR_TARGET_NAME} TEST_SRC ${benchmark_files})
 endif()

@@ -46,47 +46,16 @@ if(WIN32)
   add_compile_options(/wd4819)
 endif()
 
-#要导出给引用者的变量
-set(YTLIB_LIBRARY)                          # ytlib自己生成的库
-set(YTLIB_LIBRARY_DEPEND)                   # ytlib依赖的库
-set(YTLIB_INCLUDE_DIR ${CMAKE_SOURCE_DIR})  # ytlib头文件目录
-set(YTLIB_LIBRARY_DIR)                      # ytlib库文件目录
-
-if(UNIX)
-  set(YTLIB_LIBRARY_DEPEND ${YTLIB_LIBRARY_DEPEND} dl)
-endif()
-
-# 设置输出路径
-set(YTLIB_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${YTLIB_OUTPUT_PATH})
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${YTLIB_OUTPUT_PATH})
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${YTLIB_OUTPUT_PATH})
-set(YTLIB_LIBRARY_DIR ${YTLIB_LIBRARY_DIR} ${YTLIB_OUTPUT_PATH})
-
-#设置是否依赖boost库
-option(BUILD_WITH_BOOST "Build with boost lib." OFF)
-if(BUILD_WITH_BOOST)
-  if(WIN32)
-    find_package(Boost QUIET)
-    if(NOT Boost_FOUND)
-      message(FATAL_ERROR "Cannot find Boost library. please set the Boost_INCLUDE_DIRS to boost root path.")
-    endif()
-  else()
-    find_package(Boost QUIET COMPONENTS log serialization)
-    if(NOT Boost_FOUND)
-      message(FATAL_ERROR "Cannot find Boost library. please set the Boost_INCLUDE_DIRS to boost root path.")
-    endif()
-    set(YTLIB_LIBRARY_DEPEND ${YTLIB_LIBRARY_DEPEND} ${Boost_LIBRARIES})
-  endif()
-
-  set(YTLIB_INCLUDE_DIR ${YTLIB_INCLUDE_DIR} ${Boost_INCLUDE_DIRS})
-  set(YTLIB_LIBRARY_DIR ${YTLIB_LIBRARY_DIR} ${Boost_LIBRARY_DIRS})
-
+#设置是否依赖boost库（boost静态库）
+option(YTLIB_BUILD_WITH_BOOST "Build with boost stage lib." OFF)
+if(YTLIB_BUILD_WITH_BOOST)
+  set(Boost_USE_STATIC_LIBS ON)
+  find_package(Boost REQUIRED COMPONENTS date_time log serialization program_options)
 endif()
 
 #设置测试
-option(BUILD_TESTS "Build tests." OFF)
-if(BUILD_TESTS)
+option(YTLIB_BUILD_TESTS "Build tests." OFF)
+if(YTLIB_BUILD_TESTS)
   FetchContent_Declare(
     googletest
     GIT_REPOSITORY  https://github.com/google/googletest.git
@@ -101,8 +70,8 @@ if(BUILD_TESTS)
 endif()
 
 #设置benchmark测试
-option(BUILD_BENCH_TESTS "Build benchmark tests." OFF)
-if(BUILD_BENCH_TESTS)
+option(YTLIB_BUILD_BENCH_TESTS "Build benchmark tests." OFF)
+if(YTLIB_BUILD_BENCH_TESTS)
   FetchContent_Declare(
     googlebenchmark
     GIT_REPOSITORY  https://github.com/google/benchmark.git
@@ -114,41 +83,27 @@ if(BUILD_BENCH_TESTS)
   FetchContent_MakeAvailable(googlebenchmark)
 endif()
 
-#链接设置
-include_directories(${YTLIB_INCLUDE_DIR})
-link_directories(${YTLIB_LIBRARY_DIR})
-
-#打印信息
-message(STATUS "YTLIB_LIBRARY: ${YTLIB_LIBRARY}")
-message(STATUS "YTLIB_LIBRARY_DEPEND: ${YTLIB_LIBRARY_DEPEND}")
-message(STATUS "YTLIB_INCLUDE_DIR: ${YTLIB_INCLUDE_DIR}")
-message(STATUS "YTLIB_LIBRARY_DIR: ${YTLIB_LIBRARY_DIR}")
-
-#需要编译的库（保留，应朝head-only方向发展）
-#set(YTLIB_LIBRARY ${YTLIB_LIBRARY} xxx )
-
 #设置下一级目录
 add_subdirectory(ytlib/cache)
 add_subdirectory(ytlib/container)
+add_subdirectory(ytlib/dll_tools)
 add_subdirectory(ytlib/file)
 add_subdirectory(ytlib/log)
+add_subdirectory(ytlib/logic)
 add_subdirectory(ytlib/math)
 add_subdirectory(ytlib/misc)
 add_subdirectory(ytlib/string)
 add_subdirectory(ytlib/thread)
 
-if(BUILD_WITH_BOOST)
+if(YTLIB_BUILD_WITH_BOOST)
   add_subdirectory(ytlib/boost_asio)
   add_subdirectory(ytlib/boost_tools)
 endif()
 
 #设置个性化测试（ytlib开发测试专用）
-option(BUILD_CUSTOM_TESTS "Build custom tests." OFF)
-if(BUILD_CUSTOM_TESTS)
+option(YTLIB_BUILD_CUSTOM_TESTS "Build custom tests." OFF)
+if(YTLIB_BUILD_CUSTOM_TESTS)
   add_subdirectory(ytlib/custom_test/custom_bench)
   add_subdirectory(ytlib/custom_test/testlib)
   add_subdirectory(ytlib/custom_test/testprj)
 endif()
-
-#提供给使用者的配置文件config.in
-configure_file(${YTLIB_CMAKE_TOOL_PATH}/UseYTLIB.cmake.in  ${CMAKE_BINARY_DIR}/UseYTLIB.cmake @ONLY)

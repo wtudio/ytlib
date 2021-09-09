@@ -4,11 +4,7 @@
 #include <iostream>
 #include <string>
 
-#include "dynamic_lib.hpp"
-#include "guid.hpp"
-#include "loop_tool.hpp"
-#include "rule_tool.hpp"
-#include "shared_buf.hpp"
+#include "print_ctr.hpp"
 #include "stl_util.hpp"
 #include "time.hpp"
 
@@ -17,83 +13,6 @@ namespace ytlib {
 using std::cout;
 using std::endl;
 using std::vector;
-
-TEST(MISC_TEST, GUID_BASE) {
-  // 生成mac值
-  std::string mac = "testmac::abc::def";
-  std::string svr_id = "testsvr";
-  int thread_id = 123;
-  uint32_t mac_hash = std::hash<std::string>{}(mac + svr_id + std::to_string(thread_id)) % GUID_MAC_NUM;
-
-  GuidGener::Ins().Init(mac_hash);
-
-  // 生成obj值
-  std::string obj_name = "test_obj_name";
-  uint32_t obj_hash = std::hash<std::string>{}(obj_name) % GUID_OBJ_NUM;
-
-  // 直接生成guid
-  Guid guid_last = GuidGener::Ins().GetGuid(obj_hash);
-
-  // 获取objgener
-  ObjGuidGener gener;
-  gener.Init(obj_hash);
-
-  // 用objgener生成guid
-  for (int ii = 0; ii < 1000; ++ii) {
-    Guid guid_cur = gener.GetGuid();
-    // printf("%llu\n", guid_cur.id);
-    ASSERT_GE(guid_cur.id, guid_last.id);
-    guid_last = guid_cur;
-  }
-}
-
-TEST(MISC_TEST, LoopTool_BASE) {
-  vector<uint32_t> vec{2, 3, 3};
-  LoopTool lt(vec);
-  do {
-    for (size_t ii = lt.m_vecContent.size() - 1; ii > 0; --ii) {
-      cout << lt.m_vecContent[ii] << '-';
-    }
-    cout << lt.m_vecContent[0] << endl;
-
-  } while (++lt);
-}
-
-TEST(MISC_TEST, DynamicLib_BASE) {
-  DynamicLib d;
-  ASSERT_FALSE(d);
-  ASSERT_STREQ(d.GetLibName().c_str(), "");
-  ASSERT_FALSE(d.Load("xxx/xxx"));
-
-  ASSERT_FALSE(DynamicLibContainer::Ins().LoadLib("xxx/xxx"));
-  ASSERT_FALSE(DynamicLibContainer::Ins().GetLib("xxx/xxx"));
-  ASSERT_FALSE(DynamicLibContainer::Ins().RemoveLib("xxx/xxx"));
-}
-
-TEST(MISC_TEST, sharedBuf_BASE) {
-  std::string s = "test test";
-  uint32_t n = static_cast<uint32_t>(s.size());
-  SharedBuf buf1(n);
-  ASSERT_EQ(buf1.Size(), n);
-
-  buf1 = SharedBuf(s);
-  ASSERT_STREQ(std::string(buf1.Get(), n).c_str(), s.c_str());
-
-  // 浅拷贝
-  SharedBuf buf2(buf1.GetSharedPtr(), n);
-  ASSERT_STREQ(std::string(buf2.Get(), n).c_str(), s.c_str());
-  ASSERT_EQ(buf1.Get(), buf2.Get());
-
-  // 深拷贝
-  SharedBuf buf3(buf1.Get(), n);
-  ASSERT_STREQ(std::string(buf3.Get(), n).c_str(), s.c_str());
-  ASSERT_NE(buf1.Get(), buf3.Get());
-
-  // 深拷贝
-  SharedBuf buf4 = SharedBuf::GetDeepCopy(buf1);
-  ASSERT_STREQ(std::string(buf4.Get(), n).c_str(), s.c_str());
-  ASSERT_NE(buf1.Get(), buf4.Get());
-}
 
 TEST(TIME_TEST, BASE_test) {
   std::string s = GetCurTimeStr();
@@ -355,27 +274,67 @@ TEST(STL_UTIL_TEST, CheckMapEqual_test) {
   }
 }
 
-TEST(RULE_TOOL_TEST, RunRules) {
-  int rule_result = 0;
-  std::string hit_rule;
+struct TestObj {
+  int age;
+  std::string name;
 
-  std::map<std::string, std::function<bool()> > rule_map;
-  rule_map.emplace("r1", [&]() {
-    rule_result = 1;
-    return false;
-  });
-  rule_map.emplace("r2", [&]() {
-    rule_result = 2;
-    return true;
-  });
-  rule_map.emplace("r3", [&]() {
-    rule_result = 3;
-    return true;
-  });
+  friend std::ostream& operator<<(std::ostream& out, const TestObj& obj) {
+    out << "age:" << obj.age << "\n";
+    out << "name:" << obj.name << "\n";
+    return out;
+  }
+};
 
-  hit_rule = RunRules(std::vector<std::string>{"r1", "r2", "r3"}, rule_map);
-  EXPECT_STREQ(hit_rule.c_str(), "r2");
-  EXPECT_EQ(rule_result, 2);
+TEST(LOG_TEST, PrintHelper_BASE) {
+  PrintCtr::Ins().SetPrint(true);
+  ASSERT_TRUE(PrintCtr::Ins().IfPrint());
+
+  TestObj obj = {20, "testname"};
+  std::string struct_str = R"str(test msg:
+age:20
+name:testname
+
+)str";
+  EXPECT_STREQ(PrintCtr::Ins().PrintStruct("test msg", obj).c_str(), struct_str.c_str());
+
+  std::vector<std::string> v = {"val1", "val2", "val3\nval3val3"};
+  std::string v_str = R"str(test vec:
+vec size = 3
+[index=0]:val1
+[index=1]:val2
+[index=2]:
+val3
+val3val3
+)str";
+  EXPECT_STREQ(PrintCtr::Ins().PrintVec("test vec", v).c_str(), v_str.c_str());
+
+  std::set<std::string> s = {"val1", "val2", "val3\nval3val3"};
+  std::string s_str = R"str(test set:
+set size = 3
+[index=0]:val1
+[index=1]:val2
+[index=2]:
+val3
+val3val3
+)str";
+  EXPECT_STREQ(PrintCtr::Ins().PrintSet("test set", s).c_str(), s_str.c_str());
+
+  std::map<std::string, std::string> m = {{"key1", "val1"}, {"key2", "val2"}, {"key3", "val3\nval3val3"}};
+  std::string m_str = R"str(test map:
+map size = 3
+[index=0]:
+  [key]:key1
+  [val]:val1
+[index=1]:
+  [key]:key2
+  [val]:val2
+[index=2]:
+  [key]:key3
+  [val]:
+val3
+val3val3
+)str";
+  EXPECT_STREQ(PrintCtr::Ins().PrintMap("test map", m).c_str(), m_str.c_str());
 }
 
 }  // namespace ytlib

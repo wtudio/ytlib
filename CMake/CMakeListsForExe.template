@@ -17,14 +17,14 @@ target_sources(${CUR_TARGET_NAME} PRIVATE ${src})
 target_include_directories(${CUR_TARGET_NAME} PRIVATE ${CMAKE_SOURCE_DIR})
 
 # 设置依赖
-add_dependencies(${CUR_TARGET_NAME} boost_asio)
+# add_dependencies(${CUR_TARGET_NAME} xxx)
 
 # 设置链接库
-target_link_libraries(${CUR_TARGET_NAME} PRIVATE boost_asio)
+# target_link_libraries(${CUR_TARGET_NAME} PRIVATE xxx)
 
 # 设置编译选项
 # target_compile_definitions(${CUR_TARGET_NAME} PRIVATE xxx)
 
 # 设置其他属性
 set_property(TARGET ${CUR_TARGET_NAME} PROPERTY UNITY_BUILD ON)
-set_property(TARGET ${CUR_TARGET_NAME} PROPERTY FOLDER custom_test/${CUR_TARGET_NAME})
+set_property(TARGET ${CUR_TARGET_NAME} PROPERTY FOLDER ${CUR_TARGET_NAME})

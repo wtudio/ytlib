@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "math_util.hpp"
+
 #include "ytlib/misc/stl_util.hpp"
 
 namespace ytlib {

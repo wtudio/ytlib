@@ -14,8 +14,6 @@
 #include <memory>
 #include <string>
 
-#include "misc_macro.h"
-
 namespace ytlib {
 
 #if defined(_WIN32)
@@ -66,8 +64,7 @@ class DynamicLib {
 
     hnd_ = dlopen(libname_.c_str(), RTLD_NOW | RTLD_GLOBAL);
 #endif
-    if (NULL == hnd_)
-      DBG_PRINT("load dynamic lib failed, lib path:%s, err:%s\n", libname_.c_str(), GetErr().c_str());
+    // if (NULL == hnd_) printf("load dynamic lib failed, lib path:%s, err:%s\n", libname_.c_str(), GetErr().c_str());
 
     return (NULL != hnd_);
   }
@@ -83,7 +80,7 @@ class DynamicLib {
     ret = (0 == dlclose(hnd_));
 #endif
     if (!ret) {
-      DBG_PRINT("free dynamic lib failed, lib path:%s, err:%s\n", libname_.c_str(), GetErr().c_str());
+      // printf("free dynamic lib failed, lib path:%s, err:%s\n", libname_.c_str(), GetErr().c_str());
       return false;
     }
 
