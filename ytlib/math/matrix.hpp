@@ -7,6 +7,7 @@
  */
 #pragma once
 
+#include <cmath>
 #include <cstring>
 #include <iostream>
 #include <string>
@@ -485,8 +486,8 @@ inline Matrix RotMatX(const double angle) {
  * @return Matrix 
  */
 inline Matrix RotMatY(const double angle) {
-  double s = sin(angle);
-  double c = cos(angle);
+  double s = std::sin(angle);
+  double c = std::cos(angle);
   Matrix R(3, 3);
   R.val[0][0] = c;
   R.val[0][2] = s;
@@ -503,8 +504,8 @@ inline Matrix RotMatY(const double angle) {
  * @return Matrix 
  */
 inline Matrix RotMatZ(const double angle) {
-  double s = sin(angle);
-  double c = cos(angle);
+  double s = std::sin(angle);
+  double c = std::cos(angle);
   Matrix R(3, 3);
   R.val[0][0] = c;
   R.val[0][1] = -s;

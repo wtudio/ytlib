@@ -51,7 +51,7 @@ class BigNum {
     if (num != 0) content_.resize(order);
 
     do {
-      lldiv_t tmp = div(num, base_);
+      lldiv_t tmp = lldiv(num, base_);
       content_.emplace_back(static_cast<uint32_t>(tmp.rem));
       num = tmp.quot;
     } while (num);
