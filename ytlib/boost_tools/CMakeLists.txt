@@ -31,6 +31,9 @@ target_link_libraries(${CUR_TARGET_NAME} INTERFACE Boost::boost Boost::serializa
 # 设置其他属性
 set_property(TARGET ${CUR_TARGET_NAME} PROPERTY FOLDER ${CUR_TARGET_NAME})
 
+# 设置安装
+install(TARGETS ${CUR_TARGET_NAME} PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ytlib/${CUR_DIR})
+
 # 设置测试
 if (YTLIB_BUILD_TESTS)
   add_gtest(TEST_TARGET ${CUR_TARGET_NAME} TEST_SRC ${test_files})
@@ -39,6 +42,3 @@ endif()
 if (YTLIB_BUILD_BENCH_TESTS)
   add_benchmark_test(TEST_TARGET ${CUR_TARGET_NAME} TEST_SRC ${benchmark_files})
 endif()
-
-# 设置安装
-install(TARGETS ${CUR_TARGET_NAME} PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ytlib/${CUR_DIR})

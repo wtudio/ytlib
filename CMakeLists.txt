@@ -34,9 +34,6 @@ endif()
 
 #设置动态库还是静态库
 option(BUILD_SHARED_LIBS "Build with shared libraries." OFF)
-if(BUILD_SHARED_LIBS)
-  ADD_DEFINITIONS(-DBUILD_SHARED_LIBS)
-endif()
 
 #设置杂项
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
