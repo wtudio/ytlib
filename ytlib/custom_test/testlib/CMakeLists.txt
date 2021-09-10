@@ -39,7 +39,7 @@ target_link_libraries(${CUR_TARGET_NAME} PRIVATE ytlib::dll_tools)
 # 设置编译选项
 # target_compile_definitions(${CUR_TARGET_NAME} PRIVATE xxx)
 if(BUILD_SHARED_LIBS)
-  target_compile_definitions(${CUR_TARGET_NAME} PRIVATE -DBUILD_SHARED_LIBS)
+  target_compile_definitions(${CUR_TARGET_NAME} PRIVATE BUILD_SHARED_LIBS)
 endif()
 
 # 设置其他属性

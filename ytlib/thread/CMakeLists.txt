@@ -14,7 +14,7 @@ add_library(${CUR_TARGET_NAME} INTERFACE)
 add_library(ytlib::${CUR_TARGET_NAME} ALIAS ${CUR_TARGET_NAME})
 
 # 设置头文件路径
-target_include_directories(${CUR_TARGET_NAME} INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../>)
+target_include_directories(${CUR_TARGET_NAME} INTERFACE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>)
 
 # 设置头文件
 set_property(TARGET ${CUR_TARGET_NAME} PROPERTY PUBLIC_HEADER ${head_files})
