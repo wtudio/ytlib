@@ -1,0 +1,3 @@
+add_subdirectory(custom_bench)
+add_subdirectory(testlib)
+add_subdirectory(testprj)
