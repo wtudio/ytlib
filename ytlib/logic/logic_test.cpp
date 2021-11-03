@@ -36,54 +36,59 @@ TEST(BOOL_EXP_TEST, CheckExp_test) {
   struct TestCase {
     std::string name;
 
-    BoolExpCalc calc;
+    BoolExpCalculator calc;
     std::string expression;
     bool want_result;
   };
   std::vector<TestCase> test_cases;
   test_cases.emplace_back(TestCase{
       .name = "case 1",
-      .calc = BoolExpCalc(),
+      .calc = BoolExpCalculator(),
       .expression = "abc",
       .want_result = true});
   test_cases.emplace_back(TestCase{
       .name = "case 2",
-      .calc = BoolExpCalc(),
+      .calc = BoolExpCalculator(),
       .expression = "(a&b|!c)",
       .want_result = true});
   test_cases.emplace_back(TestCase{
       .name = "case 3",
-      .calc = BoolExpCalc(),
+      .calc = BoolExpCalculator(),
       .expression = "((a&b)|(!c))",
       .want_result = true});
   test_cases.emplace_back(TestCase{
       .name = "case 4",
-      .calc = BoolExpCalc(),
+      .calc = BoolExpCalculator(),
       .expression = "!!!!a",
       .want_result = true});
   test_cases.emplace_back(TestCase{
       .name = "case 5",
-      .calc = BoolExpCalc(check_fun, BoolExpCalc::DefaultExpKeyCalcFun),
+      .calc = BoolExpCalculator(check_fun, BoolExpCalculator::DefaultKeyCalcFun),
       .expression = "!(testkey)",
       .want_result = true});
   test_cases.emplace_back(TestCase{
       .name = "case 6",
-      .calc = BoolExpCalc(check_fun, BoolExpCalc::DefaultExpKeyCalcFun),
+      .calc = BoolExpCalculator(check_fun, BoolExpCalculator::DefaultKeyCalcFun),
       .expression = "!(abc)",
       .want_result = false});
   test_cases.emplace_back(TestCase{
+      .name = "case 7",
+      .calc = BoolExpCalculator(),
+      .expression = "T&!(T&F|(!T))",
+      .want_result = true});
+  test_cases.emplace_back(TestCase{
       .name = "bad case 1",
-      .calc = BoolExpCalc(),
+      .calc = BoolExpCalculator(),
       .expression = "",
       .want_result = false});
   test_cases.emplace_back(TestCase{
       .name = "bad case 2",
-      .calc = BoolExpCalc(),
+      .calc = BoolExpCalculator(),
       .expression = "&",
       .want_result = false});
   test_cases.emplace_back(TestCase{
       .name = "bad case 3",
-      .calc = BoolExpCalc(),
+      .calc = BoolExpCalculator(),
       .expression = "(a))",
       .want_result = false});
 
@@ -93,55 +98,65 @@ TEST(BOOL_EXP_TEST, CheckExp_test) {
   }
 }
 
-TEST(BOOL_EXP_TEST, ConvertToSuffixExp_test) {
+TEST(BOOL_EXP_TEST, PreCalc_test) {
   struct TestCase {
     std::string name;
 
+    BoolExpCalculator calc;
     std::string expression;
-    std::vector<std::string> want_result;
+    std::vector<std::string> want_mid_result;
+    bool want_exp;
   };
   std::vector<TestCase> test_cases;
   test_cases.emplace_back(TestCase{
       .name = "case 1",
+      .calc = BoolExpCalculator(),
       .expression = "",
-      .want_result = {}});
+      .want_mid_result = {},
+      .want_exp = true});
   test_cases.emplace_back(TestCase{
       .name = "case 2",
-      .expression = "(abc)",
-      .want_result = {"abc"}});
+      .calc = BoolExpCalculator(),
+      .expression = "((abc))",
+      .want_mid_result = {"abc"},
+      .want_exp = false});
   test_cases.emplace_back(TestCase{
       .name = "case 3",
+      .calc = BoolExpCalculator(),
       .expression = "(!abc&def)",
-      .want_result = {"abc", "!", "def", "&"}});
+      .want_mid_result = {"abc", "!", "def", "&"},
+      .want_exp = false});
   test_cases.emplace_back(TestCase{
       .name = "case 4",
-      .expression = "!a|(b&c)",
-      .want_result = {"a", "!", "b", "c", "&", "|"}});
+      .calc = BoolExpCalculator(),
+      .expression = "(!aa|(bb&(cc|dd)))&ee",
+      .want_mid_result = {"aa", "!", "bb", "cc", "dd", "|", "&", "|", "ee", "&"},
+      .want_exp = false});
   test_cases.emplace_back(TestCase{
-      .name = "bad case 1",
-      .expression = "())",
-      .want_result = {}});
-  test_cases.emplace_back(TestCase{
-      .name = "bad case 2",
-      .expression = "()abc)",
-      .want_result = {"abc"}});
+      .name = "case 5",
+      .calc = BoolExpCalculator(),
+      .expression = "T&F|(!T)",
+      .want_mid_result = {"T", "F", "&", "T", "!", "|"},
+      .want_exp = false});
+
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
-    std::queue<std::string> result = BoolExpCalc::ConvertToSuffixExp(test_cases[ii].expression);
-    std::vector<std::string> result_vec;
-    while (!result.empty()) {
-      result_vec.push_back(result.front());
-      result.pop();
+    bool get_exp = false;
+    try {
+      EXPECT_EQ(test_cases[ii].calc.PreCalc(test_cases[ii].expression), test_cases[ii].want_mid_result)
+          << "Test " << test_cases[ii].name << " failed, index " << ii;
+    } catch (const std::exception&) {
+      get_exp = true;
     }
-    EXPECT_EQ(result_vec, test_cases[ii].want_result)
+    EXPECT_EQ(get_exp, test_cases[ii].want_exp)
         << "Test " << test_cases[ii].name << " failed, index " << ii;
   }
 }
 
-TEST(BOOL_EXP_TEST, CalcExp_test) {
+TEST(BOOL_EXP_TEST, Calc_test) {
   struct TestCase {
     std::string name;
 
-    BoolExpCalc calc;
+    BoolExpCalculator calc;
     std::string expression;
     bool want_result;
     bool want_exp;
@@ -149,15 +164,38 @@ TEST(BOOL_EXP_TEST, CalcExp_test) {
   std::vector<TestCase> test_cases;
   test_cases.emplace_back(TestCase{
       .name = "case 1",
-      .calc = BoolExpCalc(),
-      .expression = "",
+      .calc = BoolExpCalculator(),
+      .expression = "T",
       .want_result = true,
       .want_exp = false});
-
+  test_cases.emplace_back(TestCase{
+      .name = "case 2",
+      .calc = BoolExpCalculator(),
+      .expression = "F",
+      .want_result = false,
+      .want_exp = false});
+  test_cases.emplace_back(TestCase{
+      .name = "case 3",
+      .calc = BoolExpCalculator(),
+      .expression = "T&F|(!T)",
+      .want_result = false,
+      .want_exp = false});
+  test_cases.emplace_back(TestCase{
+      .name = "case 4",
+      .calc = BoolExpCalculator(),
+      .expression = "T&!(T&F|(!T))",
+      .want_result = true,
+      .want_exp = false});
+  test_cases.emplace_back(TestCase{
+      .name = "bad case 1",
+      .calc = BoolExpCalculator(),
+      .expression = "",
+      .want_result = true,
+      .want_exp = true});
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
     bool get_exp = false;
     try {
-      EXPECT_EQ(test_cases[ii].calc.CalcExp(test_cases[ii].expression), test_cases[ii].want_result)
+      EXPECT_EQ(test_cases[ii].calc.Calc(test_cases[ii].expression), test_cases[ii].want_result)
           << "Test " << test_cases[ii].name << " failed, index " << ii;
     } catch (const std::exception&) {
       get_exp = true;
