@@ -35,10 +35,10 @@ set_property(TARGET ${CUR_TARGET_NAME} PROPERTY FOLDER ${CUR_TARGET_NAME})
 install(TARGETS ${CUR_TARGET_NAME} PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ytlib/${CUR_DIR})
 
 # 设置测试
-if (YTLIB_BUILD_TESTS)
+if (YTLIB_BUILD_TESTS AND test_files)
   add_gtest(TEST_TARGET ${CUR_TARGET_NAME} TEST_SRC ${test_files})
 endif()
 
-if (YTLIB_BUILD_BENCH_TESTS)
-#   add_benchmark_test(TEST_TARGET ${CUR_TARGET_NAME} TEST_SRC ${benchmark_files})
+if (YTLIB_BUILD_BENCH_TESTS AND benchmark_files)
+  add_benchmark_test(TEST_TARGET ${CUR_TARGET_NAME} TEST_SRC ${benchmark_files})
 endif()

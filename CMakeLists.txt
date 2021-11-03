@@ -100,7 +100,5 @@ endif()
 #设置个性化测试（ytlib开发测试专用）
 option(YTLIB_BUILD_CUSTOM_TESTS "Build custom tests." OFF)
 if(YTLIB_BUILD_CUSTOM_TESTS)
-  add_subdirectory(ytlib/custom_test/custom_bench)
-  add_subdirectory(ytlib/custom_test/testlib)
-  add_subdirectory(ytlib/custom_test/testprj)
+  add_subdirectory(ytlib/custom_test)
 endif()

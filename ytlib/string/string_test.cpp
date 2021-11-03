@@ -754,7 +754,7 @@ TEST(STRING_UTIL_TEST, SplitToVec_test) {
         test_cases[ii].sep,
         test_cases[ii].trim,
         test_cases[ii].clear);
-    ASSERT_TRUE(CheckVectorEqual(ret, test_cases[ii].want_result))
+    EXPECT_TRUE(CheckVectorEqual(ret, test_cases[ii].want_result))
         << "Test " << test_cases[ii].name << " failed, index " << ii;
   }
 }
@@ -1039,7 +1039,7 @@ TEST(STRING_UTIL_TEST, SplitToSet_test) {
         test_cases[ii].sep,
         test_cases[ii].trim,
         test_cases[ii].clear);
-    ASSERT_TRUE(CheckSetEqual(ret, test_cases[ii].want_result))
+    EXPECT_TRUE(CheckSetEqual(ret, test_cases[ii].want_result))
         << "Test " << test_cases[ii].name << " failed, index " << ii;
   }
 }
