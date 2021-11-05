@@ -10,7 +10,7 @@
 #include <fstream>
 #include <map>
 
-#include "fileobj_inf.hpp"
+#include "ytlib/file/fileobj_inf.hpp"
 
 namespace ytlib {
 
@@ -29,9 +29,9 @@ class KeyValueFile : public FileObj<std::map<std::string, std::string> > {
  protected:
   /**
    * @brief 从打开的文件中解析获取文件内容结构体
-   * 
-   * @return true 
-   * @return false 
+   *
+   * @return true
+   * @return false
    */
   virtual bool ParseFileObj() {
     std::ifstream infile(filepath_, std::ios::in);
@@ -49,14 +49,14 @@ class KeyValueFile : public FileObj<std::map<std::string, std::string> > {
 
       size_t key_start_pos = buf.find_first_not_of(' ');
 
-      //key不能为空
+      // key不能为空
       size_t sep_pos = buf.find('=', key_start_pos);
       if (sep_pos == std::string::npos || sep_pos == key_start_pos) continue;
 
       size_t key_end_pos = buf.find_last_not_of(' ', sep_pos - 1) + 1;
       const std::string& key = buf.substr(key_start_pos, key_end_pos - key_start_pos);
 
-      //val可以为空
+      // val可以为空
       size_t val_start_pos = buf.find_first_not_of(' ', sep_pos + 1);
       size_t val_end_pos = buf.find_last_not_of(' ') + 1;
       const std::string& val = (val_start_pos < val_end_pos) ? buf.substr(val_start_pos, val_end_pos - val_start_pos) : "";
@@ -70,9 +70,9 @@ class KeyValueFile : public FileObj<std::map<std::string, std::string> > {
 
   /**
    * @brief 将当前的文件内容结构体保存为文件
-   * 
-   * @return true 
-   * @return false 
+   *
+   * @return true
+   * @return false
    */
   virtual bool SaveFileObj() {
     std::ofstream ofile(filepath_, std::ios::trunc);

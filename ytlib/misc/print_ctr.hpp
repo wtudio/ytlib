@@ -2,10 +2,8 @@
  * @file print_ctr.hpp
  * @author WT
  * @brief 常规打印辅助工具
- * @note 常规打印辅助工具
  * @date 2021-08-09
  */
-
 #pragma once
 
 #include <functional>

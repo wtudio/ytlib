@@ -82,8 +82,8 @@ struct SharedBuf {
   }
 
  private:
-  uint32_t buf_size = 0;          ///<buf大小
-  std::shared_ptr<BUF_TYPE> buf;  ///<buf智能指针
+  uint32_t buf_size = 0;          ///< buf大小
+  std::shared_ptr<BUF_TYPE> buf;  ///< buf智能指针
 };
 
 }  // namespace ytlib

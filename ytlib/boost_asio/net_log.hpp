@@ -13,7 +13,7 @@
 #include <memory>
 #include <set>
 
-#include "net_util.hpp"
+#include "ytlib/boost_asio/net_util.hpp"
 #include "ytlib/misc/misc_macro.h"
 #include "ytlib/misc/time.hpp"
 
@@ -29,8 +29,8 @@ class NetLogClient : public std::enable_shared_from_this<NetLogClient> {
 
   ~NetLogClient() {}
 
-  NetLogClient(const NetLogClient&) = delete;             ///<no copy
-  NetLogClient& operator=(const NetLogClient&) = delete;  ///<no copy
+  NetLogClient(const NetLogClient&) = delete;             ///< no copy
+  NetLogClient& operator=(const NetLogClient&) = delete;  ///< no copy
 
   void Stop() {
     if (std::atomic_exchange(&stop_flag_, true)) return;
@@ -126,8 +126,8 @@ class LogSvr : public std::enable_shared_from_this<LogSvr> {
 
   ~LogSvr() {}
 
-  LogSvr(const LogSvr&) = delete;             ///<no copy
-  LogSvr& operator=(const LogSvr&) = delete;  ///<no copy
+  LogSvr(const LogSvr&) = delete;             ///< no copy
+  LogSvr& operator=(const LogSvr&) = delete;  ///< no copy
 
   void Start() {
     acceptor_ptr_ = std::make_shared<boost::asio::ip::tcp::acceptor>(*io_ptr_, TcpEp{IPV4(), cfg_.port});
@@ -195,8 +195,8 @@ class LogSvr : public std::enable_shared_from_this<LogSvr> {
 
     ~LogSession() {}
 
-    LogSession(const LogSession&) = delete;             ///<no copy
-    LogSession& operator=(const LogSession&) = delete;  ///<no copy
+    LogSession(const LogSession&) = delete;             ///< no copy
+    LogSession& operator=(const LogSession&) = delete;  ///< no copy
 
     void Start() {
       std::filesystem::path log_file_dir = logsvr_ptr_->cfg_.log_path / session_name_;

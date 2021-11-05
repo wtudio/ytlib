@@ -2,10 +2,8 @@
  * @file stl_util.hpp
  * @author WT
  * @brief stl容器相关工具
- * @note stl容器相关工具
  * @date 2021-08-09
  */
-
 #pragma once
 
 #include <functional>

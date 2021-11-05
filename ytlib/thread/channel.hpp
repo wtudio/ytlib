@@ -7,11 +7,10 @@
  */
 #pragma once
 
-#include <cassert>
 #include <list>
 #include <thread>
 
-#include "block_queue.hpp"
+#include "ytlib/thread/block_queue.hpp"
 
 namespace ytlib {
 
@@ -37,14 +36,15 @@ class Channel : public BlockQueue<T> {
    * @param f 处理内容的函数。参数推荐使用（智能）指针
    * @param th_size 消费者线程数
    */
-  void Init(std::function<void(T &&)> &&f, uint32_t th_size = 1) {
-    f_ = std::move(f);
+  void Init(const std::function<void(T &&)> &f, uint32_t th_size = 1) {
+    f_ = f;
     th_size_ = th_size;
   }
 
   ///开启线程
   void StartProcess() {
-    assert(f_);
+    if (!f_) throw std::logic_error("Invalid HandleFun.");
+
     for (uint32_t ii = 0; ii < th_size_; ++ii) {
       threads_.emplace(threads_.end(), [&] {
         std::unique_lock<std::mutex> lck(BlockQueue<T>::mutex_);

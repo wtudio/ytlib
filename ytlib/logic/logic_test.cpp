@@ -61,16 +61,22 @@ TEST(BOOL_EXP_TEST, CheckExp_test) {
       .calc = BoolExpCalculator(),
       .expression = "!!!!a",
       .want_result = true});
-  test_cases.emplace_back(TestCase{
-      .name = "case 5",
-      .calc = BoolExpCalculator(check_fun, BoolExpCalculator::DefaultKeyCalcFun),
-      .expression = "!(testkey)",
-      .want_result = true});
-  test_cases.emplace_back(TestCase{
-      .name = "case 6",
-      .calc = BoolExpCalculator(check_fun, BoolExpCalculator::DefaultKeyCalcFun),
-      .expression = "!(abc)",
-      .want_result = false});
+  {
+    auto cur_case = test_cases.emplace_back(TestCase{
+        .name = "case 5",
+        .calc = BoolExpCalculator(),
+        .expression = "!(testkey)",
+        .want_result = true});
+    cur_case.calc.SetKeyCheckFun(check_fun);
+  }
+  {
+    auto cur_case = test_cases.emplace_back(TestCase{
+        .name = "case 6",
+        .calc = BoolExpCalculator(),
+        .expression = "!(abc)",
+        .want_result = false});
+    cur_case.calc.SetKeyCheckFun(check_fun);
+  }
   test_cases.emplace_back(TestCase{
       .name = "case 7",
       .calc = BoolExpCalculator(),

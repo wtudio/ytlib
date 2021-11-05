@@ -1,3 +1,9 @@
+/**
+ * @file error.hpp
+ * @author WT
+ * @brief 错误与异常
+ * @date 2021-11-03
+ */
 #pragma once
 
 #include <exception>

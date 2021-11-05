@@ -1,3 +1,9 @@
+/**
+ * @file misc_macro.h
+ * @author WT
+ * @brief 一些杂项宏定义
+ * @date 2021-11-03
+ */
 #pragma once
 
 #ifdef _DEBUG

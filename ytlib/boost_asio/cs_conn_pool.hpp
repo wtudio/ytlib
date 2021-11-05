@@ -7,10 +7,10 @@
  */
 #pragma once
 
-#include "net_util.hpp"
-
 #include <functional>
 #include <map>
+
+#include "ytlib/boost_asio/net_util.hpp"
 
 namespace ytlib {
 
@@ -32,8 +32,8 @@ class CliConnPool : public std::enable_shared_from_this<CliConnPool> {
                                                                         cfg_(cfg) {}
   ~CliConnPool() {}
 
-  CliConnPool(const CliConnPool&) = delete;             ///<no copy
-  CliConnPool& operator=(const CliConnPool&) = delete;  ///<no copy
+  CliConnPool(const CliConnPool&) = delete;             ///< no copy
+  CliConnPool& operator=(const CliConnPool&) = delete;  ///< no copy
 
   void Stop() {
     if (!std::atomic_exchange(&run_flag_, false)) return;
@@ -48,8 +48,8 @@ class CliConnPool : public std::enable_shared_from_this<CliConnPool> {
                                                             sock_(strand_) {}
     ~CliConn() {}
 
-    CliConn(const CliConn&) = delete;             ///<no copy
-    CliConn& operator=(const CliConn&) = delete;  ///<no copy
+    CliConn(const CliConn&) = delete;             ///< no copy
+    CliConn& operator=(const CliConn&) = delete;  ///< no copy
 
     void Stop() {
       if (!std::atomic_exchange(&run_flag_, false)) return;

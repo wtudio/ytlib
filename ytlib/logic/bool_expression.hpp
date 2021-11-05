@@ -31,10 +31,16 @@ class BoolExpCalculator {
   using MidResultClass = std::vector<std::string>;                // 中间结果类型
 
  public:
-  explicit BoolExpCalculator() {}
-  explicit BoolExpCalculator(KeyCheckFun check_fun, KeyCalcFun calc_fun) : key_check_fun_(check_fun),
-                                                                           key_calc_fun_(calc_fun) {}
-  virtual ~BoolExpCalculator() {}
+  BoolExpCalculator() {}
+  ~BoolExpCalculator() {}
+
+  void SetKeyCheckFun(const KeyCheckFun& check_fun) {
+    key_check_fun_ = check_fun;
+  }
+
+  void SetKeyCalcFun(const KeyCalcFun& calc_fun) {
+    key_calc_fun_ = calc_fun;
+  }
 
   /**
    * @brief 由bool表达式字符串形式计算表达式值
