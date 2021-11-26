@@ -14,6 +14,16 @@
 
 namespace ytlib {
 
+/**
+ * @brief CacheData初始化配置
+ *
+ */
+struct CacheDataCfg {
+  CacheDataCfg() {}
+
+  LocalCacheCfg local_cache_cfg;
+};
+
 template <typename KeyType, typename ValType>
 class CacheData {
  public:
@@ -21,7 +31,9 @@ class CacheData {
   typedef std::function<std::optional<ValType>(const KeyType&)> GetDataFun;
 
  public:
-  CacheData() {}
+  CacheData(const CacheDataCfg& cfg) : cfg_(cfg),
+                                       local_cache_(cfg_.local_cache_cfg) {
+  }
   ~CacheData() {}
 
   void SetGetDataFun(const GetDataFun& get_data_fun) {
@@ -29,10 +41,21 @@ class CacheData {
   }
 
   std::optional<ValType> Get(const KeyType& key) {
-    return std::nullopt;
+    auto ret = local_cache_.Get(key);
+    if (ret) return ret;
+
+    ret = get_data_fun_(key);
+
+    if (ret) local_cache_.Update(key, *ret);
+
+    return ret;
   }
 
  private:
+  CacheDataCfg cfg_;
+
   GetDataFun get_data_fun_;
+
+  LocalCache local_cache_;
 };
 }  // namespace ytlib
