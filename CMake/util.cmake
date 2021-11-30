@@ -1,4 +1,5 @@
 # 为目标添加gtest测试项目
+# eg: add_gtest(TEST_TARGET targetxxx TEST_SRC "xxx.h;xxx.cpp" DEP_LIB "libxxx;libyyy")
 function(add_gtest)
   cmake_parse_arguments(ARG "" "TEST_TARGET" "TEST_SRC;DEP_LIB" ${ARGN})
   set(target_test_name ${ARG_TEST_TARGET}_test)
@@ -18,6 +19,7 @@ function(add_gtest)
 endfunction()
 
 # 为目标添加benchmark测试项目
+# eg: add_benchmark_test(TEST_TARGET targetxxx TEST_SRC "xxx.h;xxx.cpp" DEP_LIB "libxxx;libyyy")
 function(add_benchmark_test)
   cmake_parse_arguments(ARG "" "TEST_TARGET" "TEST_SRC;DEP_LIB" ${ARGN})
   set(target_test_name ${ARG_TEST_TARGET}_benchmark)

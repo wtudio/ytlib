@@ -1,6 +1,6 @@
 .vscode/
 build/
-
+gen/
 debug/
 release/
 doc/html

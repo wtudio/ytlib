@@ -6,7 +6,7 @@ message(STATUS "start cmake ytlib ...")
 #设置cmake工具
 set(YTLIB_CMAKE_TOOL_PATH ${CMAKE_CURRENT_SOURCE_DIR}/CMake)
 list(APPEND CMAKE_MODULE_PATH ${YTLIB_CMAKE_TOOL_PATH})
-include(${YTLIB_CMAKE_TOOL_PATH}/util.cmake)
+include(${YTLIB_CMAKE_TOOL_PATH}/Util.cmake)
 include(FetchContent)
 
 #设定c++版本
@@ -39,15 +39,30 @@ option(BUILD_SHARED_LIBS "Build with shared libraries." OFF)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set_property(GLOBAL PROPERTY POSITION_INDEPENDENT_CODE ON)
 
-if(WIN32)
+if(MSVC)
   add_compile_options(/wd4819)
 endif()
 
-#设置是否依赖boost库（boost静态库）
+#设置是否编译依赖boost库的部分（boost静态库）
 option(YTLIB_BUILD_WITH_BOOST "Build with boost stage lib." OFF)
 if(YTLIB_BUILD_WITH_BOOST)
   set(Boost_USE_STATIC_LIBS ON)
   find_package(Boost REQUIRED COMPONENTS date_time log serialization program_options)
+endif()
+
+#设置是否编译依赖protobuf库的部分
+option(YTLIB_BUILD_WITH_PROTOBUF "Build with protobuf lib." OFF)
+if(YTLIB_BUILD_WITH_PROTOBUF)
+  FetchContent_Declare(
+    protobuf
+    GIT_REPOSITORY https://github.com/protocolbuffers/protobuf.git
+    GIT_TAG        v3.19.1
+    SOURCE_SUBDIR  cmake
+  )
+  set(protobuf_BUILD_TESTS OFF CACHE BOOL "")
+  set(protobuf_WITH_ZLIB OFF CACHE BOOL "")
+  FetchContent_MakeAvailable(protobuf)
+  include(${YTLIB_CMAKE_TOOL_PATH}/ProtoBufTool.cmake)
 endif()
 
 #设置测试

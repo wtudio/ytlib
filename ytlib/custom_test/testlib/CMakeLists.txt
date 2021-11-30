@@ -31,7 +31,7 @@ set_property(TARGET ${CUR_TARGET_NAME} PROPERTY PUBLIC_HEADER ${head_files})
 set_property(TARGET ${CUR_TARGET_NAME} PROPERTY PRIVATE_HEADER ${head_files})
 
 # 设置依赖
-add_dependencies(${CUR_TARGET_NAME} ytlib::dll_tools)
+# add_dependencies(${CUR_TARGET_NAME} xxx)
 
 # 设置链接库
 target_link_libraries(${CUR_TARGET_NAME} PRIVATE ytlib::dll_tools)
