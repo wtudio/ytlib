@@ -83,7 +83,7 @@ class DataPackage {
  public:
   T obj;                 //可序列化的类
   SharedBuf quick_data;  //快速内容
-  //tip-data形式
+  // tip-data形式
   std::map<std::string, SharedBuf> map_datas;    //数据,最大支持255个
   std::map<std::string, std::string> map_files;  //文件,最大支持255个
 };
@@ -403,7 +403,7 @@ class TcpNetAdapter : public ConnPool<TcpConnection<T>> {
     return _Send(Tdata_, vec_hosts, delfiles);
   }
 
-  ///hostinfo操作，主要是对外提供。只可添加或修改，不可移除
+  /// hostinfo操作，主要是对外提供。只可添加或修改，不可移除
   inline TcpEp GetMyHostInfo() {
     std::shared_lock<std::shared_mutex> lck(m_hostInfoMutex);
     return m_mapHostInfo[m_myid];
@@ -508,7 +508,7 @@ class TcpNetAdapter : public ConnPool<TcpConnection<T>> {
       f_head_buff = boost::shared_array<char>(new char[map_files.size() * HEAD_SIZE]);
       for (std::map<std::string, std::string>::const_iterator itr = map_files.begin(); itr != map_files.end(); ++itr) {
         file_tips += itr->first;
-        file_tips += '=';  //tip
+        file_tips += '=';  // tip
         file_tips += boost::filesystem::path(itr->second).filename().string();
         file_tips += '\n';
       }
@@ -652,7 +652,7 @@ class ConnBase {
   TcpSocket& Sock() const { return sock_; }
 
  protected:
-  TcpSocket sock_;  //sock连接
+  TcpSocket sock_;  // sock连接
   boost::asio::io_context::strand strand_;
 };
 
@@ -687,7 +687,7 @@ class DemoConn {
 
   virtual void Start() { ReadHead(); }
 
-  TcpSocket sock_;   //sock连接
+  TcpSocket sock_;   // sock连接
   TcpEp remote_ep_;  //远端地址
 
  protected:
@@ -719,7 +719,7 @@ class DemoConn {
     }
 
     uint32_t pack_size = GetNumFromBuf(&header[4]);
-    //do something
+    // do something
     return;
   }
 

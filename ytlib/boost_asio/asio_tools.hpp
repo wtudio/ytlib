@@ -43,8 +43,8 @@ class AsioExecutor {
     }
   }
 
-  AsioExecutor(const AsioExecutor&) = delete;             ///<no copy
-  AsioExecutor& operator=(const AsioExecutor&) = delete;  ///<no copy
+  AsioExecutor(const AsioExecutor&) = delete;             ///< no copy
+  AsioExecutor& operator=(const AsioExecutor&) = delete;  ///< no copy
 
   /**
    * @brief 注册svr的start、stop方法

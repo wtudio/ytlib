@@ -25,7 +25,7 @@ TEST(BOOST_TOOLS_TEST, SERIALIZE_BASE) {
   obj1.v.push_back(666);
   obj1.dbl_arr[0] = 1.23456;
 
-  //string
+  // string
   string re = Serialize(obj1, SerializeType::BinaryType);
 
   CTest obj2;
@@ -37,7 +37,7 @@ TEST(BOOST_TOOLS_TEST, SERIALIZE_BASE) {
   ASSERT_EQ(obj1.v[0], obj2.v[0]);
   ASSERT_EQ(obj2.dbl_arr[0], 1.23456);
 
-  //char array
+  // char array
   const uint32_t len = 1024;
   char buf[len];
 
@@ -52,7 +52,7 @@ TEST(BOOST_TOOLS_TEST, SERIALIZE_BASE) {
   ASSERT_EQ(obj1.v[0], obj3.v[0]);
   ASSERT_EQ(obj3.dbl_arr[0], 1.23456);
 
-  //file
+  // file
   std::filesystem::path p("testTmp/testSerializeFile.txt");
 
   Serialize(obj1, p, SerializeType::TextType);

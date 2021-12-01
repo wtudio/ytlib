@@ -888,7 +888,7 @@ TEST(RSTUDIO_CONTAINER_TEST, RingBuf_char_TEST) {
 }
 
 TEST(RSTUDIO_CONTAINER_TEST, Graph_TEST) {
-  //todo 未完成
+  // todo 未完成
   typedef Graph<uint32_t> myGraph;
 
   std::vector<myGraph*> myGraphVec;
@@ -919,12 +919,12 @@ TEST(RSTUDIO_CONTAINER_TEST, Graph_TEST) {
 
   releaseGraphVec(myGraphVec2);
 
-  //dfs
+  // dfs
   std::vector<myGraph*> vec;
   clearFlag(myGraphVec);
   DFS(*myGraphVec[0], vec);
 
-  //bfs
+  // bfs
   vec.clear();
   clearFlag(myGraphVec);
   BFS(*myGraphVec[0], vec);
@@ -935,7 +935,7 @@ TEST(RSTUDIO_CONTAINER_TEST, Graph_TEST) {
   std::cout << M << std::endl;
   std::cout << std::endl;
 
-  //dijkstra
+  // dijkstra
   auto dj = dijkstra(*myGraphVec[0], myGraphVec);
   for (size_t ii = 0; ii < dj.first.size(); ++ii) {
     std::cout << dj.first[ii] << " ";
@@ -952,7 +952,7 @@ TEST(RSTUDIO_CONTAINER_TEST, Graph_TEST) {
   }
   std::cout << std::endl;
 
-  //floyd
+  // floyd
   auto fl = floyd(myGraphVec);
   std::cout << fl.first << std::endl;
   std::cout << std::endl;
@@ -970,7 +970,7 @@ TEST(RSTUDIO_CONTAINER_TEST, Graph_TEST) {
 }
 
 TEST(RSTUDIO_CONTAINER_TEST, Heap_TEST) {
-  //todo 未完成
+  // todo 未完成
   int data[10] = {7, 9, 2, 6, 4, 8, 1, 3, 10, 5};
   Heap<int> h1(data, 10);
   for (int ii = 0; ii < 10; ++ii) {

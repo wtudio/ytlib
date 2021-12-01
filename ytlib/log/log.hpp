@@ -39,8 +39,8 @@ struct LogData {
   LOG_LEVEL lvl = LOG_LEVEL::L_TRACE;  ///<日志级别
   uint64_t thread_id = 0;              ///<创建日志的线程的id
   uint64_t time = 0;                   ///<微秒时间戳
-  Ctx ctx;                             ///<context
-  char msg[MAX_BUF_SIZE];              ///<fmt后的日志msg字符串
+  Ctx ctx;                             ///< context
+  char msg[MAX_BUF_SIZE];              ///< fmt后的日志msg字符串
 };
 
 // 自定义writer接口

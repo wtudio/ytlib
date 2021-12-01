@@ -17,7 +17,7 @@ namespace ytlib {
 
 /**
  * @brief 打印vector。自定义打印方式
- * 
+ *
  * @tparam T vector模板参数
  * @param v 待打印vector
  * @param f 打印方法
@@ -50,7 +50,7 @@ std::string Vec2Str(const std::vector<T>& v, const std::function<std::string(con
 
 /**
  * @brief 打印vector。使用T的 << 方法
- * 
+ *
  * @tparam T vector模板参数
  * @param v 待打印vector
  * @return std::string 结果字符串
@@ -67,7 +67,7 @@ std::string Vec2Str(const std::vector<T>& v) {
 
 /**
  * @brief 打印set。自定义打印方式
- * 
+ *
  * @tparam T set模板参数
  * @param s 待打印set
  * @param f 打印方法
@@ -100,7 +100,7 @@ std::string Set2Str(const std::set<T>& s, const std::function<std::string(const 
 
 /**
  * @brief 打印set。使用T的 << 方法
- * 
+ *
  * @tparam T set模板参数
  * @param s 待打印set
  * @return std::string 结果字符串
@@ -117,7 +117,7 @@ std::string Set2Str(const std::set<T>& s) {
 
 /**
  * @brief 打印map。自定义打印方式
- * 
+ *
  * @tparam KeyType map中key类型
  * @tparam ValType map中val类型
  * @param m 待打印map
@@ -168,7 +168,7 @@ std::string Map2Str(const std::map<KeyType, ValType>& m,
 
 /**
  * @brief 打印map。使用KeyType、ValType的 << 方法
- * 
+ *
  * @tparam KeyType map中key类型
  * @tparam ValType map中val类型
  * @param m 待打印map
@@ -191,10 +191,10 @@ std::string Map2Str(const std::map<KeyType, ValType>& m) {
 
 /**
  * @brief 判断两个vector是否相等
- * 
+ *
  * @tparam T vector模板参数，需支持!=运算
- * @param[in] vec1 
- * @param[in] vec2 
+ * @param[in] vec1
+ * @param[in] vec2
  * @return true 相等
  * @return false 不相等
  */
@@ -209,10 +209,10 @@ bool CheckVectorEqual(const std::vector<T>& vec1, const std::vector<T>& vec2) {
 
 /**
  * @brief 判断两个set是否相等
- * 
+ *
  * @tparam T set模板参数，需支持!=运算
- * @param[in] set1 
- * @param[in] set2 
+ * @param[in] set1
+ * @param[in] set2
  * @return true 相等
  * @return false 不相等
  */
@@ -231,11 +231,11 @@ bool CheckSetEqual(const std::set<T>& set1, const std::set<T>& set2) {
 
 /**
  * @brief 判断两个map是否相等
- * 
+ *
  * @tparam KeyType map模板参数，需支持!=运算
  * @tparam ValType map模板参数，需支持!=运算
- * @param[in] map1 
- * @param[in] map2 
+ * @param[in] map1
+ * @param[in] map2
  * @return true 相等
  * @return false 不相等
  */

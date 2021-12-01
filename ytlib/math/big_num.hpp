@@ -21,7 +21,7 @@ class BigNum {
  public:
   /**
    * @brief 典型进制
-   * 
+   *
    */
   enum class BaseType : uint8_t {
     BIN = 2,
@@ -293,7 +293,7 @@ class BigNum {
     (*this) = operator+(BigNum(1, base_));
     return *this;
   }
-  ///i++
+  /// i++
   const BigNum operator++(int) {
     BigNum re(*this);
     (*this) = operator+(BigNum(1, base_));
@@ -313,7 +313,7 @@ class BigNum {
     (*this) = operator+(BigNum(-1, base_));
     return *this;
   }
-  ///i--
+  /// i--
   const BigNum operator--(int) {
     BigNum re(*this);
     (*this) = operator+(BigNum(-1, base_));
@@ -462,9 +462,9 @@ class BigNum {
   /**
    * @brief 打印
    * @note 支持8、10、16进制打印，c++不支持直接的二进制打印
-   * @param out 
-   * @param val 
-   * @return std::ostream& 
+   * @param out
+   * @param val
+   * @return std::ostream&
    */
   friend std::ostream& operator<<(std::ostream& out, const BigNum& val) {
     //符号位
@@ -507,9 +507,9 @@ class BigNum {
 
   /**
    * @brief 比较大小
-   * 
-   * @param val_l 
-   * @param val_r 
+   *
+   * @param val_l
+   * @param val_r
    * @return int32_t 1:val_l>val_r; 0:val_l==val_r; -1:val_l<val_r
    */
   static int32_t Compare(const BigNum& val_l, const BigNum& val_r) {

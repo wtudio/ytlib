@@ -42,7 +42,7 @@ TEST(BOOST_ASIO_TEST, LOG) {
     DBG_PRINT("cli_sys_ptr exit");
   });
 
-  //svr1
+  // svr1
   thread t_svr1([svr1_sys_ptr] {
     auto lgsvr_ptr = std::make_shared<LogSvr>(svr1_sys_ptr->IO(), LogSvrCfg());
     svr1_sys_ptr->RegisterSvrFunc([&lgsvr_ptr] { lgsvr_ptr->Start(); },

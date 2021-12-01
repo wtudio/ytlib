@@ -8,6 +8,7 @@
 #pragma once
 
 #include <string>
+#include <string_view>
 
 namespace ytlib {
 
@@ -28,12 +29,12 @@ inline unsigned char FromHex(unsigned char x) {
 
 /**
  * @brief UrlEncode
- * 
+ *
  * @param[in] str 待编码字符串
  * @param[in] up 是否转码为大写字符
  * @return std::string 转码后的结果字符串
  */
-inline std::string UrlEncode(const std::string& str, bool up = true) {
+inline std::string UrlEncode(std::string_view str, bool up = true) {
   std::string strTemp;
   size_t length = str.length();
   strTemp.reserve(length << 1);
@@ -53,11 +54,11 @@ inline std::string UrlEncode(const std::string& str, bool up = true) {
 
 /**
  * @brief UrlDecode
- * 
+ *
  * @param[in] str 待解码字符串
  * @return std::string 解码后的结果字符串
  */
-inline std::string UrlDecode(const std::string& str) {
+inline std::string UrlDecode(std::string_view str) {
   std::string strTemp;
   size_t length = str.length();
   strTemp.reserve(length);

@@ -652,10 +652,10 @@ class BRTreeNode : public std::enable_shared_from_this<BRTreeNode<T> > {
 
 /**
  * @brief 检查子节点是否为目标节点的左子节点
- * 
- * @tparam T 
- * @param target_node 
- * @param child_node 
+ *
+ * @tparam T
+ * @param target_node
+ * @param child_node
  * @return true child_node是target_node左子节点
  * @return false child_node不是target_node左子节点
  */
@@ -666,10 +666,10 @@ bool CheckLChild(const std::shared_ptr<T>& target_node, const std::shared_ptr<T>
 
 /**
  * @brief 检查子节点是否为目标节点的右子节点
- * 
- * @tparam T 
- * @param target_node 
- * @param child_node 
+ *
+ * @tparam T
+ * @param target_node
+ * @param child_node
  * @return true child_node是target_node右子节点
  * @return false child_node不是target_node右子节点
  */
@@ -702,7 +702,7 @@ bool GetLR(const std::shared_ptr<T> target_node) {
 
 /**
  * @brief 与左子树断开
- * 
+ *
  * @tparam T 节点类型
  * @param target_node 待处理节点
  */
@@ -715,7 +715,7 @@ void BreakLChild(std::shared_ptr<T> target_node) {
 
 /**
  * @brief 与右子树断开
- * 
+ *
  * @tparam T 节点类型
  * @param target_node 待处理节点
  */
@@ -728,8 +728,8 @@ void BreakRChild(std::shared_ptr<T> target_node) {
 
 /**
  * @brief 与父节点断开
- * 
- * @tparam T 
+ *
+ * @tparam T
  * @param target_node 待处理节点
  */
 template <typename T>
@@ -1011,7 +1011,7 @@ size_t GetMinChain(const std::shared_ptr<T>& node) {
 
 /**
  * @brief 获取树中节点个数
- * 
+ *
  * @tparam T 节点类型
  * @param node 要获取节点个数的树的根节点
  * @return size_t 节点个数
@@ -1024,10 +1024,10 @@ size_t GetNodeNum(const std::shared_ptr<T>& node) {
 
 /**
  * @brief 获取所在树的根节点
- * 
- * @tparam T 
- * @param node 
- * @return std::shared_ptr<T> 
+ *
+ * @tparam T
+ * @param node
+ * @return std::shared_ptr<T>
  */
 template <typename T>
 std::shared_ptr<T> GetRootNode(const std::shared_ptr<T>& node) {
@@ -1044,10 +1044,10 @@ std::shared_ptr<T> GetRootNode(const std::shared_ptr<T>& node) {
 /**
  * @brief 二叉树深拷贝
  * @note 对二叉树进行深拷贝，可以在不同类型之间拷贝
- * @tparam NodeTypeFrom 
- * @tparam NodeTypeTo 
- * @param[in] root_node_from 
- * @param[out] root_node_to 
+ * @tparam NodeTypeFrom
+ * @tparam NodeTypeTo
+ * @param[in] root_node_from
+ * @param[out] root_node_to
  */
 template <typename NodeTypeFrom, typename NodeTypeTo>
 void CopyTree(const std::shared_ptr<NodeTypeFrom>& root_node_from, std::shared_ptr<NodeTypeTo>& root_node_to) {
@@ -1061,12 +1061,12 @@ void CopyTree(const std::shared_ptr<NodeTypeFrom>& root_node_from, std::shared_p
 
 /**
  * @brief 比较两个二叉树的结构和obj是否相等
- * 
- * @tparam T 
- * @param root_node1 
- * @param root_node2 
- * @return true 
- * @return false 
+ *
+ * @tparam T
+ * @param root_node1
+ * @param root_node2
+ * @return true
+ * @return false
  */
 template <typename T>
 bool CompareTreeObj(const std::shared_ptr<T>& root_node1, const std::shared_ptr<T>& root_node2) {
@@ -1081,11 +1081,11 @@ bool CompareTreeObj(const std::shared_ptr<T>& root_node1, const std::shared_ptr<
 
 /**
  * @brief 在二叉搜索树中进行查找
- * 
+ *
  * @tparam NodeType 节点类型
  * @tparam ValType 节点obj类型
- * @param root_node 
- * @param val 
+ * @param root_node
+ * @param val
  * @return std::shared_ptr<NodeType> 查找到的节点的智能指针，若没有查到则返回空智能指针
  */
 template <typename NodeType, typename ValType>

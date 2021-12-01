@@ -1,7 +1,6 @@
 #include <gtest/gtest.h>
 
 #include "sort_algs.hpp"
-#include "ytlib/misc/stl_util.hpp"
 
 namespace ytlib {
 

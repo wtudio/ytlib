@@ -36,7 +36,7 @@ class PrintCtr {
 
   /**
    * @brief 打印结构体。自定义打印方式
-   * 
+   *
    * @tparam T 结构体类型
    * @param msg 额外信息
    * @param obj 结构体
@@ -72,7 +72,7 @@ class PrintCtr {
 
   /**
    * @brief 打印结构体。使用结构体的 << 方法
-   * 
+   *
    * @tparam T 结构体类型
    * @param msg 额外信息
    * @param obj 结构体
@@ -90,7 +90,7 @@ class PrintCtr {
 
   /**
    * @brief 打印vector。自定义打印方式
-   * 
+   *
    * @tparam T vector模板参数
    * @param msg 额外信息
    * @param v 待打印vector
@@ -105,7 +105,7 @@ class PrintCtr {
 
   /**
    * @brief 打印vector。使用T的 << 方法
-   * 
+   *
    * @tparam T vector模板参数
    * @param msg 额外信息
    * @param v 待打印vector
@@ -118,7 +118,7 @@ class PrintCtr {
 
   /**
    * @brief 打印set。自定义打印方式
-   * 
+   *
    * @tparam T set模板参数
    * @param msg 额外信息
    * @param s 待打印set
@@ -133,7 +133,7 @@ class PrintCtr {
 
   /**
    * @brief 打印set。使用T的 << 方法
-   * 
+   *
    * @tparam T set模板参数
    * @param msg 额外信息
    * @param s 待打印set
@@ -146,7 +146,7 @@ class PrintCtr {
 
   /**
    * @brief 打印map。自定义打印方式
-   * 
+   *
    * @tparam KeyType map中key类型
    * @tparam ValType map中val类型
    * @param msg 额外信息

@@ -11,17 +11,13 @@
 
 namespace ytlib {
 
-
-
 class RpcCli : public std::enable_shared_from_this<RpcCli> {
  public:
 };
 
 class RpcSvr : public std::enable_shared_from_this<RpcSvr> {
  public:
-
-// register(string, )
-
+  // register(string, )
 };
 
 }  // namespace ytlib

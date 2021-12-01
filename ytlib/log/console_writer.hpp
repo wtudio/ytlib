@@ -95,8 +95,8 @@ class ConsoleWriter {
     dwSize.Y = 1024;
     SetConsoleScreenBufferSize(console_handle_, dwSize);
     SetConsoleMode(console_handle_, ENABLE_QUICK_EDIT_MODE | ENABLE_EXTENDED_FLAGS);
-    //HMENU hMenu = GetSystemMenu(GetConsoleWindow(), FALSE);
-    //EnableMenuItem(hMenu, SC_CLOSE, MF_GRAYED);
+    // HMENU hMenu = GetSystemMenu(GetConsoleWindow(), FALSE);
+    // EnableMenuItem(hMenu, SC_CLOSE, MF_GRAYED);
 
     return true;
   }

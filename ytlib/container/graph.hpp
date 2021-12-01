@@ -302,16 +302,16 @@ g_sideType maxFlow(Graph<T>& beginNode, Graph<T>& endNode) {
   return re;
 }
 
-//Kruskal算法：最小生成树，加边法。将在输入的vector上进行修改，返回根节点的指针
+// Kruskal算法：最小生成树，加边法。将在输入的vector上进行修改，返回根节点的指针
 template <typename T>
 Graph<T>* kruskal(std::vector<Graph<T>*>& vec) {
 }
 
-//Prim算法：最小生成树，加点法。将在输入的vector上进行修改，返回根节点的指针
+// Prim算法：最小生成树，加点法。将在输入的vector上进行修改，返回根节点的指针
 template <typename T>
 Graph<T>* prim(std::vector<Graph<T>*>& vec) {
 }
 
-//A*
+// A*
 
 }  // namespace ytlib

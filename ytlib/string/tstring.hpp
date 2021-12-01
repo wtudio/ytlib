@@ -48,16 +48,16 @@ typedef std::basic_ofstream<tchar> tofstream;
 
 /**
  * @brief wstring转string
- * 
+ *
  * @param[in] src wstring字符串指针
  * @param[in] size wstring字符串长度
- * @param[in] loc 
+ * @param[in] loc
  * @return std::string string结果
  */
 inline std::string ToString(const wchar_t* src, size_t size, const std::locale& loc) {
   if (size == 0) return "";
 
-  //typedef std::codecvt<wchar_t, char, std::mbstate_t> std::codecvt<wchar_t, char, std::mbstate_t>;
+  // typedef std::codecvt<wchar_t, char, std::mbstate_t> std::codecvt<wchar_t, char, std::mbstate_t>;
   const std::codecvt<wchar_t, char, std::mbstate_t>& cdcvt = std::use_facet<std::codecvt<wchar_t, char, std::mbstate_t>>(loc);
   std::mbstate_t state;
   std::memset(&state, 0, sizeof(std::mbstate_t));
@@ -104,16 +104,16 @@ inline std::string ToString(const wchar_t* src, size_t size, const std::locale& 
 
 /**
  * @brief string转wstring
- * 
+ *
  * @param src string字符串指针
  * @param size string字符串长度
- * @param loc 
+ * @param loc
  * @return std::wstring wstring结果
  */
 inline std::wstring ToWString(const char* src, size_t size, const std::locale& loc) {
   if (size == 0) return L"";
 
-  //typedef std::codecvt<wchar_t, char, std::mbstate_t> std::codecvt<wchar_t, char, std::mbstate_t>;
+  // typedef std::codecvt<wchar_t, char, std::mbstate_t> std::codecvt<wchar_t, char, std::mbstate_t>;
   const std::codecvt<wchar_t, char, std::mbstate_t>& cdcvt = std::use_facet<std::codecvt<wchar_t, char, std::mbstate_t>>(loc);
   std::mbstate_t state;
   std::memset(&state, 0, sizeof(std::mbstate_t));

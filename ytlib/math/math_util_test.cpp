@@ -2,8 +2,6 @@
 
 #include "math_util.hpp"
 
-#include "ytlib/misc/stl_util.hpp"
-
 namespace ytlib {
 
 TEST(MATH_UTIL_TEST, CountOne_test) {

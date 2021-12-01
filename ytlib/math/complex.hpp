@@ -17,7 +17,7 @@ namespace ytlib {
 
 /**
  * @brief 简易复数类
- * 
+ *
  * @tparam CFloat 使用的浮点类型
  */
 template <std::floating_point CFloat = double>
@@ -155,11 +155,11 @@ class Complex {
 
 /**
  * @brief 将实数数组扩展成复数数组
- * 
- * @tparam CFloat 
- * @param[in] len 
- * @param[in] in 
- * @param[out] out 
+ *
+ * @tparam CFloat
+ * @param[in] len
+ * @param[in] in
+ * @param[out] out
  */
 template <std::floating_point CFloat = double>
 void GetComplex(uint32_t len, CFloat in[], Complex<CFloat> out[]) {
@@ -171,10 +171,10 @@ void GetComplex(uint32_t len, CFloat in[], Complex<CFloat> out[]) {
 
 /**
  * @brief 取共轭
- * 
- * @tparam CFloat 
- * @param[in] len 
- * @param[inout] in 
+ *
+ * @tparam CFloat
+ * @param[in] len
+ * @param[inout] in
  */
 template <std::floating_point CFloat = double>
 void ConjugateComplex(uint32_t len, Complex<CFloat> in[]) {
@@ -185,11 +185,11 @@ void ConjugateComplex(uint32_t len, Complex<CFloat> in[]) {
 
 /**
  * @brief 复数数组取模
- * 
- * @tparam CFloat 
- * @param[in] len 
- * @param[in] in 
- * @param[out] out 
+ *
+ * @tparam CFloat
+ * @param[in] len
+ * @param[in] in
+ * @param[out] out
  */
 template <std::floating_point CFloat = double>
 void AbsComplex(uint32_t len, Complex<CFloat> in[], CFloat out[]) {
@@ -200,10 +200,10 @@ void AbsComplex(uint32_t len, Complex<CFloat> in[], CFloat out[]) {
 
 /**
  * @brief 傅立叶变换
- * 
- * @tparam CFloat 
- * @param[in] N 
- * @param[inout] data 
+ *
+ * @tparam CFloat
+ * @param[in] N
+ * @param[inout] data
  */
 template <std::floating_point CFloat = double>
 void FFT(uint32_t N, Complex<CFloat> data[]) {
@@ -248,10 +248,10 @@ void FFT(uint32_t N, Complex<CFloat> data[]) {
 
 /**
  * @brief 傅里叶逆变换
- * 
- * @tparam CFloat 
- * @param[in] N 
- * @param[inout] data 
+ *
+ * @tparam CFloat
+ * @param[in] N
+ * @param[inout] data
  */
 template <std::floating_point CFloat = double>
 void IFFT(uint32_t N, Complex<CFloat> data[]) {
@@ -265,10 +265,10 @@ void IFFT(uint32_t N, Complex<CFloat> data[]) {
 
 /**
  * @brief fftshift
- * 
- * @tparam CFloat 
- * @param[in] len 
- * @param[inout] data 
+ *
+ * @tparam CFloat
+ * @param[in] len
+ * @param[inout] data
  */
 template <std::floating_point CFloat = double>
 void FFTShift(uint32_t len, Complex<CFloat> data[]) {

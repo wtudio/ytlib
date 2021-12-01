@@ -74,7 +74,7 @@ inline bool IsPrime(uint64_t num) {
 
 /**
  * @brief 求最大公约数
- * 
+ *
  * @param[in] num1 输入的数字1
  * @param[in] num2 输入的数字2
  * @return uint64_t 最大公约数
@@ -105,7 +105,7 @@ inline uint64_t Lcm(uint64_t num1, uint64_t num2) {
 
 /**
  * @brief 分解质因数
- * 
+ *
  * @param[in] num 待分解数
  * @return std::vector<uint64_t> 质因数列表
  */
@@ -122,7 +122,7 @@ inline std::vector<uint64_t> Factoring2Vec(uint64_t num) {
 
 /**
  * @brief 分解质因数
- * 
+ *
  * @param[in] num 待分解数
  * @return std::map<uint64_t, uint64_t> 质因数列表
  */

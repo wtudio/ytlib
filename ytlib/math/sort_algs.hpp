@@ -36,7 +36,7 @@ class SortObj {
   bool operator!=(const SortObj& val) const { return key != val.key; }
 
  public:
-  uint32_t key = 0;  ///<key
+  uint32_t key = 0;  ///< key
 };
 
 /**

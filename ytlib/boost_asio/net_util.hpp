@@ -11,8 +11,8 @@
 
 namespace ytlib {
 
-typedef boost::asio::ip::address_v4 IPV4;      //ip
-typedef boost::asio::ip::tcp::endpoint TcpEp;  //28个字节
+typedef boost::asio::ip::address_v4 IPV4;      // ip
+typedef boost::asio::ip::tcp::endpoint TcpEp;  // 28个字节
 typedef boost::asio::ip::tcp::socket TcpSocket;
 
 inline std::string TcpEp2Str(const TcpEp& ep) {

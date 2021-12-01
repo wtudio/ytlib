@@ -420,7 +420,7 @@ TEST(BIG_NUM_TEST, Add_test) {
     BigNum a;
     BigNum b;
 
-    BigNum want_result;  //want_result=a+b
+    BigNum want_result;  // want_result=a+b
   };
   std::vector<TestCase> test_cases;
   test_cases.emplace_back(TestCase{
@@ -481,7 +481,7 @@ TEST(BIG_NUM_TEST, Add_test) {
   test_cases.emplace_back(TestCase{
       .name = "case 12",
       .a = BigNum("1234"),
-      .b = BigNum("-ABC", BigNum::BaseType::HEX),  //2748
+      .b = BigNum("-ABC", BigNum::BaseType::HEX),  // 2748
       .want_result = BigNum("-1514")});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
@@ -570,7 +570,7 @@ TEST(BIG_NUM_TEST, Multiply_test) {
     BigNum a;
     BigNum b;
 
-    BigNum want_result;  //want_result=a*b
+    BigNum want_result;  // want_result=a*b
   };
   std::vector<TestCase> test_cases;
   test_cases.emplace_back(TestCase{
@@ -600,7 +600,7 @@ TEST(BIG_NUM_TEST, Multiply_test) {
       .want_result = BigNum("300")});
   test_cases.emplace_back(TestCase{
       .name = "case 6",
-      .a = BigNum("FF", BigNum::BaseType::HEX),  //255
+      .a = BigNum("FF", BigNum::BaseType::HEX),  // 255
       .b = BigNum("24"),
       .want_result = BigNum("6120")});
   test_cases.emplace_back(TestCase{

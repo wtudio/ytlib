@@ -88,11 +88,11 @@ class Basic_Matrix {
 
   /**
    * @brief 将矩阵中部分区域数据按行展开
-   * 
-   * @param[in] row_begin 
-   * @param[in] col_begin 
-   * @param[in] row_end 
-   * @param[in] col_end 
+   *
+   * @param[in] row_begin
+   * @param[in] col_begin
+   * @param[in] row_end
+   * @param[in] col_end
    * @return std::vector<T> 展开后的数据
    */
   std::vector<T> GetData(uint32_t row_begin = 0, uint32_t col_begin = 0,
@@ -116,11 +116,11 @@ class Basic_Matrix {
 
   /**
    * @brief 获取子矩阵
-   * 
-   * @param[in] row_begin 
-   * @param[in] col_begin 
-   * @param[in] row_end 
-   * @param[in] col_end 
+   *
+   * @param[in] row_begin
+   * @param[in] col_begin
+   * @param[in] row_end
+   * @param[in] col_end
    * @return Basic_Matrix 子矩阵
    */
   Basic_Matrix GetMat(uint32_t row_begin, uint32_t col_begin,
@@ -143,12 +143,12 @@ class Basic_Matrix {
 
   /**
    * @brief 设置子矩阵
-   * 
-   * @param[in] M 
-   * @param[in] row_begin 
-   * @param[in] col_begin 
-   * @param[in] row_end 
-   * @param[in] col_end 
+   *
+   * @param[in] M
+   * @param[in] row_begin
+   * @param[in] col_begin
+   * @param[in] row_end
+   * @param[in] col_end
    */
   void SetMat(const Basic_Matrix& M, const uint32_t row_begin = 0, const uint32_t col_begin = 0,
               uint32_t row_end = UINT32_MAX, uint32_t col_end = UINT32_MAX) {
@@ -166,12 +166,12 @@ class Basic_Matrix {
 
   /**
    * @brief 将矩阵一定区域内都设置为一个常量
-   * 
-   * @param[in] in_val 
-   * @param[in] row_begin 
-   * @param[in] col_begin 
-   * @param[in] row_end 
-   * @param[in] col_end 
+   *
+   * @param[in] in_val
+   * @param[in] row_begin
+   * @param[in] col_begin
+   * @param[in] row_end
+   * @param[in] col_end
    */
   void SetVal(const T& in_val, uint32_t row_begin = 0, uint32_t col_begin = 0,
               uint32_t row_end = UINT32_MAX, uint32_t col_end = UINT32_MAX) {
@@ -189,10 +189,10 @@ class Basic_Matrix {
 
   /**
    * @brief 设置对角矩阵
-   * 
-   * @param[in] in_val 
-   * @param[in] idx_begin 
-   * @param[in] idx_end 
+   *
+   * @param[in] in_val
+   * @param[in] idx_begin
+   * @param[in] idx_end
    */
   void SetDiag(const T& in_val, uint32_t idx_begin = 0, uint32_t idx_end = UINT32_MAX) {
     uint32_t real_idx_end = (idx_end >= max_row || idx_end >= max_col) ? std::min(max_row, max_col) : (idx_end + 1);
@@ -205,10 +205,10 @@ class Basic_Matrix {
 
   /**
    * @brief 设置对角矩阵
-   * 
-   * @param[in] input_vec 
-   * @param[in] idx_begin 
-   * @param[in] idx_end 
+   *
+   * @param[in] input_vec
+   * @param[in] idx_begin
+   * @param[in] idx_end
    */
   void SetDiag(const std::vector<T>& input_vec, uint32_t idx_begin = 0, uint32_t idx_end = UINT32_MAX) {
     uint32_t real_idx_end = (idx_end >= max_row || idx_end >= max_col) ? std::min(max_row, max_col) : (idx_end + 1);
@@ -224,7 +224,7 @@ class Basic_Matrix {
 
   /**
    * @brief 设置零矩阵
-   * 
+   *
    */
   void Zero() {
     if (val == nullptr) return;
@@ -373,10 +373,10 @@ class Basic_Matrix {
 
   /**
    * @brief 创建单位矩阵
-   * 
+   *
    * @param[in] in_val 单位值
    * @param[in] max_idx 矩阵大小
-   * @return Basic_Matrix 
+   * @return Basic_Matrix
    */
   static Basic_Matrix Eye(const T& in_val, const uint32_t max_idx) {
     Basic_Matrix M(max_idx, max_idx);
@@ -390,7 +390,7 @@ class Basic_Matrix {
    * @param[in] in_val 单位值
    * @param[in] M 底数
    * @param[in] n 次方数
-   * @return Basic_Matrix 
+   * @return Basic_Matrix
    */
   static Basic_Matrix Pow(const T& in_val, const Basic_Matrix& M, uint32_t n) {
     Basic_Matrix tmp = M, re(M.max_row, M.max_col);
@@ -454,7 +454,7 @@ class Basic_Matrix {
 template <typename T = double>
 void swap(Basic_Matrix<T>& a, Basic_Matrix<T>& b) { a.Swap(b); }
 
-typedef Basic_Matrix<double> Matrix;  //default
+typedef Basic_Matrix<double> Matrix;  // default
 typedef Basic_Matrix<float> Matrix_f;
 typedef Basic_Matrix<int32_t> Matrix_i32;
 typedef Basic_Matrix<uint32_t> Matrix_u32;
@@ -464,8 +464,8 @@ typedef Basic_Matrix<uint64_t> Matrix_u64;
 /**
  * @brief 获取3x3旋转矩阵
  * @note 参考http://en.wikipedia.org/wiki/Rotation_matrix
- * @param[in] angle 
- * @return Matrix 
+ * @param[in] angle
+ * @return Matrix
  */
 inline Matrix RotMatX(const double angle) {
   double s = std::sin(angle);
@@ -482,8 +482,8 @@ inline Matrix RotMatX(const double angle) {
 /**
  * @brief 获取3x3旋转矩阵
  * @note 参考http://en.wikipedia.org/wiki/Rotation_matrix
- * @param[in] angle 
- * @return Matrix 
+ * @param[in] angle
+ * @return Matrix
  */
 inline Matrix RotMatY(const double angle) {
   double s = std::sin(angle);
@@ -500,8 +500,8 @@ inline Matrix RotMatY(const double angle) {
 /**
  * @brief 获取3x3旋转矩阵
  * @note 参考http://en.wikipedia.org/wiki/Rotation_matrix
- * @param[in] angle 
- * @return Matrix 
+ * @param[in] angle
+ * @return Matrix
  */
 inline Matrix RotMatZ(const double angle) {
   double s = std::sin(angle);

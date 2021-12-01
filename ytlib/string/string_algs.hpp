@@ -8,9 +8,8 @@
 #pragma once
 
 #include <algorithm>
-#include <cstring>
-#include <map>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace ytlib {
@@ -22,7 +21,7 @@ namespace ytlib {
  * @param[in] ps 要匹配的短字符串
  * @return size_t 字符串ps首次出现在ss中的位置，如果未出现则返回ss.length()
  */
-inline size_t KMP(const std::string& ss, const std::string& ps) {
+inline size_t KMP(std::string_view ss, std::string_view ps) {
   size_t sslen = ss.length();
   size_t pslen = ps.length();
 
@@ -58,12 +57,12 @@ inline size_t KMP(const std::string& ss, const std::string& ps) {
  * @param[in] s2 字符串2
  * @return size_t 字符串1和字符串2的差异度
  */
-inline size_t StrDif(const std::string& s1, const std::string& s2) {
+inline size_t StrDif(std::string_view s1, std::string_view s2) {
   //默认s1.length()>=s2.length()
   if (s2.length() > s1.length())
     return StrDif(s2, s1);
 
-  //c1: unmatched cost; c2: mismatched cost
+  // c1: unmatched cost; c2: mismatched cost
   const uint32_t c1 = 1, c2 = 1;
 
   size_t s1len = s1.length();
@@ -99,7 +98,7 @@ inline size_t StrDif(const std::string& s1, const std::string& s2) {
  * @param[in] s 字符串
  * @return std::pair<size_t, size_t> 最长不重复子串出现的位置和长度
  */
-inline std::pair<size_t, size_t> LongestSubStrWithoutDup(const std::string& s) {
+inline std::pair<size_t, size_t> LongestSubStrWithoutDup(std::string_view s) {
   size_t len = s.length();
   size_t positions[256];                                    //每种字符上一次出现的位置
   for (size_t ii = 0; ii < len; ++ii) positions[ii] = len;  //初始化为len，表示没出现

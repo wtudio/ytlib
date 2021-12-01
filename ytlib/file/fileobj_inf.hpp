@@ -101,7 +101,7 @@ class FileObj {
 
   /**
    * @brief 获取文件结构体智能指针
-   * 
+   *
    * @return std::shared_ptr<T> 文件结构体智能指针
    */
   std::shared_ptr<T> GetObjPtr() const {
@@ -110,7 +110,7 @@ class FileObj {
 
   /**
    * @brief 获取绝对路径
-   * 
+   *
    * @return const std::filesystem::path& 文件绝对路径
    */
   const std::filesystem::path& GetFilePath() const {
@@ -119,7 +119,7 @@ class FileObj {
 
   /**
    * @brief 设置路径
-   * 
+   *
    * @param[in] path 文件路径
    */
   void SetFilePath(const std::string& path) {

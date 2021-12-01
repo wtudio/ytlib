@@ -17,7 +17,7 @@ namespace ytlib {
 
 /**
  * @brief 修剪字符串
- * 
+ *
  * @param[inout] s 待处理字符串
  * @return std::string& 处理后的字符串s的引用
  */
@@ -78,7 +78,7 @@ inline std::map<std::string, std::string> SplitToMap(const std::string& source,
 
 /**
  * @brief 拼接map为a=1&b=2&c=3形式的string
- * 
+ *
  * @param[in] kvmap std::map<std::string,std::string>结构体
  * @param[in] vsep 多个kv之间的分隔符
  * @param[in] msep 单个kv内部的分隔符
@@ -97,7 +97,7 @@ inline std::string JoinMap(const std::map<std::string, std::string>& kvmap,
 
 /**
  * @brief 带默认值的获取map<std::string,std::string>中val数据
- * 
+ *
  * @param[in] m std::map<std::string,std::string>结构体
  * @param[in] key 要获取数据的key
  * @param[in] defval 默认字符串，当m中没有对应的key时，返回defval
@@ -111,7 +111,7 @@ inline std::string GetMapItemWithDef(const std::map<std::string, std::string>& m
 
 /**
  * @brief 向s中添加kv字段
- * 
+ *
  * @param[inout] s 待处理字符串
  * @param[in] key key
  * @param[in] val val
@@ -185,7 +185,7 @@ inline std::string GetValueFromStrKV(const std::string& str, const std::string& 
 
 /**
  * @brief 分割字符串到vector
- * 
+ *
  * @param[in] source 待处理字符串
  * @param[in] sep 分隔符
  * @param[in] trim 是否对每项结果去除空格
@@ -222,7 +222,7 @@ inline std::vector<std::string> SplitToVec(const std::string& source, const std:
 
 /**
  * @brief 拼接vector到string
- * 
+ *
  * @param[in] vec 待处理vector
  * @param[in] sep 分隔符
  * @return std::string 拼接后的字符串
@@ -238,7 +238,7 @@ inline std::string JoinVec(const std::vector<std::string>& vec, const std::strin
 
 /**
  * @brief 分割字符串到set，自动去重
- * 
+ *
  * @param[in] source 待处理字符串
  * @param[in] sep 分隔符
  * @param[in] trim 是否对每项结果去除空格
@@ -275,7 +275,7 @@ inline std::set<std::string> SplitToSet(const std::string& source, const std::st
 
 /**
  * @brief 拼接set到string
- * 
+ *
  * @param[in] st 待处理set
  * @param[in] sep 分隔符
  * @return std::string 拼接后的字符串
@@ -333,7 +333,7 @@ inline bool CheckIfInList(const std::string& str, const std::string& key,
 
 /**
  * @brief 比较版本，如6.1.1 6.2.8
- * 
+ *
  * @param[in] ver1 版本1
  * @param[in] ver2 版本2
  * @return int 返回1是大于，返回0是相等，返回-1是小于
@@ -374,7 +374,7 @@ inline bool CheckVersionInside(const std::string& ver, const std::string& start_
 
 /**
  * @brief 将一个字符串中指定字符串ov换为字符串nv
- * 
+ *
  * @param[inout] str 待替换字符串
  * @param[in] ov 要被替换的子字符串
  * @param[in] nv 要替换成的子字符串
@@ -423,7 +423,7 @@ inline std::string& ReplaceString(std::string& str, const std::string& ov, const
 
 /**
  * @brief 判断字符串是否为数字和字母组成
- * 
+ *
  * @param[in] str 待判断字符串
  * @return true 全部为数字和字母组成
  * @return false 不全为数字和字母组成
@@ -438,7 +438,7 @@ inline bool IsAlnumStr(const std::string& str) {
 
 /**
  * @brief 判断字符串是否为数字组成
- * 
+ *
  * @param[in] str 待判断字符串
  * @return true 全部为数字组成
  * @return false 不全为数字组成
@@ -453,7 +453,7 @@ inline bool IsDigitStr(const std::string& str) {
 
 /**
  * @brief 获取map中的key的集合
- * 
+ *
  * @tparam KeyType map中key的类型
  * @tparam ValType map中val的类型
  * @param m 输入map
