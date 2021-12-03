@@ -58,6 +58,11 @@ if(YTLIB_BUILD_WITH_GFLAGS)
   include(GetGFlags)
 endif()
 
+option(YTLIB_BUILD_WITH_SNAPPY "Build with snappy lib." OFF)
+if(YTLIB_BUILD_WITH_SNAPPY)
+  include(GetSnappy)
+endif()
+
 #设置测试
 option(YTLIB_BUILD_TESTS "Build tests." OFF)
 if(YTLIB_BUILD_TESTS)

@@ -14,3 +14,7 @@ endif()
 if(YTLIB_BUILD_WITH_GFLAGS)
   add_subdirectory(testgflags)
 endif()
+
+if(YTLIB_BUILD_WITH_SNAPPY)
+  add_subdirectory(testsnappy)
+endif()
