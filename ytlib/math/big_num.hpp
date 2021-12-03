@@ -135,6 +135,18 @@ class BigNum {
     return ret;
   }
 
+  /**
+   * @brief 获取当前使用的进制
+   *
+   * @return uint32_t 当前使用的进制
+   */
+  uint32_t GetBase() const { return base_; }
+
+  /**
+   * @brief 重新设定进制
+   *
+   * @param[in] base 新进制
+   */
   void ReBase(uint32_t base) {
     if (base < 2) return;
     if (base_ == base) return;
@@ -157,6 +169,10 @@ class BigNum {
     content_ = std::move(ret);
   }
 
+  /**
+   * @brief 清零
+   *
+   */
   void Clear() {
     symbol_ = true;
     content_.clear();
@@ -561,6 +577,6 @@ class BigNum {
   uint32_t base_ = UINT32_MAX;     ///<进制，不能小于2
 };
 
-BigNum abs(const BigNum& value) { return BigNum::Abs(value); }
+inline BigNum abs(const BigNum& value) { return BigNum::Abs(value); }
 
 }  // namespace ytlib

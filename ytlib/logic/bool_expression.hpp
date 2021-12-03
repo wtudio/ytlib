@@ -114,6 +114,8 @@ class BoolExpCalculator {
    * @return false 表达式结果为false
    */
   bool Calc(const MidResultClass& expression) const {
+    if (!key_calc_fun_) throw std::runtime_error("KeyCalcFun is not set.");
+
     struct Ret {
       Ret(std::string_view s) : has_ret(false), ret(false), exp_key(s) {}
       Ret(bool b) : has_ret(true), ret(b), exp_key() {}
@@ -246,29 +248,6 @@ class BoolExpCalculator {
     return true;
   }
 
-  /**
-   * @brief 默认单表达式合法性检查函数
-   *
-   * @param[in] expression_key 待检查单表达式，不为空
-   * @return true 合法
-   * @return false 不合法
-   */
-  static bool DefaultKeyCheckFun(std::string_view expression_key) {
-    return true;
-  }
-
-  /**
-   * @brief 默认单表达式值计算函数
-   *
-   * @param[in] expression_key 待检查单表达式，其中不可能含有“()|&!”且不为空
-   * @return true
-   * @return false
-   */
-  static bool DefaultKeyCalcFun(std::string_view expression_key) {
-    if (expression_key == "F" || expression_key == "False") return false;
-    return true;
-  }
-
  private:
   // 符号优先级
   static uint8_t Priority(char c) {
@@ -288,8 +267,8 @@ class BoolExpCalculator {
   }
 
  private:
-  KeyCheckFun key_check_fun_ = DefaultKeyCheckFun;  // 单表达式合法性检查函数
-  KeyCalcFun key_calc_fun_ = DefaultKeyCalcFun;     // 单表达式值计算函数
+  KeyCheckFun key_check_fun_;  // 单表达式合法性检查函数
+  KeyCalcFun key_calc_fun_;    // 单表达式值计算函数
 };
 
 }  // namespace ytlib
