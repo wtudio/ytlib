@@ -4,10 +4,9 @@ project(ytlib VERSION 0.1.0 LANGUAGES C CXX)
 message(STATUS "start cmake ytlib ...")
 
 #设置cmake工具
-set(YTLIB_CMAKE_TOOL_PATH ${CMAKE_CURRENT_SOURCE_DIR}/CMake)
-list(APPEND CMAKE_MODULE_PATH ${YTLIB_CMAKE_TOOL_PATH})
-include(${YTLIB_CMAKE_TOOL_PATH}/Util.cmake)
-include(FetchContent)
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/CMake)
+include(Util)
+
 
 #设定c++版本
 set(CMAKE_CXX_STANDARD 20)
@@ -50,49 +49,28 @@ if(YTLIB_BUILD_WITH_BOOST)
   find_package(Boost REQUIRED COMPONENTS date_time log serialization program_options)
 endif()
 
-#设置是否编译依赖protobuf库的部分
+#设置第三方库
 option(YTLIB_BUILD_WITH_PROTOBUF "Build with protobuf lib." OFF)
 if(YTLIB_BUILD_WITH_PROTOBUF)
-  FetchContent_Declare(
-    protobuf
-    GIT_REPOSITORY https://github.com/protocolbuffers/protobuf.git
-    GIT_TAG        v3.19.1
-    SOURCE_SUBDIR  cmake
-  )
-  set(protobuf_BUILD_TESTS OFF CACHE BOOL "")
-  set(protobuf_WITH_ZLIB OFF CACHE BOOL "")
-  FetchContent_MakeAvailable(protobuf)
-  include(${YTLIB_CMAKE_TOOL_PATH}/ProtoBufTool.cmake)
+  include(GetProtoBuf)
+endif()
+
+option(YTLIB_BUILD_WITH_GFLAGS "Build with protobuf lib." OFF)
+if(YTLIB_BUILD_WITH_GFLAGS)
+  include(GetGFlags)
 endif()
 
 #设置测试
 option(YTLIB_BUILD_TESTS "Build tests." OFF)
 if(YTLIB_BUILD_TESTS)
-  FetchContent_Declare(
-    googletest
-    GIT_REPOSITORY  https://github.com/google/googletest.git
-    GIT_TAG         release-1.11.0
-  )
-  if(WIN32)
-    set(gtest_force_shared_crt ON CACHE BOOL "")
-  endif()
-  set(INSTALL_GTEST OFF CACHE BOOL "")
-  FetchContent_MakeAvailable(googletest)
+  include(GetGTest)
   enable_testing()
 endif()
 
 #设置benchmark测试
 option(YTLIB_BUILD_BENCH_TESTS "Build benchmark tests." OFF)
 if(YTLIB_BUILD_BENCH_TESTS)
-  FetchContent_Declare(
-    googlebenchmark
-    GIT_REPOSITORY  https://github.com/google/benchmark.git
-    GIT_TAG         v1.6.0
-  )
-  set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "")
-  set(BENCHMARK_ENABLE_GTEST_TESTS OFF CACHE BOOL "")
-  set(BENCHMARK_ENABLE_INSTALL OFF CACHE BOOL "")
-  FetchContent_MakeAvailable(googlebenchmark)
+  include(GetGoogleBenchmark)
 endif()
 
 #设置下一级目录

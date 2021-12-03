@@ -11,21 +11,11 @@ File(GLOB src ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 # 添加目标
 add_executable(${CUR_TARGET_NAME})
 
-# 设置proto文件代码生成
-target_add_proto(
-  TARGET_NAME ${CUR_TARGET_NAME}
-  PROTO_PATH ${CMAKE_CURRENT_SOURCE_DIR}/protos
-  GENCODE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/gen
-)
-
 # 设置源文件
 target_sources(${CUR_TARGET_NAME} PRIVATE ${src})
 
 # 设置头文件路径
-target_include_directories(${CUR_TARGET_NAME} PRIVATE 
-  ${CMAKE_CURRENT_SOURCE_DIR}
-  ${CMAKE_CURRENT_SOURCE_DIR}/gen
-)
+target_include_directories(${CUR_TARGET_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
 # 设置头文件
 set_property(TARGET ${CUR_TARGET_NAME} PROPERTY PRIVATE_HEADER ${head_files})
@@ -36,7 +26,7 @@ set_property(TARGET ${CUR_TARGET_NAME} PROPERTY PRIVATE_HEADER ${head_files})
 # 设置链接库
 target_link_libraries(${CUR_TARGET_NAME} PRIVATE
   ytlib::misc
-  protobuf::libprotobuf
+  gflags::gflags
 )
 
 # 设置编译选项

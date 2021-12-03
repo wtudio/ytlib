@@ -26,7 +26,7 @@ class CoroSched {
     CoroSched get_return_object() { return CoroSched(this); }
     std::suspend_never initial_suspend() { return {}; }
     std::suspend_never final_suspend() noexcept { return {}; }
-    void unhandled_exception() {}
+    void unhandled_exception() { std::terminate(); }
 
     void return_value(T&& re) {
       p_coro_sched->ret_ = std::move(re);

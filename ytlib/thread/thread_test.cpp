@@ -278,7 +278,9 @@ TEST(THREAD_TOOLS_TEST, coroutine_BASE) {
   TestObj buf;
   buf.data = "abcd";
 
-  auto sched = [&buf]() -> CoroSched<TestObj> {
+  auto task_fun = [&buf]() -> CoroSched<TestObj> {
+    // 调用co_await后，当前协程去执行Awaitable<TestObj>的await_suspend函数
+    // await_suspend函数需要确保h.resume()在之后某个时间被调用，此时返回Awaitable<TestObj>的await_resume函数的返回值
     TestObj ret_buf = co_await Awaitable<TestObj>([&buf](std::function<void(TestObj &&)> cb) {
       AsyncSendRecv(buf, cb);
     });
@@ -293,7 +295,10 @@ TEST(THREAD_TOOLS_TEST, coroutine_BASE) {
     co_yield std::move(ret_buf);
 
     co_return ret_buf2;
-  }();
+  };
+
+  // 开始运行协程
+  auto sched = task_fun();
 
   // run
   TestObj out_buf = sched.Get();
