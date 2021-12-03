@@ -1,7 +1,9 @@
 .vscode/
+
 build/
-gen/
 debug/
 release/
+gen/
+
 doc/html
 doc/doxygen.log
