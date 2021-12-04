@@ -55,7 +55,7 @@ class LocalCache {
     if (finditr == data_map_.end()) return std::nullopt;
 
     ValContent& val_content = finditr->second;
-    lru_list_.splice(lru_list_.end(), lru_list_, val_content.lru_itr);
+    lru_list_.splice(lru_list_.end(), lru_list_, *(static_cast<std::list<MapItr>::iterator*>(static_cast<void*>(&(val_content.lru_itr)))));
     return val_content.val;
   }
 
@@ -71,15 +71,15 @@ class LocalCache {
     val_content.load_time = std::chrono::steady_clock::now();
     if (emplace_ret.second) {
       // 新增
-      val_content.lru_itr = lru_list_.emplace(lru_list_.end(), emplace_ret.first);
-      val_content.ttl_itr = ttl_list_.emplace(ttl_list_.end(), emplace_ret.first);
+      *(static_cast<std::list<MapItr>::iterator*>(static_cast<void*>(&(val_content.lru_itr)))) = lru_list_.emplace(lru_list_.end(), emplace_ret.first);
+      *(static_cast<std::list<MapItr>::iterator*>(static_cast<void*>(&(val_content.ttl_itr)))) = ttl_list_.emplace(ttl_list_.end(), emplace_ret.first);
       // 如果超出容量上限需要清理
       if (data_map_.size() >= cfg_.clean_size) Clean();
     } else {
       // 更新
       val_content.val = val;
-      lru_list_.splice(lru_list_.end(), lru_list_, val_content.lru_itr);
-      ttl_list_.splice(ttl_list_.end(), ttl_list_, val_content.ttl_itr);
+      lru_list_.splice(lru_list_.end(), lru_list_, *(static_cast<std::list<MapItr>::iterator*>(static_cast<void*>(&(val_content.lru_itr)))));
+      ttl_list_.splice(ttl_list_.end(), ttl_list_, *(static_cast<std::list<MapItr>::iterator*>(static_cast<void*>(&(val_content.ttl_itr)))));
     }
   }
 
@@ -93,7 +93,7 @@ class LocalCache {
     for (; itr != ttl_list_.end(); ++itr) {
       ValContent& val_content = (*itr)->second;
       if (val_content.load_time < time_line) {
-        lru_list_.erase(val_content.lru_itr);
+        lru_list_.erase(*(static_cast<std::list<MapItr>::iterator*>(static_cast<void*>(&(val_content.lru_itr)))));
         data_map_.erase(*itr);
       } else {
         break;
@@ -114,7 +114,7 @@ class LocalCache {
     auto itr = lru_list_.begin();
     for (; itr != lru_list_.end(); ++itr) {
       if (to_clean_size) {
-        ttl_list_.erase((*itr)->second.ttl_itr);
+        ttl_list_.erase(*(static_cast<std::list<MapItr>::iterator*>(static_cast<void*>(&((*itr)->second.ttl_itr)))));
         data_map_.erase(*itr);
         --to_clean_size;
       } else {
@@ -126,20 +126,23 @@ class LocalCache {
 
  private:
   using TimePoint = std::chrono::steady_clock::time_point;
+  using ListItrBuf = char[sizeof(std::list<int>::iterator)];
 
   struct ValContent {
     ValType val;          // 数据
     TimePoint load_time;  // 上次更新时间
-    std::list<typename std::unordered_map<KeyType, ValContent>::iterator>::iterator lru_itr;
-    std::list<typename std::unordered_map<KeyType, ValContent>::iterator>::iterator ttl_itr;
+    ListItrBuf lru_itr;
+    ListItrBuf ttl_itr;
   };
+
+  using MapItr = std::unordered_map<KeyType, ValContent>::iterator;
 
  private:
   LocalCacheCfg cfg_;
   std::unordered_map<KeyType, ValContent> data_map_;
 
-  std::list<typename std::unordered_map<KeyType, ValContent>::iterator> lru_list_;
-  std::list<typename std::unordered_map<KeyType, ValContent>::iterator> ttl_list_;
+  std::list<MapItr> lru_list_;
+  std::list<MapItr> ttl_list_;
 };
 
 }  // namespace ytlib
