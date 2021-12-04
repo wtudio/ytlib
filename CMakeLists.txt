@@ -5,7 +5,6 @@ message(STATUS "start cmake ytlib ...")
 
 #设置cmake工具
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/CMake)
-include(Util)
 
 #设定c++版本
 set(CMAKE_CXX_STANDARD 20)
