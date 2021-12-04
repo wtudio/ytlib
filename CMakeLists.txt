@@ -39,8 +39,6 @@ if(MSVC)
   add_compile_options(/wd4819)
 endif()
 
-message(STATUS "start config third libraries ...")
-
 #设置是否编译依赖boost库的部分（boost静态库）
 option(YTLIB_BUILD_WITH_BOOST "Build with boost stage lib." OFF)
 if(YTLIB_BUILD_WITH_BOOST)

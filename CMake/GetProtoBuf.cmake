@@ -20,6 +20,10 @@ FetchContent_MakeAvailable(protobuf)
 function(target_add_proto)
   cmake_parse_arguments(ARG "" "TARGET_NAME" "PROTO_PATH;GENCODE_PATH;OPTIONS" ${ARGN})
 
+  if(NOT EXISTS ${ARG_GENCODE_PATH})
+    file(MAKE_DIRECTORY ${ARG_GENCODE_PATH})
+  endif()
+
   # 添加编译前的代码生成
   File(GLOB_RECURSE PROTO_FILES ${ARG_PROTO_PATH}/*.proto)
   foreach(PROTO_FILE ${PROTO_FILES})
