@@ -1,14 +1,17 @@
 include(FetchContent)
 
+message(STATUS "get googletest ...")
+
 FetchContent_Declare(
   googletest
-  GIT_REPOSITORY  https://github.com/google/googletest.git
-  GIT_TAG         release-1.11.0
+  URL  https://github.com/google/googletest/archive/release-1.11.0.tar.gz
 )
+
 if(WIN32)
   set(gtest_force_shared_crt ON CACHE BOOL "")
 endif()
 set(INSTALL_GTEST OFF CACHE BOOL "")
+
 FetchContent_MakeAvailable(googletest)
 
 # 引入的target：

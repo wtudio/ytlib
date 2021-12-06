@@ -39,6 +39,8 @@ if(MSVC)
   add_compile_options(/wd4819)
 endif()
 
+message(STATUS "start get third party libraries, patience ...")
+
 #设置是否编译依赖boost库的部分（boost静态库）
 option(YTLIB_BUILD_WITH_BOOST "Build with boost stage lib." OFF)
 if(YTLIB_BUILD_WITH_BOOST)
@@ -60,6 +62,11 @@ endif()
 option(YTLIB_BUILD_WITH_SNAPPY "Build with snappy lib." OFF)
 if(YTLIB_BUILD_WITH_SNAPPY)
   include(GetSnappy)
+endif()
+
+option(YTLIB_BUILD_WITH_LEVELDB "Build with leveldb lib." OFF)
+if(YTLIB_BUILD_WITH_LEVELDB)
+  include(GetLeveldb)
 endif()
 
 #设置测试

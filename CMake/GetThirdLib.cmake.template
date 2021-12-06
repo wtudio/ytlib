@@ -1,0 +1,31 @@
+include(FetchContent)
+
+message(STATUS "get thirdlib ...")
+
+# 基于下载链接获取源码（推荐）
+FetchContent_Declare(
+  thirdlib
+  URL  https://github.com/third_party/thirdlib/archive/v1.2.3.tar.gz
+)
+
+# 基于git获取源码
+# FetchContent_Declare(
+#   thirdlib
+#   GIT_REPOSITORY  https://github.com/third_party/thirdlib.git
+#   GIT_TAG         v1.2.3
+# )
+
+# 基于本地资源获取源码，一般用于调试第三方库
+# FetchContent_Declare(
+#   thirdlib
+#   SOURCE_DIR  ../third_party/thirdlib
+# )
+
+# 配置第三方库选项，一般需要关掉第三方库的测试项目
+set(THIRDLIB_BUILD_TESTS OFF CACHE BOOL "")
+set(THIRDLIB_xxxx OFF CACHE BOOL "")
+
+FetchContent_MakeAvailable(thirdlib)
+
+# 引入的target：
+# thirdlib::thirdlib

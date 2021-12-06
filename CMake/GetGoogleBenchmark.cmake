@@ -1,13 +1,16 @@
 include(FetchContent)
 
+message(STATUS "get googlebenchmark ...")
+
 FetchContent_Declare(
   googlebenchmark
-  GIT_REPOSITORY  https://github.com/google/benchmark.git
-  GIT_TAG         v1.6.0
+  URL https://github.com/google/benchmark/archive/v1.6.0.tar.gz
 )
+
 set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "")
 set(BENCHMARK_ENABLE_GTEST_TESTS OFF CACHE BOOL "")
 set(BENCHMARK_ENABLE_INSTALL OFF CACHE BOOL "")
+
 FetchContent_MakeAvailable(googlebenchmark)
 
 # 引入的target：

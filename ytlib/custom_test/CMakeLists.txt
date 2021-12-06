@@ -18,3 +18,7 @@ endif()
 if(YTLIB_BUILD_WITH_SNAPPY)
   add_subdirectory(testsnappy)
 endif()
+
+if(YTLIB_BUILD_WITH_LEVELDB)
+  add_subdirectory(testleveldb)
+endif()

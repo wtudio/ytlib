@@ -1,13 +1,16 @@
 include(FetchContent)
 
+message(STATUS "get protobuf ...")
+
 FetchContent_Declare(
   protobuf
-  GIT_REPOSITORY https://github.com/protocolbuffers/protobuf.git
-  GIT_TAG        v3.18.1
+  URL   https://github.com/protocolbuffers/protobuf/archive/v3.18.1.tar.gz
   SOURCE_SUBDIR  cmake
 )
+
 set(protobuf_BUILD_TESTS OFF CACHE BOOL "")
 set(protobuf_WITH_ZLIB OFF CACHE BOOL "")
+
 FetchContent_MakeAvailable(protobuf)
 
 # 引入的target：
