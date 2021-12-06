@@ -69,6 +69,11 @@ if(YTLIB_BUILD_WITH_LEVELDB)
   include(GetLeveldb)
 endif()
 
+option(YTLIB_BUILD_WITH_LUA "Build with lua lib." OFF)
+if(YTLIB_BUILD_WITH_LUA)
+  include(GetLua)
+endif()
+
 #设置测试
 option(YTLIB_BUILD_TESTS "Build tests." OFF)
 if(YTLIB_BUILD_TESTS)

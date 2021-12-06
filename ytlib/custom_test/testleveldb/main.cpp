@@ -1,7 +1,5 @@
-
 #include <filesystem>
 #include <string>
-
 #include "ytlib/misc/misc_macro.h"
 
 #include "leveldb/db.h"

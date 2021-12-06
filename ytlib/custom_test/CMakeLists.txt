@@ -22,3 +22,7 @@ endif()
 if(YTLIB_BUILD_WITH_LEVELDB)
   add_subdirectory(testleveldb)
 endif()
+
+if(YTLIB_BUILD_WITH_LUA)
+  add_subdirectory(testlua)
+endif()

@@ -1,4 +1,3 @@
-
 #include <sstream>
 #include <vector>
 #include "ytlib/misc/misc_macro.h"
