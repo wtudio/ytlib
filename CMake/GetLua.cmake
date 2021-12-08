@@ -17,8 +17,7 @@ File(GLOB lib_src ${src})
 LIST(REMOVE_ITEM lib_src ${lua_SOURCE_DIR}/lua.c ${lua_SOURCE_DIR}/onelua.c)
 
 # lua exe
-add_library(lua)
-add_library(lua::lua ALIAS lua)
+add_executable(lua)
 
 target_sources(lua PRIVATE ${src})
 target_include_directories(lua PRIVATE ${lua_SOURCE_DIR})
