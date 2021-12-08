@@ -84,6 +84,16 @@ if(YTLIB_BUILD_WITH_LIBTOMCRYPT)
   include(GetLibTomcrypt)
 endif()
 
+option(YTLIB_BUILD_WITH_RAPIDJSON "Build with rapidjson lib." OFF)
+if(YTLIB_BUILD_WITH_RAPIDJSON)
+  include(GetRapidjson)
+endif()
+
+option(YTLIB_BUILD_WITH_YAMLCPP "Build with yaml-cpp lib." OFF)
+if(YTLIB_BUILD_WITH_YAMLCPP)
+  include(GetYamlCpp)
+endif()
+
 #设置测试
 option(YTLIB_BUILD_TESTS "Build tests." OFF)
 if(YTLIB_BUILD_TESTS)

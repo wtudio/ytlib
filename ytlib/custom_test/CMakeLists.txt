@@ -34,3 +34,11 @@ endif()
 if(YTLIB_BUILD_WITH_LIBTOMCRYPT)
   add_subdirectory(testlibtomcrypt)
 endif()
+
+if(YTLIB_BUILD_WITH_RAPIDJSON)
+  add_subdirectory(testrapidjson)
+endif()
+
+if(YTLIB_BUILD_WITH_YAMLCPP)
+  add_subdirectory(testyamlcpp)
+endif()
