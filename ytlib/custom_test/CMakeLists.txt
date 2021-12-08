@@ -26,3 +26,11 @@ endif()
 if(YTLIB_BUILD_WITH_LUA)
   add_subdirectory(testlua)
 endif()
+
+if(YTLIB_BUILD_WITH_SQLITE)
+  add_subdirectory(testsqlite)
+endif()
+
+if(YTLIB_BUILD_WITH_LIBTOMCRYPT)
+  add_subdirectory(testlibtomcrypt)
+endif()

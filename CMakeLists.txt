@@ -14,6 +14,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 #设置文档
 option(YTLIB_BUILD_DOC "Build ytlib doc." OFF)
 if(YTLIB_BUILD_DOC)
+  message(STATUS "gen doc ...")
   set(YTLIB_DOC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/doc)
   if(WIN32)
     execute_process(COMMAND ${YTLIB_DOC_DIR}/buildDoc.bat ${YTLIB_DOC_DIR} WORKING_DIRECTORY ${YTLIB_DOC_DIR})
@@ -39,16 +40,15 @@ if(MSVC)
   add_compile_options(/wd4819)
 endif()
 
+#设置第三方库
 message(STATUS "start get third party libraries, patience ...")
 
-#设置是否编译依赖boost库的部分（boost静态库）
 option(YTLIB_BUILD_WITH_BOOST "Build with boost stage lib." OFF)
 if(YTLIB_BUILD_WITH_BOOST)
   set(Boost_USE_STATIC_LIBS ON)
   find_package(Boost REQUIRED COMPONENTS date_time log serialization program_options)
 endif()
 
-#设置第三方库
 option(YTLIB_BUILD_WITH_PROTOBUF "Build with protobuf lib." OFF)
 if(YTLIB_BUILD_WITH_PROTOBUF)
   include(GetProtoBuf)
@@ -72,6 +72,16 @@ endif()
 option(YTLIB_BUILD_WITH_LUA "Build with lua lib." OFF)
 if(YTLIB_BUILD_WITH_LUA)
   include(GetLua)
+endif()
+
+option(YTLIB_BUILD_WITH_SQLITE "Build with sqlite lib." OFF)
+if(YTLIB_BUILD_WITH_SQLITE)
+  include(GetSqlite)
+endif()
+
+option(YTLIB_BUILD_WITH_LIBTOMCRYPT "Build with libtomcrypt lib." OFF)
+if(YTLIB_BUILD_WITH_LIBTOMCRYPT)
+  include(GetLibTomcrypt)
 endif()
 
 #设置测试

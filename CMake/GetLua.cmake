@@ -21,7 +21,7 @@ add_library(lua)
 add_library(lua::lua ALIAS lua)
 
 target_sources(lua PRIVATE ${src})
-target_include_directories(lua PUBLIC ${lua_SOURCE_DIR})
+target_include_directories(lua PRIVATE ${lua_SOURCE_DIR})
 
 # lua lib
 add_library(liblua)
