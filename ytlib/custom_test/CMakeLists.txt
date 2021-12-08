@@ -42,3 +42,11 @@ endif()
 if(YTLIB_BUILD_WITH_YAMLCPP)
   add_subdirectory(testyamlcpp)
 endif()
+
+if(YTLIB_BUILD_WITH_FMT)
+  add_subdirectory(testfmt)
+endif()
+
+if(YTLIB_BUILD_WITH_JSONCPP)
+  add_subdirectory(testjsoncpp)
+endif()

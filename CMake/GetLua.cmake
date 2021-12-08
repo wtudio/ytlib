@@ -14,6 +14,7 @@ endif()
 
 File(GLOB src ${lua_SOURCE_DIR}/*.c)
 File(GLOB lib_src ${src})
+LIST(REMOVE_ITEM src ${lua_SOURCE_DIR}/onelua.c)
 LIST(REMOVE_ITEM lib_src ${lua_SOURCE_DIR}/lua.c ${lua_SOURCE_DIR}/onelua.c)
 
 # lua exe

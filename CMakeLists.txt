@@ -94,6 +94,16 @@ if(YTLIB_BUILD_WITH_YAMLCPP)
   include(GetYamlCpp)
 endif()
 
+option(YTLIB_BUILD_WITH_FMT "Build with fmt lib." OFF)
+if(YTLIB_BUILD_WITH_FMT)
+  include(GetFmt)
+endif()
+
+option(YTLIB_BUILD_WITH_JSONCPP "Build with jsoncpp lib." OFF)
+if(YTLIB_BUILD_WITH_JSONCPP)
+  include(GetJsonCpp)
+endif()
+
 #设置测试
 option(YTLIB_BUILD_TESTS "Build tests." OFF)
 if(YTLIB_BUILD_TESTS)
