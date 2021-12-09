@@ -2,7 +2,7 @@
 #include <vector>
 #include "ytlib/misc/misc_macro.h"
 
-#include "gen/test.pb.h"
+#include "test.pb.h"
 
 using namespace std;
 

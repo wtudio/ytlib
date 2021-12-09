@@ -12,22 +12,23 @@ if(NOT lua_POPULATED)
   FetchContent_Populate(lua)
 endif()
 
-File(GLOB src ${lua_SOURCE_DIR}/*.c)
-File(GLOB lib_src ${src})
-LIST(REMOVE_ITEM src ${lua_SOURCE_DIR}/onelua.c)
-LIST(REMOVE_ITEM lib_src ${lua_SOURCE_DIR}/lua.c ${lua_SOURCE_DIR}/onelua.c)
-
 # lua exe
 add_executable(lua)
 
-target_sources(lua PRIVATE ${src})
+File(GLOB lua_src ${lua_SOURCE_DIR}/*.c)
+LIST(REMOVE_ITEM lua_src ${lua_SOURCE_DIR}/onelua.c)
+
+target_sources(lua PRIVATE ${lua_src})
 target_include_directories(lua PRIVATE ${lua_SOURCE_DIR})
 
 # lua lib
 add_library(liblua)
 add_library(lua::liblua ALIAS liblua)
 
-target_sources(liblua PRIVATE ${lib_src})
+File(GLOB lib_lua_src ${lua_SOURCE_DIR}/*.c)
+LIST(REMOVE_ITEM lib_lua_src ${lua_SOURCE_DIR}/lua.c ${lua_SOURCE_DIR}/onelua.c)
+
+target_sources(liblua PRIVATE ${lib_lua_src})
 target_include_directories(liblua PUBLIC ${lua_SOURCE_DIR})
 
 # 引入的target：

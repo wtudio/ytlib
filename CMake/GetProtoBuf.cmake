@@ -19,13 +19,16 @@ FetchContent_MakeAvailable(protobuf)
 # protobuf::libprotoc
 # protobuf::protoc
 
-# add protos for target
-function(target_add_proto)
+# add target for protobuf gen code
+function(add_protobuf_gencode_target)
   cmake_parse_arguments(ARG "" "TARGET_NAME" "PROTO_PATH;GENCODE_PATH;OPTIONS" ${ARGN})
 
   if(NOT EXISTS ${ARG_GENCODE_PATH})
     file(MAKE_DIRECTORY ${ARG_GENCODE_PATH})
   endif()
+
+  set(GEN_SRCS)
+  set(GEN_HDRS)
 
   # 添加编译前的代码生成
   File(GLOB_RECURSE PROTO_FILES ${ARG_PROTO_PATH}/*.proto)
@@ -33,6 +36,9 @@ function(target_add_proto)
     STRING(REGEX REPLACE ".+/(.+)\\..*" "\\1" PROTO_FILE_NAME ${PROTO_FILE})
     set(GEN_SRC "${ARG_GENCODE_PATH}/${PROTO_FILE_NAME}.pb.cc")
     set(GEN_HDR "${ARG_GENCODE_PATH}/${PROTO_FILE_NAME}.pb.h")
+
+    list(APPEND GEN_SRCS ${GEN_SRC})
+    list(APPEND GEN_HDRS ${GEN_HDR})
 
     add_custom_command(
       OUTPUT ${GEN_SRC} ${GEN_HDR}
@@ -42,10 +48,11 @@ function(target_add_proto)
       COMMENT "Running cpp protocol buffer compiler on ${PROTO_FILE}. Custom options: ${ARG_OPTIONS}"
       VERBATIM
     )
-
-    target_sources(${ARG_TARGET_NAME} PRIVATE ${GEN_SRC})
-    set_property(TARGET ${ARG_TARGET_NAME} PROPERTY PRIVATE_HEADER ${GEN_HDR})
-
   endforeach()
+
+  add_library(${ARG_TARGET_NAME} INTERFACE)
+
+  target_sources(${ARG_TARGET_NAME} PUBLIC ${GEN_SRCS})
+  set_property(TARGET ${ARG_TARGET_NAME} PROPERTY PUBLIC_HEADER ${GEN_HDRS})
 
 endfunction()
