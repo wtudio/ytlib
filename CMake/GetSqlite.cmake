@@ -18,6 +18,9 @@ add_executable(sqlite)
 
 target_sources(sqlite PRIVATE ${sqlite_SOURCE_DIR}/sqlite3.c ${sqlite_SOURCE_DIR}/shell.c)
 target_include_directories(sqlite PRIVATE ${sqlite_SOURCE_DIR})
+if(UNIX)
+  target_link_libraries(sqlite PRIVATE pthread dl)
+endif()
 
 # sqlite lib
 add_library(libsqlite)

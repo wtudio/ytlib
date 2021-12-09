@@ -20,6 +20,9 @@ LIST(REMOVE_ITEM lua_src ${lua_SOURCE_DIR}/onelua.c)
 
 target_sources(lua PRIVATE ${lua_src})
 target_include_directories(lua PRIVATE ${lua_SOURCE_DIR})
+if(UNIX)
+  target_link_libraries(lua PRIVATE m)
+endif()
 
 # lua lib
 add_library(liblua)
@@ -30,6 +33,9 @@ LIST(REMOVE_ITEM lib_lua_src ${lua_SOURCE_DIR}/lua.c ${lua_SOURCE_DIR}/onelua.c)
 
 target_sources(liblua PRIVATE ${lib_lua_src})
 target_include_directories(liblua PUBLIC ${lua_SOURCE_DIR})
+if(UNIX)
+  target_link_libraries(liblua PRIVATE m)
+endif()
 
 # 引入的target：
 # lua::lua
