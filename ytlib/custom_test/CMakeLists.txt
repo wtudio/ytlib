@@ -50,3 +50,7 @@ endif()
 if(YTLIB_BUILD_WITH_JSONCPP)
   add_subdirectory(testjsoncpp)
 endif()
+
+if(YTLIB_BUILD_WITH_TINYXML2)
+  add_subdirectory(testtinyxml2)
+endif()

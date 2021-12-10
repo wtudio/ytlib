@@ -40,7 +40,7 @@ if(MSVC)
   add_compile_options(/wd4819)
 endif()
 
-#设置第三方库
+#设置第三方库。使用 FETCHCONTENT_BASE_DIR 以设置下载目录
 message(STATUS "start get third party libraries, patience ...")
 
 option(YTLIB_BUILD_WITH_BOOST "Build with boost stage lib." OFF)
@@ -102,6 +102,11 @@ endif()
 option(YTLIB_BUILD_WITH_JSONCPP "Build with jsoncpp lib." OFF)
 if(YTLIB_BUILD_WITH_JSONCPP)
   include(GetJsonCpp)
+endif()
+
+option(YTLIB_BUILD_WITH_TINYXML2 "Build with tinyxml2 lib." OFF)
+if(YTLIB_BUILD_WITH_TINYXML2)
+  include(GetTinyxml2)
 endif()
 
 #设置测试
