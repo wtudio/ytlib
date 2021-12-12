@@ -1,6 +1,5 @@
 #include <filesystem>
 #include <fstream>
-#include "ytlib/misc/misc_macro.h"
 
 extern "C" {
 #include "lauxlib.h"
@@ -12,13 +11,12 @@ using namespace std;
 
 extern "C" int LuaPrint(lua_State* L) {
   const char* s = lua_tostring(L, 1);
-  DBG_PRINT("%s", s);
+  printf("%s", s);
   return 0;
 }
 
-// 返回传入参数的个数与和
 extern "C" int LuaFoo(lua_State* L) {
-  int n = lua_gettop(L); /* 参数的个数 */
+  int n = lua_gettop(L);  // argc
   lua_Number sum = 0.0;
 
   int i;
@@ -29,14 +27,12 @@ extern "C" int LuaFoo(lua_State* L) {
     }
     sum += lua_tonumber(L, i);
   }
-  lua_pushnumber(L, n);   /* 第一个返回值 */
-  lua_pushnumber(L, sum); /* 第二个返回值 */
-  return 2;               /* 返回值的个数 */
+  lua_pushnumber(L, n);    // first return val
+  lua_pushnumber(L, sum);  // second return val
+  return 2;                // return  num
 }
 
 int32_t main(int32_t argc, char** argv) {
-  DBG_PRINT("-------------------start test-------------------");
-
   lua_State* L = luaL_newstate();
   luaL_openlibs(L);
 
@@ -61,19 +57,17 @@ end
   ofile.close();
 
   int ret = luaL_dofile(L, script_file.string().c_str());
-  if (ret) DBG_PRINT("load lua script ret:%d, msg:%s", ret, lua_tostring(L, -1));
+  if (ret) printf("load lua script ret:%d, msg:%s", ret, lua_tostring(L, -1));
 
-  // 调用lua脚本中的一个函数
   lua_getglobal(L, "testluafun");
   lua_pushstring(L, "aaa");
   lua_pushstring(L, "bbb");
   lua_pcall(L, 2, 1, 0);
 
   std::string lua_ret = lua_tostring(L, -1);
-  DBG_PRINT("testluafun ret:%s", lua_ret.c_str());
+  printf("testluafun ret:%s", lua_ret.c_str());
 
   lua_close(L);
 
-  DBG_PRINT("********************end test*******************");
   return 0;
 }

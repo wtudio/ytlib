@@ -15,5 +15,5 @@ FetchContent_MakeAvailable(leveldb)
 
 add_library(leveldb::leveldb ALIAS leveldb)
 
-# 引入的target：
+# import targets：
 # leveldb::leveldb

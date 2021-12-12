@@ -13,7 +13,7 @@ set(protobuf_WITH_ZLIB OFF CACHE BOOL "")
 
 FetchContent_MakeAvailable(protobuf)
 
-# 引入的target：
+# import targets：
 # protobuf::libprotobuf
 # protobuf::libprotobuf-lite
 # protobuf::libprotoc
@@ -30,7 +30,6 @@ function(add_protobuf_gencode_target)
   set(GEN_SRCS)
   set(GEN_HDRS)
 
-  # 添加编译前的代码生成
   File(GLOB_RECURSE PROTO_FILES ${ARG_PROTO_PATH}/*.proto)
   foreach(PROTO_FILE ${PROTO_FILES})
     STRING(REGEX REPLACE ".+/(.+)\\..*" "\\1" PROTO_FILE_NAME ${PROTO_FILE})
@@ -53,6 +52,7 @@ function(add_protobuf_gencode_target)
   add_library(${ARG_TARGET_NAME} INTERFACE)
 
   target_sources(${ARG_TARGET_NAME} PUBLIC ${GEN_SRCS})
+  target_include_directories(${ARG_TARGET_NAME} INTERFACE ${ARG_GENCODE_PATH})
   set_property(TARGET ${ARG_TARGET_NAME} PROPERTY PUBLIC_HEADER ${GEN_HDRS})
 
 endfunction()

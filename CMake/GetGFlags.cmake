@@ -11,5 +11,5 @@ set(BUILD_TESTING OFF CACHE BOOL "")
 
 FetchContent_MakeAvailable(gflags)
 
-# 引入的target：
+# import targets：
 # gflags::gflags

@@ -27,5 +27,5 @@ set(THIRDLIB_xxxx OFF CACHE BOOL "")
 
 FetchContent_MakeAvailable(thirdlib)
 
-# 引入的target：
+# import targets：
 # thirdlib::thirdlib

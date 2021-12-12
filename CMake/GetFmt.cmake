@@ -11,5 +11,5 @@ set(FMT_MASTER_PROJECT OFF CACHE BOOL "")
 
 FetchContent_MakeAvailable(fmt)
 
-# 引入的target：
+# import targets：
 # fmt::fmt

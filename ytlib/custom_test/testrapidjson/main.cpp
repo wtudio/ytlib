@@ -1,7 +1,6 @@
 #include <gtest/gtest.h>
 
 #include <string>
-#include "ytlib/misc/misc_macro.h"
 
 #include "rapidjson_tool.hpp"
 

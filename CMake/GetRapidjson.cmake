@@ -17,5 +17,5 @@ add_library(rapidjson::rapidjson ALIAS rapidjson)
 
 target_include_directories(rapidjson INTERFACE ${rapidjson_SOURCE_DIR}/include)
 
-# 引入的target：
+# import targets：
 # rapidjson::rapidjson

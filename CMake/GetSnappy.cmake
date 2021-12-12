@@ -15,5 +15,5 @@ FetchContent_MakeAvailable(snappy)
 
 add_library(snappy::snappy ALIAS snappy)
 
-# 引入的target：
+# import targets：
 # snappy::snappy

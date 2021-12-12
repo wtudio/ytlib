@@ -18,5 +18,5 @@ elseif (TARGET jsoncpp_lib)
   add_library(jsoncpp::jsoncpp ALIAS jsoncpp_lib)
 endif ()
 
-# 引入的target：
+# import targets：
 # jsoncpp::jsoncpp

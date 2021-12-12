@@ -37,6 +37,6 @@ if(UNIX)
   target_link_libraries(liblua PRIVATE m)
 endif()
 
-# 引入的target：
+# import targets：
 # lua::lua
 # lua::liblua

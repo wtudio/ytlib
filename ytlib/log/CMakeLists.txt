@@ -19,9 +19,6 @@ target_include_directories(${CUR_TARGET_NAME} INTERFACE $<BUILD_INTERFACE:${PROJ
 # 设置头文件
 set_property(TARGET ${CUR_TARGET_NAME} PROPERTY PUBLIC_HEADER ${head_files})
 
-# 设置依赖
-# add_dependencies(${CUR_TARGET_NAME} xxx)
-
 # 设置链接库
 # target_link_libraries(${CUR_TARGET_NAME} INTERFACE xxx)
 
@@ -36,9 +33,11 @@ install(TARGETS ${CUR_TARGET_NAME} PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INC
 
 # 设置测试
 if (YTLIB_BUILD_TESTS AND test_files)
-  add_gtest(TEST_TARGET ${CUR_TARGET_NAME} TEST_SRC ${test_files})
+  add_gtest_target(TEST_TARGET ${CUR_TARGET_NAME} TEST_SRC ${test_files})
+  set_property(TARGET ${CUR_TARGET_NAME}_test PROPERTY FOLDER ${CUR_TARGET_NAME})
 endif()
 
 if (YTLIB_BUILD_BENCH_TESTS AND benchmark_files)
-  add_benchmark_test(TEST_TARGET ${CUR_TARGET_NAME} TEST_SRC ${benchmark_files})
+  add_benchmark_target(TEST_TARGET ${CUR_TARGET_NAME} TEST_SRC ${benchmark_files})
+  set_property(TARGET ${CUR_TARGET_NAME}_benchmark PROPERTY FOLDER ${CUR_TARGET_NAME})
 endif()

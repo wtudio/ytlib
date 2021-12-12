@@ -12,5 +12,5 @@ set(tinyxml2_BUILD_TESTING OFF CACHE BOOL "")
 
 FetchContent_MakeAvailable(tinyxml2)
 
-# 引入的target：
+# import targets：
 # tinyxml2::tinyxml2

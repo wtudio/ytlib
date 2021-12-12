@@ -14,5 +14,5 @@ set(YAML_CPP_INSTALL OFF CACHE BOOL "")
 
 FetchContent_MakeAvailable(yaml-cpp)
 
-# 引入的target：
+# import targets：
 # yaml-cpp::yaml-cpp

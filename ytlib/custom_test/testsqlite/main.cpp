@@ -1,46 +1,43 @@
 #include <filesystem>
 #include <string>
-#include "ytlib/misc/misc_macro.h"
 
 #include "sqlite3.h"
 
 using namespace std;
 
 static int callback(void *data, int argc, char **argv, char **azColName) {
-  DBG_PRINT("data : %s", static_cast<char *>(data));
+  printf("data : %s\n", static_cast<char *>(data));
 
   for (int ii = 0; ii < argc; ++ii) {
-    DBG_PRINT("%s = %s", azColName[ii], argv[ii] ? argv[ii] : "NULL");
+    printf("%s = %s\n", azColName[ii], argv[ii] ? argv[ii] : "NULL");
   }
   return 0;
 }
 
 int32_t main(int32_t argc, char **argv) {
-  DBG_PRINT("-------------------start test-------------------");
-
   sqlite3 *db;
   int ret;
   char *err_msg;
   const char *data = "Callback function called";
 
   const std::filesystem::path &db_file = std::filesystem::absolute("./test.db");
-  DBG_PRINT("db file path is %s", db_file.string().c_str());
+  printf("db file path is %s\n", db_file.string().c_str());
   if (std::filesystem::status(db_file).type() == std::filesystem::file_type::regular) {
     std::filesystem::remove(db_file);
   }
 
   // create db
-  DBG_PRINT("-------------------create db-------------------");
+  printf("-------------------create db-------------------\n");
   ret = sqlite3_open(db_file.string().c_str(), &db);
   if (ret != SQLITE_OK) {
-    DBG_PRINT("sqlite3_open failed, err_msg: %s", sqlite3_errmsg(db));
+    printf("sqlite3_open failed, err_msg: %s\n", sqlite3_errmsg(db));
     return 0;
   } else {
-    DBG_PRINT("sqlite3_open successfully");
+    printf("sqlite3_open successfully\n");
   }
 
   // create table
-  DBG_PRINT("-------------------create table-------------------");
+  printf("-------------------create table-------------------\n");
   std::string sql = R"str(
 CREATE TABLE COMPANY(
 ID INT PRIMARY KEY     NOT NULL,
@@ -52,14 +49,14 @@ SALARY         REAL);
 
   ret = sqlite3_exec(db, sql.c_str(), callback, (void *)data, &err_msg);
   if (ret != SQLITE_OK) {
-    DBG_PRINT("sqlite3_exec error: %s", err_msg);
+    printf("sqlite3_exec error: %s\n", err_msg);
     sqlite3_free(err_msg);
   } else {
-    DBG_PRINT("sqlite3_exec successfully");
+    printf("sqlite3_exec successfully\n");
   }
 
   // insert
-  DBG_PRINT("-------------------insert-------------------");
+  printf("-------------------insert-------------------\n");
   sql = R"str(
 INSERT INTO COMPANY (ID,NAME,AGE,ADDRESS,SALARY)
 VALUES (1, 'Paul', 32, 'California', 20000.00 );
@@ -72,49 +69,48 @@ VALUES (4, 'Mark', 25, 'Rich-Mond ', 65000.00 );
 )str";
   ret = sqlite3_exec(db, sql.c_str(), callback, (void *)data, &err_msg);
   if (ret != SQLITE_OK) {
-    DBG_PRINT("sqlite3_exec error: %s", err_msg);
+    printf("sqlite3_exec error: %s\n", err_msg);
     sqlite3_free(err_msg);
   } else {
-    DBG_PRINT("sqlite3_exec successfully");
+    printf("sqlite3_exec successfully\n");
   }
 
   // select
-  DBG_PRINT("-------------------select-------------------");
+  printf("-------------------select-------------------\n");
   sql = "SELECT * from COMPANY";
   ret = sqlite3_exec(db, sql.c_str(), callback, (void *)data, &err_msg);
   if (ret != SQLITE_OK) {
-    DBG_PRINT("sqlite3_exec error: %s", err_msg);
+    printf("sqlite3_exec error: %s\n", err_msg);
     sqlite3_free(err_msg);
   } else {
-    DBG_PRINT("sqlite3_exec successfully");
+    printf("sqlite3_exec successfully\n");
   }
 
   // update
-  DBG_PRINT("-------------------update-------------------");
+  printf("-------------------update-------------------\n");
   sql = "UPDATE COMPANY set SALARY = 25000.00 where ID=1;SELECT * from COMPANY";
   ret = sqlite3_exec(db, sql.c_str(), callback, (void *)data, &err_msg);
   if (ret != SQLITE_OK) {
-    DBG_PRINT("sqlite3_exec error: %s", err_msg);
+    printf("sqlite3_exec error: %s\n", err_msg);
     sqlite3_free(err_msg);
   } else {
-    DBG_PRINT("sqlite3_exec successfully");
+    printf("sqlite3_exec successfully\n");
   }
 
   // delete
-  DBG_PRINT("-------------------delete-------------------");
+  printf("-------------------delete-------------------\n");
   sql = "DELETE from COMPANY where ID=2;SELECT * from COMPANY";
   ret = sqlite3_exec(db, sql.c_str(), callback, (void *)data, &err_msg);
   if (ret != SQLITE_OK) {
-    DBG_PRINT("sqlite3_exec error: %s", err_msg);
+    printf("sqlite3_exec error: %s\n", err_msg);
     sqlite3_free(err_msg);
   } else {
-    DBG_PRINT("sqlite3_exec successfully");
+    printf("sqlite3_exec successfully\n");
   }
 
   // close
-  DBG_PRINT("-------------------close-------------------");
+  printf("-------------------close-------------------\n");
   sqlite3_close(db);
 
-  DBG_PRINT("********************end test*******************");
   return 0;
 }

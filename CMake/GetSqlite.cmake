@@ -32,6 +32,6 @@ if(UNIX)
   target_link_libraries(libsqlite PUBLIC pthread dl)
 endif()
 
-# 引入的target：
+# import targets：
 # sqlite::sqlite
 # sqlite::libsqlite
