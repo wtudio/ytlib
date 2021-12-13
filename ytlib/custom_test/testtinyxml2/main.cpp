@@ -7,9 +7,9 @@
 using namespace std;
 
 int32_t main(int32_t argc, char** argv) {
-  const std::filesystem::path& yaml_file = std::filesystem::absolute("./test.xml");
+  const std::filesystem::path& xml_file = std::filesystem::absolute("./test.xml");
 
-  std::ofstream ofile(yaml_file, std::ios::trunc);
+  std::ofstream ofile(xml_file, std::ios::trunc);
   ofile << R"str(
 <document>
 	<data>1</data>
@@ -20,14 +20,17 @@ int32_t main(int32_t argc, char** argv) {
   ofile.close();
 
   tinyxml2::XMLDocument doc;
-  tinyxml2::XMLError error = doc.LoadFile(yaml_file.string().c_str());
+  tinyxml2::XMLError error = doc.LoadFile(xml_file.string().c_str());
 
   if (error != tinyxml2::XMLError::XML_SUCCESS) {
     printf("LoadFile error %d", error);
     return 0;
   }
 
-  doc.SaveFile(yaml_file.string().c_str());
+  tinyxml2::XMLElement* root = doc.RootElement();
+  printf("root name : %s\n", root->Name());
+
+  doc.SaveFile(xml_file.string().c_str());
 
   return 0;
 }

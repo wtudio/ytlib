@@ -44,11 +44,11 @@ int32_t main(int32_t argc, char** argv) {
   std::ofstream ofile(script_file, std::ios::trunc);
   ofile << R"str(
 -- testlib
-print("test test !!!")
+print("test test !!!\n")
 
 local n, sum = foo(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
 
-print("n:" .. n .. ", sum:" .. sum)
+print("n:" .. n .. ", sum:" .. sum .. "\n")
 
 function testluafun(a, b)
     return (a .. b)
@@ -57,7 +57,7 @@ end
   ofile.close();
 
   int ret = luaL_dofile(L, script_file.string().c_str());
-  if (ret) printf("load lua script ret:%d, msg:%s", ret, lua_tostring(L, -1));
+  if (ret) printf("load lua script ret:%d, msg:%s\n", ret, lua_tostring(L, -1));
 
   lua_getglobal(L, "testluafun");
   lua_pushstring(L, "aaa");
@@ -65,7 +65,7 @@ end
   lua_pcall(L, 2, 1, 0);
 
   std::string lua_ret = lua_tostring(L, -1);
-  printf("testluafun ret:%s", lua_ret.c_str());
+  printf("testluafun ret:%s\n", lua_ret.c_str());
 
   lua_close(L);
 

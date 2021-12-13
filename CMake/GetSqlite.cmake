@@ -15,6 +15,7 @@ endif()
 
 # sqlite exe
 add_executable(sqlite)
+add_executable(sqlite::sqlite ALIAS sqlite)
 
 target_sources(sqlite PRIVATE ${sqlite_SOURCE_DIR}/sqlite3.c ${sqlite_SOURCE_DIR}/shell.c)
 target_include_directories(sqlite PRIVATE ${sqlite_SOURCE_DIR})

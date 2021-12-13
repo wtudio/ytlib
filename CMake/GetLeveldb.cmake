@@ -17,3 +17,4 @@ add_library(leveldb::leveldb ALIAS leveldb)
 
 # import targets：
 # leveldb::leveldb
+# leveldb::leveldbutil

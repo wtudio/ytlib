@@ -14,6 +14,7 @@ endif()
 
 # lua exe
 add_executable(lua)
+add_executable(lua::lua ALIAS lua)
 
 File(GLOB lua_src ${lua_SOURCE_DIR}/*.c)
 LIST(REMOVE_ITEM lua_src ${lua_SOURCE_DIR}/onelua.c)

@@ -10,7 +10,7 @@ File(GLOB_RECURSE src ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 
 # 添加目标
 add_executable(${CUR_TARGET_NAME})
-add_library(ytlib::${CUR_TARGET_NAME} ALIAS ${CUR_TARGET_NAME})
+add_executable(ytlib::${CUR_TARGET_NAME} ALIAS ${CUR_TARGET_NAME})
 
 # 设置源文件
 target_sources(${CUR_TARGET_NAME} PRIVATE ${src})

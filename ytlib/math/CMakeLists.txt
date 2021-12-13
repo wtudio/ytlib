@@ -39,6 +39,6 @@ if (YTLIB_BUILD_TESTS AND test_files)
 endif()
 
 if (YTLIB_BUILD_BENCH_TESTS AND benchmark_files)
-  add_benchmark_target(TEST_TARGET ${CUR_TARGET_NAME} TEST_SRC ${benchmark_files})
+  add_benchmark_target(BENCH_TARGET ${CUR_TARGET_NAME} BENCH_SRC ${benchmark_files})
   set_property(TARGET ${CUR_TARGET_NAME}_benchmark PROPERTY FOLDER ${CUR_TARGET_NAME})
 endif()
