@@ -1,7 +1,15 @@
 cmake_minimum_required(VERSION 3.20)
 
 project(ytlib VERSION 0.1.0 LANGUAGES C CXX)
-message(STATUS "start cmake ytlib ...")
+
+#是否为主项目
+if (NOT DEFINED YTLIB_MASTER_PROJECT)
+  set(YTLIB_MASTER_PROJECT OFF)
+  if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
+    set(YTLIB_MASTER_PROJECT ON)
+    message(STATUS "start cmake ytlib ...")
+  endif ()
+endif ()
 
 #设置cmake工具
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/CMake)
@@ -23,21 +31,26 @@ if(YTLIB_BUILD_DOC)
   endif()
 endif()
 
-#设置默认编译类型
-if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build.")
-  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
-endif()
+#为主项目时的一些开发配置
+if(YTLIB_MASTER_PROJECT)
 
-#设置动态库还是静态库
-option(BUILD_SHARED_LIBS "Build with shared libraries." OFF)
+  #设置默认编译类型
+  if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build.")
+    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
+  endif()
 
-#设置杂项
-set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-set_property(GLOBAL PROPERTY POSITION_INDEPENDENT_CODE ON)
+  #设置动态库还是静态库
+  option(BUILD_SHARED_LIBS "Build with shared libraries." OFF)
 
-if(MSVC)
-  add_compile_options(/wd4819)
+  #设置杂项
+  set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+  set_property(GLOBAL PROPERTY POSITION_INDEPENDENT_CODE ON)
+
+  if(MSVC)
+    add_compile_options(/wd4819)
+  endif()
+
 endif()
 
 #设置第三方库。使用 FETCHCONTENT_BASE_DIR 以设置下载目录
@@ -47,66 +60,6 @@ option(YTLIB_BUILD_WITH_BOOST "Build with boost stage lib." OFF)
 if(YTLIB_BUILD_WITH_BOOST)
   set(Boost_USE_STATIC_LIBS ON)
   find_package(Boost REQUIRED COMPONENTS date_time log serialization program_options)
-endif()
-
-option(YTLIB_BUILD_WITH_PROTOBUF "Build with protobuf lib." OFF)
-if(YTLIB_BUILD_WITH_PROTOBUF)
-  include(GetProtoBuf)
-endif()
-
-option(YTLIB_BUILD_WITH_GFLAGS "Build with protobuf lib." OFF)
-if(YTLIB_BUILD_WITH_GFLAGS)
-  include(GetGFlags)
-endif()
-
-option(YTLIB_BUILD_WITH_SNAPPY "Build with snappy lib." OFF)
-if(YTLIB_BUILD_WITH_SNAPPY)
-  include(GetSnappy)
-endif()
-
-option(YTLIB_BUILD_WITH_LEVELDB "Build with leveldb lib." OFF)
-if(YTLIB_BUILD_WITH_LEVELDB)
-  include(GetLeveldb)
-endif()
-
-option(YTLIB_BUILD_WITH_LUA "Build with lua lib." OFF)
-if(YTLIB_BUILD_WITH_LUA)
-  include(GetLua)
-endif()
-
-option(YTLIB_BUILD_WITH_SQLITE "Build with sqlite lib." OFF)
-if(YTLIB_BUILD_WITH_SQLITE)
-  include(GetSqlite)
-endif()
-
-option(YTLIB_BUILD_WITH_LIBTOMCRYPT "Build with libtomcrypt lib." OFF)
-if(YTLIB_BUILD_WITH_LIBTOMCRYPT)
-  include(GetLibTomcrypt)
-endif()
-
-option(YTLIB_BUILD_WITH_RAPIDJSON "Build with rapidjson lib." OFF)
-if(YTLIB_BUILD_WITH_RAPIDJSON)
-  include(GetRapidjson)
-endif()
-
-option(YTLIB_BUILD_WITH_YAMLCPP "Build with yaml-cpp lib." OFF)
-if(YTLIB_BUILD_WITH_YAMLCPP)
-  include(GetYamlCpp)
-endif()
-
-option(YTLIB_BUILD_WITH_FMT "Build with fmt lib." OFF)
-if(YTLIB_BUILD_WITH_FMT)
-  include(GetFmt)
-endif()
-
-option(YTLIB_BUILD_WITH_JSONCPP "Build with jsoncpp lib." OFF)
-if(YTLIB_BUILD_WITH_JSONCPP)
-  include(GetJsonCpp)
-endif()
-
-option(YTLIB_BUILD_WITH_TINYXML2 "Build with tinyxml2 lib." OFF)
-if(YTLIB_BUILD_WITH_TINYXML2)
-  include(GetTinyxml2)
 endif()
 
 #设置测试
