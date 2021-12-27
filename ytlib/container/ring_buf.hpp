@@ -17,7 +17,7 @@ template <class T, uint32_t BUF_SIZE>
 class RingBuf {
  public:
   RingBuf() {}
-  virtual ~RingBuf() {}
+  ~RingBuf() {}
 
   bool Empty() const { return wpos_ == rpos_; }
   bool Full() const { return (wpos_ >= rpos_) ? (wpos_ - rpos_ == BUF_SIZE - 1) : (rpos_ - wpos_ == 1); }
@@ -53,14 +53,14 @@ class RingBuf {
   }
 
   T& Top() {
-    if (Empty())
+    if (Empty()) [[unlikely]]
       throw std::runtime_error("Buf is empty.");
 
     return content_[rpos_];
   }
 
   T& Get(const uint32_t& pos) {
-    if (pos >= Size())
+    if (pos >= Size()) [[unlikely]]
       throw std::invalid_argument("Pos is invalid.");
 
     const uint32_t& cur_rpos = rpos_ + pos;
@@ -70,6 +70,7 @@ class RingBuf {
   bool PushArray(const T* buf, const uint32_t& len) {
     if (len > UnusedCapacity()) [[unlikely]]
       return false;
+
     if (wpos_ + len <= BUF_SIZE) {
       memcpy(content_ + wpos_, buf, len * sizeof(T));
       wpos_ += len;

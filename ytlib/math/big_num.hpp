@@ -511,15 +511,9 @@ class BigNum {
     return out;
   }
 
-  bool get_symbol() const {
-    return symbol_;
-  }
-  const std::vector<uint32_t>& get_content() const {
-    return content_;
-  }
-  uint32_t get_base() const {
-    return base_;
-  }
+  bool Symbol() const { return symbol_; }
+  const std::vector<uint32_t>& Content() const { return content_; }
+  uint32_t Base() const { return base_; }
 
   /**
    * @brief 比较大小

@@ -5,7 +5,7 @@
 
 namespace ytlib {
 
-#if RSTUDIO_CORE_PLATFORM == RSTUDIO_CORE_PLATFORM_WIN32
+#if defined(_WIN32)
   #define strcasecmp _stricmp
 #endif
 

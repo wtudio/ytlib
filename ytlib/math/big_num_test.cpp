@@ -119,11 +119,11 @@ TEST(BIG_NUM_TEST, Construct_test) {
       .want_base = UINT32_MAX});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
-    EXPECT_EQ(test_cases[ii].num.get_symbol(), test_cases[ii].want_symbol)
+    EXPECT_EQ(test_cases[ii].num.Symbol(), test_cases[ii].want_symbol)
         << "Test " << test_cases[ii].name << " failed, index " << ii;
-    EXPECT_EQ(test_cases[ii].num.get_content(), test_cases[ii].want_content)
+    EXPECT_EQ(test_cases[ii].num.Content(), test_cases[ii].want_content)
         << "Test " << test_cases[ii].name << " failed, index " << ii;
-    EXPECT_EQ(test_cases[ii].num.get_base(), test_cases[ii].want_base)
+    EXPECT_EQ(test_cases[ii].num.Base(), test_cases[ii].want_base)
         << "Test " << test_cases[ii].name << " failed, index " << ii;
   }
 }
@@ -199,11 +199,11 @@ TEST(BIG_NUM_TEST, ReBase_test) {
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
     test_cases[ii].num.ReBase(test_cases[ii].base);
-    EXPECT_EQ(test_cases[ii].num.get_symbol(), test_cases[ii].want_symbol)
+    EXPECT_EQ(test_cases[ii].num.Symbol(), test_cases[ii].want_symbol)
         << "Test " << test_cases[ii].name << " failed, index " << ii;
-    EXPECT_EQ(test_cases[ii].num.get_content(), test_cases[ii].want_content)
+    EXPECT_EQ(test_cases[ii].num.Content(), test_cases[ii].want_content)
         << "Test " << test_cases[ii].name << " failed, index " << ii;
-    EXPECT_EQ(test_cases[ii].num.get_base(), test_cases[ii].want_base)
+    EXPECT_EQ(test_cases[ii].num.Base(), test_cases[ii].want_base)
         << "Test " << test_cases[ii].name << " failed, index " << ii;
   }
 }
