@@ -7,6 +7,7 @@
  */
 #pragma once
 
+#include <algorithm>
 #include <cstring>
 #include <map>
 #include <set>
@@ -464,6 +465,161 @@ std::set<KeyType> GetMapKeys(const std::map<KeyType, ValType>& m) {
   std::set<KeyType> re;
   for (const auto& it : m) re.emplace(it.first);
   return re;
+}
+
+/**
+ * @brief 字符转小写
+ *
+ * @param c 字符
+ * @return char 小写字符
+ */
+inline char CharToLower(char c) { return static_cast<char>(tolower(c)); }
+
+/**
+ * @brief 字符转大写
+ *
+ * @param c 字符
+ * @return char 大写字符
+ */
+inline char CharToUpper(char c) { return static_cast<char>(toupper(c)); }
+
+/**
+ * @brief 字符串转小写
+ *
+ * @param str 字符串
+ * @return std::string& 小写字符串
+ */
+inline std::string& StrToLower(std::string& str) {
+  std::transform(str.begin(), str.end(), str.begin(), CharToLower);
+  return str;
+}
+
+/**
+ * @brief 字符串转大写
+ *
+ * @param str 字符串
+ * @return std::string& 大写字符串
+ */
+inline std::string& StrToUpper(std::string& str) {
+  std::transform(str.begin(), str.end(), str.begin(), CharToUpper);
+  return str;
+}
+
+/**
+ * @brief 字符串转为标题形式，单词首字符大写
+ *
+ * @param str 字符串
+ * @return std::string& 标题形式字符串
+ */
+inline std::string& StrToTitleCase(std::string& str) {
+  std::string::iterator it = str.begin();
+  *it = CharToUpper(*it);
+  for (; it != str.end() - 1; ++it) {
+    if (*it == ' ') {
+      *(it + 1) = CharToUpper(*(it + 1));
+    }
+  }
+  return str;
+}
+
+/**
+ * @brief standardise a path string
+ *
+ * @param path
+ * @return std::string&
+ */
+inline std::string& StandardisePath(std::string& path) {
+  if (path.empty()) return (path = "/");
+  std::replace(path.begin(), path.end(), '\\', '/');
+  if (path[path.length() - 1] != '/') path += '/';
+  return path;
+}
+
+/**
+ * @brief judge if str start with pattern
+ *
+ * @param str
+ * @param pattern
+ * @param ignore_case if ignore the case
+ * @return true
+ * @return false
+ */
+inline bool StartsWith(const std::string& str, const std::string& pattern, bool ignore_case = false) {
+  const size_t& str_len = str.length();
+  const size_t& pattern_len = pattern.length();
+  if (str_len < pattern_len || pattern_len == 0) return false;
+
+  if (ignore_case) {
+    for (size_t i = 0; i < pattern_len; ++i) {
+      if (tolower(pattern[i]) != tolower(str[i])) return false;
+    }
+    return true;
+  } else {
+    for (size_t i = 0; i < pattern_len; ++i) {
+      if (pattern[i] != str[i]) return false;
+    }
+    return true;
+  }
+}
+
+/**
+ * @brief judge if str end with pattern
+ *
+ * @param str
+ * @param pattern
+ * @param ignore_case if ignore the case
+ * @return true
+ * @return false
+ */
+inline bool EndsWith(const std::string& str, const std::string& pattern, bool ignore_case = false) {
+  const size_t& str_len = str.length();
+  const size_t& pattern_len = pattern.length();
+  if (str_len < pattern_len || pattern_len == 0) return false;
+
+  const size_t& begin_pos = str_len - pattern_len;
+  if (ignore_case) {
+    for (size_t i = 0; i < pattern_len; ++i) {
+      if (tolower(pattern[i]) != tolower(str[begin_pos + i])) return false;
+    }
+    return true;
+  } else {
+    for (size_t i = 0; i < pattern_len; i++) {
+      if (pattern[i] != str[begin_pos + i]) return false;
+    }
+    return true;
+  }
+}
+
+/**
+ * @brief fnv1a hash算法，64位
+ *
+ * @param data
+ * @param len
+ * @return const uint64_t hash值
+ */
+inline const uint64_t Hash64Fnv1a(const char* data, const uint64_t len) {
+  const uint64_t prime = 0x100000001b3;
+  uint64_t hash = 0xcbf29ce484222325;
+  for (int i = 0; i < len; ++i) {
+    hash = (hash ^ static_cast<uint8_t>(data[i])) * prime;
+  }
+  return hash;
+}
+
+/**
+ * @brief fnv1a hash算法，32位
+ *
+ * @param data
+ * @param len
+ * @return const uint32_t hash值
+ */
+inline const uint32_t Hash32Fnv1a(const char* data, const uint64_t len) {
+  const uint32_t prime = 0x1000193;
+  uint32_t hash = 0x811c9dc5;
+  for (int i = 0; i < len; ++i) {
+    hash = (hash ^ static_cast<uint8_t>(data[i])) * prime;
+  }
+  return hash;
 }
 
 }  // namespace ytlib

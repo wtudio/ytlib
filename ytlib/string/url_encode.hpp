@@ -35,21 +35,21 @@ inline unsigned char FromHex(unsigned char x) {
  * @return std::string 转码后的结果字符串
  */
 inline std::string UrlEncode(std::string_view str, bool up = true) {
-  std::string strTemp;
-  size_t length = str.length();
-  strTemp.reserve(length << 1);
-  for (size_t i = 0; i < length; ++i) {
-    if (isalnum((unsigned char)str[i]) || (str[i] == '-') || (str[i] == '_') || (str[i] == '.') || (str[i] == '~'))
-      strTemp += str[i];
-    else if (str[i] == ' ')
-      strTemp += '+';
-    else {
-      strTemp += '%';
-      strTemp += ToHex((unsigned char)str[i] >> 4, up);
-      strTemp += ToHex((unsigned char)str[i] & 15, up);
+  std::string ret_str;
+  size_t len = str.length();
+  ret_str.reserve(len << 1);
+  for (size_t i = 0; i < len; ++i) {
+    if (isalnum((unsigned char)str[i]) || (str[i] == '-') || (str[i] == '_') || (str[i] == '.') || (str[i] == '~')) {
+      ret_str += str[i];
+    } else if (str[i] == ' ') {
+      ret_str += '+';
+    } else {
+      ret_str += '%';
+      ret_str += ToHex((unsigned char)str[i] >> 4, up);
+      ret_str += ToHex((unsigned char)str[i] & 15, up);
     }
   }
-  return strTemp;
+  return ret_str;
 }
 
 /**
@@ -59,20 +59,24 @@ inline std::string UrlEncode(std::string_view str, bool up = true) {
  * @return std::string 解码后的结果字符串
  */
 inline std::string UrlDecode(std::string_view str) {
-  std::string strTemp;
-  size_t length = str.length();
-  strTemp.reserve(length);
-  for (size_t i = 0; i < length; ++i) {
-    if (str[i] == '+')
-      strTemp += ' ';
-    else if (str[i] == '%') {
-      assert(i + 2 < length);
-      unsigned char c = (FromHex((unsigned char)str[++i])) << 4;
-      strTemp += (c | FromHex((unsigned char)str[++i]));
-    } else
-      strTemp += str[i];
+  std::string ret_str;
+  size_t len = str.length();
+  ret_str.reserve(len);
+  for (size_t i = 0; i < len; ++i) {
+    if (str[i] == '+') {
+      ret_str += ' ';
+    } else if (str[i] == '%') {
+      if (i + 2 < len) {
+        unsigned char c = (FromHex((unsigned char)str[++i])) << 4;
+        ret_str += (c | FromHex((unsigned char)str[++i]));
+      } else {
+        break;
+      }
+    } else {
+      ret_str += str[i];
+    }
   }
-  return strTemp;
+  return ret_str;
 }
 
 }  // namespace ytlib

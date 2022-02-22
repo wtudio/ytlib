@@ -1144,4 +1144,248 @@ TEST(STRING_UTIL_TEST, AddKV_test) {
   }
 }
 
+TEST(STRING_UTIL_TEST, StrToLower_test) {
+  struct TestCase {
+    std::string name;
+
+    std::string str;
+
+    std::string want_result;
+  };
+  std::vector<TestCase> test_cases;
+  test_cases.emplace_back(TestCase{
+      .name = "case 1",
+      .str = "ABCDEFG",
+      .want_result = "abcdefg"});
+  test_cases.emplace_back(TestCase{
+      .name = "case 2",
+      .str = "123456 ",
+      .want_result = "123456 "});
+
+  for (size_t ii = 0; ii < test_cases.size(); ++ii) {
+    auto ret = StrToLower(test_cases[ii].str);
+    EXPECT_STREQ(ret.c_str(), test_cases[ii].want_result.c_str())
+        << "Test " << test_cases[ii].name << " failed, index " << ii;
+  }
+}
+
+TEST(STRING_UTIL_TEST, StrToUpper_test) {
+  struct TestCase {
+    std::string name;
+
+    std::string str;
+
+    std::string want_result;
+  };
+  std::vector<TestCase> test_cases;
+  test_cases.emplace_back(TestCase{
+      .name = "case 1",
+      .str = "abcdefg",
+      .want_result = "ABCDEFG"});
+  test_cases.emplace_back(TestCase{
+      .name = "case 2",
+      .str = "123456 ",
+      .want_result = "123456 "});
+
+  for (size_t ii = 0; ii < test_cases.size(); ++ii) {
+    auto ret = StrToUpper(test_cases[ii].str);
+    EXPECT_STREQ(ret.c_str(), test_cases[ii].want_result.c_str())
+        << "Test " << test_cases[ii].name << " failed, index " << ii;
+  }
+}
+
+TEST(STRING_UTIL_TEST, StrToTitleCase_test) {
+  struct TestCase {
+    std::string name;
+
+    std::string str;
+
+    std::string want_result;
+  };
+  std::vector<TestCase> test_cases;
+  test_cases.emplace_back(TestCase{
+      .name = "case 1",
+      .str = "abc defg",
+      .want_result = "Abc Defg"});
+  test_cases.emplace_back(TestCase{
+      .name = "case 2",
+      .str = "123 456",
+      .want_result = "123 456"});
+
+  for (size_t ii = 0; ii < test_cases.size(); ++ii) {
+    auto ret = StrToTitleCase(test_cases[ii].str);
+    EXPECT_STREQ(ret.c_str(), test_cases[ii].want_result.c_str())
+        << "Test " << test_cases[ii].name << " failed, index " << ii;
+  }
+}
+
+TEST(STRING_UTIL_TEST, StandardisePath_test) {
+  struct TestCase {
+    std::string name;
+
+    std::string path;
+
+    std::string want_result;
+  };
+  std::vector<TestCase> test_cases;
+  test_cases.emplace_back(TestCase{
+      .name = "case 1",
+      .path = "",
+      .want_result = "/"});
+  test_cases.emplace_back(TestCase{
+      .name = "case 2",
+      .path = "root",
+      .want_result = "root/"});
+  test_cases.emplace_back(TestCase{
+      .name = "case 3",
+      .path = "root/",
+      .want_result = "root/"});
+  test_cases.emplace_back(TestCase{
+      .name = "case 4",
+      .path = "C\\work",
+      .want_result = "C/work/"});
+
+  for (size_t ii = 0; ii < test_cases.size(); ++ii) {
+    auto ret = StandardisePath(test_cases[ii].path);
+    EXPECT_STREQ(ret.c_str(), test_cases[ii].want_result.c_str())
+        << "Test " << test_cases[ii].name << " failed, index " << ii;
+  }
+}
+
+TEST(STRING_UTIL_TEST, StartsWith_test) {
+  struct TestCase {
+    std::string name;
+
+    std::string str;
+    std::string pattern;
+    bool ignore_case;
+
+    bool want_result;
+  };
+  std::vector<TestCase> test_cases;
+  test_cases.emplace_back(TestCase{
+      .name = "case 1",
+      .str = "abcdefg123456",
+      .pattern = "abc",
+      .ignore_case = false,
+      .want_result = true});
+  test_cases.emplace_back(TestCase{
+      .name = "case 2",
+      .str = "abcdefg123456",
+      .pattern = "abC",
+      .ignore_case = false,
+      .want_result = false});
+  test_cases.emplace_back(TestCase{
+      .name = "case 3",
+      .str = "abcdefg123456",
+      .pattern = "abC",
+      .ignore_case = true,
+      .want_result = true});
+  test_cases.emplace_back(TestCase{
+      .name = "case 4",
+      .str = "abcdefg123456",
+      .pattern = "",
+      .ignore_case = true,
+      .want_result = false});
+
+  for (size_t ii = 0; ii < test_cases.size(); ++ii) {
+    auto ret = StartsWith(test_cases[ii].str, test_cases[ii].pattern, test_cases[ii].ignore_case);
+    EXPECT_EQ(ret, test_cases[ii].want_result)
+        << "Test " << test_cases[ii].name << " failed, index " << ii;
+  }
+}
+
+TEST(STRING_UTIL_TEST, EndsWith_test) {
+  struct TestCase {
+    std::string name;
+
+    std::string str;
+    std::string pattern;
+    bool ignore_case;
+
+    bool want_result;
+  };
+  std::vector<TestCase> test_cases;
+  test_cases.emplace_back(TestCase{
+      .name = "case 1",
+      .str = "123456abcdefg",
+      .pattern = "efg",
+      .ignore_case = false,
+      .want_result = true});
+  test_cases.emplace_back(TestCase{
+      .name = "case 2",
+      .str = "123456abcdefg",
+      .pattern = "Efg",
+      .ignore_case = false,
+      .want_result = false});
+  test_cases.emplace_back(TestCase{
+      .name = "case 3",
+      .str = "123456abcdefg",
+      .pattern = "Efg",
+      .ignore_case = true,
+      .want_result = true});
+  test_cases.emplace_back(TestCase{
+      .name = "case 4",
+      .str = "123456abcdefg",
+      .pattern = "",
+      .ignore_case = true,
+      .want_result = false});
+
+  for (size_t ii = 0; ii < test_cases.size(); ++ii) {
+    auto ret = EndsWith(test_cases[ii].str, test_cases[ii].pattern, test_cases[ii].ignore_case);
+    EXPECT_EQ(ret, test_cases[ii].want_result)
+        << "Test " << test_cases[ii].name << " failed, index " << ii;
+  }
+}
+
+TEST(STRING_UTIL_TEST, Hash64Fnv1a_test) {
+  struct TestCase {
+    std::string name;
+
+    std::string data;
+
+    uint64_t want_result;
+  };
+  std::vector<TestCase> test_cases;
+  test_cases.emplace_back(TestCase{
+      .name = "case 1",
+      .data = "abcdefg123456",
+      .want_result = 340744521186200064});
+  test_cases.emplace_back(TestCase{
+      .name = "case 2",
+      .data = "",
+      .want_result = 14695981039346656037});
+
+  for (size_t ii = 0; ii < test_cases.size(); ++ii) {
+    auto ret = Hash64Fnv1a(test_cases[ii].data.c_str(), test_cases[ii].data.size());
+    EXPECT_EQ(ret, test_cases[ii].want_result)
+        << "Test " << test_cases[ii].name << " failed, index " << ii;
+  }
+}
+
+TEST(STRING_UTIL_TEST, Hash32Fnv1a_test) {
+  struct TestCase {
+    std::string name;
+
+    std::string data;
+
+    uint32_t want_result;
+  };
+  std::vector<TestCase> test_cases;
+  test_cases.emplace_back(TestCase{
+      .name = "case 1",
+      .data = "abcdefg123456",
+      .want_result = 1667236096});
+  test_cases.emplace_back(TestCase{
+      .name = "case 2",
+      .data = "",
+      .want_result = 2166136261});
+
+  for (size_t ii = 0; ii < test_cases.size(); ++ii) {
+    auto ret = Hash32Fnv1a(test_cases[ii].data.c_str(), test_cases[ii].data.size());
+    EXPECT_EQ(ret, test_cases[ii].want_result)
+        << "Test " << test_cases[ii].name << " failed, index " << ii;
+  }
+}
+
 }  // namespace ytlib
