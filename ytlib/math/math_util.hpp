@@ -74,7 +74,7 @@ inline bool IsPrime(uint64_t num) {
 
 /**
  * @brief 求最大公约数
- *
+ * @note 推荐直接使用 std::gcd
  * @param[in] num1 输入的数字1
  * @param[in] num2 输入的数字2
  * @return uint64_t 最大公约数
@@ -94,7 +94,7 @@ inline uint64_t Gcd(uint64_t num1, uint64_t num2) {
 
 /**
  * @brief 求最小公倍数
- * @note num1*num2/gcd(num1,num2)
+ * @note 推荐直接使用 std::lcm
  * @param[in] num1 输入的数字1
  * @param[in] num2 输入的数字2
  * @return uint64_t 最小公倍数
