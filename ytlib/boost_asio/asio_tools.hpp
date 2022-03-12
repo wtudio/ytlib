@@ -25,14 +25,12 @@ namespace ytlib {
  * @note 使用时先调用RegisterSvrFunc注册子服务的启动、停止方法，
  * 然后调用Start方法异步启动，之后可以调用join方法，等待kill信号或其他异步程序里调用Stop方法结束整个服务。
  * 并不会调用asio的stop方法，只会调用注册的stop方法，等各个子服务自己停止。
- * @tparam THREADS_NUM 线程数
  */
-template <std::uint32_t THREADS_NUM = 1>
 class AsioExecutor {
  public:
-  AsioExecutor() : io_ptr_(std::make_shared<boost::asio::io_context>(THREADS_NUM)),
-                   signals_(*io_ptr_, SIGINT, SIGTERM) {
-    static_assert(THREADS_NUM >= 1);
+  explicit AsioExecutor(uint32_t threads_num = 1) : threads_num_(threads_num),
+                                                    io_ptr_(std::make_shared<boost::asio::io_context>(threads_num)),
+                                                    signals_(*io_ptr_, SIGINT, SIGTERM) {
   }
 
   ~AsioExecutor() noexcept {
@@ -83,7 +81,7 @@ class AsioExecutor {
       DBG_PRINT("AsioExecutor thread %llu exit.", ytlib::GetThreadId());
     };
 
-    for (uint32_t ii = 0; ii < THREADS_NUM; ++ii) {
+    for (uint32_t ii = 0; ii < threads_num_; ++ii) {
       threads_.emplace(threads_.end(), run_func);
     }
   }
@@ -124,6 +122,7 @@ class AsioExecutor {
   std::shared_ptr<boost::asio::io_context> IO() { return io_ptr_; }
 
  private:
+  uint32_t threads_num_;
   std::atomic_bool start_flag_ = false;
   std::atomic_bool stop_flag_ = false;
   std::shared_ptr<boost::asio::io_context> io_ptr_;

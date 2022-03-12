@@ -4,7 +4,7 @@
 
 namespace ytlib {
 
-TEST(VECTOR3_TEST, Length_test) {
+TEST(VECTOR3_TEST, Len_test) {
   struct TestCase {
     std::string name;
 
@@ -23,7 +23,7 @@ TEST(VECTOR3_TEST, Length_test) {
       .want_result = 9.8303852});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
-    EXPECT_FLOAT_EQ(test_cases[ii].vec.Length(), test_cases[ii].want_result)
+    EXPECT_FLOAT_EQ(test_cases[ii].vec.Len(), test_cases[ii].want_result)
         << "Test " << test_cases[ii].name << " failed, index " << ii;
   }
 }
