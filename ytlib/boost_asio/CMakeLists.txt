@@ -23,7 +23,7 @@ set_property(TARGET ${CUR_TARGET_NAME} PROPERTY PUBLIC_HEADER ${head_files})
 target_link_libraries(${CUR_TARGET_NAME} INTERFACE Boost::boost Boost::date_time Boost::log)
 
 # 设置编译选项
-# target_compile_definitions(${CUR_TARGET_NAME} INTERFACE xxx)
+target_compile_definitions(${CUR_TARGET_NAME} INTERFACE ASIO_ENABLE_DEBUG)
 
 # 设置其他属性
 set_property(TARGET ${CUR_TARGET_NAME} PROPERTY FOLDER ${CUR_TARGET_NAME})

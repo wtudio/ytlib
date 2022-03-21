@@ -19,6 +19,7 @@
 
 #include <boost/asio.hpp>
 
+#include "ytlib/boost_asio/asio_debug_tools.hpp"
 #include "ytlib/boost_asio/net_util.hpp"
 #include "ytlib/misc/misc_macro.h"
 
@@ -36,15 +37,16 @@ int32_t main(int32_t argc, char** argv) {
   boost::asio::co_spawn(
       io,
       [&t, &t2]() -> boost::asio::awaitable<void> {
+        ASIO_DEBUG_HANDLE(co_timer_1);
         try {
           for (uint32_t ii = 0; ii < 10; ++ii) {
             t.expires_after(std::chrono::seconds(1));
-            std::cerr << "thread " << std::this_thread::get_id() << " run 1.\n";
+            std::cerr << "thread " << std::this_thread::get_id() << " run co_timer_1.\n";
             co_await t.async_wait(boost::asio::use_awaitable);
             t2.expires_after(std::chrono::seconds(2));
           }
         } catch (const std::exception& e) {
-          std::cerr << "log svr accept connection get exception:" << e.what() << '\n';
+          std::cerr << "co_timer_1 get exception:" << e.what() << '\n';
         }
         co_return;
       },
@@ -53,14 +55,15 @@ int32_t main(int32_t argc, char** argv) {
   boost::asio::co_spawn(
       io,
       [&t2]() -> boost::asio::awaitable<void> {
+        ASIO_DEBUG_HANDLE(co_timer_2);
         try {
           for (uint32_t ii = 0; ii < 10; ++ii) {
             t2.expires_after(std::chrono::seconds(2));
-            std::cerr << "thread " << std::this_thread::get_id() << " run 2.\n";
+            std::cerr << "thread " << std::this_thread::get_id() << " run co_timer_2.\n";
             co_await t2.async_wait(boost::asio::use_awaitable);
           }
         } catch (const std::exception& e) {
-          std::cerr << "log svr accept connection get exception:" << e.what() << '\n';
+          std::cerr << "co_timer_2 get exception:" << e.what() << '\n';
         }
         co_return;
       },
@@ -80,6 +83,8 @@ int32_t main(int32_t argc, char** argv) {
     itr->join();
     threads_.erase(itr++);
   }
+
+  DBG_PRINT("%s", AsioDebugTool::Ins().GetStatisticalResult().c_str());
 
   DBG_PRINT("********************end test*******************");
   return 0;

@@ -77,6 +77,8 @@ int32_t main(int32_t argc, char** argv) {
      << "end location: " << ship2->location_ << endl;
   DBG_PRINT("%s", ss.str().c_str());
 
+  DBG_PRINT("%s", AsioDebugTool::Ins().GetStatisticalResult().c_str());
+
   DBG_PRINT("********************end game*******************");
   return 0;
 }

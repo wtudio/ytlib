@@ -13,6 +13,8 @@
 #include "ship.hpp"
 #include "station.hpp"
 
+#include "ytlib/boost_asio/asio_debug_tools.hpp"
+
 namespace ytlib {
 
 struct WorldCfg {
@@ -34,6 +36,7 @@ class World : public std::enable_shared_from_this<World> {
     boost::asio::co_spawn(
         loop_strand_,
         [this, self]() -> boost::asio::awaitable<void> {
+          ASIO_DEBUG_HANDLE(loop_co);
           boost::asio::steady_timer timer(loop_strand_);
 
           std::chrono::steady_clock::time_point last_frame_end_time_point;

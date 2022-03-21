@@ -13,6 +13,7 @@
 #include <memory>
 #include <set>
 
+#include "ytlib/boost_asio/asio_debug_tools.hpp"
 #include "ytlib/boost_asio/net_util.hpp"
 #include "ytlib/misc/misc_macro.h"
 #include "ytlib/misc/time.hpp"
@@ -36,18 +37,17 @@ class NetLogClient : public std::enable_shared_from_this<NetLogClient> {
     if (std::atomic_exchange(&stop_flag_, true)) return;
 
     auto self = shared_from_this();
-    boost::asio::co_spawn(
+    boost::asio::post(
         strand_,
-        [this, self]() -> boost::asio::awaitable<void> {
+        [this, self]() {
+          ASIO_DEBUG_HANDLE(net_log_cli_stop_co);
+
           if (sock_.is_open()) {
             sock_.cancel();
             sock_.close();
             sock_.release();
           }
-
-          co_return;
-        },
-        boost::asio::detached);
+        });
   }
 
   void LogToSvr(std::shared_ptr<boost::asio::streambuf> log_buf) {
@@ -58,6 +58,7 @@ class NetLogClient : public std::enable_shared_from_this<NetLogClient> {
     boost::asio::co_spawn(
         strand_,
         [this, self, log_buf]() -> boost::asio::awaitable<void> {
+          ASIO_DEBUG_HANDLE(net_log_cli_log_to_svr_co);
           try {
             if (!sock_.is_open()) {
               DBG_PRINT("start create a new connect to %s", TcpEp2Str(log_svr_ep_).c_str());
@@ -139,6 +140,7 @@ class LogSvr : public std::enable_shared_from_this<LogSvr> {
     boost::asio::co_spawn(
         mgr_strand_,
         [this, self]() -> boost::asio::awaitable<void> {
+          ASIO_DEBUG_HANDLE(net_log_svr_acceptor_co);
           try {
             while (run_flag_) {
               auto session_ptr = std::make_shared<LogSession>(
@@ -163,23 +165,23 @@ class LogSvr : public std::enable_shared_from_this<LogSvr> {
     if (!std::atomic_exchange(&run_flag_, false)) return;
 
     auto self = shared_from_this();
-    boost::asio::co_spawn(
+    boost::asio::post(
         mgr_strand_,
-        [this, self]() -> boost::asio::awaitable<void> {
+        [this, self]() {
+          ASIO_DEBUG_HANDLE(net_log_svr_stop_co);
+
           if (acceptor_ptr_->is_open()) {
             acceptor_ptr_->cancel();
             acceptor_ptr_->close();
             acceptor_ptr_->release();
           }
 
-          for (auto& session_ptr : session_ptr_set_)
+          for (auto& session_ptr : session_ptr_set_) {
             session_ptr->Stop();
+          }
 
           session_ptr_set_.clear();
-
-          co_return;
-        },
-        boost::asio::detached);
+        });
   }
 
  private:
@@ -213,6 +215,7 @@ class LogSvr : public std::enable_shared_from_this<LogSvr> {
       boost::asio::co_spawn(
           strand_,
           [this, self]() -> boost::asio::awaitable<void> {
+            ASIO_DEBUG_HANDLE(net_log_svr_session_recv_co);
             try {
               const size_t data_size = 1024;
               char data[data_size];
@@ -239,6 +242,7 @@ class LogSvr : public std::enable_shared_from_this<LogSvr> {
       boost::asio::co_spawn(
           strand_,
           [this, self]() -> boost::asio::awaitable<void> {
+            ASIO_DEBUG_HANDLE(net_log_svr_session_timer_co);
             try {
               uint32_t no_data_time_count = 0;  // 当前无数据时间，秒
 
@@ -285,9 +289,11 @@ class LogSvr : public std::enable_shared_from_this<LogSvr> {
       if (!std::atomic_exchange(&run_flag_, false)) return;
 
       auto self = shared_from_this();
-      boost::asio::co_spawn(
+      boost::asio::post(
           strand_,
-          [this, self]() -> boost::asio::awaitable<void> {
+          [this, self]() {
+            ASIO_DEBUG_HANDLE(net_log_svr_session_stop_co);
+
             if (sock_.is_open()) {
               sock_.cancel();
               sock_.close();
@@ -301,21 +307,17 @@ class LogSvr : public std::enable_shared_from_this<LogSvr> {
               ofs_.clear();
               ofs_.close();
             }
+          });
 
-            co_return;
-          },
-          boost::asio::detached);
-
-      boost::asio::co_spawn(
+      boost::asio::post(
           logsvr_ptr_->mgr_strand_,
-          [this, self]() -> boost::asio::awaitable<void> {
+          [this, self]() {
+            ASIO_DEBUG_HANDLE(net_log_svr_session_clear_co);
+
             auto finditr = logsvr_ptr_->session_ptr_set_.find(self);
             if (finditr != logsvr_ptr_->session_ptr_set_.end())
               logsvr_ptr_->session_ptr_set_.erase(finditr);
-
-            co_return;
-          },
-          boost::asio::detached);
+          });
     }
 
    private:

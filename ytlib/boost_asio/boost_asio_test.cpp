@@ -105,6 +105,8 @@ TEST(BOOST_ASIO_TEST, LOG) {
 
   cli_sys_ptr->Stop();
   t_cli.join();
+
+  DBG_PRINT("%s", AsioDebugTool::Ins().GetStatisticalResult().c_str());
 }
 
 }  // namespace ytlib
