@@ -39,7 +39,8 @@ class AsioDebugTool {
   ~AsioDebugTool() {}
 
   void AddLog(uint64_t co_id, AsioDebugState state, const std::string& co_name = "") {
-    uint64_t thread_id = GetAsioDebugThreadId();
+    thread_local uint64_t thread_id = thread_count_++;
+
     if (thread_id >= ASIO_DEBUG_MAX_THREAD_NUM)
       throw std::logic_error("thread num is greater than the maximum.");
 
@@ -120,11 +121,6 @@ class AsioDebugTool {
   AsioDebugTool() : start_time_point_(std::chrono::steady_clock::now()),
                     thread_logs_vec(ASIO_DEBUG_MAX_THREAD_NUM) {}
 
-  const uint64_t& GetAsioDebugThreadId() {
-    thread_local uint64_t cur_thread_id = thread_count_++;
-    return cur_thread_id;
-  }
-
   std::atomic<uint64_t> thread_count_ = 0;
   std::chrono::steady_clock::time_point start_time_point_;
   std::vector<std::list<AsioDebugLog> > thread_logs_vec;
@@ -136,7 +132,9 @@ class AsioDebugTool {
  */
 class AsioDebugHandle {
  public:
-  AsioDebugHandle(const std::string& co_name) : co_id_(GetCoId()) {
+  AsioDebugHandle(const std::string& co_name) {
+    static std::atomic<uint64_t> co_count = 0;
+    co_id_ = co_count++;
     AsioDebugTool::Ins().AddLog(co_id_, AsioDebugState::Start, co_name);
   }
   ~AsioDebugHandle() {
@@ -144,11 +142,6 @@ class AsioDebugHandle {
   }
 
  private:
-  const uint64_t& GetCoId() {
-    static std::atomic<uint64_t> co_count = 0;
-    return co_count++;
-  }
-
   uint64_t co_id_;
 };
 
