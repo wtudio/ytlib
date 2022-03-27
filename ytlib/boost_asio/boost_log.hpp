@@ -111,6 +111,8 @@ class YTBLCtr {
 
   /**
    * @brief 开启文件日志
+   *
+   * @param base_file_name_ 日志文件名称
    */
   void EnableFileLog(const std::string& base_file_name_) {
     if (!std::atomic_exchange(&file_log_flag, true)) {
@@ -130,6 +132,8 @@ class YTBLCtr {
 
   /**
    * @brief 开启网络日志
+   *
+   * @param net_log_cli_ptr 网络日志客户端
    */
   void EnableNetLog(std::shared_ptr<NetLogClient> net_log_cli_ptr) {
     if (!std::atomic_exchange(&net_log_flag, true)) {

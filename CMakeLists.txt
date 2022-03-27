@@ -66,6 +66,11 @@ if(YTLIB_BUILD_WITH_BOOST)
   find_package(Boost REQUIRED COMPONENTS date_time log serialization program_options)
 endif()
 
+option(YTLIB_BUILD_WITH_FREEGLUT "Build with freeglut lib." OFF)
+if(YTLIB_BUILD_WITH_FREEGLUT)
+  include(GetFreeglut)
+endif()
+
 #设置测试
 option(YTLIB_BUILD_TESTS "Build tests." OFF)
 if(YTLIB_BUILD_TESTS)
@@ -94,6 +99,10 @@ add_subdirectory(ytlib/thread)
 if(YTLIB_BUILD_WITH_BOOST)
   add_subdirectory(ytlib/boost_asio)
   add_subdirectory(ytlib/boost_tools)
+endif()
+
+if(YTLIB_BUILD_WITH_FREEGLUT)
+  add_subdirectory(ytlib/gl)
 endif()
 
 #设置个性化测试（ytlib开发测试专用）

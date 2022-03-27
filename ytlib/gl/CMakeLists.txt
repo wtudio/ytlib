@@ -20,10 +20,10 @@ target_include_directories(${CUR_TARGET_NAME} INTERFACE $<BUILD_INTERFACE:${PROJ
 set_property(TARGET ${CUR_TARGET_NAME} PROPERTY PUBLIC_HEADER ${head_files})
 
 # 设置链接库
-target_link_libraries(${CUR_TARGET_NAME} INTERFACE Boost::boost Boost::date_time Boost::log)
+target_link_libraries(${CUR_TARGET_NAME} INTERFACE freeglut::freeglut)
 
 # 设置编译选项
-# target_compile_definitions(${CUR_TARGET_NAME} INTERFACE ASIO_ENABLE_DEBUG)
+# target_compile_definitions(${CUR_TARGET_NAME} INTERFACE xxx)
 
 # 设置其他属性
 set_property(TARGET ${CUR_TARGET_NAME} PROPERTY FOLDER ${CUR_TARGET_NAME})

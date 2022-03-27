@@ -24,13 +24,13 @@ TEST(BOOST_ASIO_TEST, UTIL) {
 
 TEST(BOOST_ASIO_TEST, LOG) {
   auto cli_sys_ptr = std::make_shared<AsioExecutor>(1);
-  auto svr1_sys_ptr = std::make_shared<AsioExecutor>(1);
-  auto svr2_sys_ptr = std::make_shared<AsioExecutor>(1);
+  auto svr1_sys_ptr = std::make_shared<AsioExecutor>(2);
+  auto svr2_sys_ptr = std::make_shared<AsioExecutor>(2);
 
   // cli
   auto net_log_cli_ptr = std::make_shared<NetLogClient>(cli_sys_ptr->IO(), TcpEp{IPV4({127, 0, 0, 1}), 50001});
   cli_sys_ptr->RegisterSvrFunc(std::function<void()>(),
-                               [&net_log_cli_ptr] { net_log_cli_ptr->Stop(); });
+                               [net_log_cli_ptr] { net_log_cli_ptr->Stop(); });
 
   YTBLCtr::Ins().EnableConsoleLog();
   YTBLCtr::Ins().EnableFileLog("./test");
@@ -45,8 +45,8 @@ TEST(BOOST_ASIO_TEST, LOG) {
   // svr1
   thread t_svr1([svr1_sys_ptr] {
     auto lgsvr_ptr = std::make_shared<LogSvr>(svr1_sys_ptr->IO(), LogSvrCfg());
-    svr1_sys_ptr->RegisterSvrFunc([&lgsvr_ptr] { lgsvr_ptr->Start(); },
-                                  [&lgsvr_ptr] { lgsvr_ptr->Stop(); });
+    svr1_sys_ptr->RegisterSvrFunc([lgsvr_ptr] { lgsvr_ptr->Start(); },
+                                  [lgsvr_ptr] { lgsvr_ptr->Stop(); });
 
     svr1_sys_ptr->Start();
     svr1_sys_ptr->Join();
@@ -75,8 +75,8 @@ TEST(BOOST_ASIO_TEST, LOG) {
     cfg.timer_dt = 1;
     cfg.max_no_data_time = 3;
     auto lgsvr_ptr = std::make_shared<LogSvr>(svr2_sys_ptr->IO(), cfg);
-    svr2_sys_ptr->RegisterSvrFunc([&lgsvr_ptr] { lgsvr_ptr->Start(); },
-                                  [&lgsvr_ptr] { lgsvr_ptr->Stop(); });
+    svr2_sys_ptr->RegisterSvrFunc([lgsvr_ptr] { lgsvr_ptr->Start(); },
+                                  [lgsvr_ptr] { lgsvr_ptr->Stop(); });
     svr2_sys_ptr->Start();
     svr2_sys_ptr->Join();
     DBG_PRINT("svr2_sys_ptr exit");

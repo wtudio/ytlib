@@ -20,24 +20,38 @@
 
 namespace ytlib {
 
+/**
+ * @brief 远程日志服务器客户端
+ * @note 必须以智能指针形式构造，在结束使用前手动调用Stop方法
+ */
 class NetLogClient : public std::enable_shared_from_this<NetLogClient> {
  public:
-  NetLogClient(std::shared_ptr<boost::asio::io_context> io_ptr,
-               const TcpEp& log_svr_ep) : log_svr_ep_(log_svr_ep),
-                                          io_ptr_(io_ptr),
-                                          strand_(boost::asio::make_strand(*io_ptr_)),
-                                          sock_(strand_) {}
+  /**
+   * @brief 远程日志服务器客户端构造函数
+   *
+   * @param io_ptr io_context智能指针
+   * @param log_svr_ep 日志服务器地址
+   */
+  NetLogClient(std::shared_ptr<boost::asio::io_context> io_ptr, const TcpEp& log_svr_ep)
+      : log_svr_ep_(log_svr_ep),
+        io_ptr_(io_ptr),
+        strand_(boost::asio::make_strand(*io_ptr_)),
+        sock_(strand_) {}
 
   ~NetLogClient() {}
 
   NetLogClient(const NetLogClient&) = delete;             ///< no copy
   NetLogClient& operator=(const NetLogClient&) = delete;  ///< no copy
 
+  /**
+   * @brief 停止
+   * @note 需要在析构之前手动调用Stop
+   */
   void Stop() {
     if (std::atomic_exchange(&stop_flag_, true)) return;
 
     auto self = shared_from_this();
-    boost::asio::post(
+    boost::asio::dispatch(
         strand_,
         [this, self]() {
           ASIO_DEBUG_HANDLE(net_log_cli_stop_co);
@@ -50,24 +64,30 @@ class NetLogClient : public std::enable_shared_from_this<NetLogClient> {
         });
   }
 
-  void LogToSvr(std::shared_ptr<boost::asio::streambuf> log_buf) {
+  /**
+   * @brief 打日志到远程日志服务器
+   *
+   * @param log_buf_ptr 日志内容指针
+   */
+  void LogToSvr(std::shared_ptr<boost::asio::streambuf> log_buf_ptr) {
     if (stop_flag_) [[unlikely]]
       return;
 
     auto self = shared_from_this();
     boost::asio::co_spawn(
         strand_,
-        [this, self, log_buf]() -> boost::asio::awaitable<void> {
+        [this, self, log_buf_ptr]() -> boost::asio::awaitable<void> {
           ASIO_DEBUG_HANDLE(net_log_cli_log_to_svr_co);
+
           try {
             if (!sock_.is_open()) {
               DBG_PRINT("start create a new connect to %s", TcpEp2Str(log_svr_ep_).c_str());
               co_await sock_.async_connect(log_svr_ep_, boost::asio::use_awaitable);
             }
 
-            while (log_buf->size()) {
-              size_t n = co_await sock_.async_write_some(log_buf->data(), boost::asio::use_awaitable);
-              log_buf->consume(n);
+            while (log_buf_ptr->size()) {
+              size_t n = co_await sock_.async_write_some(log_buf_ptr->data(), boost::asio::use_awaitable);
+              log_buf_ptr->consume(n);
             }
 
           } catch (const std::exception& e) {
@@ -96,12 +116,11 @@ class NetLogClient : public std::enable_shared_from_this<NetLogClient> {
  * @brief 远程日志服务器配置
  */
 struct LogSvrCfg {
-  LogSvrCfg() : log_path("./log"),
-                max_file_size(1 * 1024 * 1024) {}
+  LogSvrCfg() : log_path("./log") {}
 
-  uint16_t port = 50001;
-  std::filesystem::path log_path;
-  size_t max_file_size;
+  uint16_t port = 50001;                   // 监听的端口
+  std::filesystem::path log_path;          // 日志路径
+  size_t max_file_size = 1 * 1024 * 1024;  // 最大日志文件尺寸
 
   uint32_t timer_dt = 5;           // 定时器间隔，秒
   uint32_t max_no_data_time = 60;  // 最长无数据时间，秒
@@ -109,16 +128,23 @@ struct LogSvrCfg {
 
 /**
  * @brief 远程日志服务器
- * 默认监听50001端口，为每个ip-port创建一个文件夹存放滚动日志文件
+ * @note 默认监听50001端口，为每个ip-port创建一个文件夹存放滚动日志文件
  * 无协议，收到什么打印什么
- * 必须以智能指针形式构造，同时在创建的所有协程中持有智能指针，以确保所有协程结束后才能析构
+ * 必须以智能指针形式构造，调用Start启动服务，在结束使用前手动调用Stop方法
  */
 class LogSvr : public std::enable_shared_from_this<LogSvr> {
  public:
-  LogSvr(std::shared_ptr<boost::asio::io_context> io_ptr,
-         const LogSvrCfg& cfg) : cfg_(cfg),
-                                 io_ptr_(io_ptr),
-                                 mgr_strand_(boost::asio::make_strand(*io_ptr_)) {
+  /**
+   * @brief 远程日志服务器构造函数
+   *
+   * @param io_ptr io_context智能指针
+   * @param cfg 配置
+   */
+  LogSvr(std::shared_ptr<boost::asio::io_context> io_ptr, const LogSvrCfg& cfg)
+      : cfg_(cfg),
+        io_ptr_(io_ptr),
+        mgr_strand_(boost::asio::make_strand(*io_ptr_)) {
+    // 校验配置
     if (cfg_.port > 65535 || cfg_.port < 1000) cfg_.port = 50001;
 
     if (cfg_.max_file_size < 100 * 1024) cfg_.max_file_size = 100 * 1024;
@@ -130,6 +156,10 @@ class LogSvr : public std::enable_shared_from_this<LogSvr> {
   LogSvr(const LogSvr&) = delete;             ///< no copy
   LogSvr& operator=(const LogSvr&) = delete;  ///< no copy
 
+  /**
+   * @brief 启动日志服务器
+   *
+   */
   void Start() {
     acceptor_ptr_ = std::make_shared<boost::asio::ip::tcp::acceptor>(*io_ptr_, TcpEp{IPV4(), cfg_.port});
 
@@ -161,11 +191,15 @@ class LogSvr : public std::enable_shared_from_this<LogSvr> {
         boost::asio::detached);
   }
 
+  /**
+   * @brief 停止日志服务器
+   * @note 需要在析构之前手动调用Stop
+   */
   void Stop() {
     if (!std::atomic_exchange(&run_flag_, false)) return;
 
     auto self = shared_from_this();
-    boost::asio::post(
+    boost::asio::dispatch(
         mgr_strand_,
         [this, self]() {
           ASIO_DEBUG_HANDLE(net_log_svr_stop_co);
@@ -176,21 +210,24 @@ class LogSvr : public std::enable_shared_from_this<LogSvr> {
             acceptor_ptr_->release();
           }
 
-          for (auto& session_ptr : session_ptr_set_) {
+          while (!session_ptr_set_.empty()) {
+            auto session_ptr_itr = session_ptr_set_.begin();
+            auto session_ptr = *session_ptr_itr;
+            session_ptr_set_.erase(session_ptr_itr);
+
             session_ptr->Stop();
           }
-
-          session_ptr_set_.clear();
         });
   }
 
  private:
   class LogSession : public std::enable_shared_from_this<LogSession> {
    public:
-    LogSession(TcpSocket&& sock, std::shared_ptr<LogSvr> logsvr_ptr) : logsvr_ptr_(logsvr_ptr),
-                                                                       strand_(boost::asio::make_strand(*(logsvr_ptr_->io_ptr_))),
-                                                                       sock_(std::move(sock)),
-                                                                       timer_(strand_) {
+    LogSession(TcpSocket&& sock, std::shared_ptr<LogSvr> logsvr_ptr)
+        : logsvr_ptr_(logsvr_ptr),
+          strand_(boost::asio::make_strand(*(logsvr_ptr_->io_ptr_))),
+          sock_(std::move(sock)),
+          timer_(strand_) {
       const TcpEp& ep = sock_.remote_endpoint();
       session_name_ = (ep.address().to_string() + "_" + std::to_string(ep.port()));
     }
@@ -289,7 +326,7 @@ class LogSvr : public std::enable_shared_from_this<LogSvr> {
       if (!std::atomic_exchange(&run_flag_, false)) return;
 
       auto self = shared_from_this();
-      boost::asio::post(
+      boost::asio::dispatch(
           strand_,
           [this, self]() {
             ASIO_DEBUG_HANDLE(net_log_svr_session_stop_co);
@@ -309,7 +346,7 @@ class LogSvr : public std::enable_shared_from_this<LogSvr> {
             }
           });
 
-      boost::asio::post(
+      boost::asio::dispatch(
           logsvr_ptr_->mgr_strand_,
           [this, self]() {
             ASIO_DEBUG_HANDLE(net_log_svr_session_clear_co);
@@ -336,7 +373,7 @@ class LogSvr : public std::enable_shared_from_this<LogSvr> {
 
  private:
   std::atomic_bool run_flag_ = true;
-  LogSvrCfg cfg_;  // 配置
+  LogSvrCfg cfg_;
   std::shared_ptr<boost::asio::io_context> io_ptr_;
   boost::asio::strand<boost::asio::io_context::executor_type> mgr_strand_;  // session池操作strand
   std::shared_ptr<boost::asio::ip::tcp::acceptor> acceptor_ptr_;            // 监听器

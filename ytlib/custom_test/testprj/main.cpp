@@ -26,48 +26,44 @@
 using namespace std;
 using namespace ytlib;
 
-int32_t main(int32_t argc, char** argv) {
-  DBG_PRINT("-------------------start test-------------------");
+boost::asio::awaitable<void> TestTimerCo1(boost::asio::steady_timer& t1, boost::asio::steady_timer& t2) {
+  ASIO_DEBUG_HANDLE(TestTimerCo1);
+  try {
+    t1.expires_after(std::chrono::seconds(1));
+    std::cerr << "thread " << std::this_thread::get_id() << " run TestTimerCo1.\n";
+    co_await t1.async_wait(boost::asio::use_awaitable);
+    t2.expires_after(std::chrono::seconds(123));
+  } catch (const std::exception& e) {
+    std::cerr << "TestTimerCo1 get exception:" << e.what() << '\n';
+  }
+  co_return;
+}
 
+boost::asio::awaitable<void> TestTimerCo2(boost::asio::steady_timer& t1, boost::asio::steady_timer& t2) {
+  ASIO_DEBUG_HANDLE(TestTimerCo2);
+  try {
+    t2.expires_after(std::chrono::seconds(2));
+    std::cerr << "thread " << std::this_thread::get_id() << " run TestTimerCo2.\n";
+    co_await t2.async_wait(boost::asio::use_awaitable);
+  } catch (const std::exception& e) {
+    std::cerr << "TestTimerCo2 get exception:" << e.what() << '\n';
+  }
+  co_return;
+}
+
+/**
+ * @brief
+ * boost::asio::steady_timer 在协程1中async_wait时，如果在其他线程/协程里重新设置了expires_after，则会触发在协程1里的异常
+ *
+ */
+void Test1() {
   uint32_t n = 2;
   boost::asio::io_context io(n);
-  boost::asio::steady_timer t(io);
+  boost::asio::steady_timer t1(io);
   boost::asio::steady_timer t2(io);
 
-  boost::asio::co_spawn(
-      io,
-      [&t, &t2]() -> boost::asio::awaitable<void> {
-        ASIO_DEBUG_HANDLE(co_timer_1);
-        try {
-          for (uint32_t ii = 0; ii < 10; ++ii) {
-            t.expires_after(std::chrono::seconds(1));
-            std::cerr << "thread " << std::this_thread::get_id() << " run co_timer_1.\n";
-            co_await t.async_wait(boost::asio::use_awaitable);
-            t2.expires_after(std::chrono::seconds(2));
-          }
-        } catch (const std::exception& e) {
-          std::cerr << "co_timer_1 get exception:" << e.what() << '\n';
-        }
-        co_return;
-      },
-      boost::asio::detached);
-
-  boost::asio::co_spawn(
-      io,
-      [&t2]() -> boost::asio::awaitable<void> {
-        ASIO_DEBUG_HANDLE(co_timer_2);
-        try {
-          for (uint32_t ii = 0; ii < 10; ++ii) {
-            t2.expires_after(std::chrono::seconds(2));
-            std::cerr << "thread " << std::this_thread::get_id() << " run co_timer_2.\n";
-            co_await t2.async_wait(boost::asio::use_awaitable);
-          }
-        } catch (const std::exception& e) {
-          std::cerr << "co_timer_2 get exception:" << e.what() << '\n';
-        }
-        co_return;
-      },
-      boost::asio::detached);
+  boost::asio::co_spawn(io, TestTimerCo1(t1, t2), boost::asio::detached);
+  boost::asio::co_spawn(io, TestTimerCo2(t1, t2), boost::asio::detached);
 
   std::list<std::thread> threads_;
 
@@ -83,6 +79,85 @@ int32_t main(int32_t argc, char** argv) {
     itr->join();
     threads_.erase(itr++);
   }
+}
+
+boost::asio::awaitable<void> TestCo1(boost::asio::io_context& io) {
+  ASIO_DEBUG_HANDLE(TestCo1);
+
+  try {
+    std::cerr << "thread " << std::this_thread::get_id() << " run TestCo1-a.\n";
+    boost::asio::steady_timer t1(io);
+    t1.expires_after(std::chrono::seconds(1));
+    co_await t1.async_wait(boost::asio::use_awaitable);
+    std::cerr << "thread " << std::this_thread::get_id() << " run TestCo1-b.\n";
+  } catch (const std::exception& e) {
+    std::cerr << "TestCo1 get exception:" << e.what() << '\n';
+  }
+  co_return;
+}
+
+boost::asio::awaitable<void> TestCo2(boost::asio::io_context& io) {
+  ASIO_DEBUG_HANDLE(TestCo2);
+
+  try {
+    std::cerr << "thread " << std::this_thread::get_id() << " run TestCo2-a.\n";
+    co_await boost::asio::co_spawn(io, TestCo1(io), boost::asio::use_awaitable);
+    std::cerr << "thread " << std::this_thread::get_id() << " run TestCo2-b.\n";
+  } catch (const std::exception& e) {
+    std::cerr << "TestCo2 get exception:" << e.what() << '\n';
+  }
+  co_return;
+}
+
+boost::asio::awaitable<void> TestCo3(boost::asio::io_context& io) {
+  ASIO_DEBUG_HANDLE(TestCo3);
+
+  try {
+    std::cerr << "thread " << std::this_thread::get_id() << " run TestCo3-a.\n";
+    boost::asio::co_spawn(io, TestCo2(io), boost::asio::detached);
+    std::cerr << "thread " << std::this_thread::get_id() << " run TestCo3-b.\n";
+  } catch (const std::exception& e) {
+    std::cerr << "TestCo3 get exception:" << e.what() << '\n';
+  }
+  co_return;
+}
+
+/**
+ * @brief
+ * 1、co_spawn创建的协程是类似于dispach的运行方式，会先尽可能的执行下去，直到遇到co_await
+ * 2、使用 co_await boost::asio::co_spawn(io, handle, boost::asio::use_awaitable) 来在协程内部等待另一个协程
+ *
+ */
+void Test2() {
+  uint32_t n = 2;
+  boost::asio::io_context io(n);
+
+  boost::asio::co_spawn(io, TestCo3(io), boost::asio::detached);
+
+  // boost::asio::strand<boost::asio::io_context::executor_type> strand = boost::asio::make_strand(io);
+
+  std::list<std::thread> threads_;
+
+  for (uint32_t ii = 0; ii < n; ++ii) {
+    threads_.emplace(threads_.end(), [&io] {
+      std::cerr << "thread " << std::this_thread::get_id() << " start.\n";
+      io.run();
+      std::cerr << "thread " << std::this_thread::get_id() << " exit.\n";
+    });
+  }
+
+  for (auto itr = threads_.begin(); itr != threads_.end();) {
+    itr->join();
+    threads_.erase(itr++);
+  }
+}
+
+int32_t main(int32_t argc, char** argv) {
+  DBG_PRINT("-------------------start test-------------------");
+
+  // Test1();
+
+  Test2();
 
   DBG_PRINT("%s", AsioDebugTool::Ins().GetStatisticalResult().c_str());
 
