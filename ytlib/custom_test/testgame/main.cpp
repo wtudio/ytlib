@@ -10,6 +10,7 @@
 #include <thread>
 #include <vector>
 
+#include "gl_game_displayer.hpp"
 #include "world.hpp"
 #include "ytlib/boost_asio/asio_tools.hpp"
 #include "ytlib/misc/misc_macro.h"
@@ -25,21 +26,22 @@ int32_t main(int32_t argc, char** argv) {
   // init game world
   WorldCfg cfg;
   auto game_world_ptr = std::make_shared<World>(game_sys_ptr->IO(), cfg);
+  game_world_ptr->SetGameDisplayer(std::dynamic_pointer_cast<GameDisplayerInf>(GlGameDisplayer::InsPtr()));
 
   auto ship1 = std::make_shared<Ship>();
   ship1->name_ = "ship1";
   ship1->id_ = 1;
   ship1->mass_ = 1.0;
   ship1->thrust_ = 1.0;
-  ship1->speed_ = {0.0, 0.0, 0.0};
+  ship1->speed_ = {1.0, 2.0, 3.0};
   game_world_ptr->ship_map_.emplace(ship1->id_, ship1);
 
   auto ship2 = std::make_shared<Ship>();
   ship2->name_ = "ship2";
   ship2->id_ = 2;
   ship2->mass_ = 1.0;
-  ship2->thrust_ = 0.0;
-  ship2->speed_ = {0.0, 2.0, 0.0};
+  ship2->thrust_ = 2.0;
+  ship2->speed_ = {2.0, 2.0, 4.0};
   game_world_ptr->ship_map_.emplace(ship2->id_, ship2);
 
   // start game sys
@@ -52,7 +54,9 @@ int32_t main(int32_t argc, char** argv) {
     DBG_PRINT("game_sys_ptr exit");
   });
 
-  std::this_thread::sleep_for(std::chrono::seconds(5));
+  // std::this_thread::sleep_for(std::chrono::seconds(5));
+
+  game_world_ptr->game_displayer_->Start();
 
   game_sys_ptr->Stop();
   game_thread.join();

@@ -32,7 +32,7 @@ class NetLogClient : public std::enable_shared_from_this<NetLogClient> {
    * @param io_ptr io_context智能指针
    * @param log_svr_ep 日志服务器地址
    */
-  NetLogClient(std::shared_ptr<boost::asio::io_context> io_ptr, const TcpEp& log_svr_ep)
+  NetLogClient(std::shared_ptr<boost::asio::io_context> io_ptr, const boost::asio::ip::tcp::endpoint& log_svr_ep)
       : log_svr_ep_(log_svr_ep),
         io_ptr_(io_ptr),
         strand_(boost::asio::make_strand(*io_ptr_)),
@@ -55,12 +55,7 @@ class NetLogClient : public std::enable_shared_from_this<NetLogClient> {
         strand_,
         [this, self]() {
           ASIO_DEBUG_HANDLE(net_log_cli_stop_co);
-
-          if (sock_.is_open()) {
-            sock_.cancel();
-            sock_.close();
-            sock_.release();
-          }
+          CloseSocket();
         });
   }
 
@@ -79,25 +74,29 @@ class NetLogClient : public std::enable_shared_from_this<NetLogClient> {
         [this, self, log_buf_ptr]() -> boost::asio::awaitable<void> {
           ASIO_DEBUG_HANDLE(net_log_cli_log_to_svr_co);
 
-          try {
-            if (!sock_.is_open()) {
-              DBG_PRINT("start create a new connect to %s", TcpEp2Str(log_svr_ep_).c_str());
-              co_await sock_.async_connect(log_svr_ep_, boost::asio::use_awaitable);
-            }
+          uint32_t retry_num = max_retry_num_;
+          bool suc_flag = false;
 
-            while (log_buf_ptr->size()) {
-              size_t n = co_await sock_.async_write_some(log_buf_ptr->data(), boost::asio::use_awaitable);
-              log_buf_ptr->consume(n);
-            }
+          do {
+            try {
+              if (!sock_.is_open()) {
+                DBG_PRINT("start create a new connect to %s", TcpEp2Str(log_svr_ep_).c_str());
+                co_await sock_.async_connect(log_svr_ep_, boost::asio::use_awaitable);
+              }
 
-          } catch (const std::exception& e) {
-            DBG_PRINT("send log to svr get exception, addr %s, exception %s", TcpEp2Str(log_svr_ep_).c_str(), e.what());
-            if (sock_.is_open()) {
-              sock_.cancel();
-              sock_.close();
-              sock_.release();
+              while (log_buf_ptr->size()) {
+                size_t n = co_await sock_.async_write_some(log_buf_ptr->data(), boost::asio::use_awaitable);
+                log_buf_ptr->consume(n);
+              }
+
+              suc_flag = true;
+            } catch (const std::exception& e) {
+              DBG_PRINT("send log to svr get exception, addr %s, exception %s", TcpEp2Str(log_svr_ep_).c_str(), e.what());
+              CloseSocket();
             }
-          }
+          } while (!suc_flag && --retry_num);
+
+          if (!suc_flag) DBG_PRINT("log to svr failed after %u retry.", max_retry_num_);
 
           co_return;
         },
@@ -105,22 +104,31 @@ class NetLogClient : public std::enable_shared_from_this<NetLogClient> {
   }
 
  private:
-  const TcpEp log_svr_ep_;
+  void CloseSocket() {
+    if (sock_.is_open()) {
+      sock_.shutdown(boost::asio::ip::tcp::socket::shutdown_both);
+      sock_.cancel();
+      sock_.close();
+      sock_.release();
+    }
+  }
+
+ private:
+  const uint32_t max_retry_num_ = 5;
+  const boost::asio::ip::tcp::endpoint log_svr_ep_;
   std::atomic_bool stop_flag_ = false;
   std::shared_ptr<boost::asio::io_context> io_ptr_;
   boost::asio::strand<boost::asio::io_context::executor_type> strand_;
-  TcpSocket sock_;
+  boost::asio::ip::tcp::socket sock_;
 };
 
 /**
  * @brief 远程日志服务器配置
  */
 struct LogSvrCfg {
-  LogSvrCfg() : log_path("./log") {}
-
-  uint16_t port = 50001;                   // 监听的端口
-  std::filesystem::path log_path;          // 日志路径
-  size_t max_file_size = 1 * 1024 * 1024;  // 最大日志文件尺寸
+  uint16_t port = 50001;                     // 监听的端口
+  std::filesystem::path log_path = "./log";  // 日志路径
+  size_t max_file_size = 1 * 1024 * 1024;    // 最大日志文件尺寸
 
   uint32_t timer_dt = 5;           // 定时器间隔，秒
   uint32_t max_no_data_time = 60;  // 最长无数据时间，秒
@@ -161,7 +169,7 @@ class LogSvr : public std::enable_shared_from_this<LogSvr> {
    *
    */
   void Start() {
-    acceptor_ptr_ = std::make_shared<boost::asio::ip::tcp::acceptor>(*io_ptr_, TcpEp{IPV4(), cfg_.port});
+    acceptor_ptr_ = std::make_shared<boost::asio::ip::tcp::acceptor>(*io_ptr_, boost::asio::ip::tcp::endpoint{boost::asio::ip::address_v4(), cfg_.port});
 
     if (std::filesystem::status(cfg_.log_path).type() != std::filesystem::file_type::directory)
       std::filesystem::create_directories(cfg_.log_path);
@@ -223,12 +231,12 @@ class LogSvr : public std::enable_shared_from_this<LogSvr> {
  private:
   class LogSession : public std::enable_shared_from_this<LogSession> {
    public:
-    LogSession(TcpSocket&& sock, std::shared_ptr<LogSvr> logsvr_ptr)
-        : logsvr_ptr_(logsvr_ptr),
-          strand_(boost::asio::make_strand(*(logsvr_ptr_->io_ptr_))),
+    LogSession(boost::asio::ip::tcp::socket&& sock, std::shared_ptr<LogSvr> svr_ptr)
+        : svr_ptr_(svr_ptr),
+          strand_(boost::asio::make_strand(*(svr_ptr_->io_ptr_))),
           sock_(std::move(sock)),
           timer_(strand_) {
-      const TcpEp& ep = sock_.remote_endpoint();
+      const boost::asio::ip::tcp::endpoint& ep = sock_.remote_endpoint();
       session_name_ = (ep.address().to_string() + "_" + std::to_string(ep.port()));
     }
 
@@ -238,7 +246,7 @@ class LogSvr : public std::enable_shared_from_this<LogSvr> {
     LogSession& operator=(const LogSession&) = delete;  ///< no copy
 
     void Start() {
-      std::filesystem::path log_file_dir = logsvr_ptr_->cfg_.log_path / session_name_;
+      std::filesystem::path log_file_dir = svr_ptr_->cfg_.log_path / session_name_;
 
       if (std::filesystem::status(log_file_dir).type() != std::filesystem::file_type::directory)
         std::filesystem::create_directories(log_file_dir);
@@ -284,7 +292,7 @@ class LogSvr : public std::enable_shared_from_this<LogSvr> {
               uint32_t no_data_time_count = 0;  // 当前无数据时间，秒
 
               while (run_flag_) {
-                timer_.expires_after(std::chrono::seconds(logsvr_ptr_->cfg_.timer_dt));
+                timer_.expires_after(std::chrono::seconds(svr_ptr_->cfg_.timer_dt));
                 co_await timer_.async_wait(boost::asio::use_awaitable);
 
                 if (tick_has_data_) {
@@ -294,7 +302,7 @@ class LogSvr : public std::enable_shared_from_this<LogSvr> {
                   if (ofs_.is_open()) ofs_.flush();
 
                   // 判断日志文件是否需要rename
-                  if (std::filesystem::file_size(log_file_) > logsvr_ptr_->cfg_.max_file_size) {
+                  if (std::filesystem::file_size(log_file_) > svr_ptr_->cfg_.max_file_size) {
                     if (ofs_.is_open()) {
                       ofs_.clear();
                       ofs_.close();
@@ -303,8 +311,8 @@ class LogSvr : public std::enable_shared_from_this<LogSvr> {
                   }
 
                 } else {
-                  no_data_time_count += logsvr_ptr_->cfg_.timer_dt;
-                  if (no_data_time_count >= logsvr_ptr_->cfg_.max_no_data_time) {
+                  no_data_time_count += svr_ptr_->cfg_.timer_dt;
+                  if (no_data_time_count >= svr_ptr_->cfg_.max_no_data_time) {
                     DBG_PRINT("log session exit due to timeout(%us), addr %s.", no_data_time_count, session_name_.c_str());
                     break;
                   }
@@ -332,6 +340,7 @@ class LogSvr : public std::enable_shared_from_this<LogSvr> {
             ASIO_DEBUG_HANDLE(net_log_svr_session_stop_co);
 
             if (sock_.is_open()) {
+              sock_.shutdown(boost::asio::ip::tcp::socket::shutdown_both);
               sock_.cancel();
               sock_.close();
               sock_.release();
@@ -347,21 +356,21 @@ class LogSvr : public std::enable_shared_from_this<LogSvr> {
           });
 
       boost::asio::dispatch(
-          logsvr_ptr_->mgr_strand_,
+          svr_ptr_->mgr_strand_,
           [this, self]() {
             ASIO_DEBUG_HANDLE(net_log_svr_session_clear_co);
 
-            auto finditr = logsvr_ptr_->session_ptr_set_.find(self);
-            if (finditr != logsvr_ptr_->session_ptr_set_.end())
-              logsvr_ptr_->session_ptr_set_.erase(finditr);
+            auto finditr = svr_ptr_->session_ptr_set_.find(self);
+            if (finditr != svr_ptr_->session_ptr_set_.end())
+              svr_ptr_->session_ptr_set_.erase(finditr);
           });
     }
 
    private:
     std::atomic_bool run_flag_ = true;
-    std::shared_ptr<LogSvr> logsvr_ptr_;
+    std::shared_ptr<LogSvr> svr_ptr_;
     boost::asio::strand<boost::asio::io_context::executor_type> strand_;
-    TcpSocket sock_;
+    boost::asio::ip::tcp::socket sock_;
     boost::asio::steady_timer timer_;
 
     std::string session_name_;

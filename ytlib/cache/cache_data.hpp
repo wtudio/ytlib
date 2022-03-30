@@ -28,7 +28,7 @@ template <typename KeyType, typename ValType>
 class CacheData {
  public:
   // 获取实际数据接口，输入key，输出val和是否获取成功
-  typedef std::function<std::optional<ValType>(const KeyType&)> GetDataFun;
+  using GetDataFun = std::function<std::optional<ValType>(const KeyType&)>;
 
  public:
   CacheData(const CacheDataCfg& cfg) : cfg_(cfg),

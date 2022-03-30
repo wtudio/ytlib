@@ -11,11 +11,7 @@
 
 namespace ytlib {
 
-typedef boost::asio::ip::address_v4 IPV4;      // ip
-typedef boost::asio::ip::tcp::endpoint TcpEp;  // 28个字节
-typedef boost::asio::ip::tcp::socket TcpSocket;
-
-inline std::string TcpEp2Str(const TcpEp& ep) {
+inline std::string TcpEp2Str(const boost::asio::ip::tcp::endpoint& ep) {
   std::stringstream ss;
   ss << ep;
   return ss.str();
@@ -24,10 +20,10 @@ inline std::string TcpEp2Str(const TcpEp& ep) {
 ///检查端口是否可用。true说明可用
 inline bool CheckPort(uint16_t port_) {
   boost::asio::io_context io;
-  TcpSocket sk(io);
+  boost::asio::ip::tcp::socket sk(io);
   sk.open(boost::asio::ip::tcp::v4());
   boost::system::error_code err;
-  sk.connect(TcpEp(boost::asio::ip::tcp::v4(), port_), err);
+  sk.connect(boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port_), err);
   if (err) return true;  //连接不上，说明没有程序在监听
   sk.close();            //否则说明已经被占用了
   return false;

@@ -43,9 +43,9 @@ class CliConnPool : public std::enable_shared_from_this<CliConnPool> {
   // 提供Send、Recv、SendAndRecv方法，缓存tcp连接
   class CliConn : public std::enable_shared_from_this<CliConn> {
    public:
-    CliConn(boost::asio::io_context& io, const TcpEp& ep) : ep_(ep),
-                                                            strand_(boost::asio::make_strand(io)),
-                                                            sock_(strand_) {}
+    CliConn(boost::asio::io_context& io, const boost::asio::ip::tcp::endpoint& ep) : ep_(ep),
+                                                                                     strand_(boost::asio::make_strand(io)),
+                                                                                     sock_(strand_) {}
     ~CliConn() {}
 
     CliConn(const CliConn&) = delete;             ///< no copy
@@ -56,16 +56,16 @@ class CliConnPool : public std::enable_shared_from_this<CliConnPool> {
     }
 
    private:
-    const TcpEp ep_;
+    const boost::asio::ip::tcp::endpoint ep_;
     boost::asio::strand<boost::asio::io_context::executor_type> strand_;
-    TcpSocket sock_;
+    boost::asio::ip::tcp::socket sock_;
     std::atomic_bool run_flag_ = true;
   };
 
  private:
   boost::asio::io_context& io_;
-  boost::asio::strand<boost::asio::io_context::executor_type> mgr_strand_;  // 连接池操作strand
-  std::map<TcpEp, std::shared_ptr<CliConn> > conn_map_;                     // 连接池
+  boost::asio::strand<boost::asio::io_context::executor_type> mgr_strand_;        // 连接池操作strand
+  std::map<boost::asio::ip::tcp::endpoint, std::shared_ptr<CliConn> > conn_map_;  // 连接池
   std::atomic_bool run_flag_ = true;
   CliConnPoolCfg cfg_;
 };

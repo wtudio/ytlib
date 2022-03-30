@@ -28,7 +28,7 @@ class NetLogFixture {
     // log cli
     auto log_cli_sys_ptr = std::make_shared<AsioExecutor>(1);
     log_cli_sys_ptr_ = log_cli_sys_ptr;
-    auto net_log_cli_ptr = std::make_shared<NetLogClient>(log_cli_sys_ptr->IO(), TcpEp{IPV4({127, 0, 0, 1}), 50001});
+    auto net_log_cli_ptr = std::make_shared<NetLogClient>(log_cli_sys_ptr->IO(), boost::asio::ip::tcp::endpoint{boost::asio::ip::address_v4({127, 0, 0, 1}), 50001});
     log_cli_sys_ptr->RegisterSvrFunc(std::function<void()>(),
                                      [net_log_cli_ptr] { net_log_cli_ptr->Stop(); });
 

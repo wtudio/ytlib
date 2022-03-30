@@ -454,12 +454,12 @@ class Basic_Matrix {
 template <typename T = double>
 void swap(Basic_Matrix<T>& a, Basic_Matrix<T>& b) { a.Swap(b); }
 
-typedef Basic_Matrix<double> Matrix;  // default
-typedef Basic_Matrix<float> Matrix_f;
-typedef Basic_Matrix<int32_t> Matrix_i32;
-typedef Basic_Matrix<uint32_t> Matrix_u32;
-typedef Basic_Matrix<int64_t> Matrix_i64;
-typedef Basic_Matrix<uint64_t> Matrix_u64;
+using Matrix = Basic_Matrix<double>;
+using Matrix_f = Basic_Matrix<float>;
+using Matrix_i32 = Basic_Matrix<int32_t>;
+using Matrix_u32 = Basic_Matrix<uint32_t>;
+using Matrix_i64 = Basic_Matrix<int64_t>;
+using Matrix_u64 = Basic_Matrix<uint64_t>;
 
 /**
  * @brief 获取3x3旋转矩阵

@@ -111,7 +111,7 @@ class TcpConnection : public ConnBase {
     FILEHEAD = 'F'
   };
   TcpConnection(boost::asio::io_context& io_,
-                std::function<void(const TcpEp&)> errcb_,
+                std::function<void(const boost::asio::ip::tcp::endpoint&)> errcb_,
                 tpath const* p_RecvPath_,
                 std::function<void(dataPtr&)> cb_) : ConnBase(io_, errcb_),
                                                      m_recv_callback(cb_),
@@ -126,13 +126,13 @@ class TcpConnection : public ConnBase {
   }
 
   ///用于主动连接
-  bool connect(const TcpEp& ep_, uint16_t port_ = 0) {
+  bool connect(const boost::asio::ip::tcp::endpoint& ep_, uint16_t port_ = 0) {
     sock_.open(boost::asio::ip::tcp::v4());
     boost::system::error_code err;
     if (port_) {
       //如果指定端口了，则绑定到指定端口
-      sock_.set_option(TcpSocket::reuse_address(true));
-      sock_.bind(TcpEp(boost::asio::ip::tcp::v4(), port_), err);
+      sock_.set_option(boost::asio::ip::tcp::socket::reuse_address(true));
+      sock_.bind(boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port_), err);
       /*
       if (err) {
         YT_DEBUG_PRINTF("connect failed : %s", err.message().c_str());
@@ -357,7 +357,7 @@ class TcpNetAdapter : public ConnPool<TcpConnection<T>> {
                                              m_receiveCallBack(recvcb_),
                                              m_RecvPath(tGetAbsolutePath(rp)),
                                              m_SendPath(tGetAbsolutePath(sp)) {
-    m_mapHostInfo[myid_] = TcpEp(boost::asio::ip::tcp::v4(), port_);
+    m_mapHostInfo[myid_] = boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port_);
     boost::filesystem::create_directories(m_RecvPath);
     boost::filesystem::create_directories(m_SendPath);
   }
@@ -372,11 +372,11 @@ class TcpNetAdapter : public ConnPool<TcpConnection<T>> {
     if (BaseClass::stopflag) return false;
     if (dst_.size() == 0) return false;
     if (Tdata_->map_datas.size() > 255 || Tdata_->map_files.size() > 255) return false;  //最大支持255个数据包/文件
-    std::vector<TcpEp> vec_hosts;
+    std::vector<boost::asio::ip::tcp::endpoint> vec_hosts;
     std::shared_lock<std::shared_mutex> lck(m_hostInfoMutex);
     for (typename std::set<IDType>::const_iterator itr = dst_.begin(); itr != dst_.end(); ++itr) {
       if (*itr == m_myid) return false;  //不能发给自己。上层做好检查
-      typename std::map<IDType, TcpEp>::const_iterator itr1 = m_mapHostInfo.find(*itr);
+      typename std::map<IDType, boost::asio::ip::tcp::endpoint>::const_iterator itr1 = m_mapHostInfo.find(*itr);
       if (itr1 == m_mapHostInfo.end()) return false;
       vec_hosts.push_back(itr1->second);
     }
@@ -391,11 +391,11 @@ class TcpNetAdapter : public ConnPool<TcpConnection<T>> {
     size_t size = dst_.size();
     if (size == 0) return false;
     if (Tdata_->map_datas.size() > 255 || Tdata_->map_files.size() > 255) return false;  //最大支持255个数据包/文件
-    std::vector<TcpEp> vec_hosts;
+    std::vector<boost::asio::ip::tcp::endpoint> vec_hosts;
     std::shared_lock<std::shared_mutex> lck(m_hostInfoMutex);
     for (size_t ii = 0; ii < size; ++ii) {
       if (dst_[ii] == m_myid) return false;  //不能发给自己。上层做好检查
-      typename std::map<IDType, TcpEp>::const_iterator itr = m_mapHostInfo.find(dst_[ii]);
+      typename std::map<IDType, boost::asio::ip::tcp::endpoint>::const_iterator itr = m_mapHostInfo.find(dst_[ii]);
       if (itr == m_mapHostInfo.end()) return false;
       vec_hosts.push_back(itr->second);
     }
@@ -404,33 +404,33 @@ class TcpNetAdapter : public ConnPool<TcpConnection<T>> {
   }
 
   /// hostinfo操作，主要是对外提供。只可添加或修改，不可移除
-  inline TcpEp GetMyHostInfo() {
+  inline boost::asio::ip::tcp::endpoint GetMyHostInfo() {
     std::shared_lock<std::shared_mutex> lck(m_hostInfoMutex);
     return m_mapHostInfo[m_myid];
   }
-  inline std::map<IDType, TcpEp> GetHostInfoMap() {
+  inline std::map<IDType, boost::asio::ip::tcp::endpoint> GetHostInfoMap() {
     std::shared_lock<std::shared_mutex> lck(m_hostInfoMutex);
     return m_mapHostInfo;
   }
   ///设置主机info，有则覆盖，无责添加
-  bool SetHost(const IDType& hostid_, const TcpEp& hostInfo_) {
+  bool SetHost(const IDType& hostid_, const boost::asio::ip::tcp::endpoint& hostInfo_) {
     std::unique_lock<std::shared_mutex> lck(m_hostInfoMutex);
     m_mapHostInfo[hostid_] = hostInfo_;
     return true;
   }
   inline bool SetHost(const IDType& hostid_, const std::string& ip_, const uint16_t port_) {
-    return SetHost(hostid_, TcpEp(boost::asio::ip::address::from_string(ip_), port_));
+    return SetHost(hostid_, boost::asio::ip::tcp::endpoint(boost::asio::ip::address::from_string(ip_), port_));
   }
 
-  bool SetHost(std::map<IDType, TcpEp>& hosts_) {
+  bool SetHost(std::map<IDType, boost::asio::ip::tcp::endpoint>& hosts_) {
     std::unique_lock<std::shared_mutex> lck(m_hostInfoMutex);
     m_mapHostInfo = hosts_;
     return true;
   }
   bool SetHost(const std::map<IDType, std::pair<std::string, uint16_t>>& hosts_) {
     std::unique_lock<std::shared_mutex> lck(m_hostInfoMutex);
-    for (typename std::map<IDType, TcpEp>::iterator itr = hosts_.begin(); itr != hosts_.end(); ++itr) {
-      m_mapHostInfo[itr->first] = std::move(TcpEp(boost::asio::ip::address::from_string(itr->second.first), itr->second.second));
+    for (typename std::map<IDType, boost::asio::ip::tcp::endpoint>::iterator itr = hosts_.begin(); itr != hosts_.end(); ++itr) {
+      m_mapHostInfo[itr->first] = std::move(boost::asio::ip::tcp::endpoint(boost::asio::ip::address::from_string(itr->second.first), itr->second.second));
     }
     return true;
   }
@@ -439,20 +439,20 @@ class TcpNetAdapter : public ConnPool<TcpConnection<T>> {
   TcpConnectionPtr GetNewTcpConnectionPtr() {
     return std::make_shared<TcpConnection<T>>(BaseClass::service, std::bind(&TcpNetAdapter::on_err, this, std::placeholders::_1), &m_RecvPath, m_receiveCallBack);
   }
-  void on_err(const TcpEp& ep) { BaseClass::on_err(ep); }
+  void on_err(const boost::asio::ip::tcp::endpoint& ep) { BaseClass::on_err(ep); }
 
-  bool _send_one(const std::shared_ptr<std::vector<boost::asio::const_buffer>>& Tdata_, const TcpEp& ep) {
+  bool _send_one(const std::shared_ptr<std::vector<boost::asio::const_buffer>>& Tdata_, const boost::asio::ip::tcp::endpoint& ep) {
     std::shared_ptr<TcpConnection<T>> pc = getTcpConnectionPtr(ep);
     if (!pc) return false;
     return pc->write(Tdata_);
   }
 
   ///获取连接
-  TcpConnectionPtr getTcpConnectionPtr(const TcpEp& ep) {
+  TcpConnectionPtr getTcpConnectionPtr(const boost::asio::ip::tcp::endpoint& ep) {
     //先在map里找，没有就直接去连接一个
     {
       std::shared_lock<std::shared_mutex> lck(BaseClass::tcp_conn_map_mutex_);
-      typename std::map<TcpEp, TcpConnectionPtr>::iterator itr = BaseClass::tcp_conn_map_.find(ep);
+      typename std::map<boost::asio::ip::tcp::endpoint, TcpConnectionPtr>::iterator itr = BaseClass::tcp_conn_map_.find(ep);
       if (itr != BaseClass::tcp_conn_map_.end()) {
         return itr->second;
       }
@@ -469,7 +469,7 @@ class TcpNetAdapter : public ConnPool<TcpConnection<T>> {
     } else {
       //如果同步连接失败了，也有可能对方已经连接过来了。可以再在表中找一下
       std::shared_lock<std::shared_mutex> lck(BaseClass::tcp_conn_map_mutex_);
-      typename std::map<TcpEp, TcpConnectionPtr>::iterator itr = BaseClass::tcp_conn_map_.find(ep);
+      typename std::map<boost::asio::ip::tcp::endpoint, TcpConnectionPtr>::iterator itr = BaseClass::tcp_conn_map_.find(ep);
       if (itr != BaseClass::tcp_conn_map_.end()) {
         return itr->second;
       }
@@ -478,7 +478,7 @@ class TcpNetAdapter : public ConnPool<TcpConnection<T>> {
     return TcpConnectionPtr();
   }
 
-  bool _Send(const dataPtr& Tdata_, const std::vector<TcpEp>& vec_hosts, bool delfiles = false) {
+  bool _Send(const dataPtr& Tdata_, const std::vector<boost::asio::ip::tcp::endpoint>& vec_hosts, bool delfiles = false) {
     //将Tdata_先转换为std::vector<boost::asio::const_buffer>再一次性发送
     std::shared_ptr<std::vector<boost::asio::const_buffer>> buffersPtr = std::make_shared<std::vector<boost::asio::const_buffer>>();
     //第一步：发送对象
@@ -602,8 +602,8 @@ class TcpNetAdapter : public ConnPool<TcpConnection<T>> {
   tpath m_RecvPath;                                 ///<接收文件路径
   tpath m_SendPath;                                 ///<发送文件路径
 
-  std::map<IDType, TcpEp> m_mapHostInfo;  ///<主机列表：id-info
-  std::shared_mutex m_hostInfoMutex;      ///<主机列表的读写锁
+  std::map<IDType, boost::asio::ip::tcp::endpoint> m_mapHostInfo;  ///<主机列表：id-info
+  std::shared_mutex m_hostInfoMutex;                               ///<主机列表的读写锁
 
   const IDType m_myid;  ///<自身id，构造之后无法修改
 };
@@ -623,15 +623,15 @@ class ConnBase {
   ConnBase& ConnBase = (const ConnBase&) = delete;
 
   // 用于主动连接
-  bool Connect(const TcpEp& ep, uint16_t port = 0) {
+  bool Connect(const boost::asio::ip::tcp::endpoint& ep, uint16_t port = 0) {
     sock_.open(boost::asio::ip::tcp::v4());
 
     if (port) {
       //如果指定端口了，则尝试绑定到本地的指定端口
-      sock_.set_option(TcpSocket::reuse_address(true));
+      sock_.set_option(boost::asio::ip::tcp::socket::reuse_address(true));
 
       boost::system::error_code err;
-      sock_.bind(TcpEp(boost::asio::ip::tcp::v4(), port), err);
+      sock_.bind(boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port), err);
 
       if (err) DBG_PRINT("bind to local port %d failed, err: %s", port, err.message().c_str());
     }
@@ -649,10 +649,10 @@ class ConnBase {
   // 开始主动监听
   virtual void Start() = 0;
 
-  TcpSocket& Sock() const { return sock_; }
+  boost::asio::ip::tcp::socket& Sock() const { return sock_; }
 
  protected:
-  TcpSocket sock_;  // sock连接
+  boost::asio::ip::tcp::socket sock_;  // sock连接
   boost::asio::io_context::strand strand_;
 };
 
@@ -678,7 +678,7 @@ class DemoConn {
   static const uint8_t HEAD_SIZE = 8;
 
   DemoConn(boost::asio::io_context& service,
-           std::function<void(const TcpEp&)> errcb) : sock_(service), errcb_(errcb), stopflag_(false) {}
+           std::function<void(const boost::asio::ip::tcp::endpoint&)> errcb) : sock_(service), errcb_(errcb), stopflag_(false) {}
   virtual ~DemoConn() { stopflag_ = true; }
 
   // no copy
@@ -687,8 +687,8 @@ class DemoConn {
 
   virtual void Start() { ReadHead(); }
 
-  TcpSocket sock_;   // sock连接
-  TcpEp remote_ep_;  //远端地址
+  boost::asio::ip::tcp::socket sock_;         // sock连接
+  boost::asio::ip::tcp::endpoint remote_ep_;  //远端地址
 
  protected:
   //异步读head
@@ -723,9 +723,9 @@ class DemoConn {
     return;
   }
 
-  std::atomic_bool stopflag_;                ///<停止标志
-  std::function<void(const TcpEp&)> errcb_;  ///<发生错误时的回调。一旦读/写出错，就关闭连接并调用回调告知上层
-  char header[HEAD_SIZE];                    ///<接收缓存
+  std::atomic_bool stopflag_;                                         ///<停止标志
+  std::function<void(const boost::asio::ip::tcp::endpoint&)> errcb_;  ///<发生错误时的回调。一旦读/写出错，就关闭连接并调用回调告知上层
+  char header[HEAD_SIZE];                                             ///<接收缓存
 };
 
 /**
@@ -747,7 +747,7 @@ class ConnPool {
 
     service_.reset();
     stopflag_ = false;
-    acceptor_ptr_ = std::make_shared<boost::asio::ip::tcp::acceptor>(service_, TcpEp(boost::asio::ip::tcp::v4(), port_), true);
+    acceptor_ptr_ = std::make_shared<boost::asio::ip::tcp::acceptor>(service_, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port_), true);
     acceptor_ptr_->async_accept(conn_ptr->sock_, std::bind(&ConnPool::OnAccept, this, conn_ptr, std::placeholders::_1));
 
     for (uint32_t ii = 0; ii < thread_size_; ++ii) {
@@ -805,7 +805,7 @@ class ConnPool {
     acceptor_ptr_->async_accept(conn_ptr->sock_, std::bind(&ConnPool::OnAccept, this, conn_ptr, std::placeholders::_1));
   }
 
-  virtual void OnErr(const TcpEp& ep) {
+  virtual void OnErr(const boost::asio::ip::tcp::endpoint& ep) {
     DBG_PRINT("connection to %s:%d get an err and is closed", ep.address().to_string().c_str(), ep.port());
     std::unique_lock<std::shared_mutex> lck(tcp_conn_map_mutex_);
     auto itr = tcp_conn_map_.find(ep);
@@ -816,7 +816,7 @@ class ConnPool {
   std::atomic_bool stopflag_;       //停止标志
   std::list<std::thread> threads_;  //线程
 
-  std::map<TcpEp, TcpConnectionPtr> tcp_conn_map_;  //目标ep-TcpConnection的map
+  std::map<boost::asio::ip::tcp::endpoint, TcpConnectionPtr> tcp_conn_map_;  //目标ep-TcpConnection的map
   std::shared_mutex tcp_conn_map_mutex_;
 
   std::shared_ptr<boost::asio::ip::tcp::acceptor> acceptor_ptr_;  //监听器
@@ -829,7 +829,7 @@ class ConnPool {
 class NetBackend : public boost::log::sinks::basic_sink_backend<boost::log::sinks::synchronized_feeding> {
  public:
   //目前只支持int型id。如果要改成string型id也很简单
-  explicit NetBackend(boost::asio::io_context& io, const TcpEp& log_svr_ep) : sock(service), LogServerEp(logserver_ep_), ConnectFlag(false), m_bFirstLogFlag(true) {
+  explicit NetBackend(boost::asio::io_context& io, const boost::asio::ip::tcp::endpoint& log_svr_ep) : sock(service), LogServerEp(logserver_ep_), ConnectFlag(false), m_bFirstLogFlag(true) {
     header[0] = LogConnection::TCPHEAD1;
     header[1] = LogConnection::TCPHEAD2;
     header[2] = LogConnection::LOGHEAD1;
@@ -889,8 +889,8 @@ class NetBackend : public boost::log::sinks::basic_sink_backend<boost::log::sink
   }
 
   boost::asio::io_context service;  //全同步操作，所以不需要run
-  TcpSocket sock;
-  TcpEp LogServerEp;
+  boost::asio::ip::tcp::socket sock;
+  boost::asio::ip::tcp::endpoint LogServerEp;
   std::atomic_bool ConnectFlag;
   std::vector<boost::asio::const_buffer> logBuff;
   boost::shared_array<char> HostInfoBuff;
@@ -905,7 +905,7 @@ TEST(BOOST_TOOLS_TEST, LOG) {
   LoggerServer l(55555);
   l.start();
 
-  InitNetLog(12345, TcpEp(boost::asio::ip::address::from_string("127.0.0.1"), 55555));
+  InitNetLog(12345, boost::asio::ip::tcp::endpoint(boost::asio::ip::address::from_string("127.0.0.1"), 55555));
 
   YT_LOG_TRACE << "trace log test";
   YT_LOG_DEBUG << "debug log test";
@@ -1023,23 +1023,23 @@ TEST(BOOST_TOOLS_TEST, TcpNetAdapter_BASE) {
     myTcpNetAdapter* a = new myTcpNetAdapter(1000, 60001,
                                              std::bind(&handel_recv, std::placeholders::_1), T_TEXT("a/recv"), T_TEXT("a/send"));
     iserr &= (a->start());
-    a->SetHost(1000, TcpEp(boost::asio::ip::address::from_string("127.0.0.1"), 60001));
-    a->SetHost(2000, TcpEp(boost::asio::ip::address::from_string("127.0.0.1"), 60002));
-    a->SetHost(3000, TcpEp(boost::asio::ip::address::from_string("127.0.0.1"), 60003));
+    a->SetHost(1000, boost::asio::ip::tcp::endpoint(boost::asio::ip::address::from_string("127.0.0.1"), 60001));
+    a->SetHost(2000, boost::asio::ip::tcp::endpoint(boost::asio::ip::address::from_string("127.0.0.1"), 60002));
+    a->SetHost(3000, boost::asio::ip::tcp::endpoint(boost::asio::ip::address::from_string("127.0.0.1"), 60003));
 
     myTcpNetAdapter* b = new myTcpNetAdapter(2000, 60002,
                                              std::bind(&handel_recv2, std::placeholders::_1), T_TEXT("b/recv"), T_TEXT("b/send"));
     iserr &= (b->start());
-    b->SetHost(1000, TcpEp(boost::asio::ip::address::from_string("127.0.0.1"), 60001));
-    b->SetHost(2000, TcpEp(boost::asio::ip::address::from_string("127.0.0.1"), 60002));
-    b->SetHost(3000, TcpEp(boost::asio::ip::address::from_string("127.0.0.1"), 60003));
+    b->SetHost(1000, boost::asio::ip::tcp::endpoint(boost::asio::ip::address::from_string("127.0.0.1"), 60001));
+    b->SetHost(2000, boost::asio::ip::tcp::endpoint(boost::asio::ip::address::from_string("127.0.0.1"), 60002));
+    b->SetHost(3000, boost::asio::ip::tcp::endpoint(boost::asio::ip::address::from_string("127.0.0.1"), 60003));
 
     myTcpNetAdapter* c = new myTcpNetAdapter(3000, 60003,
                                              std::bind(&handel_recv3, std::placeholders::_1), T_TEXT("c/recv"), T_TEXT("c/send"));
     iserr &= (c->start());
-    c->SetHost(1000, TcpEp(boost::asio::ip::address::from_string("127.0.0.1"), 60001));
-    c->SetHost(2000, TcpEp(boost::asio::ip::address::from_string("127.0.0.1"), 60002));
-    c->SetHost(3000, TcpEp(boost::asio::ip::address::from_string("127.0.0.1"), 60003));
+    c->SetHost(1000, boost::asio::ip::tcp::endpoint(boost::asio::ip::address::from_string("127.0.0.1"), 60001));
+    c->SetHost(2000, boost::asio::ip::tcp::endpoint(boost::asio::ip::address::from_string("127.0.0.1"), 60002));
+    c->SetHost(3000, boost::asio::ip::tcp::endpoint(boost::asio::ip::address::from_string("127.0.0.1"), 60003));
 
     std::vector<uint32_t> dst1 = {2000, 3000};
 

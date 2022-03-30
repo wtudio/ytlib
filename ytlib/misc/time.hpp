@@ -25,6 +25,44 @@
 namespace ytlib {
 
 /**
+ * @brief 获取毫秒时间戳
+ *
+ * @param t 时间点
+ * @return uint64_t 毫秒时间戳
+ */
+inline uint64_t GetTimestampMs(const std::chrono::system_clock::time_point& t) {
+  return std::chrono::duration_cast<std::chrono::milliseconds>(t.time_since_epoch()).count();
+}
+
+/**
+ * @brief 获取当前时间毫秒时间戳
+ *
+ * @return uint64_t 当前时间毫秒时间戳
+ */
+inline uint64_t GetCurTimestampMs() {
+  return GetTimestampMs(std::chrono::system_clock::now());
+}
+
+/**
+ * @brief 获取秒时间戳
+ *
+ * @param t 时间点
+ * @return uint64_t 秒时间戳
+ */
+inline uint64_t GetTimestampSec(const std::chrono::system_clock::time_point& t) {
+  return std::chrono::duration_cast<std::chrono::seconds>(t.time_since_epoch()).count();
+}
+
+/**
+ * @brief 获取当前时间秒时间戳
+ *
+ * @return uint64_t 当前时间秒时间戳
+ */
+inline uint64_t GetCurTimestampSec() {
+  return GetTimestampSec(std::chrono::system_clock::now());
+}
+
+/**
  * @brief 获取当前时间
  *
  * @return time_t
@@ -148,7 +186,7 @@ inline uint32_t GetMonthDayCount(uint32_t year, uint32_t month) {
  *
  * @return int32_t 时区，单位s
  */
-int32_t GetLocalTimeZone() {
+inline int32_t GetLocalTimeZone() {
   time_t now = GetCurTimeT();
   struct tm gt, lt;
 

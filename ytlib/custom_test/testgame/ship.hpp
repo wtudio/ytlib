@@ -39,8 +39,9 @@ class Ship : public std::enable_shared_from_this<Ship> {
   float max_speed_ = 1000.0;  // m/s
 
   // 一阶状态，由二阶状态在每帧计算得到
+  Vector3<float> speed_ = {0.0, 0.0, 0.0};  // 速度向量，m/s
+
   Vector3<float> location_ = {0.0, 0.0, 0.0};   // (m,m,m)
-  Vector3<float> speed_ = {0.0, 0.0, 0.0};      // 速度向量，m/s
   Vector3<float> direction_ = {1.0, 0.0, 0.0};  // 单位向量，实际船头指向
 };
 

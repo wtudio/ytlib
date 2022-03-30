@@ -9,6 +9,7 @@
 #include <boost/asio.hpp>
 
 #include "employee.hpp"
+#include "game_displayer_inf.hpp"
 #include "group.hpp"
 #include "ship.hpp"
 #include "station.hpp"
@@ -30,6 +31,10 @@ class World : public std::enable_shared_from_this<World> {
                                io_ptr_(io_ptr),
                                loop_strand_(boost::asio::make_strand(*io_ptr_)) {}
   virtual ~World() {}
+
+  void SetGameDisplayer(std::shared_ptr<GameDisplayerInf> game_displayer) {
+    game_displayer_ = game_displayer;
+  }
 
   void Start() {
     auto self = shared_from_this();
@@ -92,6 +97,20 @@ class World : public std::enable_shared_from_this<World> {
     for (auto& ship_itr : ship_map_) {
       ship_itr.second->OnWorldLoopOnce(dt);
     }
+
+    if (game_displayer_) {
+      std::shared_ptr<GameBuf> game_buf = std::make_shared<GameBuf>();
+
+      // todo
+
+      for (auto& ship_itr : ship_map_) {
+        game_buf->obj_list.emplace_back(GameBufObj{
+            ship_itr.second->location_,
+            ship_itr.second->direction_});
+      }
+
+      game_displayer_->SyncBuf(game_buf);
+    }
   }
 
  public:
@@ -103,6 +122,8 @@ class World : public std::enable_shared_from_this<World> {
   std::chrono::steady_clock::time_point game_start_time_point_;
   std::chrono::steady_clock::time_point game_end_time_point_;
   uint64_t frame_count_ = 0;
+
+  std::shared_ptr<GameDisplayerInf> game_displayer_;
 
   std::map<uint32_t, std::shared_ptr<Group> > group_map_;
   std::map<uint32_t, std::shared_ptr<Ship> > ship_map_;

@@ -20,19 +20,19 @@
 namespace ytlib {
 
 #if defined(USE_WCHAR)
-typedef wchar_t tchar;
+using tchar = wchar_t;
 #else
-typedef char tchar;
+using tchar = char;
 #endif
 
-typedef std::basic_string<tchar> tstring;
+using tstring = std::basic_string<tchar>;
 
-typedef std::basic_ostream<tchar> tostream;
-typedef std::basic_istream<tchar> tistream;
-typedef std::basic_ostringstream<tchar> tostringstream;
-typedef std::basic_istringstream<tchar> tistringstream;
-typedef std::basic_ifstream<tchar> tifstream;
-typedef std::basic_ofstream<tchar> tofstream;
+using tostream = std::basic_ostream<tchar>;
+using tistream = std::basic_istream<tchar>;
+using tostringstream = std::basic_ostringstream<tchar>;
+using tistringstream = std::basic_istringstream<tchar>;
+using tifstream = std::basic_ifstream<tchar>;
+using tofstream = std::basic_ofstream<tchar>;
 
 #if defined(USE_WCHAR)
   #define tcout std::wcout
@@ -57,7 +57,6 @@ typedef std::basic_ofstream<tchar> tofstream;
 inline std::string ToString(const wchar_t* src, size_t size, const std::locale& loc) {
   if (size == 0) return "";
 
-  // typedef std::codecvt<wchar_t, char, std::mbstate_t> std::codecvt<wchar_t, char, std::mbstate_t>;
   const std::codecvt<wchar_t, char, std::mbstate_t>& cdcvt = std::use_facet<std::codecvt<wchar_t, char, std::mbstate_t>>(loc);
   std::mbstate_t state;
   std::memset(&state, 0, sizeof(std::mbstate_t));
@@ -113,7 +112,6 @@ inline std::string ToString(const wchar_t* src, size_t size, const std::locale& 
 inline std::wstring ToWString(const char* src, size_t size, const std::locale& loc) {
   if (size == 0) return L"";
 
-  // typedef std::codecvt<wchar_t, char, std::mbstate_t> std::codecvt<wchar_t, char, std::mbstate_t>;
   const std::codecvt<wchar_t, char, std::mbstate_t>& cdcvt = std::use_facet<std::codecvt<wchar_t, char, std::mbstate_t>>(loc);
   std::mbstate_t state;
   std::memset(&state, 0, sizeof(std::mbstate_t));

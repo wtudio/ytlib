@@ -23,7 +23,7 @@ set_property(TARGET ${CUR_TARGET_NAME} PROPERTY PUBLIC_HEADER ${head_files})
 target_link_libraries(${CUR_TARGET_NAME} INTERFACE Boost::boost Boost::date_time Boost::log)
 
 # 设置编译选项
-# target_compile_definitions(${CUR_TARGET_NAME} INTERFACE ASIO_ENABLE_DEBUG)
+target_compile_definitions(${CUR_TARGET_NAME} INTERFACE ASIO_ENABLE_DEBUG)
 
 # 设置其他属性
 set_property(TARGET ${CUR_TARGET_NAME} PROPERTY FOLDER ${CUR_TARGET_NAME})
@@ -35,6 +35,9 @@ install(TARGETS ${CUR_TARGET_NAME} PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INC
 if (YTLIB_BUILD_TESTS AND test_files)
   add_gtest_target(TEST_TARGET ${CUR_TARGET_NAME} TEST_SRC ${test_files})
   set_property(TARGET ${CUR_TARGET_NAME}_test PROPERTY FOLDER ${CUR_TARGET_NAME})
+  if(WIN32)
+    target_compile_options(${CUR_TARGET_NAME}_test PRIVATE /bigobj)
+  endif()
 endif()
 
 if (YTLIB_BUILD_BENCH_TESTS AND benchmark_files)

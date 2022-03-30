@@ -17,7 +17,7 @@
 
 namespace ytlib {
 
-#define ASIO_DEBUG_MAX_THREAD_NUM 16
+#define ASIO_DEBUG_MAX_THREAD_NUM 64
 
 enum class AsioDebugState : uint32_t {
   UnKnown,
@@ -82,6 +82,7 @@ class AsioDebugTool {
 
     std::stringstream ss;
     ss << "asio debug report:\n"
+       << "used thread num: " << thread_count_ << "\n"
        << "total co num: " << result_map.size() << "\n"
        << "unfinished co num: " << unfinished_co.size() << "\n";
     for (auto co_id : unfinished_co) {
@@ -100,6 +101,13 @@ class AsioDebugTool {
 
     ss << std::endl;
     return ss.str();
+  }
+
+  void Reset() {
+    thread_count_ = 0;
+    start_time_point_ = std::chrono::steady_clock::now();
+    thread_logs_vec.clear();
+    thread_logs_vec.resize(ASIO_DEBUG_MAX_THREAD_NUM);
   }
 
  private:

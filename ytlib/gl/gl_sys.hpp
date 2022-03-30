@@ -13,10 +13,8 @@
 namespace ytlib {
 
 struct GlSysCfg {
-  GlSysCfg() : title("demo") {}
-
-  bool print_fps = true;  // 是否打印帧率
-  std::string title;      // 标题
+  bool print_fps = true;       // 是否打印帧率
+  std::string title = "demo";  // 标题
 
   int w = 800;  // 窗体宽
   int h = 800;  // 窗体高
