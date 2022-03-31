@@ -104,6 +104,8 @@ boost::asio::awaitable<void> TestCo2(boost::asio::io_context& io) {
     std::cerr << "thread " << std::this_thread::get_id() << " run TestCo2-a.\n";
     uint32_t co1_re = co_await boost::asio::co_spawn(io, TestCo1(io), boost::asio::use_awaitable);
     std::cerr << "co1_re " << co1_re << " \n";
+    co1_re = co_await TestCo1(io);
+    std::cerr << "co1_re " << co1_re << " \n";
     std::cerr << "thread " << std::this_thread::get_id() << " run TestCo2-b.\n";
   } catch (const std::exception& e) {
     std::cerr << "TestCo2 get exception:" << e.what() << '\n';
@@ -128,7 +130,7 @@ boost::asio::awaitable<void> TestCo3(boost::asio::io_context& io) {
  * @brief
  * 1、co_spawn创建的协程是类似于dispach的运行方式，会先尽可能的执行下去，直到遇到co_await
  * 2、使用 co_await boost::asio::co_spawn(io, handle, boost::asio::use_awaitable) 来在协程内部等待另一个协程
- *
+ * 3、如果在io作为执行者的协程内部再执行 co_await boost::asio::co_spawn(io, handle, boost::asio::use_awaitable) 则等价于 co_await handle
  */
 void Test2() {
   uint32_t n = 2;
@@ -154,84 +156,12 @@ void Test2() {
   }
 }
 
-boost::asio::awaitable<void> TestHttpCli(boost::asio::io_context& io) {
-  ASIO_DEBUG_HANDLE(TestHttpCli);
-
-  try {
-    std::string host = "baidu.com";
-    std::string port = "80";
-    std::string target = "/";
-
-    boost::asio::ip::tcp::resolver resolver(io);
-    auto const results = co_await resolver.async_resolve(host, port, boost::asio::use_awaitable);
-
-    boost::beast::tcp_stream stream(io);
-    stream.expires_after(std::chrono::seconds(3));
-    co_await stream.async_connect(results, boost::asio::use_awaitable);
-
-    boost::beast::http::request<boost::beast::http::string_body> req{boost::beast::http::verb::get, target, 11};
-    req.set(boost::beast::http::field::host, host);
-    req.set(boost::beast::http::field::user_agent, BOOST_BEAST_VERSION_STRING);
-
-    stream.expires_after(std::chrono::seconds(3));
-    co_await boost::beast::http::async_write(stream, req, boost::asio::use_awaitable);
-
-    boost::beast::flat_buffer buffer;
-    boost::beast::http::response<boost::beast::http::dynamic_body> res;
-    stream.expires_after(std::chrono::seconds(3));
-    co_await boost::beast::http::async_read(stream, buffer, res, boost::asio::use_awaitable);
-
-    std::cout << res << std::endl;
-
-    stream.socket().shutdown(boost::asio::ip::tcp::socket::shutdown_both);
-
-  } catch (const std::exception& e) {
-    std::cerr << "TestHttpCli get exception:" << e.what() << '\n';
-  }
-  co_return;
-}
-
-boost::asio::awaitable<void> TestHttpSvr(boost::asio::io_context& io) {
-  ASIO_DEBUG_HANDLE(TestHttpSvr);
-
-  try {
-  } catch (const std::exception& e) {
-    std::cerr << "TestHttpSvr get exception:" << e.what() << '\n';
-  }
-  co_return;
-}
-
-void Test3() {
-  uint32_t n = 2;
-  boost::asio::io_context io(n);
-
-  boost::asio::co_spawn(io, TestHttpSvr(io), boost::asio::detached);
-  boost::asio::co_spawn(io, TestHttpCli(io), boost::asio::detached);
-
-  std::list<std::thread> threads_;
-
-  for (uint32_t ii = 0; ii < n; ++ii) {
-    threads_.emplace(threads_.end(), [&io] {
-      std::cerr << "thread " << std::this_thread::get_id() << " start.\n";
-      io.run();
-      std::cerr << "thread " << std::this_thread::get_id() << " exit.\n";
-    });
-  }
-
-  for (auto itr = threads_.begin(); itr != threads_.end();) {
-    itr->join();
-    threads_.erase(itr++);
-  }
-}
-
 int32_t main(int32_t argc, char** argv) {
   DBG_PRINT("-------------------start test-------------------");
 
   // Test1();
 
-  // Test2();
-
-  Test3();
+  Test2();
 
   DBG_PRINT("%s", AsioDebugTool::Ins().GetStatisticalResult().c_str());
 

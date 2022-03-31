@@ -41,13 +41,13 @@ class AsioHttpCli : public std::enable_shared_from_this<AsioHttpCli> {
 
   /**
    * @brief http发收协程
-   *
+   * @note 调用者需要保证再协程执行完之前自身不析构
    * @param req 请求
    * @param timeout 超时，默认5s
    * @return boost::asio::awaitable<HttpRsp> 协程句柄
    */
-  boost::asio::awaitable<HttpRsp> HttpSendRecv(const HttpReq& req,
-                                               std::chrono::steady_clock::duration timeout = std::chrono::milliseconds(5000)) {
+  boost::asio::awaitable<HttpRsp> HttpSendRecvCo(const HttpReq& req,
+                                                 std::chrono::steady_clock::duration timeout = std::chrono::milliseconds(5000)) {
     namespace chrono = std::chrono;
     namespace asio = boost::asio;
     namespace http = boost::beast::http;

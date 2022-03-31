@@ -23,7 +23,7 @@ TEST(BOOST_ASIO_TEST, HTTP_base) {
   auto http_cli_ptr = std::make_shared<AsioHttpCli>(cli_sys_ptr->IO(), AsioHttpCliCfg{"127.0.0.1", "80"});
   cli_sys_ptr->RegisterSvrFunc(std::function<void()>(), std::function<void()>());
 
-  auto HttpSendRecv = [http_cli_ptr]() -> asio::awaitable<void> {
+  auto http_send_recv = [http_cli_ptr]() -> asio::awaitable<void> {
     ASIO_DEBUG_HANDLE(http_send_recv_co_1);
     bool exp_flag = false;
     try {
@@ -35,7 +35,7 @@ TEST(BOOST_ASIO_TEST, HTTP_base) {
       ss << req << std::endl;
       DBG_PRINT("req:\n%s", ss.str().c_str());
 
-      auto rsp = co_await http_cli_ptr->HttpSendRecv(req);
+      auto rsp = co_await http_cli_ptr->HttpSendRecvCo(req);
 
       ss.str("");
       ss << rsp << std::endl;
@@ -96,7 +96,7 @@ TEST(BOOST_ASIO_TEST, HTTP_base) {
   });
   std::this_thread::sleep_for(std::chrono::seconds(1));
 
-  asio::co_spawn(http_cli_ptr->Strand(), HttpSendRecv(), asio::detached);
+  asio::co_spawn(http_cli_ptr->Strand(), http_send_recv(), asio::detached);
   std::this_thread::sleep_for(std::chrono::seconds(1));
 
   svr1_sys_ptr->Stop();
@@ -115,10 +115,10 @@ TEST(BOOST_ASIO_TEST, HTTP_base) {
   });
   std::this_thread::sleep_for(std::chrono::seconds(1));
 
-  asio::co_spawn(http_cli_ptr->Strand(), HttpSendRecv(), asio::detached);
+  asio::co_spawn(http_cli_ptr->Strand(), http_send_recv(), asio::detached);
   std::this_thread::sleep_for(std::chrono::seconds(1));
 
-  asio::co_spawn(http_cli_ptr->Strand(), HttpSendRecv(), asio::detached);
+  asio::co_spawn(http_cli_ptr->Strand(), http_send_recv(), asio::detached);
   std::this_thread::sleep_for(std::chrono::seconds(1));
 
   svr2_sys_ptr->Stop();
@@ -140,7 +140,7 @@ TEST(BOOST_ASIO_TEST, HTTP_handle) {
   auto http_cli_ptr = std::make_shared<AsioHttpCli>(cli_sys_ptr->IO(), AsioHttpCliCfg{"127.0.0.1", "80"});
   cli_sys_ptr->RegisterSvrFunc(std::function<void()>(), std::function<void()>());
 
-  auto HttpSendRecv = [http_cli_ptr]() -> asio::awaitable<void> {
+  auto http_send_recv = [http_cli_ptr]() -> asio::awaitable<void> {
     ASIO_DEBUG_HANDLE(http_send_recv_co_1);
     bool exp_flag = false;
     try {
@@ -154,7 +154,7 @@ TEST(BOOST_ASIO_TEST, HTTP_handle) {
       ss << req << std::endl;
       DBG_PRINT("req:\n%s", ss.str().c_str());
 
-      auto rsp = co_await http_cli_ptr->HttpSendRecv(req);
+      auto rsp = co_await http_cli_ptr->HttpSendRecvCo(req);
 
       ss.str("");
       ss << rsp << std::endl;
@@ -228,7 +228,7 @@ TEST(BOOST_ASIO_TEST, HTTP_handle) {
   });
   std::this_thread::sleep_for(std::chrono::seconds(1));
 
-  asio::co_spawn(http_cli_ptr->Strand(), HttpSendRecv(), asio::detached);
+  asio::co_spawn(http_cli_ptr->Strand(), http_send_recv(), asio::detached);
   std::this_thread::sleep_for(std::chrono::seconds(1));
 
   svr_sys_ptr->Stop();

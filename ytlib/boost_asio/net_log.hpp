@@ -65,42 +65,52 @@ class NetLogClient : public std::enable_shared_from_this<NetLogClient> {
    * @param log_buf_ptr 日志内容指针
    */
   void LogToSvr(std::shared_ptr<boost::asio::streambuf> log_buf_ptr) {
-    if (stop_flag_) [[unlikely]]
-      return;
-
     auto self = shared_from_this();
     boost::asio::co_spawn(
         strand_,
         [this, self, log_buf_ptr]() -> boost::asio::awaitable<void> {
           ASIO_DEBUG_HANDLE(net_log_cli_log_to_svr_co);
-
-          uint32_t retry_num = max_retry_num_;
-          bool suc_flag = false;
-
-          do {
-            try {
-              if (!sock_.is_open()) {
-                DBG_PRINT("start create a new connect to %s", TcpEp2Str(log_svr_ep_).c_str());
-                co_await sock_.async_connect(log_svr_ep_, boost::asio::use_awaitable);
-              }
-
-              while (log_buf_ptr->size()) {
-                size_t n = co_await sock_.async_write_some(log_buf_ptr->data(), boost::asio::use_awaitable);
-                log_buf_ptr->consume(n);
-              }
-
-              suc_flag = true;
-            } catch (const std::exception& e) {
-              DBG_PRINT("send log to svr get exception, addr %s, exception %s", TcpEp2Str(log_svr_ep_).c_str(), e.what());
-              CloseSocket();
-            }
-          } while (!suc_flag && --retry_num);
-
-          if (!suc_flag) DBG_PRINT("log to svr failed after %u retry.", max_retry_num_);
-
+          co_await LogToSvrCo(log_buf_ptr);
           co_return;
         },
         boost::asio::detached);
+  }
+
+  /**
+   * @brief 打日志到远程日志服务器协程
+   * @note 调用者需要保证再协程执行完之前自身不析构
+   * @param log_buf_ptr 日志内容指针
+   * @return boost::asio::awaitable<void> 协程句柄
+   */
+  boost::asio::awaitable<void> LogToSvrCo(std::shared_ptr<boost::asio::streambuf> log_buf_ptr) {
+    if (stop_flag_) [[unlikely]]
+      co_return;
+
+    uint32_t retry_num = max_retry_num_;
+
+    do {
+      try {
+        if (!sock_.is_open()) {
+          DBG_PRINT("start create a new connect to %s", TcpEp2Str(log_svr_ep_).c_str());
+          co_await sock_.async_connect(log_svr_ep_, boost::asio::use_awaitable);
+        }
+
+        while (log_buf_ptr->size()) {
+          size_t n = co_await sock_.async_write_some(log_buf_ptr->data(), boost::asio::use_awaitable);
+          log_buf_ptr->consume(n);
+        }
+
+        co_return;
+
+      } catch (const std::exception& e) {
+        DBG_PRINT("send log to svr get exception, addr %s, exception %s", TcpEp2Str(log_svr_ep_).c_str(), e.what());
+        CloseSocket();
+      }
+    } while (--retry_num);
+
+    DBG_PRINT("log to svr failed after %u retry.", max_retry_num_);
+
+    co_return;
   }
 
  private:
