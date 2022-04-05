@@ -1,5 +1,5 @@
 /**
- * @file net_log.hpp
+ * @file asio_net_log_svr.hpp
  * @brief 基于boost.asio的远程日志服务器
  * @note 基于boost.asio的远程日志服务器
  * @author WT
@@ -8,10 +8,13 @@
 #pragma once
 
 #include <atomic>
+#include <chrono>
 #include <filesystem>
 #include <fstream>
 #include <memory>
 #include <set>
+
+#include <boost/asio.hpp>
 
 #include "ytlib/boost_asio/asio_debug_tools.hpp"
 #include "ytlib/boost_asio/net_util.hpp"
@@ -21,118 +24,6 @@
 namespace ytlib {
 
 /**
- * @brief 远程日志服务器客户端
- * @note 必须以智能指针形式构造，在结束使用前手动调用Stop方法
- */
-class NetLogClient : public std::enable_shared_from_this<NetLogClient> {
- public:
-  /**
-   * @brief 远程日志服务器客户端构造函数
-   *
-   * @param io_ptr io_context智能指针
-   * @param log_svr_ep 日志服务器地址
-   */
-  NetLogClient(std::shared_ptr<boost::asio::io_context> io_ptr, const boost::asio::ip::tcp::endpoint& log_svr_ep)
-      : log_svr_ep_(log_svr_ep),
-        io_ptr_(io_ptr),
-        strand_(boost::asio::make_strand(*io_ptr_)),
-        sock_(strand_) {}
-
-  ~NetLogClient() {}
-
-  NetLogClient(const NetLogClient&) = delete;             ///< no copy
-  NetLogClient& operator=(const NetLogClient&) = delete;  ///< no copy
-
-  /**
-   * @brief 停止
-   * @note 需要在析构之前手动调用Stop
-   */
-  void Stop() {
-    if (std::atomic_exchange(&stop_flag_, true)) return;
-
-    auto self = shared_from_this();
-    boost::asio::dispatch(
-        strand_,
-        [this, self]() {
-          ASIO_DEBUG_HANDLE(net_log_cli_stop_co);
-          CloseSocket();
-        });
-  }
-
-  /**
-   * @brief 打日志到远程日志服务器
-   *
-   * @param log_buf_ptr 日志内容指针
-   */
-  void LogToSvr(std::shared_ptr<boost::asio::streambuf> log_buf_ptr) {
-    auto self = shared_from_this();
-    boost::asio::co_spawn(
-        strand_,
-        [this, self, log_buf_ptr]() -> boost::asio::awaitable<void> {
-          ASIO_DEBUG_HANDLE(net_log_cli_log_to_svr_co);
-          co_await LogToSvrCo(log_buf_ptr);
-          co_return;
-        },
-        boost::asio::detached);
-  }
-
-  /**
-   * @brief 打日志到远程日志服务器协程
-   * @note 调用者需要保证再协程执行完之前自身不析构
-   * @param log_buf_ptr 日志内容指针
-   * @return boost::asio::awaitable<void> 协程句柄
-   */
-  boost::asio::awaitable<void> LogToSvrCo(std::shared_ptr<boost::asio::streambuf> log_buf_ptr) {
-    if (stop_flag_) [[unlikely]]
-      co_return;
-
-    uint32_t retry_num = max_retry_num_;
-
-    do {
-      try {
-        if (!sock_.is_open()) {
-          DBG_PRINT("start create a new connect to %s", TcpEp2Str(log_svr_ep_).c_str());
-          co_await sock_.async_connect(log_svr_ep_, boost::asio::use_awaitable);
-        }
-
-        while (log_buf_ptr->size()) {
-          size_t n = co_await sock_.async_write_some(log_buf_ptr->data(), boost::asio::use_awaitable);
-          log_buf_ptr->consume(n);
-        }
-
-        co_return;
-
-      } catch (const std::exception& e) {
-        DBG_PRINT("send log to svr get exception, addr %s, exception %s", TcpEp2Str(log_svr_ep_).c_str(), e.what());
-        CloseSocket();
-      }
-    } while (--retry_num);
-
-    DBG_PRINT("log to svr failed after %u retry.", max_retry_num_);
-
-    co_return;
-  }
-
- private:
-  void CloseSocket() {
-    if (sock_.is_open()) {
-      sock_.shutdown(boost::asio::ip::tcp::socket::shutdown_both);
-      sock_.cancel();
-      sock_.close();
-      sock_.release();
-    }
-  }
-
- private:
-  const uint32_t max_retry_num_ = 5;
-  const boost::asio::ip::tcp::endpoint log_svr_ep_;
-  std::atomic_bool stop_flag_ = false;
-  std::shared_ptr<boost::asio::io_context> io_ptr_;
-  boost::asio::strand<boost::asio::io_context::executor_type> strand_;
-  boost::asio::ip::tcp::socket sock_;
-};
-
-/**
  * @brief 远程日志服务器配置
  */
 struct LogSvrCfg {
@@ -140,8 +31,19 @@ struct LogSvrCfg {
   std::filesystem::path log_path = "./log";  // 日志路径
   size_t max_file_size = 1 * 1024 * 1024;    // 最大日志文件尺寸
 
-  uint32_t timer_dt = 5;           // 定时器间隔，秒
-  uint32_t max_no_data_time = 60;  // 最长无数据时间，秒
+  std::chrono::steady_clock::duration timer_dt = std::chrono::seconds(5);               // 定时器间隔
+  std::chrono::steady_clock::duration max_no_data_duration = std::chrono::seconds(60);  // 最长无数据时间
+
+  void Verify() {
+    // 校验配置
+    if (port > 65535 || port < 1000) port = 50001;
+
+    if (max_file_size < 100 * 1024) max_file_size = 100 * 1024;
+    if (max_file_size > 1024 * 1024 * 1024) max_file_size = 1024 * 1024 * 1024;
+
+    if (timer_dt < std::chrono::seconds(1)) timer_dt = std::chrono::seconds(1);
+    if (max_no_data_duration < timer_dt * 2) max_no_data_duration = timer_dt * 2;
+  }
 };
 
 /**
@@ -162,11 +64,7 @@ class LogSvr : public std::enable_shared_from_this<LogSvr> {
       : cfg_(cfg),
         io_ptr_(io_ptr),
         mgr_strand_(boost::asio::make_strand(*io_ptr_)) {
-    // 校验配置
-    if (cfg_.port > 65535 || cfg_.port < 1000) cfg_.port = 50001;
-
-    if (cfg_.max_file_size < 100 * 1024) cfg_.max_file_size = 100 * 1024;
-    if (cfg_.max_file_size > 1024 * 1024 * 1024) cfg_.max_file_size = 1024 * 1024 * 1024;
+    cfg_.Verify();
   }
 
   ~LogSvr() {}
@@ -297,17 +195,19 @@ class LogSvr : public std::enable_shared_from_this<LogSvr> {
       boost::asio::co_spawn(
           strand_,
           [this, self]() -> boost::asio::awaitable<void> {
+            namespace chrono = std::chrono;
+
             ASIO_DEBUG_HANDLE(net_log_svr_session_timer_co);
             try {
-              uint32_t no_data_time_count = 0;  // 当前无数据时间，秒
+              chrono::steady_clock::duration no_data_time_count = chrono::steady_clock::duration::zero();  // 当前无数据时间
 
               while (run_flag_) {
-                timer_.expires_after(std::chrono::seconds(svr_ptr_->cfg_.timer_dt));
+                timer_.expires_after(svr_ptr_->cfg_.timer_dt);
                 co_await timer_.async_wait(boost::asio::use_awaitable);
 
                 if (tick_has_data_) {
                   tick_has_data_ = false;
-                  no_data_time_count = 0;
+                  no_data_time_count = chrono::steady_clock::duration::zero();
 
                   if (ofs_.is_open()) ofs_.flush();
 
@@ -322,8 +222,8 @@ class LogSvr : public std::enable_shared_from_this<LogSvr> {
 
                 } else {
                   no_data_time_count += svr_ptr_->cfg_.timer_dt;
-                  if (no_data_time_count >= svr_ptr_->cfg_.max_no_data_time) {
-                    DBG_PRINT("log session exit due to timeout(%us), addr %s.", no_data_time_count, session_name_.c_str());
+                  if (no_data_time_count >= svr_ptr_->cfg_.max_no_data_duration) {
+                    DBG_PRINT("log session exit due to timeout(%llums), addr %s.", chrono::duration_cast<chrono::milliseconds>(no_data_time_count).count(), session_name_.c_str());
                     break;
                   }
                 }

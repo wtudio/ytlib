@@ -1,6 +1,7 @@
 #pragma once
 
 #include <atomic>
+#include <chrono>
 #include <memory>
 
 #include <boost/beast.hpp>
@@ -17,8 +18,16 @@ struct AsioHttpSvrCfg {
 
   std::string doc_root = ".";  // http页面根目录
 
-  uint32_t timer_dt = 5;           // 定时器间隔，秒
-  uint32_t max_no_data_time = 60;  // 最长无数据时间，秒
+  std::chrono::steady_clock::duration timer_dt = std::chrono::seconds(5);               // 定时器间隔
+  std::chrono::steady_clock::duration max_no_data_duration = std::chrono::seconds(60);  // 最长无数据时间
+
+  void Verify() {
+    // 校验配置
+    if (port > 65535) port = 80;
+
+    if (timer_dt < std::chrono::seconds(1)) timer_dt = std::chrono::seconds(1);
+    if (max_no_data_duration < timer_dt * 2) max_no_data_duration = timer_dt * 2;
+  }
 };
 
 /**
@@ -36,8 +45,7 @@ class AsioHttpSvr : public std::enable_shared_from_this<AsioHttpSvr> {
       : cfg_(cfg),
         io_ptr_(io_ptr),
         mgr_strand_(boost::asio::make_strand(*io_ptr_)) {
-    // 校验配置
-    if (cfg_.port > 65535) cfg_.port = 80;
+    cfg_.Verify();
   }
 
   ~AsioHttpSvr() {}
@@ -241,21 +249,23 @@ class AsioHttpSvr : public std::enable_shared_from_this<AsioHttpSvr> {
       boost::asio::co_spawn(
           strand_,
           [this, self]() -> boost::asio::awaitable<void> {
+            namespace chrono = std::chrono;
+
             ASIO_DEBUG_HANDLE(http_svr_session_timer_co);
             try {
-              uint32_t no_data_time_count = 0;  // 当前无数据时间，秒
+              chrono::steady_clock::duration no_data_time_count = chrono::steady_clock::duration::zero();  // 当前无数据时间
 
               while (run_flag_) {
-                timer_.expires_after(std::chrono::seconds(svr_ptr_->cfg_.timer_dt));
+                timer_.expires_after(svr_ptr_->cfg_.timer_dt);
                 co_await timer_.async_wait(boost::asio::use_awaitable);
 
                 if (tick_has_data_) {
                   tick_has_data_ = false;
-                  no_data_time_count = 0;
+                  no_data_time_count = chrono::steady_clock::duration::zero();
                 } else {
                   no_data_time_count += svr_ptr_->cfg_.timer_dt;
-                  if (no_data_time_count >= svr_ptr_->cfg_.max_no_data_time) {
-                    DBG_PRINT("http session exit due to timeout(%us), addr %s.", no_data_time_count, session_name_.c_str());
+                  if (no_data_time_count >= svr_ptr_->cfg_.max_no_data_duration) {
+                    DBG_PRINT("http session exit due to timeout(%llums), addr %s.", chrono::duration_cast<chrono::milliseconds>(no_data_time_count).count(), session_name_.c_str());
                     break;
                   }
                 }

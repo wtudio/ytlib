@@ -9,6 +9,7 @@
 
 #include <atomic>
 #include <chrono>
+#include <list>
 #include <map>
 #include <set>
 #include <sstream>

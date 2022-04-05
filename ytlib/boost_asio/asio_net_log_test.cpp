@@ -63,8 +63,8 @@ TEST(BOOST_ASIO_TEST, LOG) {
     LogSvrCfg cfg;
     cfg.port = 50001;
     cfg.log_path = "./log2";
-    cfg.timer_dt = 1;
-    cfg.max_no_data_time = 3;
+    cfg.timer_dt = std::chrono::seconds(1);
+    cfg.max_no_data_duration = std::chrono::seconds(10);
     auto lgsvr_ptr = std::make_shared<LogSvr>(svr2_sys_ptr->IO(), cfg);
     svr2_sys_ptr->RegisterSvrFunc([lgsvr_ptr] { lgsvr_ptr->Start(); },
                                   [lgsvr_ptr] { lgsvr_ptr->Stop(); });
