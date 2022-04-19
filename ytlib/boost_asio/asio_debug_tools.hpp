@@ -18,8 +18,6 @@
 
 namespace ytlib {
 
-#define ASIO_DEBUG_MAX_THREAD_NUM 64
-
 enum class AsioDebugState : uint32_t {
   UnKnown,
   Start,
@@ -42,7 +40,7 @@ class AsioDebugTool {
   void AddLog(uint64_t co_id, AsioDebugState state, const std::string& co_name = "") {
     thread_local uint64_t thread_id = thread_count_++;
 
-    if (thread_id >= ASIO_DEBUG_MAX_THREAD_NUM)
+    if (thread_id >= max_thread_num_)
       throw std::logic_error("thread num is greater than the maximum.");
 
     uint64_t t = (std::chrono::steady_clock::now() - start_time_point_).count();
@@ -50,7 +48,7 @@ class AsioDebugTool {
     thread_logs_vec[thread_id].emplace_back(co_id, state, co_name, thread_id, t);
   }
 
-  std::string GetStatisticalResult() {
+  std::string GetStatisticalResult(bool simple_mode = true) {
     // 统计信息：有多少协程被创建、有多少协程已经结束，未结束的协程的信息列表
     std::map<uint64_t, std::set<AsioDebugLog> > result_map;
 
@@ -84,8 +82,24 @@ class AsioDebugTool {
     std::stringstream ss;
     ss << "asio debug report:\n"
        << "used thread num: " << thread_count_ << "\n"
-       << "total co num: " << result_map.size() << "\n"
-       << "unfinished co num: " << unfinished_co.size() << "\n";
+       << "total co num: " << result_map.size() << "\n";
+
+    if (!simple_mode) {
+      for (const auto& co_itr : result_map) {
+        ss << "co id: " << co_itr.first << "\n";
+        for (const auto& log : co_itr.second) {
+          ss << "    "
+             << log.co_id
+             << "|" << log.thread_id
+             << "|" << static_cast<uint32_t>(log.state)
+             << "|" << log.t
+             << "|" << log.co_name
+             << "\n";
+        }
+      }
+    }
+
+    ss << "unfinished co num: " << unfinished_co.size() << "\n";
     for (auto co_id : unfinished_co) {
       ss << "  unfinished co id:" << co_id << "\n";
       auto finditr = result_map.find(co_id);
@@ -108,7 +122,7 @@ class AsioDebugTool {
     thread_count_ = 0;
     start_time_point_ = std::chrono::steady_clock::now();
     thread_logs_vec.clear();
-    thread_logs_vec.resize(ASIO_DEBUG_MAX_THREAD_NUM);
+    thread_logs_vec.resize(max_thread_num_);
   }
 
  private:
@@ -128,7 +142,9 @@ class AsioDebugTool {
   };
 
   AsioDebugTool() : start_time_point_(std::chrono::steady_clock::now()),
-                    thread_logs_vec(ASIO_DEBUG_MAX_THREAD_NUM) {}
+                    thread_logs_vec(max_thread_num_) {}
+
+  const uint32_t max_thread_num_ = 64;
 
   std::atomic<uint64_t> thread_count_ = 0;
   std::chrono::steady_clock::time_point start_time_point_;

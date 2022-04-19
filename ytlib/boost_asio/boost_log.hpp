@@ -33,7 +33,7 @@
 #include <boost/log/utility/setup/file.hpp>
 #include <boost/shared_ptr.hpp>
 
-#include "ytlib/boost_asio/net_log.hpp"
+#include "ytlib/boost_asio/asio_net_log_cli.hpp"
 #include "ytlib/boost_asio/net_util.hpp"
 
 namespace ytlib {
@@ -48,7 +48,7 @@ class NetLogBackend : public boost::log::sinks::basic_sink_backend<boost::log::s
    * @brief 构造函数
    * @param[in] net_log_cli_ptr 网络日志客户端的智能指针
    */
-  explicit NetLogBackend(std::shared_ptr<NetLogClient> net_log_cli_ptr) : net_log_cli_ptr_(net_log_cli_ptr) {
+  explicit NetLogBackend(std::shared_ptr<AsioNetLogClient> net_log_cli_ptr) : net_log_cli_ptr_(net_log_cli_ptr) {
     if (!net_log_cli_ptr_)
       throw std::invalid_argument("net_log_cli_ptr can not be nullptr.");
   }
@@ -75,7 +75,7 @@ class NetLogBackend : public boost::log::sinks::basic_sink_backend<boost::log::s
   }
 
  private:
-  std::shared_ptr<NetLogClient> net_log_cli_ptr_;
+  std::shared_ptr<AsioNetLogClient> net_log_cli_ptr_;
 };
 
 /**
@@ -135,7 +135,7 @@ class YTBLCtr {
    *
    * @param net_log_cli_ptr 网络日志客户端
    */
-  void EnableNetLog(std::shared_ptr<NetLogClient> net_log_cli_ptr) {
+  void EnableNetLog(std::shared_ptr<AsioNetLogClient> net_log_cli_ptr) {
     if (!std::atomic_exchange(&net_log_flag, true)) {
       auto sink = boost::make_shared<boost::log::sinks::synchronous_sink<NetLogBackend> >(boost::make_shared<NetLogBackend>(net_log_cli_ptr));
 

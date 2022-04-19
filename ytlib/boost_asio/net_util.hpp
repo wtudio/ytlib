@@ -37,49 +37,41 @@ inline uint16_t GetUsablePort(uint16_t start = 60000, uint16_t end = 65535) {
   return 0;
 }
 
-// 大小端判断
-#define YT_ENDIAN_ORDER ('ABCD')
-#define YT_LITTLE_ENDIAN 0x41424344UL
-#define YT_BIG_ENDIAN 0x44434241UL
-
 ///大小端转换，将ps中的数据转换到pd中。默认小端
 inline void TransEndian(char* pd, const char* ps, uint32_t len) {
-#if YT_ENDIAN_ORDER == YT_LITTLE_ENDIAN
-  memcpy(pd, ps, len);
-#elif YT_ENDIAN_ORDER == YT_BIG_ENDIAN
-  ps += len;
-  while (len--) (*(pd++)) = (*(--ps));
-#else
-  #error "unknown ENDIAN."
-#endif
+  static_assert(std::endian::native == std::endian::big || std::endian::native == std::endian::little, "unknown endian");
+  if constexpr (std::endian::native == std::endian::big) {
+    ps += len;
+    while (len--) (*(pd++)) = (*(--ps));
+  } else if constexpr (std::endian::native == std::endian::little) {
+    memcpy(pd, ps, len);
+  }
 }
 
 inline void SetBufFromNum(char* p, uint32_t n) {
-#if YT_ENDIAN_ORDER == YT_LITTLE_ENDIAN
-  memcpy(p, &n, 4);
-#elif YT_ENDIAN_ORDER == YT_BIG_ENDIAN
-  p[0] = ((char*)&n)[3];
-  p[1] = ((char*)&n)[2];
-  p[2] = ((char*)&n)[1];
-  p[3] = ((char*)&n)[0];
-#else
-  #error "unknown ENDIAN."
-#endif
+  static_assert(std::endian::native == std::endian::big || std::endian::native == std::endian::little, "unknown endian");
+  if constexpr (std::endian::native == std::endian::big) {
+    p[0] = ((char*)&n)[3];
+    p[1] = ((char*)&n)[2];
+    p[2] = ((char*)&n)[1];
+    p[3] = ((char*)&n)[0];
+  } else if constexpr (std::endian::native == std::endian::little) {
+    memcpy(p, &n, 4);
+  }
 }
 
 inline uint32_t GetNumFromBuf(const char* p) {
-#if YT_ENDIAN_ORDER == YT_LITTLE_ENDIAN
-  return *((uint32_t*)p);
-#elif YT_ENDIAN_ORDER == YT_BIG_ENDIAN
-  uint32_t n;
-  ((char*)&n)[3] = p[0];
-  ((char*)&n)[2] = p[1];
-  ((char*)&n)[1] = p[2];
-  ((char*)&n)[0] = p[3];
-  return n;
-#else
-  #error "unknown ENDIAN."
-#endif
+  static_assert(std::endian::native == std::endian::big || std::endian::native == std::endian::little, "unknown endian");
+  if constexpr (std::endian::native == std::endian::big) {
+    uint32_t n;
+    ((char*)&n)[3] = p[0];
+    ((char*)&n)[2] = p[1];
+    ((char*)&n)[1] = p[2];
+    ((char*)&n)[0] = p[3];
+    return n;
+  } else if constexpr (std::endian::native == std::endian::little) {
+    return *((uint32_t*)p);
+  }
 }
 
 }  // namespace ytlib

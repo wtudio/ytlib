@@ -20,11 +20,11 @@ TEST(BOOST_ASIO_TEST, HTTP_base) {
   auto svr2_sys_ptr = std::make_shared<AsioExecutor>(2);
 
   // cli
-  auto http_cli_ptr = std::make_shared<AsioHttpCli>(cli_sys_ptr->IO(), AsioHttpCliCfg{"127.0.0.1", "80"});
-  cli_sys_ptr->RegisterSvrFunc(std::function<void()>(), std::function<void()>());
+  auto http_cli_ptr = std::make_shared<AsioHttpClient>(cli_sys_ptr->IO(), AsioHttpClient::Cfg{"127.0.0.1", "80"});
+  cli_sys_ptr->RegisterSvrFunc(std::function<void()>(), [http_cli_ptr] { http_cli_ptr->Stop(); });
 
-  auto http_send_recv = [http_cli_ptr]() -> asio::awaitable<void> {
-    ASIO_DEBUG_HANDLE(http_send_recv_co_1);
+  auto http_send_recv = [http_cli_ptr](bool expect_exp = false) -> asio::awaitable<void> {
+    ASIO_DEBUG_HANDLE(http_send_recv_co);
     bool exp_flag = false;
     try {
       http::request<http::string_body> req{http::verb::get, "/", 11};
@@ -68,11 +68,10 @@ TEST(BOOST_ASIO_TEST, HTTP_base) {
       EXPECT_STREQ(rsp.body().c_str(), "The resource '/' was not found.");
 
     } catch (const std::exception& e) {
-      DBG_PRINT("http_send_recv_co_1 get exception and exit, exception: %s", e.what());
-      http_cli_ptr->Close();
+      DBG_PRINT("http_send_recv_co get exception and exit, exception: %s", e.what());
       exp_flag = true;
     }
-    EXPECT_EQ(exp_flag, false);
+    EXPECT_EQ(exp_flag, expect_exp);
     co_return;
   };
 
@@ -86,7 +85,7 @@ TEST(BOOST_ASIO_TEST, HTTP_base) {
   // svr1
   std::thread t_svr1([svr1_sys_ptr] {
     DBG_PRINT("svr1_sys_ptr start");
-    auto http_svr_ptr = std::make_shared<AsioHttpSvr>(svr1_sys_ptr->IO(), AsioHttpSvrCfg());
+    auto http_svr_ptr = std::make_shared<AsioHttpServer>(svr1_sys_ptr->IO(), AsioHttpServer::Cfg());
     svr1_sys_ptr->RegisterSvrFunc([http_svr_ptr] { http_svr_ptr->Start(); },
                                   [http_svr_ptr] { http_svr_ptr->Stop(); });
 
@@ -97,6 +96,13 @@ TEST(BOOST_ASIO_TEST, HTTP_base) {
   std::this_thread::sleep_for(std::chrono::seconds(1));
 
   asio::co_spawn(http_cli_ptr->Strand(), http_send_recv(), asio::detached);
+  asio::co_spawn(http_cli_ptr->Strand(), http_send_recv(), asio::detached);
+  std::this_thread::sleep_for(std::chrono::seconds(1));
+
+  asio::co_spawn(http_cli_ptr->Strand(), http_send_recv(true), asio::detached);
+  asio::co_spawn(http_cli_ptr->Strand(), http_send_recv(true), asio::detached);
+  asio::co_spawn(http_cli_ptr->Strand(), http_send_recv(), asio::detached);
+  asio::co_spawn(http_cli_ptr->Strand(), http_send_recv(), asio::detached);
   std::this_thread::sleep_for(std::chrono::seconds(1));
 
   svr1_sys_ptr->Stop();
@@ -105,8 +111,8 @@ TEST(BOOST_ASIO_TEST, HTTP_base) {
   // svr2
   std::thread t_svr2([svr2_sys_ptr] {
     DBG_PRINT("svr2_sys_ptr start");
-    AsioHttpSvrCfg cfg;
-    auto http_svr_ptr = std::make_shared<AsioHttpSvr>(svr2_sys_ptr->IO(), cfg);
+    AsioHttpServer::Cfg cfg;
+    auto http_svr_ptr = std::make_shared<AsioHttpServer>(svr2_sys_ptr->IO(), cfg);
     svr2_sys_ptr->RegisterSvrFunc([http_svr_ptr] { http_svr_ptr->Start(); },
                                   [http_svr_ptr] { http_svr_ptr->Stop(); });
     svr2_sys_ptr->Start();
@@ -115,7 +121,8 @@ TEST(BOOST_ASIO_TEST, HTTP_base) {
   });
   std::this_thread::sleep_for(std::chrono::seconds(1));
 
-  asio::co_spawn(http_cli_ptr->Strand(), http_send_recv(), asio::detached);
+  asio::co_spawn(http_cli_ptr->Strand(), http_send_recv(true), asio::detached);
+  asio::co_spawn(http_cli_ptr->Strand(), http_send_recv(true), asio::detached);
   std::this_thread::sleep_for(std::chrono::seconds(1));
 
   asio::co_spawn(http_cli_ptr->Strand(), http_send_recv(), asio::detached);
@@ -137,11 +144,11 @@ TEST(BOOST_ASIO_TEST, HTTP_handle) {
   auto svr_sys_ptr = std::make_shared<AsioExecutor>(2);
 
   // cli
-  auto http_cli_ptr = std::make_shared<AsioHttpCli>(cli_sys_ptr->IO(), AsioHttpCliCfg{"127.0.0.1", "80"});
-  cli_sys_ptr->RegisterSvrFunc(std::function<void()>(), std::function<void()>());
+  auto http_cli_ptr = std::make_shared<AsioHttpClient>(cli_sys_ptr->IO(), AsioHttpClient::Cfg{"127.0.0.1", "80"});
+  cli_sys_ptr->RegisterSvrFunc(std::function<void()>(), [http_cli_ptr] { http_cli_ptr->Stop(); });
 
-  auto http_send_recv = [http_cli_ptr]() -> asio::awaitable<void> {
-    ASIO_DEBUG_HANDLE(http_send_recv_co_1);
+  auto http_send_recv = [http_cli_ptr](bool expect_exp = false) -> asio::awaitable<void> {
+    ASIO_DEBUG_HANDLE(http_send_recv_co);
     bool exp_flag = false;
     try {
       http::request<http::string_body> req{http::verb::post, "/test?key1=val1&key2=val2", 11};
@@ -177,11 +184,10 @@ TEST(BOOST_ASIO_TEST, HTTP_handle) {
       EXPECT_STREQ(rsp.body().c_str(), "echo: test data.");
 
     } catch (const std::exception& e) {
-      DBG_PRINT("http_send_recv_co_1 get exception and exit, exception: %s", e.what());
-      http_cli_ptr->Close();
+      DBG_PRINT("http_send_recv_co get exception and exit, exception: %s", e.what());
       exp_flag = true;
     }
-    EXPECT_EQ(exp_flag, false);
+    EXPECT_EQ(exp_flag, expect_exp);
     co_return;
   };
 
@@ -193,22 +199,22 @@ TEST(BOOST_ASIO_TEST, HTTP_handle) {
   });
 
   // svr
-  auto http_svr_ptr = std::make_shared<AsioHttpSvr>(svr_sys_ptr->IO(), AsioHttpSvrCfg());
+  auto http_svr_ptr = std::make_shared<AsioHttpServer>(svr_sys_ptr->IO(), AsioHttpServer::Cfg());
   svr_sys_ptr->RegisterSvrFunc([http_svr_ptr] { http_svr_ptr->Start(); },
                                [http_svr_ptr] { http_svr_ptr->Stop(); });
 
-  auto HttpHandle = [](const AsioHttpSvr::HttpReq& req) -> boost::asio::awaitable<AsioHttpSvr::HttpRsp> {
-    AsioHttpSvr::HttpRsp rsp;
-
+  std::function<boost::asio::awaitable<http::response<http::string_body>>(const http::request<http::dynamic_body>&)>
+      HttpHandle = [](const http::request<http::dynamic_body>& req)
+      -> boost::asio::awaitable<http::response<http::string_body>> {
     std::stringstream ss;
     ss << req << std::endl;
     DBG_PRINT("handle req:\n%s", ss.str().c_str());
 
-    rsp = http::response<http::string_body>{http::status::ok, req.version()};
+    auto rsp = http::response<http::string_body>{http::status::ok, req.version()};
     rsp.set(http::field::server, BOOST_BEAST_VERSION_STRING);
     rsp.set(http::field::content_type, "text/html");
     rsp.keep_alive(req.keep_alive());
-    rsp.body() = "echo: " + req.body();
+    rsp.body() = "echo: " + boost::beast::buffers_to_string(req.body().data());
     rsp.prepare_payload();
 
     ss.str("");
@@ -217,11 +223,10 @@ TEST(BOOST_ASIO_TEST, HTTP_handle) {
 
     co_return rsp;
   };
-  http_svr_ptr->RegisterHttpHandleFunc("/test", HttpHandle);
+  http_svr_ptr->RegisterHttpHandleFunc<http::string_body>("/test", HttpHandle);
 
   std::thread t_svr([svr_sys_ptr] {
     DBG_PRINT("svr_sys_ptr start");
-
     svr_sys_ptr->Start();
     svr_sys_ptr->Join();
     DBG_PRINT("svr_sys_ptr exit");

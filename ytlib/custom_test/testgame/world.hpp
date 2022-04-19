@@ -125,10 +125,10 @@ class World : public std::enable_shared_from_this<World> {
 
   std::shared_ptr<GameDisplayerInf> game_displayer_;
 
-  std::map<uint32_t, std::shared_ptr<Group> > group_map_;
-  std::map<uint32_t, std::shared_ptr<Ship> > ship_map_;
-  std::map<uint32_t, std::shared_ptr<Station> > station_map_;
-  std::map<uint32_t, std::shared_ptr<Employee> > employee_map_;
+  std::map<uint64_t, std::shared_ptr<Group> > group_map_;
+  std::map<uint64_t, std::shared_ptr<Ship> > ship_map_;
+  std::map<uint64_t, std::shared_ptr<Station> > station_map_;
+  std::map<uint64_t, std::shared_ptr<Employee> > employee_map_;
 };
 
 }  // namespace ytlib

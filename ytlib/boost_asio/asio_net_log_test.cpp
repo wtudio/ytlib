@@ -1,8 +1,9 @@
 #include <gtest/gtest.h>
 
+#include "asio_net_log_cli.hpp"
+#include "asio_net_log_svr.hpp"
 #include "asio_tools.hpp"
 #include "boost_log.hpp"
-#include "net_log.hpp"
 
 #include "ytlib/misc/misc_macro.h"
 
@@ -11,7 +12,7 @@ namespace ytlib {
 using namespace boost::asio;
 using namespace std;
 
-TEST(BOOST_ASIO_TEST, LOG) {
+TEST(BOOST_ASIO_TEST, NET_LOG) {
   AsioDebugTool::Ins().Reset();
 
   auto cli_sys_ptr = std::make_shared<AsioExecutor>(1);
@@ -19,7 +20,10 @@ TEST(BOOST_ASIO_TEST, LOG) {
   auto svr2_sys_ptr = std::make_shared<AsioExecutor>(2);
 
   // cli
-  auto net_log_cli_ptr = std::make_shared<NetLogClient>(cli_sys_ptr->IO(), boost::asio::ip::tcp::endpoint{boost::asio::ip::address_v4({127, 0, 0, 1}), 50001});
+  AsioNetLogClient::Cfg net_log_client_cfg;
+  net_log_client_cfg.svr_ep = boost::asio::ip::tcp::endpoint{boost::asio::ip::address_v4({127, 0, 0, 1}), 50001};
+
+  auto net_log_cli_ptr = std::make_shared<AsioNetLogClient>(cli_sys_ptr->IO(), net_log_client_cfg);
   cli_sys_ptr->RegisterSvrFunc(std::function<void()>(),
                                [net_log_cli_ptr] { net_log_cli_ptr->Stop(); });
 
@@ -35,7 +39,7 @@ TEST(BOOST_ASIO_TEST, LOG) {
 
   // svr1
   thread t_svr1([svr1_sys_ptr] {
-    auto lgsvr_ptr = std::make_shared<LogSvr>(svr1_sys_ptr->IO(), LogSvrCfg());
+    auto lgsvr_ptr = std::make_shared<AsioNetLogServer>(svr1_sys_ptr->IO(), AsioNetLogServer::Cfg());
     svr1_sys_ptr->RegisterSvrFunc([lgsvr_ptr] { lgsvr_ptr->Start(); },
                                   [lgsvr_ptr] { lgsvr_ptr->Stop(); });
 
@@ -54,18 +58,18 @@ TEST(BOOST_ASIO_TEST, LOG) {
   YTBL_ERROR << "test error log" << std::endl;
   YTBL_FATAL << "test fatal log" << std::endl;
 
-  std::this_thread::sleep_for(std::chrono::seconds(1));
+  std::this_thread::sleep_for(std::chrono::seconds(10));
   svr1_sys_ptr->Stop();
   t_svr1.join();
 
   // svr2
   thread t_svr2([svr2_sys_ptr] {
-    LogSvrCfg cfg;
+    AsioNetLogServer::Cfg cfg;
     cfg.port = 50001;
     cfg.log_path = "./log2";
     cfg.timer_dt = std::chrono::seconds(1);
     cfg.max_no_data_duration = std::chrono::seconds(10);
-    auto lgsvr_ptr = std::make_shared<LogSvr>(svr2_sys_ptr->IO(), cfg);
+    auto lgsvr_ptr = std::make_shared<AsioNetLogServer>(svr2_sys_ptr->IO(), cfg);
     svr2_sys_ptr->RegisterSvrFunc([lgsvr_ptr] { lgsvr_ptr->Start(); },
                                   [lgsvr_ptr] { lgsvr_ptr->Stop(); });
     svr2_sys_ptr->Start();
@@ -81,7 +85,7 @@ TEST(BOOST_ASIO_TEST, LOG) {
   YTBL_ERROR << "test error log" << std::endl;
   YTBL_FATAL << "test fatal log" << std::endl;
 
-  std::this_thread::sleep_for(std::chrono::seconds(5));
+  std::this_thread::sleep_for(std::chrono::seconds(10));
 
   YTBL_TRACE << "test trace log" << std::endl;
   YTBL_DEBUG << "test debug log" << std::endl;
@@ -90,7 +94,17 @@ TEST(BOOST_ASIO_TEST, LOG) {
   YTBL_ERROR << "test error log" << std::endl;
   YTBL_FATAL << "test fatal log" << std::endl;
 
-  std::this_thread::sleep_for(std::chrono::seconds(1));
+  std::this_thread::sleep_for(std::chrono::seconds(10));
+
+  YTBL_TRACE << "test trace log" << std::endl;
+  YTBL_DEBUG << "test debug log" << std::endl;
+  YTBL_INFO << "test info log" << std::endl;
+  YTBL_WARN << "test warning log" << std::endl;
+  YTBL_ERROR << "test error log" << std::endl;
+  YTBL_FATAL << "test fatal log" << std::endl;
+
+  std::this_thread::sleep_for(std::chrono::seconds(10));
+
   svr2_sys_ptr->Stop();
   t_svr2.join();
 

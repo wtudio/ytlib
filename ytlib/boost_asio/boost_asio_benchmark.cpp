@@ -2,9 +2,10 @@
 
 #include <thread>
 
+#include "asio_net_log_cli.hpp"
+#include "asio_net_log_svr.hpp"
 #include "asio_tools.hpp"
 #include "boost_log.hpp"
-#include "net_log.hpp"
 
 namespace ytlib {
 class NetLogFixture {
@@ -15,7 +16,7 @@ class NetLogFixture {
     // log svr
     auto log_svr_sys_ptr = std::make_shared<AsioExecutor>(8);
     log_svr_sys_ptr_ = log_svr_sys_ptr;
-    auto net_log_svr_ptr = std::make_shared<LogSvr>(log_svr_sys_ptr->IO(), LogSvrCfg());
+    auto net_log_svr_ptr = std::make_shared<AsioNetLogServer>(log_svr_sys_ptr->IO(), AsioNetLogServer::Cfg());
     log_svr_sys_ptr->RegisterSvrFunc([net_log_svr_ptr] { net_log_svr_ptr->Start(); },
                                      [net_log_svr_ptr] { net_log_svr_ptr->Stop(); });
 
@@ -28,7 +29,10 @@ class NetLogFixture {
     // log cli
     auto log_cli_sys_ptr = std::make_shared<AsioExecutor>(1);
     log_cli_sys_ptr_ = log_cli_sys_ptr;
-    auto net_log_cli_ptr = std::make_shared<NetLogClient>(log_cli_sys_ptr->IO(), boost::asio::ip::tcp::endpoint{boost::asio::ip::address_v4({127, 0, 0, 1}), 50001});
+
+    AsioNetLogClient::Cfg net_log_client_cfg;
+    net_log_client_cfg.svr_ep = boost::asio::ip::tcp::endpoint{boost::asio::ip::address_v4({127, 0, 0, 1}), 50001};
+    auto net_log_cli_ptr = std::make_shared<AsioNetLogClient>(log_cli_sys_ptr->IO(), net_log_client_cfg);
     log_cli_sys_ptr->RegisterSvrFunc(std::function<void()>(),
                                      [net_log_cli_ptr] { net_log_cli_ptr->Stop(); });
 

@@ -23,26 +23,6 @@
 本文件待废弃
 */
 
-/*
-网络库目标：
-实现4种典型场景：
-1、rpc类型，客户端主动与服务端建立连接，主动发包后等待收包，服务端完全只能被动建立连接、收包回包，不能主动发包
-以boost序列化结构体为req、rsp
-
-2、cs类型，客户端主动与服务端建立连接，此后客户端与服务端对等收发msg
-msg类型包括3种：boost序列化结构体、char* buf数据、文件
-1 byte head-len + head-len byte head + n byte data
-head中存储data大小和类型
-
-3、ss类型，对等连接池
-只认id不认ep，accept的和主动connect的都绑定到一个id上
-要发送时只要目标id有conn（之前对方连过来的）就用已有的conn，否则才去主动conn
-接收时也只回调给对应id注册的回调函数，而不管是从哪个连接过来的数据
-
-
-4、日志服务器类型，纯c2s，纯char* buf数据
-*/
-
 namespace ytlib {
 /*
   使用boost.asio的一个简易网络适配器

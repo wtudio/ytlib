@@ -1,3 +1,10 @@
+/**
+ * @file asio_http_svr.hpp
+ * @brief 基于boost.beast的http客户端
+ * @note 基于boost.beast的http客户端
+ * @author WT
+ * @date 2022-04-18
+ */
 #pragma once
 
 #include <atomic>
@@ -7,75 +14,120 @@
 #include <boost/beast.hpp>
 
 #include "ytlib/boost_asio/asio_debug_tools.hpp"
+#include "ytlib/boost_asio/http_dispatcher.hpp"
 #include "ytlib/boost_asio/net_util.hpp"
 #include "ytlib/misc/misc_macro.h"
 #include "ytlib/misc/time.hpp"
 
 namespace ytlib {
 
-struct AsioHttpSvrCfg {
-  uint16_t port = 80;  // 监听的端口
-
-  std::string doc_root = ".";  // http页面根目录
-
-  std::chrono::steady_clock::duration timer_dt = std::chrono::seconds(5);               // 定时器间隔
-  std::chrono::steady_clock::duration max_no_data_duration = std::chrono::seconds(60);  // 最长无数据时间
-
-  void Verify() {
-    // 校验配置
-    if (port > 65535) port = 80;
-
-    if (timer_dt < std::chrono::seconds(1)) timer_dt = std::chrono::seconds(1);
-    if (max_no_data_duration < timer_dt * 2) max_no_data_duration = timer_dt * 2;
-  }
-};
-
 /**
  * @brief http服务器
  *
  */
-class AsioHttpSvr : public std::enable_shared_from_this<AsioHttpSvr> {
+class AsioHttpServer : public std::enable_shared_from_this<AsioHttpServer> {
  public:
-  using HttpReq = boost::beast::http::request<boost::beast::http::string_body>;
-  using HttpRsp = boost::beast::http::response<boost::beast::http::string_body>;
-  using HttpHandleFunc = std::function<boost::asio::awaitable<HttpRsp>(const HttpReq&)>;
+  using HttpReq = boost::beast::http::request<boost::beast::http::dynamic_body>;
 
  public:
-  AsioHttpSvr(std::shared_ptr<boost::asio::io_context> io_ptr, const AsioHttpSvrCfg& cfg)
-      : cfg_(cfg),
+  struct Cfg {
+    uint16_t port = 80;  // 监听的端口
+
+    std::string doc_root = ".";  // http页面根目录
+
+    size_t max_session_num = 1000000;                                            // 最大连接数
+    std::chrono::steady_clock::duration mgr_timer_dt = std::chrono::seconds(5);  // 管理协程定时器间隔
+
+    std::chrono::steady_clock::duration timer_dt = std::chrono::seconds(5);               // 定时器间隔
+    std::chrono::steady_clock::duration max_no_data_duration = std::chrono::seconds(60);  // 最长无数据时间
+
+    static Cfg Verify(const Cfg& verify_cfg) {
+      Cfg cfg(verify_cfg);
+
+      if (cfg.port > 65535) cfg.port = 80;
+
+      if (cfg.max_session_num < 1) cfg.max_session_num = 1;
+      if (cfg.max_session_num > boost::asio::ip::tcp::acceptor::max_listen_connections)
+        cfg.max_session_num = boost::asio::ip::tcp::acceptor::max_listen_connections;
+      if (cfg.mgr_timer_dt < std::chrono::seconds(1)) cfg.mgr_timer_dt = std::chrono::seconds(1);
+
+      if (cfg.timer_dt < std::chrono::seconds(1)) cfg.timer_dt = std::chrono::seconds(1);
+      if (cfg.max_no_data_duration < cfg.timer_dt * 2) cfg.max_no_data_duration = cfg.timer_dt * 2;
+
+      return cfg;
+    }
+  };
+
+  AsioHttpServer(std::shared_ptr<boost::asio::io_context> io_ptr, const AsioHttpServer::Cfg& cfg)
+      : cfg_(AsioHttpServer::Cfg::Verify(cfg)),
         io_ptr_(io_ptr),
-        mgr_strand_(boost::asio::make_strand(*io_ptr_)) {
-    cfg_.Verify();
-  }
+        session_cfg_ptr_(std::make_shared<const AsioHttpServer::SessionCfg>(cfg_)),
+        mgr_strand_(boost::asio::make_strand(*io_ptr_)),
+        acceptor_(mgr_strand_, boost::asio::ip::tcp::endpoint{boost::asio::ip::address_v4(), cfg_.port}),
+        acceptor_timer_(mgr_strand_),
+        mgr_timer_(mgr_strand_),
+        http_dispatcher_ptr_(std::make_shared<HttpDispatcher<boost::asio::awaitable<void>(std::shared_ptr<AsioHttpServer::Session>, const HttpReq&)>>()) {}
 
-  ~AsioHttpSvr() {}
+  ~AsioHttpServer() {}
 
-  AsioHttpSvr(const AsioHttpSvr&) = delete;             ///< no copy
-  AsioHttpSvr& operator=(const AsioHttpSvr&) = delete;  ///< no copy
+  AsioHttpServer(const AsioHttpServer&) = delete;             ///< no copy
+  AsioHttpServer& operator=(const AsioHttpServer&) = delete;  ///< no copy
 
   /**
    * @brief 启动http服务器
    *
    */
   void Start() {
-    acceptor_ptr_ = std::make_shared<boost::asio::ip::tcp::acceptor>(*io_ptr_, boost::asio::ip::tcp::endpoint{boost::asio::ip::address_v4(), cfg_.port});
-
-    auto self = shared_from_this();
+    auto self = this->shared_from_this();
     boost::asio::co_spawn(
         mgr_strand_,
         [this, self]() -> boost::asio::awaitable<void> {
           ASIO_DEBUG_HANDLE(http_svr_acceptor_co);
-          try {
-            while (run_flag_) {
-              auto session_ptr = std::make_shared<HttpSession>(
-                  co_await acceptor_ptr_->async_accept(boost::asio::use_awaitable),
-                  self);
+
+          while (run_flag_) {
+            try {
+              // 如果链接数达到上限，则等待一段时间再试
+              if (session_ptr_list_.size() >= cfg_.max_session_num) {
+                acceptor_timer_.expires_after(cfg_.mgr_timer_dt);
+                co_await acceptor_timer_.async_wait(boost::asio::use_awaitable);
+                continue;
+              }
+
+              auto session_ptr = std::make_shared<AsioHttpServer::Session>(boost::asio::make_strand(*io_ptr_), session_cfg_ptr_, http_dispatcher_ptr_);
+              co_await acceptor_.async_accept(session_ptr->Socket(), boost::asio::use_awaitable);
               session_ptr->Start();
 
-              session_ptr_set_.emplace(session_ptr);
+              session_ptr_list_.emplace_back(session_ptr);
+
+            } catch (const std::exception& e) {
+              DBG_PRINT("http svr accept connection get exception and exit, exception info: %s", e.what());
             }
-          } catch (const std::exception& e) {
-            DBG_PRINT("accept connection get exception %s", e.what());
+          }
+
+          Stop();
+
+          co_return;
+        },
+        boost::asio::detached);
+
+    boost::asio::co_spawn(
+        mgr_strand_,
+        [this, self]() -> boost::asio::awaitable<void> {
+          ASIO_DEBUG_HANDLE(http_svr_timer_co);
+          while (run_flag_) {
+            try {
+              mgr_timer_.expires_after(cfg_.mgr_timer_dt);
+              co_await mgr_timer_.async_wait(boost::asio::use_awaitable);
+
+              for (auto itr = session_ptr_list_.begin(); itr != session_ptr_list_.end();) {
+                if ((*itr)->IsRunning())
+                  ++itr;
+                else
+                  session_ptr_list_.erase(itr++);
+              }
+            } catch (const std::exception& e) {
+              DBG_PRINT("http svr timer get exception and exit, exception info: %s", e.what());
+            }
           }
 
           Stop();
@@ -92,101 +144,111 @@ class AsioHttpSvr : public std::enable_shared_from_this<AsioHttpSvr> {
   void Stop() {
     if (!std::atomic_exchange(&run_flag_, false)) return;
 
-    auto self = shared_from_this();
+    auto self = this->shared_from_this();
     boost::asio::dispatch(
         mgr_strand_,
         [this, self]() {
           ASIO_DEBUG_HANDLE(http_svr_stop_co);
 
-          if (acceptor_ptr_->is_open()) {
-            acceptor_ptr_->cancel();
-            acceptor_ptr_->close();
-            acceptor_ptr_->release();
+          if (acceptor_.is_open()) {
+            acceptor_.cancel();
+            acceptor_.close();
+            acceptor_.release();
           }
 
-          while (!session_ptr_set_.empty()) {
-            auto session_ptr_itr = session_ptr_set_.begin();
-            auto session_ptr = *session_ptr_itr;
-            session_ptr_set_.erase(session_ptr_itr);
+          acceptor_timer_.cancel();
+          mgr_timer_.cancel();
 
+          for (auto& session_ptr : session_ptr_list_)
             session_ptr->Stop();
-          }
+
+          session_ptr_list_.clear();
         });
   }
 
-  /**
-   * @brief 注册处理函数
-   * @note 目前只支持简单的路径匹配，暂不支持通配符等
-   * @param pattern url路径
-   * @param handle 处理函数
-   */
-  void RegisterHttpHandleFunc(std::string_view pattern, HttpHandleFunc&& handle) {
-    if (handle) http_handle_map_.emplace(pattern, std::move(handle));
+  template <typename RspBodyType = boost::beast::http::string_body>
+  void RegisterHttpHandleFunc(std::string_view pattern,
+                              std::function<boost::asio::awaitable<boost::beast::http::response<RspBodyType>>(const HttpReq&)>&& handle) {
+    http_dispatcher_ptr_->RegisterHttpHandle(pattern, Session::GenHttpHandle(std::move(handle)));
+  }
+
+  template <typename RspBodyType = boost::beast::http::string_body>
+  void RegisterHttpHandleFunc(std::string_view pattern,
+                              const std::function<boost::asio::awaitable<boost::beast::http::response<RspBodyType>>(const HttpReq&)>& handle) {
+    auto h = handle;
+    http_dispatcher_ptr_->RegisterHttpHandle(pattern, Session::GenHttpHandle(std::move(h)));
   }
 
  private:
-  class HttpSession : public std::enable_shared_from_this<HttpSession> {
+  struct SessionCfg {
+    SessionCfg(const Cfg& cfg)
+        : doc_root(cfg.doc_root),
+          timer_dt(cfg.timer_dt),
+          max_no_data_duration(cfg.max_no_data_duration) {}
+
+    std::string doc_root;
+
+    std::chrono::steady_clock::duration timer_dt;
+    std::chrono::steady_clock::duration max_no_data_duration;
+  };
+
+  class Session : public std::enable_shared_from_this<Session> {
    public:
-    HttpSession(boost::asio::ip::tcp::socket&& sock, std::shared_ptr<AsioHttpSvr> svr_ptr)
-        : svr_ptr_(svr_ptr),
-          strand_(boost::asio::make_strand(*(svr_ptr_->io_ptr_))),
-          stream_(std::move(sock)),
-          timer_(strand_) {
-      const boost::asio::ip::tcp::endpoint& ep = stream_.socket().remote_endpoint();
-      session_name_ = (ep.address().to_string() + "_" + std::to_string(ep.port()));
-    }
+    Session(boost::asio::strand<boost::asio::io_context::executor_type> session_strand,
+            std::shared_ptr<const AsioHttpServer::SessionCfg> session_cfg_ptr,
+            std::shared_ptr<HttpDispatcher<boost::asio::awaitable<void>(std::shared_ptr<AsioHttpServer::Session>, const HttpReq&)>> http_dispatcher_ptr)
+        : session_cfg_ptr_(session_cfg_ptr),
+          session_strand_(session_strand),
+          stream_(session_strand_),
+          timer_(session_strand_),
+          http_dispatcher_ptr_(http_dispatcher_ptr) {}
 
-    ~HttpSession() {}
+    ~Session() {}
 
-    HttpSession(const HttpSession&) = delete;             ///< no copy
-    HttpSession& operator=(const HttpSession&) = delete;  ///< no copy
+    Session(const Session&) = delete;             ///< no copy
+    Session& operator=(const Session&) = delete;  ///< no copy
 
     void Start() {
-      DBG_PRINT("get a new connection from %s", session_name_.c_str());
+      const boost::asio::ip::tcp::endpoint& ep = stream_.socket().remote_endpoint();
+      session_name_ = (ep.address().to_string() + "_" + std::to_string(ep.port()));
 
-      auto self = shared_from_this();
+      auto self = this->shared_from_this();
+
       // 请求处理协程
       boost::asio::co_spawn(
-          strand_,
+          session_strand_,
           [this, self]() -> boost::asio::awaitable<void> {
-            namespace http = boost::beast::http;
-
             ASIO_DEBUG_HANDLE(http_svr_session_recv_co);
+
             try {
+              namespace http = boost::beast::http;
               boost::beast::flat_buffer buffer;
-              while (run_flag_) {
-                http::request<http::string_body> req;
-                co_await http::async_read(stream_, buffer, req, boost::asio::use_awaitable);
 
-                if (req.method() != http::verb::get && req.method() != http::verb::head && req.method() != http::verb::post) {
-                  auto rsp = BadRequestHandle(req, "UnSupport HTTP-method");
-                  run_flag_ = !rsp.need_eof();
-                  co_await http::async_write(stream_, rsp, boost::asio::use_awaitable);
-                  continue;
-                }
+              while (run_flag_ && !close_connect_flag_) {
+                HttpReq req;
+                size_t read_data_size = co_await http::async_read(stream_, buffer, req, boost::asio::use_awaitable);
+                DBG_PRINT("http svr session async read %llu bytes", read_data_size);
 
-                if (req.target().empty() || req.target()[0] != '/' || req.target().find("..") != boost::beast::string_view::npos) {
-                  auto rsp = BadRequestHandle(req, "Illegal request-target");
-                  run_flag_ = !rsp.need_eof();
-                  co_await http::async_write(stream_, rsp, boost::asio::use_awaitable);
+                // 检查bad req
+                std::string_view bad_req_check_ret = CheckBadRequest(req);
+                if (!bad_req_check_ret.empty()) {
+                  const auto& rsp = BadRequestHandle(req, bad_req_check_ret);
+                  close_connect_flag_ = !rsp.need_eof();
+
+                  DBG_PRINT("http svr session get bad request, err msg: %s, close_connect_flag: %d", bad_req_check_ret.data(), close_connect_flag_);
+                  size_t write_data_size = co_await http::async_write(stream_, rsp, boost::asio::use_awaitable);
+                  DBG_PRINT("http svr session async write %llu bytes", write_data_size);
                   continue;
                 }
 
                 // 处理handle类请求
-                auto handle = GetHttpHandleFunc(std::string_view(req.target().data(), req.target().length()), svr_ptr_->http_handle_map_);
+                const auto& handle = http_dispatcher_ptr_->GetHttpHandle(std::string_view(req.target().data(), req.target().length()));
                 if (handle) {
-                  HttpRsp rsp;
-                  try {
-                    rsp = co_await handle(req);
-                  } catch (const std::exception& e) {
-                    rsp = ServerErrorHandle(req, e.what());
-                  }
-                  run_flag_ = !rsp.need_eof();
-                  co_await http::async_write(stream_, rsp, boost::asio::use_awaitable);
+                  co_await handle(self, req);
                   continue;
                 }
 
-                std::string path = PathCat(svr_ptr_->cfg_.doc_root, req.target());
+                std::string path = PathCat(session_cfg_ptr_->doc_root, req.target());
                 if (req.target().back() == '/') path.append("index.html");
 
                 boost::beast::error_code ec;
@@ -194,20 +256,26 @@ class AsioHttpSvr : public std::enable_shared_from_this<AsioHttpSvr> {
                 body.open(path.c_str(), boost::beast::file_mode::scan, ec);
 
                 if (ec == boost::beast::errc::no_such_file_or_directory) {
-                  auto rsp = NotFoundHandle(req, std::string_view(req.target().data(), req.target().length()));
-                  run_flag_ = !rsp.need_eof();
-                  co_await http::async_write(stream_, rsp, boost::asio::use_awaitable);
+                  const auto& rsp = NotFoundHandle(req, std::string_view(req.target().data(), req.target().length()));
+                  close_connect_flag_ = !rsp.need_eof();
+
+                  DBG_PRINT("http svr session get 404, close_connect_flag: %d", close_connect_flag_);
+                  size_t write_data_size = co_await http::async_write(stream_, rsp, boost::asio::use_awaitable);
+                  DBG_PRINT("http svr session async write %llu bytes", write_data_size);
                   continue;
                 }
 
                 if (ec) {
-                  auto rsp = ServerErrorHandle(req, ec.message());
-                  run_flag_ = !rsp.need_eof();
-                  co_await http::async_write(stream_, rsp, boost::asio::use_awaitable);
+                  const auto& rsp = ServerErrorHandle(req, ec.message());
+                  close_connect_flag_ = !rsp.need_eof();
+
+                  DBG_PRINT("http svr session get server error, err msg: %s, close_connect_flag: %d", ec.message().c_str(), close_connect_flag_);
+                  size_t write_data_size = co_await http::async_write(stream_, rsp, boost::asio::use_awaitable);
+                  DBG_PRINT("http svr session async write %llu bytes", write_data_size);
                   continue;
                 }
 
-                auto const size = body.size();
+                const auto size = body.size();
 
                 // 处理head类请求
                 if (req.method() == http::verb::head) {
@@ -217,8 +285,11 @@ class AsioHttpSvr : public std::enable_shared_from_this<AsioHttpSvr> {
                   rsp.content_length(size);
                   rsp.keep_alive(req.keep_alive());
 
-                  run_flag_ = !rsp.need_eof();
-                  co_await http::async_write(stream_, rsp, boost::asio::use_awaitable);
+                  close_connect_flag_ = !rsp.need_eof();
+
+                  DBG_PRINT("http svr session get head request, close_connect_flag: %d", close_connect_flag_);
+                  size_t write_data_size = co_await http::async_write(stream_, rsp, boost::asio::use_awaitable);
+                  DBG_PRINT("http svr session async write %llu bytes", write_data_size);
                   continue;
                 }
 
@@ -232,11 +303,14 @@ class AsioHttpSvr : public std::enable_shared_from_this<AsioHttpSvr> {
                 rsp.content_length(size);
                 rsp.keep_alive(req.keep_alive());
 
-                run_flag_ = !rsp.need_eof();
-                co_await http::async_write(stream_, rsp, boost::asio::use_awaitable);
+                close_connect_flag_ = !rsp.need_eof();
+
+                DBG_PRINT("http svr session get file request, close_connect_flag: %d", close_connect_flag_);
+                size_t write_data_size = co_await http::async_write(stream_, rsp, boost::asio::use_awaitable);
+                DBG_PRINT("http svr session async write %llu bytes", write_data_size);
               }
             } catch (std::exception& e) {
-              DBG_PRINT("http session get exception and exit, addr %s, exception %s", session_name_.c_str(), e.what());
+              DBG_PRINT("http svr session get exception and exit, addr %s, exception %s", session_name_.c_str(), e.what());
             }
 
             Stop();
@@ -247,31 +321,32 @@ class AsioHttpSvr : public std::enable_shared_from_this<AsioHttpSvr> {
 
       // 定时器协程
       boost::asio::co_spawn(
-          strand_,
+          session_strand_,
           [this, self]() -> boost::asio::awaitable<void> {
-            namespace chrono = std::chrono;
-
             ASIO_DEBUG_HANDLE(http_svr_session_timer_co);
+
             try {
-              chrono::steady_clock::duration no_data_time_count = chrono::steady_clock::duration::zero();  // 当前无数据时间
+              namespace chrono = std::chrono;
+              chrono::steady_clock::time_point last_data_time_point = chrono::steady_clock::now();  // 上次有数据时间
 
               while (run_flag_) {
-                timer_.expires_after(svr_ptr_->cfg_.timer_dt);
+                timer_.expires_after(session_cfg_ptr_->timer_dt);
                 co_await timer_.async_wait(boost::asio::use_awaitable);
 
                 if (tick_has_data_) {
                   tick_has_data_ = false;
-                  no_data_time_count = chrono::steady_clock::duration::zero();
+                  last_data_time_point = chrono::steady_clock::now();
+
                 } else {
-                  no_data_time_count += svr_ptr_->cfg_.timer_dt;
-                  if (no_data_time_count >= svr_ptr_->cfg_.max_no_data_duration) {
-                    DBG_PRINT("http session exit due to timeout(%llums), addr %s.", chrono::duration_cast<chrono::milliseconds>(no_data_time_count).count(), session_name_.c_str());
+                  chrono::steady_clock::duration no_data_duration = chrono::steady_clock::now() - last_data_time_point;
+                  if (no_data_duration >= session_cfg_ptr_->max_no_data_duration) {
+                    DBG_PRINT("http svr session exit due to timeout(%llums), addr %s.", chrono::duration_cast<chrono::milliseconds>(no_data_duration).count(), session_name_.c_str());
                     break;
                   }
                 }
               }
             } catch (const std::exception& e) {
-              DBG_PRINT("http session timer get exception and exit, addr %s, exception %s", session_name_.c_str(), e.what());
+              DBG_PRINT("http svr session timer get exception and exit, addr %s, exception %s", session_name_.c_str(), e.what());
             }
 
             Stop();
@@ -284,11 +359,9 @@ class AsioHttpSvr : public std::enable_shared_from_this<AsioHttpSvr> {
     void Stop() {
       if (!std::atomic_exchange(&run_flag_, false)) return;
 
-      DBG_PRINT("http session stop, addr %s", session_name_.c_str());
-
-      auto self = shared_from_this();
+      auto self = this->shared_from_this();
       boost::asio::dispatch(
-          strand_,
+          session_strand_,
           [this, self]() {
             ASIO_DEBUG_HANDLE(http_svr_session_stop_co);
 
@@ -304,16 +377,39 @@ class AsioHttpSvr : public std::enable_shared_from_this<AsioHttpSvr> {
 
             timer_.cancel();
           });
+    }
 
-      boost::asio::dispatch(
-          svr_ptr_->mgr_strand_,
-          [this, self]() {
-            ASIO_DEBUG_HANDLE(http_svr_session_clear_co);
+    boost::asio::ip::tcp::socket& Socket() { return stream_.socket(); }
 
-            auto finditr = svr_ptr_->session_ptr_set_.find(self);
-            if (finditr != svr_ptr_->session_ptr_set_.end())
-              svr_ptr_->session_ptr_set_.erase(finditr);
-          });
+    const std::atomic_bool& IsRunning() { return run_flag_; }
+
+    template <typename RspBodyType = boost::beast::http::string_body>
+    static std::function<boost::asio::awaitable<void>(std::shared_ptr<Session>, const HttpReq&)> GenHttpHandle(
+        std::function<boost::asio::awaitable<boost::beast::http::response<RspBodyType>>(const HttpReq&)>&& handle) {
+      return [h = std::move(handle)](std::shared_ptr<Session> session_ptr, const HttpReq& req) -> boost::asio::awaitable<void> {
+        boost::beast::http::response<RspBodyType> handle_rsp;
+        std::string exp_info;
+        try {
+          handle_rsp = co_await h(req);
+        } catch (const std::exception& e) {
+          exp_info = e.what();
+        }
+
+        if (!exp_info.empty()) {
+          const auto& rsp = AsioHttpServer::Session::ServerErrorHandle(req, exp_info);
+          session_ptr->close_connect_flag_ = !rsp.need_eof();
+
+          DBG_PRINT("http svr session custom handle request get exp, close_connect_flag: %d", session_ptr->close_connect_flag_);
+          size_t write_data_size = co_await boost::beast::http::async_write(session_ptr->stream_, rsp, boost::asio::use_awaitable);
+          DBG_PRINT("http svr session async write %llu bytes", write_data_size);
+        } else {
+          session_ptr->close_connect_flag_ = !handle_rsp.need_eof();
+
+          DBG_PRINT("http svr session custom handle request, close_connect_flag: %d", session_ptr->close_connect_flag_);
+          size_t write_data_size = co_await boost::beast::http::async_write(session_ptr->stream_, handle_rsp, boost::asio::use_awaitable);
+          DBG_PRINT("http svr session async write %llu bytes", write_data_size);
+        }
+      };
     }
 
    private:
@@ -370,7 +466,27 @@ class AsioHttpSvr : public std::enable_shared_from_this<AsioHttpSvr> {
       return result;
     }
 
-    static HttpRsp BadRequestHandle(const HttpReq& req, std::string_view info) {
+    static std::string_view CheckBadRequest(const HttpReq& req) {
+      namespace http = boost::beast::http;
+
+      // HTTP method 检查
+      if (req.method() != http::verb::get &&
+          req.method() != http::verb::head &&
+          req.method() != http::verb::post) {
+        const static std::string err_str = "UnSupport HTTP-method";
+        return err_str;
+      }
+
+      // uri 检查
+      if (req.target().empty() || req.target()[0] != '/' || req.target().find("..") != boost::beast::string_view::npos) {
+        const static std::string err_str = "Illegal request-target";
+        return err_str;
+      }
+
+      return std::string_view();
+    }
+
+    static boost::beast::http::response<boost::beast::http::string_body> BadRequestHandle(const HttpReq& req, std::string_view info) {
       namespace http = boost::beast::http;
 
       http::response<http::string_body> rsp{http::status::bad_request, req.version()};
@@ -382,7 +498,7 @@ class AsioHttpSvr : public std::enable_shared_from_this<AsioHttpSvr> {
       return rsp;
     }
 
-    static HttpRsp NotFoundHandle(const HttpReq& req, std::string_view info) {
+    static boost::beast::http::response<boost::beast::http::string_body> NotFoundHandle(const HttpReq& req, std::string_view info) {
       namespace http = boost::beast::http;
 
       http::response<http::string_body> rsp{http::status::not_found, req.version()};
@@ -394,7 +510,7 @@ class AsioHttpSvr : public std::enable_shared_from_this<AsioHttpSvr> {
       return rsp;
     }
 
-    static HttpRsp ServerErrorHandle(const HttpReq& req, std::string_view info) {
+    static boost::beast::http::response<boost::beast::http::string_body> ServerErrorHandle(const HttpReq& req, std::string_view info) {
       namespace http = boost::beast::http;
 
       http::response<http::string_body> rsp{http::status::internal_server_error, req.version()};
@@ -406,36 +522,32 @@ class AsioHttpSvr : public std::enable_shared_from_this<AsioHttpSvr> {
       return rsp;
     }
 
-    static HttpHandleFunc GetHttpHandleFunc(std::string_view target, const std::map<std::string, HttpHandleFunc>& http_handle_map) {
-      // todo 优化
-      for (const auto& itr : http_handle_map) {
-        if (target.size() < itr.first.size()) continue;
-        if (target.substr(0, itr.first.size()) != itr.first) continue;
-        return itr.second;
-      }
-      return HttpHandleFunc();
-    }
-
    private:
+    std::shared_ptr<const AsioHttpServer::SessionCfg> session_cfg_ptr_;
     std::atomic_bool run_flag_ = true;
-    std::shared_ptr<AsioHttpSvr> svr_ptr_;
-    boost::asio::strand<boost::asio::io_context::executor_type> strand_;
+    boost::asio::strand<boost::asio::io_context::executor_type> session_strand_;
     boost::beast::tcp_stream stream_;
     boost::asio::steady_timer timer_;
 
+    std::shared_ptr<HttpDispatcher<boost::asio::awaitable<void>(std::shared_ptr<AsioHttpServer::Session>, const HttpReq&)>> http_dispatcher_ptr_;
     std::string session_name_;
-
+    bool close_connect_flag_ = false;
     bool tick_has_data_ = false;
   };
 
  private:
+  const AsioHttpServer::Cfg cfg_;
   std::atomic_bool run_flag_ = true;
-  AsioHttpSvrCfg cfg_;
   std::shared_ptr<boost::asio::io_context> io_ptr_;
+
+  std::shared_ptr<const AsioHttpServer::SessionCfg> session_cfg_ptr_;
   boost::asio::strand<boost::asio::io_context::executor_type> mgr_strand_;  // session池操作strand
-  std::shared_ptr<boost::asio::ip::tcp::acceptor> acceptor_ptr_;            // 监听器
-  std::set<std::shared_ptr<HttpSession> > session_ptr_set_;                 // session池
-  std::map<std::string, HttpHandleFunc> http_handle_map_;
+  boost::asio::ip::tcp::acceptor acceptor_;                                 // 监听器
+  boost::asio::steady_timer acceptor_timer_;                                // 连接满时监听器的sleep定时器
+  boost::asio::steady_timer mgr_timer_;                                     // 管理session池的定时器
+  std::list<std::shared_ptr<AsioHttpServer::Session>> session_ptr_list_;    // session池
+
+  std::shared_ptr<HttpDispatcher<boost::asio::awaitable<void>(std::shared_ptr<AsioHttpServer::Session>, const HttpReq&)>> http_dispatcher_ptr_;
 };
 
 }  // namespace ytlib
