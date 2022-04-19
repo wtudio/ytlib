@@ -221,14 +221,35 @@ class AsioNetLogClient : public std::enable_shared_from_this<AsioNetLogClient> {
           [this, self]() {
             ASIO_DEBUG_HANDLE(net_log_cli_session_stop_co);
 
-            if (sock_.is_open()) {
-              sock_.shutdown(boost::asio::ip::tcp::socket::shutdown_both);
-              sock_.cancel();
-              sock_.close();
-              sock_.release();
+            try {
+              timer_.cancel();
+            } catch (const std::exception& e) {
+              DBG_PRINT("net log cli session timer cancel get exception, exception info: %s", e.what());
             }
 
-            timer_.cancel();
+            try {
+              sock_.shutdown(boost::asio::ip::tcp::socket::shutdown_both);
+            } catch (const std::exception& e) {
+              DBG_PRINT("net log cli session socket shutdown get exception, exception info: %s", e.what());
+            }
+
+            try {
+              sock_.cancel();
+            } catch (const std::exception& e) {
+              DBG_PRINT("net log cli session socket cancel get exception, exception info: %s", e.what());
+            }
+
+            try {
+              sock_.close();
+            } catch (const std::exception& e) {
+              DBG_PRINT("net log cli session socket close get exception, exception info: %s", e.what());
+            }
+
+            try {
+              sock_.release();
+            } catch (const std::exception& e) {
+              DBG_PRINT("net log cli session socket release get exception, exception info: %s", e.what());
+            }
           });
     }
 

@@ -40,7 +40,7 @@ if(YTLIB_MASTER_PROJECT)
     set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
   endif()
 
-  if (${CMAKE_BUILD_TYPE} STREQUAL Debug)
+  if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     set_directory_properties(PROPERTIES COMPILE_DEFINITIONS "_DEBUG")
   endif ()
 

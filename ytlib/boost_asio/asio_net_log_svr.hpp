@@ -168,14 +168,35 @@ class AsioNetLogServer : public std::enable_shared_from_this<AsioNetLogServer> {
         [this, self]() {
           ASIO_DEBUG_HANDLE(net_log_svr_stop_co);
 
-          if (acceptor_.is_open()) {
-            acceptor_.cancel();
-            acceptor_.close();
-            acceptor_.release();
+          try {
+            acceptor_timer_.cancel();
+          } catch (const std::exception& e) {
+            DBG_PRINT("net log svr acceptor timer cancel get exception, exception info: %s", e.what());
           }
 
-          acceptor_timer_.cancel();
-          mgr_timer_.cancel();
+          try {
+            mgr_timer_.cancel();
+          } catch (const std::exception& e) {
+            DBG_PRINT("net log svr mgr timer cancel get exception, exception info: %s", e.what());
+          }
+
+          try {
+            acceptor_.cancel();
+          } catch (const std::exception& e) {
+            DBG_PRINT("net log svr acceptor cancel get exception, exception info: %s", e.what());
+          }
+
+          try {
+            acceptor_.close();
+          } catch (const std::exception& e) {
+            DBG_PRINT("net log svr acceptor close get exception, exception info: %s", e.what());
+          }
+
+          try {
+            acceptor_.release();
+          } catch (const std::exception& e) {
+            DBG_PRINT("net log svr acceptor release get exception, exception info: %s", e.what());
+          }
 
           for (auto& session_ptr : session_ptr_list_)
             session_ptr->Stop();
@@ -314,14 +335,35 @@ class AsioNetLogServer : public std::enable_shared_from_this<AsioNetLogServer> {
           [this, self]() {
             ASIO_DEBUG_HANDLE(net_log_svr_session_stop_co);
 
-            if (sock_.is_open()) {
-              sock_.shutdown(boost::asio::ip::tcp::socket::shutdown_both);
-              sock_.cancel();
-              sock_.close();
-              sock_.release();
+            try {
+              timer_.cancel();
+            } catch (const std::exception& e) {
+              DBG_PRINT("net log svr session timer cancel get exception, exception info: %s", e.what());
             }
 
-            timer_.cancel();
+            try {
+              sock_.shutdown(boost::asio::ip::tcp::socket::shutdown_both);
+            } catch (const std::exception& e) {
+              DBG_PRINT("net log svr session socket shutdown get exception, exception info: %s", e.what());
+            }
+
+            try {
+              sock_.cancel();
+            } catch (const std::exception& e) {
+              DBG_PRINT("net log svr session socket cancel get exception, exception info: %s", e.what());
+            }
+
+            try {
+              sock_.close();
+            } catch (const std::exception& e) {
+              DBG_PRINT("net log svr session socket close get exception, exception info: %s", e.what());
+            }
+
+            try {
+              sock_.release();
+            } catch (const std::exception& e) {
+              DBG_PRINT("net log svr session socket release get exception, exception info: %s", e.what());
+            }
 
             if (ofs_.is_open()) {
               ofs_.flush();

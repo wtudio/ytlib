@@ -150,14 +150,35 @@ class AsioHttpServer : public std::enable_shared_from_this<AsioHttpServer> {
         [this, self]() {
           ASIO_DEBUG_HANDLE(http_svr_stop_co);
 
-          if (acceptor_.is_open()) {
-            acceptor_.cancel();
-            acceptor_.close();
-            acceptor_.release();
+          try {
+            acceptor_timer_.cancel();
+          } catch (const std::exception& e) {
+            DBG_PRINT("http svr acceptor timer cancel get exception, exception info: %s", e.what());
           }
 
-          acceptor_timer_.cancel();
-          mgr_timer_.cancel();
+          try {
+            mgr_timer_.cancel();
+          } catch (const std::exception& e) {
+            DBG_PRINT("http svr mgr timer cancel get exception, exception info: %s", e.what());
+          }
+
+          try {
+            acceptor_.cancel();
+          } catch (const std::exception& e) {
+            DBG_PRINT("http svr acceptor cancel get exception, exception info: %s", e.what());
+          }
+
+          try {
+            acceptor_.close();
+          } catch (const std::exception& e) {
+            DBG_PRINT("http svr acceptor close get exception, exception info: %s", e.what());
+          }
+
+          try {
+            acceptor_.release();
+          } catch (const std::exception& e) {
+            DBG_PRINT("http svr acceptor release get exception, exception info: %s", e.what());
+          }
 
           for (auto& session_ptr : session_ptr_list_)
             session_ptr->Stop();
@@ -365,17 +386,53 @@ class AsioHttpServer : public std::enable_shared_from_this<AsioHttpServer> {
           [this, self]() {
             ASIO_DEBUG_HANDLE(http_svr_session_stop_co);
 
-            if (stream_.socket().is_open()) {
-              stream_.socket().shutdown(boost::asio::ip::tcp::socket::shutdown_both);
-              stream_.socket().cancel();
-              stream_.socket().close();
-              stream_.socket().release();
-              stream_.cancel();
-              stream_.close();
-              stream_.release_socket();
+            try {
+              timer_.cancel();
+            } catch (const std::exception& e) {
+              DBG_PRINT("http svr session timer cancel get exception, exception info: %s", e.what());
             }
 
-            timer_.cancel();
+            try {
+              stream_.socket().shutdown(boost::asio::ip::tcp::socket::shutdown_both);
+            } catch (const std::exception& e) {
+              DBG_PRINT("http svr session socket shutdown get exception, exception info: %s", e.what());
+            }
+
+            try {
+              stream_.socket().cancel();
+            } catch (const std::exception& e) {
+              DBG_PRINT("http svr session socket cancel get exception, exception info: %s", e.what());
+            }
+
+            try {
+              stream_.socket().close();
+            } catch (const std::exception& e) {
+              DBG_PRINT("http svr session socket close get exception, exception info: %s", e.what());
+            }
+
+            try {
+              stream_.socket().release();
+            } catch (const std::exception& e) {
+              DBG_PRINT("http svr session socket release get exception, exception info: %s", e.what());
+            }
+
+            try {
+              stream_.cancel();
+            } catch (const std::exception& e) {
+              DBG_PRINT("http svr session stream cancel get exception, exception info: %s", e.what());
+            }
+
+            try {
+              stream_.close();
+            } catch (const std::exception& e) {
+              DBG_PRINT("http svr session stream close get exception, exception info: %s", e.what());
+            }
+
+            try {
+              stream_.release_socket();
+            } catch (const std::exception& e) {
+              DBG_PRINT("http svr session stream release socket get exception, exception info: %s", e.what());
+            }
           });
     }
 

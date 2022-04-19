@@ -193,7 +193,7 @@ class AsioHttpClient : public std::enable_shared_from_this<AsioHttpClient> {
         co_return rsp;
 
       } catch (const std::exception& e) {
-        DBG_PRINT("http cli session timer get exception and exit, exception info: %s", e.what());
+        DBG_PRINT("http cli session send recv co get exception and exit, exception info: %s", e.what());
       }
 
       Stop();
@@ -248,17 +248,53 @@ class AsioHttpClient : public std::enable_shared_from_this<AsioHttpClient> {
           [this, self]() {
             ASIO_DEBUG_HANDLE(http_cli_session_stop_co);
 
-            if (stream_.socket().is_open()) {
-              stream_.socket().shutdown(boost::asio::ip::tcp::socket::shutdown_both);
-              stream_.socket().cancel();
-              stream_.socket().close();
-              stream_.socket().release();
-              stream_.cancel();
-              stream_.close();
-              stream_.release_socket();
+            try {
+              timer_.cancel();
+            } catch (const std::exception& e) {
+              DBG_PRINT("http cli session timer cancel get exception, exception info: %s", e.what());
             }
 
-            timer_.cancel();
+            try {
+              stream_.socket().shutdown(boost::asio::ip::tcp::socket::shutdown_both);
+            } catch (const std::exception& e) {
+              DBG_PRINT("http cli session socket shutdown get exception, exception info: %s", e.what());
+            }
+
+            try {
+              stream_.socket().cancel();
+            } catch (const std::exception& e) {
+              DBG_PRINT("http cli session socket cancel get exception, exception info: %s", e.what());
+            }
+
+            try {
+              stream_.socket().close();
+            } catch (const std::exception& e) {
+              DBG_PRINT("http cli session socket close get exception, exception info: %s", e.what());
+            }
+
+            try {
+              stream_.socket().release();
+            } catch (const std::exception& e) {
+              DBG_PRINT("http cli session socket release get exception, exception info: %s", e.what());
+            }
+
+            try {
+              stream_.cancel();
+            } catch (const std::exception& e) {
+              DBG_PRINT("http cli session stream cancel get exception, exception info: %s", e.what());
+            }
+
+            try {
+              stream_.close();
+            } catch (const std::exception& e) {
+              DBG_PRINT("http cli session stream close get exception, exception info: %s", e.what());
+            }
+
+            try {
+              stream_.release_socket();
+            } catch (const std::exception& e) {
+              DBG_PRINT("http cli session stream release socket get exception, exception info: %s", e.what());
+            }
           });
     }
 
