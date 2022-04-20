@@ -67,7 +67,10 @@ class AsioExecutor {
     }
     start_func_vec_.clear();
 
-    signals_.async_wait([&](auto, auto) { Stop(); });
+    signals_.async_wait([&](auto, auto) {
+      DBG_PRINT("AsioExecutor get stop signal.");
+      Stop();
+    });
 
     auto run_func = [this] {
       DBG_PRINT("AsioExecutor thread %llu start.", ytlib::GetThreadId());

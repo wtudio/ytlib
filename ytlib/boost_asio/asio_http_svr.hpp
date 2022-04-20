@@ -30,6 +30,10 @@ class AsioHttpServer : public std::enable_shared_from_this<AsioHttpServer> {
   using HttpReq = boost::beast::http::request<boost::beast::http::dynamic_body>;
 
  public:
+  /**
+   * @brief 配置
+   *
+   */
   struct Cfg {
     uint16_t port = 80;  // 监听的端口
 
@@ -58,6 +62,12 @@ class AsioHttpServer : public std::enable_shared_from_this<AsioHttpServer> {
     }
   };
 
+  /**
+   * @brief http server构造函数
+   *
+   * @param io_ptr io_context
+   * @param cfg 配置
+   */
   AsioHttpServer(std::shared_ptr<boost::asio::io_context> io_ptr, const AsioHttpServer::Cfg& cfg)
       : cfg_(AsioHttpServer::Cfg::Verify(cfg)),
         io_ptr_(io_ptr),
@@ -187,12 +197,26 @@ class AsioHttpServer : public std::enable_shared_from_this<AsioHttpServer> {
         });
   }
 
+  /**
+   * @brief 注册自定义http处理接口
+   *
+   * @tparam RspBodyType 返回包body类型
+   * @param pattern http uri
+   * @param handle http处理接口
+   */
   template <typename RspBodyType = boost::beast::http::string_body>
   void RegisterHttpHandleFunc(std::string_view pattern,
                               std::function<boost::asio::awaitable<boost::beast::http::response<RspBodyType>>(const HttpReq&)>&& handle) {
     http_dispatcher_ptr_->RegisterHttpHandle(pattern, Session::GenHttpHandle(std::move(handle)));
   }
 
+  /**
+   * @brief 注册自定义http处理接口
+   *
+   * @tparam RspBodyType 返回包body类型
+   * @param pattern http uri
+   * @param handle http处理接口
+   */
   template <typename RspBodyType = boost::beast::http::string_body>
   void RegisterHttpHandleFunc(std::string_view pattern,
                               const std::function<boost::asio::awaitable<boost::beast::http::response<RspBodyType>>(const HttpReq&)>& handle) {
@@ -254,7 +278,7 @@ class AsioHttpServer : public std::enable_shared_from_this<AsioHttpServer> {
                 std::string_view bad_req_check_ret = CheckBadRequest(req);
                 if (!bad_req_check_ret.empty()) {
                   const auto& rsp = BadRequestHandle(req, bad_req_check_ret);
-                  close_connect_flag_ = !rsp.need_eof();
+                  close_connect_flag_ = rsp.need_eof();
 
                   DBG_PRINT("http svr session get bad request, err msg: %s, close_connect_flag: %d", bad_req_check_ret.data(), close_connect_flag_);
                   size_t write_data_size = co_await http::async_write(stream_, rsp, boost::asio::use_awaitable);
@@ -278,7 +302,7 @@ class AsioHttpServer : public std::enable_shared_from_this<AsioHttpServer> {
 
                 if (ec == boost::beast::errc::no_such_file_or_directory) {
                   const auto& rsp = NotFoundHandle(req, std::string_view(req.target().data(), req.target().length()));
-                  close_connect_flag_ = !rsp.need_eof();
+                  close_connect_flag_ = rsp.need_eof();
 
                   DBG_PRINT("http svr session get 404, close_connect_flag: %d", close_connect_flag_);
                   size_t write_data_size = co_await http::async_write(stream_, rsp, boost::asio::use_awaitable);
@@ -288,7 +312,7 @@ class AsioHttpServer : public std::enable_shared_from_this<AsioHttpServer> {
 
                 if (ec) {
                   const auto& rsp = ServerErrorHandle(req, ec.message());
-                  close_connect_flag_ = !rsp.need_eof();
+                  close_connect_flag_ = rsp.need_eof();
 
                   DBG_PRINT("http svr session get server error, err msg: %s, close_connect_flag: %d", ec.message().c_str(), close_connect_flag_);
                   size_t write_data_size = co_await http::async_write(stream_, rsp, boost::asio::use_awaitable);
@@ -306,7 +330,7 @@ class AsioHttpServer : public std::enable_shared_from_this<AsioHttpServer> {
                   rsp.content_length(size);
                   rsp.keep_alive(req.keep_alive());
 
-                  close_connect_flag_ = !rsp.need_eof();
+                  close_connect_flag_ = rsp.need_eof();
 
                   DBG_PRINT("http svr session get head request, close_connect_flag: %d", close_connect_flag_);
                   size_t write_data_size = co_await http::async_write(stream_, rsp, boost::asio::use_awaitable);
@@ -324,7 +348,7 @@ class AsioHttpServer : public std::enable_shared_from_this<AsioHttpServer> {
                 rsp.content_length(size);
                 rsp.keep_alive(req.keep_alive());
 
-                close_connect_flag_ = !rsp.need_eof();
+                close_connect_flag_ = rsp.need_eof();
 
                 DBG_PRINT("http svr session get file request, close_connect_flag: %d", close_connect_flag_);
                 size_t write_data_size = co_await http::async_write(stream_, rsp, boost::asio::use_awaitable);
@@ -453,14 +477,14 @@ class AsioHttpServer : public std::enable_shared_from_this<AsioHttpServer> {
         }
 
         if (!exp_info.empty()) {
-          const auto& rsp = AsioHttpServer::Session::ServerErrorHandle(req, exp_info);
-          session_ptr->close_connect_flag_ = !rsp.need_eof();
+          const auto& rsp = ServerErrorHandle(req, exp_info);
+          session_ptr->close_connect_flag_ = rsp.need_eof();
 
           DBG_PRINT("http svr session custom handle request get exp, close_connect_flag: %d", session_ptr->close_connect_flag_);
           size_t write_data_size = co_await boost::beast::http::async_write(session_ptr->stream_, rsp, boost::asio::use_awaitable);
           DBG_PRINT("http svr session async write %llu bytes", write_data_size);
         } else {
-          session_ptr->close_connect_flag_ = !handle_rsp.need_eof();
+          session_ptr->close_connect_flag_ = handle_rsp.need_eof();
 
           DBG_PRINT("http svr session custom handle request, close_connect_flag: %d", session_ptr->close_connect_flag_);
           size_t write_data_size = co_await boost::beast::http::async_write(session_ptr->stream_, handle_rsp, boost::asio::use_awaitable);

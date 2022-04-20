@@ -43,7 +43,7 @@ class AsioNetLogServer : public std::enable_shared_from_this<AsioNetLogServer> {
     size_t max_session_num = 1000000;                                            // 最大连接数
     std::chrono::steady_clock::duration mgr_timer_dt = std::chrono::seconds(5);  // 管理协程定时器间隔
 
-    size_t session_buf_size = 1024 * 4;                                                   // session接受数据时的缓存
+    size_t session_buf_size = 1024 * 8;                                                   // session接受数据时的缓存
     std::chrono::steady_clock::duration timer_dt = std::chrono::seconds(5);               // 定时器间隔
     std::chrono::steady_clock::duration max_no_data_duration = std::chrono::seconds(60);  // 最长无数据时间
 

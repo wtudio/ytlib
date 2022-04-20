@@ -23,7 +23,7 @@ namespace ytlib {
 
 /**
  * @brief 远程日志服务器客户端
- * @note 必须以智能指针形式构造
+ * @note 必须以智能指针形式构造。内部有定时器，会定时一次性的发送一段时间内的日志到服务器
  */
 class AsioNetLogClient : public std::enable_shared_from_this<AsioNetLogClient> {
  public:

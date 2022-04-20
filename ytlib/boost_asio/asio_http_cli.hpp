@@ -47,6 +47,12 @@ class AsioHttpClient : public std::enable_shared_from_this<AsioHttpClient> {
     }
   };
 
+  /**
+   * @brief http client构造函数
+   *
+   * @param io_ptr io_context
+   * @param cfg 配置
+   */
   AsioHttpClient(std::shared_ptr<boost::asio::io_context> io_ptr, const AsioHttpClient::Cfg& cfg)
       : cfg_(AsioHttpClient::Cfg::Verify(cfg)),
         io_ptr_(io_ptr),
@@ -58,6 +64,15 @@ class AsioHttpClient : public std::enable_shared_from_this<AsioHttpClient> {
   AsioHttpClient(const AsioHttpClient&) = delete;             ///< no copy
   AsioHttpClient& operator=(const AsioHttpClient&) = delete;  ///< no copy
 
+  /**
+   * @brief http请求协程接口
+   *
+   * @tparam ReqBodyType 请求包的body类型
+   * @tparam RspBodyType 返回包的body类型
+   * @param req 请求包
+   * @param timeout 超时时间
+   * @return boost::asio::awaitable<boost::beast::http::response<RspBodyType> > 返回包协程句柄
+   */
   template <typename ReqBodyType = boost::beast::http::string_body, typename RspBodyType = boost::beast::http::string_body>
   boost::asio::awaitable<boost::beast::http::response<RspBodyType> > HttpSendRecvCo(const boost::beast::http::request<ReqBodyType>& req,
                                                                                     std::chrono::steady_clock::duration timeout = std::chrono::seconds(5)) {
@@ -90,6 +105,10 @@ class AsioHttpClient : public std::enable_shared_from_this<AsioHttpClient> {
         boost::asio::use_awaitable);
   }
 
+  /**
+   * @brief 停止
+   * @note 在析构之前需要手动调用此函数
+   */
   void Stop() {
     if (!std::atomic_exchange(&run_flag_, false)) return;
 
@@ -106,6 +125,11 @@ class AsioHttpClient : public std::enable_shared_from_this<AsioHttpClient> {
         });
   }
 
+  /**
+   * @brief 调用HttpSendRecvCo时的strand
+   *
+   * @return boost::asio::strand<boost::asio::io_context::executor_type>&
+   */
   boost::asio::strand<boost::asio::io_context::executor_type>& Strand() {
     return mgr_strand_;
   }
@@ -187,6 +211,11 @@ class AsioHttpClient : public std::enable_shared_from_this<AsioHttpClient> {
         boost::beast::http::response<RspBodyType> rsp;
         size_t read_size = co_await http::async_read(stream_, buffer_, rsp, asio::use_awaitable);
         DBG_PRINT("http cli session read %llu bytes", read_size);
+
+        if (req.need_eof() || rsp.need_eof()) {
+          DBG_PRINT("http cli session close due to eof");
+          Stop();
+        }
 
         idle_flag_ = true;
 

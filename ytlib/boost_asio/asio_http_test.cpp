@@ -99,8 +99,6 @@ TEST(BOOST_ASIO_TEST, HTTP_base) {
   asio::co_spawn(http_cli_ptr->Strand(), http_send_recv(), asio::detached);
   std::this_thread::sleep_for(std::chrono::seconds(1));
 
-  asio::co_spawn(http_cli_ptr->Strand(), http_send_recv(true), asio::detached);
-  asio::co_spawn(http_cli_ptr->Strand(), http_send_recv(true), asio::detached);
   asio::co_spawn(http_cli_ptr->Strand(), http_send_recv(), asio::detached);
   asio::co_spawn(http_cli_ptr->Strand(), http_send_recv(), asio::detached);
   std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -147,15 +145,16 @@ TEST(BOOST_ASIO_TEST, HTTP_handle) {
   auto http_cli_ptr = std::make_shared<AsioHttpClient>(cli_sys_ptr->IO(), AsioHttpClient::Cfg{"127.0.0.1", "80"});
   cli_sys_ptr->RegisterSvrFunc(std::function<void()>(), [http_cli_ptr] { http_cli_ptr->Stop(); });
 
-  auto http_send_recv = [http_cli_ptr](bool expect_exp = false) -> asio::awaitable<void> {
+  auto http_send_recv = [http_cli_ptr](std::string msg, bool expect_exp = false) -> asio::awaitable<void> {
     ASIO_DEBUG_HANDLE(http_send_recv_co);
     bool exp_flag = false;
     try {
       http::request<http::string_body> req{http::verb::post, "/test?key1=val1&key2=val2", 11};
       req.set(http::field::host, "127.0.0.1");
       req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
-      req.body() = "test data.";
+      req.body() = msg;
       req.prepare_payload();
+      req.keep_alive(false);
 
       std::stringstream ss;
       ss << req << std::endl;
@@ -174,14 +173,10 @@ TEST(BOOST_ASIO_TEST, HTTP_handle) {
       auto rsp_reason = rsp.reason();
       EXPECT_STREQ(std::string(rsp_reason.data(), rsp_reason.size()).c_str(), "OK");
 
-      auto rsp_content_length = rsp.at(http::field::content_length);
-      EXPECT_STREQ(std::string(rsp_content_length.data(), rsp_content_length.size()).c_str(), "16");
-
       auto rsp_content_type = rsp.at(http::field::content_type);
       EXPECT_STREQ(std::string(rsp_content_type.data(), rsp_content_type.size()).c_str(), "text/html");
 
-      EXPECT_EQ(rsp.body().size(), 16);
-      EXPECT_STREQ(rsp.body().c_str(), "echo: test data.");
+      EXPECT_STREQ(rsp.body().c_str(), ("echo: " + msg).c_str());
 
     } catch (const std::exception& e) {
       DBG_PRINT("http_send_recv_co get exception and exit, exception: %s", e.what());
@@ -233,7 +228,10 @@ TEST(BOOST_ASIO_TEST, HTTP_handle) {
   });
   std::this_thread::sleep_for(std::chrono::seconds(1));
 
-  asio::co_spawn(http_cli_ptr->Strand(), http_send_recv(), asio::detached);
+  asio::co_spawn(http_cli_ptr->Strand(), http_send_recv("msg11111111"), asio::detached);
+  std::this_thread::sleep_for(std::chrono::seconds(1));
+
+  asio::co_spawn(http_cli_ptr->Strand(), http_send_recv("msg2222222"), asio::detached);
   std::this_thread::sleep_for(std::chrono::seconds(1));
 
   svr_sys_ptr->Stop();

@@ -13,25 +13,14 @@ class NetLogFixture {
   NetLogFixture() {
     DBG_PRINT("NetLogFixture setup");
 
-    // log svr
-    auto log_svr_sys_ptr = std::make_shared<AsioExecutor>(8);
-    log_svr_sys_ptr_ = log_svr_sys_ptr;
-    auto net_log_svr_ptr = std::make_shared<AsioNetLogServer>(log_svr_sys_ptr->IO(), AsioNetLogServer::Cfg());
-    log_svr_sys_ptr->RegisterSvrFunc([net_log_svr_ptr] { net_log_svr_ptr->Start(); },
-                                     [net_log_svr_ptr] { net_log_svr_ptr->Stop(); });
-
-    t_svr_ = std::make_shared<std::thread>([log_svr_sys_ptr] {
-      log_svr_sys_ptr->Start();
-      log_svr_sys_ptr->Join();
-      DBG_PRINT("log_svr_sys_ptr exit");
-    });
+    AsioDebugTool::Ins().Reset();
 
     // log cli
     auto log_cli_sys_ptr = std::make_shared<AsioExecutor>(1);
     log_cli_sys_ptr_ = log_cli_sys_ptr;
 
     AsioNetLogClient::Cfg net_log_client_cfg;
-    net_log_client_cfg.svr_ep = boost::asio::ip::tcp::endpoint{boost::asio::ip::address_v4({127, 0, 0, 1}), 50001};
+    net_log_client_cfg.svr_ep = boost::asio::ip::tcp::endpoint{boost::asio::ip::address_v4({127, 0, 0, 1}), 50009};
     auto net_log_cli_ptr = std::make_shared<AsioNetLogClient>(log_cli_sys_ptr->IO(), net_log_client_cfg);
     log_cli_sys_ptr->RegisterSvrFunc(std::function<void()>(),
                                      [net_log_cli_ptr] { net_log_cli_ptr->Stop(); });
@@ -48,18 +37,13 @@ class NetLogFixture {
   ~NetLogFixture() {
     DBG_PRINT("NetLogFixture teardown");
 
-    log_svr_sys_ptr_->Stop();
-    t_svr_->join();
-
     log_cli_sys_ptr_->Stop();
     t_cli_->join();
   }
 
  private:
-  std::shared_ptr<AsioExecutor> log_svr_sys_ptr_;
   std::shared_ptr<AsioExecutor> log_cli_sys_ptr_;
 
-  std::shared_ptr<std::thread> t_svr_;
   std::shared_ptr<std::thread> t_cli_;
 };
 
