@@ -84,29 +84,11 @@ if(YTLIB_BUILD_BENCH_TESTS)
   include(GetGoogleBenchmark)
 endif()
 
-#设置下一级目录
-add_subdirectory(ytlib/cache)
-add_subdirectory(ytlib/container)
-add_subdirectory(ytlib/dll_tools)
-add_subdirectory(ytlib/file)
-add_subdirectory(ytlib/log)
-add_subdirectory(ytlib/logic)
-add_subdirectory(ytlib/math)
-add_subdirectory(ytlib/misc)
-add_subdirectory(ytlib/string)
-add_subdirectory(ytlib/thread)
-
-if(YTLIB_BUILD_WITH_BOOST)
-  add_subdirectory(ytlib/boost_asio)
-  add_subdirectory(ytlib/boost_tools)
-endif()
-
-if(YTLIB_BUILD_WITH_FREEGLUT)
-  add_subdirectory(ytlib/gl)
-endif()
-
 #设置个性化测试（ytlib开发测试专用）
 option(YTLIB_BUILD_CUSTOM_TESTS "Build custom tests." OFF)
 if(YTLIB_BUILD_CUSTOM_TESTS)
-  add_subdirectory(ytlib/custom_test)
+  add_subdirectory(test)
 endif()
+
+#设置下一级目录
+add_subdirectory(ytlib)

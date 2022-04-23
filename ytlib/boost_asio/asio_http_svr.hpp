@@ -160,34 +160,33 @@ class AsioHttpServer : public std::enable_shared_from_this<AsioHttpServer> {
         [this, self]() {
           ASIO_DEBUG_HANDLE(http_svr_stop_co);
 
-          try {
-            acceptor_timer_.cancel();
-          } catch (const std::exception& e) {
-            DBG_PRINT("http svr acceptor timer cancel get exception, exception info: %s", e.what());
-          }
-
-          try {
-            mgr_timer_.cancel();
-          } catch (const std::exception& e) {
-            DBG_PRINT("http svr mgr timer cancel get exception, exception info: %s", e.what());
-          }
-
-          try {
-            acceptor_.cancel();
-          } catch (const std::exception& e) {
-            DBG_PRINT("http svr acceptor cancel get exception, exception info: %s", e.what());
-          }
-
-          try {
-            acceptor_.close();
-          } catch (const std::exception& e) {
-            DBG_PRINT("http svr acceptor close get exception, exception info: %s", e.what());
-          }
-
-          try {
-            acceptor_.release();
-          } catch (const std::exception& e) {
-            DBG_PRINT("http svr acceptor release get exception, exception info: %s", e.what());
+          uint32_t stop_step = 1;
+          while (stop_step) {
+            try {
+              switch (stop_step) {
+                case 1:
+                  acceptor_timer_.cancel();
+                  ++stop_step;
+                case 2:
+                  mgr_timer_.cancel();
+                  ++stop_step;
+                case 3:
+                  acceptor_.cancel();
+                  ++stop_step;
+                case 4:
+                  acceptor_.close();
+                  ++stop_step;
+                case 5:
+                  acceptor_.release();
+                  ++stop_step;
+                default:
+                  stop_step = 0;
+                  break;
+              }
+            } catch (const std::exception& e) {
+              DBG_PRINT("http svr stop get exception at step %u, exception info: %s", stop_step, e.what());
+              ++stop_step;
+            }
           }
 
           for (auto& session_ptr : session_ptr_list_)
@@ -287,7 +286,7 @@ class AsioHttpServer : public std::enable_shared_from_this<AsioHttpServer> {
                 }
 
                 // 处理handle类请求
-                const auto& handle = http_dispatcher_ptr_->GetHttpHandle(std::string_view(req.target().data(), req.target().length()));
+                const auto& handle = http_dispatcher_ptr_->GetHttpHandle(req.target());
                 if (handle) {
                   co_await handle(self, req);
                   continue;
@@ -301,7 +300,7 @@ class AsioHttpServer : public std::enable_shared_from_this<AsioHttpServer> {
                 body.open(path.c_str(), boost::beast::file_mode::scan, ec);
 
                 if (ec == boost::beast::errc::no_such_file_or_directory) {
-                  const auto& rsp = NotFoundHandle(req, std::string_view(req.target().data(), req.target().length()));
+                  const auto& rsp = NotFoundHandle(req, req.target());
                   close_connect_flag_ = rsp.need_eof();
 
                   DBG_PRINT("http svr session get 404, close_connect_flag: %d", close_connect_flag_);
@@ -325,7 +324,6 @@ class AsioHttpServer : public std::enable_shared_from_this<AsioHttpServer> {
                 // 处理head类请求
                 if (req.method() == http::verb::head) {
                   http::response<http::empty_body> rsp{http::status::ok, req.version()};
-                  rsp.set(http::field::server, BOOST_BEAST_VERSION_STRING);
                   rsp.set(http::field::content_type, MimeType(path));
                   rsp.content_length(size);
                   rsp.keep_alive(req.keep_alive());
@@ -343,7 +341,6 @@ class AsioHttpServer : public std::enable_shared_from_this<AsioHttpServer> {
                     std::piecewise_construct,
                     std::make_tuple(std::move(body)),
                     std::make_tuple(http::status::ok, req.version())};
-                rsp.set(http::field::server, BOOST_BEAST_VERSION_STRING);
                 rsp.set(http::field::content_type, MimeType(path));
                 rsp.content_length(size);
                 rsp.keep_alive(req.keep_alive());
@@ -410,52 +407,42 @@ class AsioHttpServer : public std::enable_shared_from_this<AsioHttpServer> {
           [this, self]() {
             ASIO_DEBUG_HANDLE(http_svr_session_stop_co);
 
-            try {
-              timer_.cancel();
-            } catch (const std::exception& e) {
-              DBG_PRINT("http svr session timer cancel get exception, exception info: %s", e.what());
-            }
-
-            try {
-              stream_.socket().shutdown(boost::asio::ip::tcp::socket::shutdown_both);
-            } catch (const std::exception& e) {
-              DBG_PRINT("http svr session socket shutdown get exception, exception info: %s", e.what());
-            }
-
-            try {
-              stream_.socket().cancel();
-            } catch (const std::exception& e) {
-              DBG_PRINT("http svr session socket cancel get exception, exception info: %s", e.what());
-            }
-
-            try {
-              stream_.socket().close();
-            } catch (const std::exception& e) {
-              DBG_PRINT("http svr session socket close get exception, exception info: %s", e.what());
-            }
-
-            try {
-              stream_.socket().release();
-            } catch (const std::exception& e) {
-              DBG_PRINT("http svr session socket release get exception, exception info: %s", e.what());
-            }
-
-            try {
-              stream_.cancel();
-            } catch (const std::exception& e) {
-              DBG_PRINT("http svr session stream cancel get exception, exception info: %s", e.what());
-            }
-
-            try {
-              stream_.close();
-            } catch (const std::exception& e) {
-              DBG_PRINT("http svr session stream close get exception, exception info: %s", e.what());
-            }
-
-            try {
-              stream_.release_socket();
-            } catch (const std::exception& e) {
-              DBG_PRINT("http svr session stream release socket get exception, exception info: %s", e.what());
+            uint32_t stop_step = 1;
+            while (stop_step) {
+              try {
+                switch (stop_step) {
+                  case 1:
+                    timer_.cancel();
+                    ++stop_step;
+                  case 2:
+                    stream_.socket().shutdown(boost::asio::ip::tcp::socket::shutdown_both);
+                    ++stop_step;
+                  case 3:
+                    stream_.socket().cancel();
+                    ++stop_step;
+                  case 4:
+                    stream_.socket().close();
+                    ++stop_step;
+                  case 5:
+                    stream_.socket().release();
+                    ++stop_step;
+                  case 6:
+                    stream_.cancel();
+                    ++stop_step;
+                  case 7:
+                    stream_.close();
+                    ++stop_step;
+                  case 8:
+                    stream_.release_socket();
+                    ++stop_step;
+                  default:
+                    stop_step = 0;
+                    break;
+                }
+              } catch (const std::exception& e) {
+                DBG_PRINT("http svr session stop get exception at step %u, exception info: %s", stop_step, e.what());
+                ++stop_step;
+              }
             }
           });
     }
@@ -494,12 +481,12 @@ class AsioHttpServer : public std::enable_shared_from_this<AsioHttpServer> {
     }
 
    private:
-    static boost::beast::string_view MimeType(boost::beast::string_view path) {
+    static std::string_view MimeType(std::string_view path) {
       using boost::beast::iequals;
       auto const ext = [&path] {
         auto const pos = path.rfind(".");
-        if (pos == boost::beast::string_view::npos)
-          return boost::beast::string_view{};
+        if (pos == std::string_view::npos)
+          return std::string_view();
         return path.substr(pos);
       }();
       if (iequals(ext, ".htm")) return "text/html";
@@ -526,7 +513,7 @@ class AsioHttpServer : public std::enable_shared_from_this<AsioHttpServer> {
       return "application/text";
     }
 
-    static std::string PathCat(boost::beast::string_view base, boost::beast::string_view path) {
+    static std::string PathCat(std::string_view base, std::string_view path) {
       if (base.empty())
         return std::string(path);
       std::string result(base);
@@ -554,14 +541,12 @@ class AsioHttpServer : public std::enable_shared_from_this<AsioHttpServer> {
       if (req.method() != http::verb::get &&
           req.method() != http::verb::head &&
           req.method() != http::verb::post) {
-        const static std::string err_str = "UnSupport HTTP-method";
-        return err_str;
+        return "UnSupport HTTP-method";
       }
 
       // uri 检查
-      if (req.target().empty() || req.target()[0] != '/' || req.target().find("..") != boost::beast::string_view::npos) {
-        const static std::string err_str = "Illegal request-target";
-        return err_str;
+      if (req.target().empty() || req.target()[0] != '/' || req.target().find("..") != std::string_view::npos) {
+        return "Illegal request-target";
       }
 
       return std::string_view();
@@ -571,7 +556,6 @@ class AsioHttpServer : public std::enable_shared_from_this<AsioHttpServer> {
       namespace http = boost::beast::http;
 
       http::response<http::string_body> rsp{http::status::bad_request, req.version()};
-      rsp.set(http::field::server, BOOST_BEAST_VERSION_STRING);
       rsp.set(http::field::content_type, "text/html");
       rsp.keep_alive(req.keep_alive());
       rsp.body() = info;
@@ -583,7 +567,6 @@ class AsioHttpServer : public std::enable_shared_from_this<AsioHttpServer> {
       namespace http = boost::beast::http;
 
       http::response<http::string_body> rsp{http::status::not_found, req.version()};
-      rsp.set(http::field::server, BOOST_BEAST_VERSION_STRING);
       rsp.set(http::field::content_type, "text/html");
       rsp.keep_alive(req.keep_alive());
       rsp.body() = "The resource '" + std::string(info) + "' was not found.";
@@ -595,7 +578,6 @@ class AsioHttpServer : public std::enable_shared_from_this<AsioHttpServer> {
       namespace http = boost::beast::http;
 
       http::response<http::string_body> rsp{http::status::internal_server_error, req.version()};
-      rsp.set(http::field::server, BOOST_BEAST_VERSION_STRING);
       rsp.set(http::field::content_type, "text/html");
       rsp.keep_alive(req.keep_alive());
       rsp.body() = "An error occurred: '" + std::string(info) + "'";

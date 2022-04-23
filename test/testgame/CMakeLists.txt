@@ -23,12 +23,14 @@ set_property(TARGET ${CUR_TARGET_NAME} PROPERTY PRIVATE_HEADER ${head_files})
 # 设置链接库
 target_link_libraries(${CUR_TARGET_NAME} PRIVATE
   ytlib::misc
+  ytlib::math
   ytlib::boost_asio
+  ytlib::gl
 )
 
 # 设置编译选项
-# target_compile_definitions(${CUR_TARGET_NAME} PRIVATE ASIO_ENABLE_DEBUG)
+target_compile_definitions(${CUR_TARGET_NAME} PRIVATE ASIO_ENABLE_DEBUG)
 
 # 设置其他属性
 set_property(TARGET ${CUR_TARGET_NAME} PROPERTY UNITY_BUILD ON)
-set_property(TARGET ${CUR_TARGET_NAME} PROPERTY FOLDER custom_test/${CUR_TARGET_NAME})
+set_property(TARGET ${CUR_TARGET_NAME} PROPERTY FOLDER test/${CUR_TARGET_NAME})

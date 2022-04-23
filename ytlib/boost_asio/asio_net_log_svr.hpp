@@ -168,34 +168,33 @@ class AsioNetLogServer : public std::enable_shared_from_this<AsioNetLogServer> {
         [this, self]() {
           ASIO_DEBUG_HANDLE(net_log_svr_stop_co);
 
-          try {
-            acceptor_timer_.cancel();
-          } catch (const std::exception& e) {
-            DBG_PRINT("net log svr acceptor timer cancel get exception, exception info: %s", e.what());
-          }
-
-          try {
-            mgr_timer_.cancel();
-          } catch (const std::exception& e) {
-            DBG_PRINT("net log svr mgr timer cancel get exception, exception info: %s", e.what());
-          }
-
-          try {
-            acceptor_.cancel();
-          } catch (const std::exception& e) {
-            DBG_PRINT("net log svr acceptor cancel get exception, exception info: %s", e.what());
-          }
-
-          try {
-            acceptor_.close();
-          } catch (const std::exception& e) {
-            DBG_PRINT("net log svr acceptor close get exception, exception info: %s", e.what());
-          }
-
-          try {
-            acceptor_.release();
-          } catch (const std::exception& e) {
-            DBG_PRINT("net log svr acceptor release get exception, exception info: %s", e.what());
+          uint32_t stop_step = 1;
+          while (stop_step) {
+            try {
+              switch (stop_step) {
+                case 1:
+                  acceptor_timer_.cancel();
+                  ++stop_step;
+                case 2:
+                  mgr_timer_.cancel();
+                  ++stop_step;
+                case 3:
+                  acceptor_.cancel();
+                  ++stop_step;
+                case 4:
+                  acceptor_.close();
+                  ++stop_step;
+                case 5:
+                  acceptor_.release();
+                  ++stop_step;
+                default:
+                  stop_step = 0;
+                  break;
+              }
+            } catch (const std::exception& e) {
+              DBG_PRINT("net log svr stop get exception at step %u, exception info: %s", stop_step, e.what());
+              ++stop_step;
+            }
           }
 
           for (auto& session_ptr : session_ptr_list_)
@@ -335,40 +334,40 @@ class AsioNetLogServer : public std::enable_shared_from_this<AsioNetLogServer> {
           [this, self]() {
             ASIO_DEBUG_HANDLE(net_log_svr_session_stop_co);
 
-            try {
-              timer_.cancel();
-            } catch (const std::exception& e) {
-              DBG_PRINT("net log svr session timer cancel get exception, exception info: %s", e.what());
-            }
-
-            try {
-              sock_.shutdown(boost::asio::ip::tcp::socket::shutdown_both);
-            } catch (const std::exception& e) {
-              DBG_PRINT("net log svr session socket shutdown get exception, exception info: %s", e.what());
-            }
-
-            try {
-              sock_.cancel();
-            } catch (const std::exception& e) {
-              DBG_PRINT("net log svr session socket cancel get exception, exception info: %s", e.what());
-            }
-
-            try {
-              sock_.close();
-            } catch (const std::exception& e) {
-              DBG_PRINT("net log svr session socket close get exception, exception info: %s", e.what());
-            }
-
-            try {
-              sock_.release();
-            } catch (const std::exception& e) {
-              DBG_PRINT("net log svr session socket release get exception, exception info: %s", e.what());
-            }
-
-            if (ofs_.is_open()) {
-              ofs_.flush();
-              ofs_.clear();
-              ofs_.close();
+            uint32_t stop_step = 1;
+            while (stop_step) {
+              try {
+                switch (stop_step) {
+                  case 1:
+                    timer_.cancel();
+                    ++stop_step;
+                  case 2:
+                    sock_.shutdown(boost::asio::ip::tcp::socket::shutdown_both);
+                    ++stop_step;
+                  case 3:
+                    sock_.cancel();
+                    ++stop_step;
+                  case 4:
+                    sock_.close();
+                    ++stop_step;
+                  case 5:
+                    sock_.release();
+                    ++stop_step;
+                  case 6:
+                    if (ofs_.is_open()) {
+                      ofs_.flush();
+                      ofs_.clear();
+                      ofs_.close();
+                    }
+                    ++stop_step;
+                  default:
+                    stop_step = 0;
+                    break;
+                }
+              } catch (const std::exception& e) {
+                DBG_PRINT("net log svr session stop get exception at step %u, exception info: %s", stop_step, e.what());
+                ++stop_step;
+              }
             }
           });
     }

@@ -8,31 +8,27 @@ SET(CUR_TARGET_NAME ${CUR_DIR})
 File(GLOB_RECURSE head_files ${CMAKE_CURRENT_SOURCE_DIR}/*.hpp ${CMAKE_CURRENT_SOURCE_DIR}/*.h)
 File(GLOB_RECURSE src ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 
-# 添加目标，设置库类型SHARED/STATIC
-add_library(${CUR_TARGET_NAME})
-add_library(ytlib::${CUR_TARGET_NAME} ALIAS ${CUR_TARGET_NAME})
+# 添加目标
+add_executable(${CUR_TARGET_NAME})
 
 # 设置源文件
 target_sources(${CUR_TARGET_NAME} PRIVATE ${src})
 
 # 设置头文件路径
-target_include_directories(${CUR_TARGET_NAME} INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(${CUR_TARGET_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
 # 设置头文件
-set_property(TARGET ${CUR_TARGET_NAME} PROPERTY PUBLIC_HEADER ${head_files})
 set_property(TARGET ${CUR_TARGET_NAME} PROPERTY PRIVATE_HEADER ${head_files})
 
 # 设置链接库
-target_link_libraries(${CUR_TARGET_NAME} PRIVATE ytlib::dll_tools)
+target_link_libraries(${CUR_TARGET_NAME} PRIVATE
+  ytlib::misc
+  ytlib::boost_asio
+)
 
 # 设置编译选项
-# target_compile_definitions(${CUR_TARGET_NAME} PRIVATE xxx)
-if(BUILD_SHARED_LIBS)
-  target_compile_definitions(${CUR_TARGET_NAME} PRIVATE BUILD_SHARED_LIBS)
-endif()
+target_compile_definitions(${CUR_TARGET_NAME} PRIVATE ASIO_ENABLE_DEBUG)
 
 # 设置其他属性
 set_property(TARGET ${CUR_TARGET_NAME} PROPERTY UNITY_BUILD ON)
-set_property(TARGET ${CUR_TARGET_NAME} PROPERTY FOLDER custom_test/${CUR_TARGET_NAME})
-set_property(TARGET ${CUR_TARGET_NAME} PROPERTY DEBUG_POSTFIX "d")
+set_property(TARGET ${CUR_TARGET_NAME} PROPERTY FOLDER test/${CUR_TARGET_NAME})

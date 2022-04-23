@@ -9,6 +9,8 @@
 
 #include <atomic>
 #include <chrono>
+#include <functional>
+#include <map>
 #include <memory>
 
 #include <boost/beast.hpp>
@@ -24,7 +26,7 @@ namespace ytlib {
  * @brief http客户端
  *
  */
-class AsioHttpClient : public std::enable_shared_from_this<AsioHttpClient> {
+class AsioHttpClientProxy : public std::enable_shared_from_this<AsioHttpClientProxy> {
  public:
   /**
    * @brief 配置
@@ -36,6 +38,8 @@ class AsioHttpClient : public std::enable_shared_from_this<AsioHttpClient> {
 
     std::chrono::steady_clock::duration max_no_data_duration = std::chrono::seconds(60);  // 连接最长无数据时间
 
+    size_t max_session_num = 1000;  // 最大连接数
+
     /// 校验配置
     static Cfg Verify(const Cfg& verify_cfg) {
       Cfg cfg(verify_cfg);
@@ -43,26 +47,28 @@ class AsioHttpClient : public std::enable_shared_from_this<AsioHttpClient> {
       if (cfg.max_no_data_duration < std::chrono::seconds(10))
         cfg.max_no_data_duration = std::chrono::seconds(10);
 
+      if (cfg.max_session_num < 1) cfg.max_session_num = 1;
+
       return cfg;
     }
   };
 
   /**
-   * @brief http client构造函数
+   * @brief http client proxy构造函数
    *
    * @param io_ptr io_context
    * @param cfg 配置
    */
-  AsioHttpClient(std::shared_ptr<boost::asio::io_context> io_ptr, const AsioHttpClient::Cfg& cfg)
-      : cfg_(AsioHttpClient::Cfg::Verify(cfg)),
+  AsioHttpClientProxy(std::shared_ptr<boost::asio::io_context> io_ptr, const AsioHttpClientProxy::Cfg& cfg)
+      : cfg_(AsioHttpClientProxy::Cfg::Verify(cfg)),
         io_ptr_(io_ptr),
-        session_cfg_ptr_(std::make_shared<const AsioHttpClient::SessionCfg>(cfg_)),
+        session_cfg_ptr_(std::make_shared<const AsioHttpClientProxy::SessionCfg>(cfg_)),
         mgr_strand_(boost::asio::make_strand(*io_ptr_)) {}
 
-  ~AsioHttpClient() {}
+  ~AsioHttpClientProxy() {}
 
-  AsioHttpClient(const AsioHttpClient&) = delete;             ///< no copy
-  AsioHttpClient& operator=(const AsioHttpClient&) = delete;  ///< no copy
+  AsioHttpClientProxy(const AsioHttpClientProxy&) = delete;             ///< no copy
+  AsioHttpClientProxy& operator=(const AsioHttpClientProxy&) = delete;  ///< no copy
 
   /**
    * @brief http请求协程接口
@@ -77,10 +83,10 @@ class AsioHttpClient : public std::enable_shared_from_this<AsioHttpClient> {
   boost::asio::awaitable<boost::beast::http::response<RspBodyType> > HttpSendRecvCo(const boost::beast::http::request<ReqBodyType>& req,
                                                                                     std::chrono::steady_clock::duration timeout = std::chrono::seconds(5)) {
     if (!run_flag_) [[unlikely]]
-      throw std::logic_error("http client is closed.");
+      throw std::runtime_error("Http client proxy is closed.");
 
     // 找可用session，没有就新建一个。同时清理已失效session
-    std::shared_ptr<AsioHttpClient::Session> session_ptr;
+    std::shared_ptr<AsioHttpClientProxy::Session> session_ptr;
     for (auto itr = session_ptr_list_.begin(); itr != session_ptr_list_.end();) {
       if ((*itr)->IsRunning()) {
         if ((*itr)->CheckIdleAndUse()) {
@@ -94,7 +100,10 @@ class AsioHttpClient : public std::enable_shared_from_this<AsioHttpClient> {
     }
 
     if (!session_ptr) {
-      session_ptr = std::make_shared<AsioHttpClient::Session>(boost::asio::make_strand(*io_ptr_), session_cfg_ptr_);
+      if (session_ptr_list_.size() >= cfg_.max_session_num)
+        throw std::runtime_error("Http client session num reach the upper limit.");
+
+      session_ptr = std::make_shared<AsioHttpClientProxy::Session>(boost::asio::make_strand(*io_ptr_), session_cfg_ptr_);
       session_ptr->Start();
       session_ptr_list_.emplace_back(session_ptr);
     }
@@ -116,7 +125,7 @@ class AsioHttpClient : public std::enable_shared_from_this<AsioHttpClient> {
     boost::asio::dispatch(
         mgr_strand_,
         [this, self]() {
-          ASIO_DEBUG_HANDLE(http_cli_stop_co);
+          ASIO_DEBUG_HANDLE(http_cli_proxy_stop_co);
 
           for (auto& session_ptr : session_ptr_list_)
             session_ptr->Stop();
@@ -124,6 +133,13 @@ class AsioHttpClient : public std::enable_shared_from_this<AsioHttpClient> {
           session_ptr_list_.clear();
         });
   }
+
+  /**
+   * @brief 是否在运行
+   *
+   * @return const std::atomic_bool&
+   */
+  const std::atomic_bool& IsRunning() { return run_flag_; }
 
   /**
    * @brief 调用HttpSendRecvCo时的strand
@@ -149,7 +165,7 @@ class AsioHttpClient : public std::enable_shared_from_this<AsioHttpClient> {
   class Session : public std::enable_shared_from_this<Session> {
    public:
     Session(boost::asio::strand<boost::asio::io_context::executor_type> session_strand,
-            std::shared_ptr<const AsioHttpClient::SessionCfg> session_cfg_ptr)
+            std::shared_ptr<const AsioHttpClientProxy::SessionCfg> session_cfg_ptr)
         : session_cfg_ptr_(session_cfg_ptr),
           session_strand_(session_strand),
           stream_(session_strand_),
@@ -277,52 +293,42 @@ class AsioHttpClient : public std::enable_shared_from_this<AsioHttpClient> {
           [this, self]() {
             ASIO_DEBUG_HANDLE(http_cli_session_stop_co);
 
-            try {
-              timer_.cancel();
-            } catch (const std::exception& e) {
-              DBG_PRINT("http cli session timer cancel get exception, exception info: %s", e.what());
-            }
-
-            try {
-              stream_.socket().shutdown(boost::asio::ip::tcp::socket::shutdown_both);
-            } catch (const std::exception& e) {
-              DBG_PRINT("http cli session socket shutdown get exception, exception info: %s", e.what());
-            }
-
-            try {
-              stream_.socket().cancel();
-            } catch (const std::exception& e) {
-              DBG_PRINT("http cli session socket cancel get exception, exception info: %s", e.what());
-            }
-
-            try {
-              stream_.socket().close();
-            } catch (const std::exception& e) {
-              DBG_PRINT("http cli session socket close get exception, exception info: %s", e.what());
-            }
-
-            try {
-              stream_.socket().release();
-            } catch (const std::exception& e) {
-              DBG_PRINT("http cli session socket release get exception, exception info: %s", e.what());
-            }
-
-            try {
-              stream_.cancel();
-            } catch (const std::exception& e) {
-              DBG_PRINT("http cli session stream cancel get exception, exception info: %s", e.what());
-            }
-
-            try {
-              stream_.close();
-            } catch (const std::exception& e) {
-              DBG_PRINT("http cli session stream close get exception, exception info: %s", e.what());
-            }
-
-            try {
-              stream_.release_socket();
-            } catch (const std::exception& e) {
-              DBG_PRINT("http cli session stream release socket get exception, exception info: %s", e.what());
+            uint32_t stop_step = 1;
+            while (stop_step) {
+              try {
+                switch (stop_step) {
+                  case 1:
+                    timer_.cancel();
+                    ++stop_step;
+                  case 2:
+                    stream_.socket().shutdown(boost::asio::ip::tcp::socket::shutdown_both);
+                    ++stop_step;
+                  case 3:
+                    stream_.socket().cancel();
+                    ++stop_step;
+                  case 4:
+                    stream_.socket().close();
+                    ++stop_step;
+                  case 5:
+                    stream_.socket().release();
+                    ++stop_step;
+                  case 6:
+                    stream_.cancel();
+                    ++stop_step;
+                  case 7:
+                    stream_.close();
+                    ++stop_step;
+                  case 8:
+                    stream_.release_socket();
+                    ++stop_step;
+                  default:
+                    stop_step = 0;
+                    break;
+                }
+              } catch (const std::exception& e) {
+                DBG_PRINT("http cli session stop get exception at step %u, exception info: %s", stop_step, e.what());
+                ++stop_step;
+              }
             }
           });
     }
@@ -340,7 +346,7 @@ class AsioHttpClient : public std::enable_shared_from_this<AsioHttpClient> {
     }
 
    private:
-    std::shared_ptr<const AsioHttpClient::SessionCfg> session_cfg_ptr_;
+    std::shared_ptr<const AsioHttpClientProxy::SessionCfg> session_cfg_ptr_;
     std::atomic_bool run_flag_ = true;
     std::atomic_bool idle_flag_ = false;
     boost::asio::strand<boost::asio::io_context::executor_type> session_strand_;
@@ -352,13 +358,119 @@ class AsioHttpClient : public std::enable_shared_from_this<AsioHttpClient> {
     bool first_time_entry_ = true;
   };
 
+  const AsioHttpClientProxy::Cfg cfg_;
+  std::atomic_bool run_flag_ = true;
+  std::shared_ptr<boost::asio::io_context> io_ptr_;
+
+  std::shared_ptr<const AsioHttpClientProxy::SessionCfg> session_cfg_ptr_;
+  boost::asio::strand<boost::asio::io_context::executor_type> mgr_strand_;
+  std::list<std::shared_ptr<AsioHttpClientProxy::Session> > session_ptr_list_;
+};
+
+class AsioHttpClient : public std::enable_shared_from_this<AsioHttpClient> {
+ public:
+  /**
+   * @brief 配置
+   *
+   */
+  struct Cfg {
+    size_t max_proxy_num = 1000;  // 最大proxy数
+
+    /// 校验配置
+    static Cfg Verify(const Cfg& verify_cfg) {
+      Cfg cfg(verify_cfg);
+
+      if (cfg.max_proxy_num < 10) cfg.max_proxy_num = 10;
+
+      return cfg;
+    }
+  };
+
+  /**
+   * @brief http client构造函数
+   *
+   * @param io_ptr io_context
+   * @param cfg 配置
+   */
+  AsioHttpClient(std::shared_ptr<boost::asio::io_context> io_ptr, const AsioHttpClient::Cfg& cfg)
+      : cfg_(AsioHttpClient::Cfg::Verify(cfg)),
+        io_ptr_(io_ptr),
+        mgr_strand_(boost::asio::make_strand(*io_ptr_)) {}
+
+  ~AsioHttpClient() {}
+
+  AsioHttpClient(const AsioHttpClient&) = delete;             ///< no copy
+  AsioHttpClient& operator=(const AsioHttpClient&) = delete;  ///< no copy
+
+  /**
+   * @brief 获取http proxy
+   * @note 非线程安全，需要在Strand下运行以保证线程安全
+   * @param cfg http proxy的配置
+   * @return std::shared_ptr<AsioHttpClientProxy> http proxy
+   */
+  std::shared_ptr<AsioHttpClientProxy> GetProxy(const AsioHttpClientProxy::Cfg& cfg) {
+    if (!run_flag_) [[unlikely]]
+      throw std::runtime_error("Http client is closed.");
+
+    const size_t proxy_hash = std::hash<std::string>{}(cfg.host + cfg.service);
+
+    auto itr = proxy_map_.find(proxy_hash);
+    if (itr != proxy_map_.end()) {
+      if (itr->second->IsRunning()) return itr->second;
+      proxy_map_.erase(itr);
+    }
+
+    if (proxy_map_.size() >= cfg_.max_proxy_num)
+      throw std::runtime_error("Http client proxy num reach the upper limit.");
+
+    std::shared_ptr<AsioHttpClientProxy> proxy_ptr = std::make_shared<AsioHttpClientProxy>(io_ptr_, cfg);
+    proxy_map_.emplace(proxy_hash, proxy_ptr);
+    return proxy_ptr;
+  }
+
+  /**
+   * @brief 停止
+   *
+   */
+  void Stop() {
+    if (!std::atomic_exchange(&run_flag_, false)) return;
+
+    auto self = shared_from_this();
+    boost::asio::dispatch(
+        mgr_strand_,
+        [this, self]() {
+          ASIO_DEBUG_HANDLE(http_cli_stop_co);
+
+          for (auto& itr : proxy_map_)
+            itr.second->Stop();
+
+          proxy_map_.clear();
+        });
+  }
+
+  /**
+   * @brief 是否在运行
+   *
+   * @return const std::atomic_bool&
+   */
+  const std::atomic_bool& IsRunning() { return run_flag_; }
+
+  /**
+   * @brief 调用GetProxy时的strand
+   *
+   * @return boost::asio::strand<boost::asio::io_context::executor_type>&
+   */
+  boost::asio::strand<boost::asio::io_context::executor_type>& Strand() {
+    return mgr_strand_;
+  }
+
+ private:
   const AsioHttpClient::Cfg cfg_;
   std::atomic_bool run_flag_ = true;
   std::shared_ptr<boost::asio::io_context> io_ptr_;
 
-  std::shared_ptr<const AsioHttpClient::SessionCfg> session_cfg_ptr_;
   boost::asio::strand<boost::asio::io_context::executor_type> mgr_strand_;
-  std::list<std::shared_ptr<AsioHttpClient::Session> > session_ptr_list_;
+  std::map<size_t, std::shared_ptr<AsioHttpClientProxy> > proxy_map_;
 };
 
 }  // namespace ytlib
