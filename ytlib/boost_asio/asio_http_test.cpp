@@ -113,12 +113,12 @@ TEST(BOOST_ASIO_TEST, HTTP_base) {
     co_return;
   };
 
-  std::this_thread::sleep_for(std::chrono::seconds(1));
+  std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
   asio::co_spawn(http_cli_ptr->Strand(), http_send_recv(AsioHttpClientProxy::Cfg{"127.0.0.1", "50080"}), asio::detached);
   asio::co_spawn(http_cli_ptr->Strand(), http_send_recv(AsioHttpClientProxy::Cfg{"127.0.0.1", "50081"}), asio::detached);
 
-  std::this_thread::sleep_for(std::chrono::seconds(1));
+  std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
   cli_sys_ptr->Stop();
   t_cli.join();
@@ -213,15 +213,15 @@ TEST(BOOST_ASIO_TEST, HTTP_proxy_base) {
     svr1_sys_ptr->Join();
     DBG_PRINT("svr1_sys_ptr exit");
   });
-  std::this_thread::sleep_for(std::chrono::seconds(1));
+  std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
   asio::co_spawn(http_cli_proxy_ptr->Strand(), http_send_recv(), asio::detached);
   asio::co_spawn(http_cli_proxy_ptr->Strand(), http_send_recv(), asio::detached);
-  std::this_thread::sleep_for(std::chrono::seconds(1));
+  std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
   asio::co_spawn(http_cli_proxy_ptr->Strand(), http_send_recv(), asio::detached);
   asio::co_spawn(http_cli_proxy_ptr->Strand(), http_send_recv(), asio::detached);
-  std::this_thread::sleep_for(std::chrono::seconds(1));
+  std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
   svr1_sys_ptr->Stop();
   t_svr1.join();
@@ -237,14 +237,14 @@ TEST(BOOST_ASIO_TEST, HTTP_proxy_base) {
     svr2_sys_ptr->Join();
     DBG_PRINT("svr2_sys_ptr exit");
   });
-  std::this_thread::sleep_for(std::chrono::seconds(1));
+  std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
   asio::co_spawn(http_cli_proxy_ptr->Strand(), http_send_recv(true), asio::detached);
   asio::co_spawn(http_cli_proxy_ptr->Strand(), http_send_recv(true), asio::detached);
-  std::this_thread::sleep_for(std::chrono::seconds(1));
+  std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
   asio::co_spawn(http_cli_proxy_ptr->Strand(), http_send_recv(), asio::detached);
-  std::this_thread::sleep_for(std::chrono::seconds(1));
+  std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
   svr2_sys_ptr->Stop();
   t_svr2.join();
@@ -269,7 +269,7 @@ TEST(BOOST_ASIO_TEST, HTTP_proxy_handle) {
     ASIO_DEBUG_HANDLE(http_send_recv_co);
     bool exp_flag = false;
     try {
-      http::request<http::string_body> req{http::verb::post, "/test?key1=val1&key2=val2", 11};
+      http::request<http::string_body> req{http::verb::post, "/test/xxx?key1=val1&key2=val2", 11};
       req.set(http::field::host, "127.0.0.1");
       req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
       req.body() = msg;
@@ -338,7 +338,7 @@ TEST(BOOST_ASIO_TEST, HTTP_proxy_handle) {
 
     co_return rsp;
   };
-  http_svr_ptr->RegisterHttpHandleFunc<http::string_body>("/test", HttpHandle);
+  http_svr_ptr->RegisterHttpHandleFunc<http::string_body>("/test/.*", HttpHandle);
 
   std::thread t_svr([svr_sys_ptr] {
     DBG_PRINT("svr_sys_ptr start");
@@ -346,13 +346,13 @@ TEST(BOOST_ASIO_TEST, HTTP_proxy_handle) {
     svr_sys_ptr->Join();
     DBG_PRINT("svr_sys_ptr exit");
   });
-  std::this_thread::sleep_for(std::chrono::seconds(1));
+  std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
   asio::co_spawn(http_cli_proxy_ptr->Strand(), http_send_recv("msg11111111"), asio::detached);
-  std::this_thread::sleep_for(std::chrono::seconds(1));
+  std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
   asio::co_spawn(http_cli_proxy_ptr->Strand(), http_send_recv("msg2222222"), asio::detached);
-  std::this_thread::sleep_for(std::chrono::seconds(1));
+  std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
   svr_sys_ptr->Stop();
   t_svr.join();

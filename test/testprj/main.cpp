@@ -20,6 +20,8 @@
 #include <boost/asio.hpp>
 #include <boost/beast.hpp>
 
+#include <boost/asio/experimental/promise.hpp>
+
 #include "ytlib/boost_asio/asio_debug_tools.hpp"
 #include "ytlib/boost_asio/net_util.hpp"
 #include "ytlib/misc/misc_macro.h"
@@ -82,46 +84,46 @@ void Test1() {
   }
 }
 
-boost::asio::awaitable<uint32_t> TestCo1(boost::asio::io_context& io) {
-  ASIO_DEBUG_HANDLE(TestCo1);
+boost::asio::awaitable<uint32_t> Test2Co1(boost::asio::io_context& io) {
+  ASIO_DEBUG_HANDLE(Test2Co1);
 
   try {
-    std::cerr << "thread " << std::this_thread::get_id() << " run TestCo1-a.\n";
+    std::cerr << "thread " << std::this_thread::get_id() << " run Test2Co1-a.\n";
     boost::asio::steady_timer t1(io);
     t1.expires_after(std::chrono::seconds(1));
     co_await t1.async_wait(boost::asio::use_awaitable);
-    std::cerr << "thread " << std::this_thread::get_id() << " run TestCo1-b.\n";
+    std::cerr << "thread " << std::this_thread::get_id() << " run Test2Co1-b.\n";
   } catch (const std::exception& e) {
-    std::cerr << "TestCo1 get exception:" << e.what() << '\n';
+    std::cerr << "Test2Co1 get exception:" << e.what() << '\n';
   }
   co_return 111;
 }
 
-boost::asio::awaitable<void> TestCo2(boost::asio::io_context& io) {
-  ASIO_DEBUG_HANDLE(TestCo2);
+boost::asio::awaitable<void> Test2Co2(boost::asio::io_context& io) {
+  ASIO_DEBUG_HANDLE(Test2Co2);
 
   try {
-    std::cerr << "thread " << std::this_thread::get_id() << " run TestCo2-a.\n";
-    uint32_t co1_re = co_await boost::asio::co_spawn(io, TestCo1(io), boost::asio::use_awaitable);
+    std::cerr << "thread " << std::this_thread::get_id() << " run Test2Co2-a.\n";
+    uint32_t co1_re = co_await boost::asio::co_spawn(io, Test2Co1(io), boost::asio::use_awaitable);
     std::cerr << "co1_re " << co1_re << " \n";
-    co1_re = co_await TestCo1(io);
+    co1_re = co_await Test2Co1(io);
     std::cerr << "co1_re " << co1_re << " \n";
-    std::cerr << "thread " << std::this_thread::get_id() << " run TestCo2-b.\n";
+    std::cerr << "thread " << std::this_thread::get_id() << " run Test2Co2-b.\n";
   } catch (const std::exception& e) {
-    std::cerr << "TestCo2 get exception:" << e.what() << '\n';
+    std::cerr << "Test2Co2 get exception:" << e.what() << '\n';
   }
   co_return;
 }
 
-boost::asio::awaitable<void> TestCo3(boost::asio::io_context& io) {
-  ASIO_DEBUG_HANDLE(TestCo3);
+boost::asio::awaitable<void> Test2Co3(boost::asio::io_context& io) {
+  ASIO_DEBUG_HANDLE(Test2Co3);
 
   try {
-    std::cerr << "thread " << std::this_thread::get_id() << " run TestCo3-a.\n";
-    boost::asio::co_spawn(io, TestCo2(io), boost::asio::detached);
-    std::cerr << "thread " << std::this_thread::get_id() << " run TestCo3-b.\n";
+    std::cerr << "thread " << std::this_thread::get_id() << " run Test2Co3-a.\n";
+    boost::asio::co_spawn(io, Test2Co2(io), boost::asio::detached);
+    std::cerr << "thread " << std::this_thread::get_id() << " run Test2Co3-b.\n";
   } catch (const std::exception& e) {
-    std::cerr << "TestCo3 get exception:" << e.what() << '\n';
+    std::cerr << "Test2Co3 get exception:" << e.what() << '\n';
   }
   co_return;
 }
@@ -136,9 +138,89 @@ void Test2() {
   uint32_t n = 2;
   boost::asio::io_context io(n);
 
-  boost::asio::co_spawn(io, TestCo3(io), boost::asio::detached);
+  boost::asio::co_spawn(io, Test2Co3(io), boost::asio::detached);
 
   // boost::asio::strand<boost::asio::io_context::executor_type> strand = boost::asio::make_strand(io);
+
+  std::list<std::thread> threads_;
+
+  for (uint32_t ii = 0; ii < n; ++ii) {
+    threads_.emplace(threads_.end(), [&io] {
+      std::cerr << "thread " << std::this_thread::get_id() << " start.\n";
+      io.run();
+      std::cerr << "thread " << std::this_thread::get_id() << " exit.\n";
+    });
+  }
+
+  for (auto itr = threads_.begin(); itr != threads_.end();) {
+    itr->join();
+    threads_.erase(itr++);
+  }
+}
+
+boost::asio::awaitable<void> Test3Co1(boost::asio::io_context& io) {
+  ASIO_DEBUG_HANDLE(Test3Co1);
+
+  try {
+    std::cerr << "thread " << std::this_thread::get_id() << " run Test3Co1-a.\n";
+    boost::asio::steady_timer t1(io);
+    t1.expires_after(std::chrono::seconds(2));
+    co_await t1.async_wait(boost::asio::use_awaitable);
+    std::cerr << "thread " << std::this_thread::get_id() << " run Test3Co1-b.\n";
+  } catch (const std::exception& e) {
+    std::cerr << "Test3Co1 get exception:" << e.what() << '\n';
+  }
+  co_return;
+}
+
+boost::asio::awaitable<void> Test3Co2(boost::asio::io_context& io) {
+  ASIO_DEBUG_HANDLE(Test3Co2);
+
+  try {
+    std::cerr << "thread " << std::this_thread::get_id() << " run Test3Co2-a.\n";
+    boost::asio::steady_timer t1(io);
+    t1.expires_after(std::chrono::seconds(1));
+    co_await t1.async_wait(boost::asio::use_awaitable);
+    std::cerr << "thread " << std::this_thread::get_id() << " run Test3Co2-b.\n";
+  } catch (const std::exception& e) {
+    std::cerr << "Test3Co2 get exception:" << e.what() << '\n';
+  }
+  co_return;
+}
+
+boost::asio::awaitable<void> Test3Co3(boost::asio::io_context& io) {
+  ASIO_DEBUG_HANDLE(Test3Co3);
+
+  try {
+    std::cerr << "thread " << std::this_thread::get_id() << " run Test3Co3-a.\n";
+
+    auto Test3Co1_promise = boost::asio::co_spawn(io, Test3Co1(io), boost::asio::experimental::use_promise);
+    std::cerr << "thread " << std::this_thread::get_id() << " run Test3Co3-b.\n";
+
+    auto Test3Co2_promise = boost::asio::co_spawn(io, Test3Co2(io), boost::asio::experimental::use_promise);
+    std::cerr << "thread " << std::this_thread::get_id() << " run Test3Co3-c.\n";
+
+    co_await Test3Co1_promise.async_wait(boost::asio::use_awaitable);
+    std::cerr << "thread " << std::this_thread::get_id() << " run Test3Co3-d.\n";
+
+    co_await Test3Co2_promise.async_wait(boost::asio::use_awaitable);
+    std::cerr << "thread " << std::this_thread::get_id() << " run Test3Co3-e.\n";
+
+  } catch (const std::exception& e) {
+    std::cerr << "Test3Co3 get exception:" << e.what() << '\n';
+  }
+  co_return;
+}
+
+/**
+ * @brief
+ * 使用use_promise可以创建一个promise，可以稍后【co_await promise.async_wait(boost::asio::use_awaitable);】，从而达到多协程并发的效果
+ */
+void Test3() {
+  uint32_t n = 2;
+  boost::asio::io_context io(n);
+
+  boost::asio::co_spawn(io, Test3Co3(io), boost::asio::detached);
 
   std::list<std::thread> threads_;
 
@@ -161,7 +243,9 @@ int32_t main(int32_t argc, char** argv) {
 
   // Test1();
 
-  Test2();
+  // Test2();
+
+  Test3();
 
   DBG_PRINT("%s", AsioDebugTool::Ins().GetStatisticalResult().c_str());
 

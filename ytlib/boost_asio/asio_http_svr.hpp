@@ -9,15 +9,17 @@
 
 #include <atomic>
 #include <chrono>
+#include <functional>
+#include <list>
 #include <memory>
 
+#include <boost/asio.hpp>
 #include <boost/beast.hpp>
 
 #include "ytlib/boost_asio/asio_debug_tools.hpp"
-#include "ytlib/boost_asio/http_dispatcher.hpp"
-#include "ytlib/boost_asio/net_util.hpp"
 #include "ytlib/misc/misc_macro.h"
-#include "ytlib/misc/time.hpp"
+#include "ytlib/string/http_dispatcher.hpp"
+#include "ytlib/string/url_parser.hpp"
 
 namespace ytlib {
 
@@ -285,22 +287,34 @@ class AsioHttpServer : public std::enable_shared_from_this<AsioHttpServer> {
                   continue;
                 }
 
+                // 检查url
+                auto url_struct = ParseUrl(req.target());
+                if (!url_struct) {
+                  const auto& rsp = BadRequestHandle(req, "Can not parse url");
+                  close_connect_flag_ = rsp.need_eof();
+
+                  DBG_PRINT("http svr session can not parse url: %s, close_connect_flag: %d", req.target().data(), close_connect_flag_);
+                  size_t write_data_size = co_await http::async_write(stream_, rsp, boost::asio::use_awaitable);
+                  DBG_PRINT("http svr session async write %llu bytes", write_data_size);
+                  continue;
+                }
+
                 // 处理handle类请求
-                const auto& handle = http_dispatcher_ptr_->GetHttpHandle(req.target());
+                const auto& handle = http_dispatcher_ptr_->GetHttpHandle(url_struct->path);
                 if (handle) {
                   co_await handle(self, req);
                   continue;
                 }
 
-                std::string path = PathCat(session_cfg_ptr_->doc_root, req.target());
-                if (req.target().back() == '/') path.append("index.html");
+                std::string path = PathCat(session_cfg_ptr_->doc_root, url_struct->path);
+                if (url_struct->path.back() == '/') path.append("index.html");
 
                 boost::beast::error_code ec;
                 http::file_body::value_type body;
                 body.open(path.c_str(), boost::beast::file_mode::scan, ec);
 
                 if (ec == boost::beast::errc::no_such_file_or_directory) {
-                  const auto& rsp = NotFoundHandle(req, req.target());
+                  const auto& rsp = NotFoundHandle(req, url_struct->path);
                   close_connect_flag_ = rsp.need_eof();
 
                   DBG_PRINT("http svr session get 404, close_connect_flag: %d", close_connect_flag_);

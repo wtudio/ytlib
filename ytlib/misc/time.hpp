@@ -10,19 +10,21 @@
 #include <ctime>
 #include <string>
 
-#define SECOND_PER_MINUTE (60)
-#define MINUTE_PER_HOUR (60)
-#define SECOND_PER_HOUR (3600)
-#define HOUR_PER_DAY (24)
-#define SECOND_PER_DAY (86400)
-#define MS_PER_SECOND (1000)
-#define US_PER_MS (1000)
-#define US_PER_SECOND (1000000)
-#define DAY_PER_MONTH (30)
-#define DAY_PER_WEEK (7)
-#define MONTH_PER_YEAR (12)
-
 namespace ytlib {
+
+enum TimeConstant {
+  SECOND_PER_MINUTE = 60,
+  MINUTE_PER_HOUR = 60,
+  SECOND_PER_HOUR = 3600,
+  HOUR_PER_DAY = 24,
+  SECOND_PER_DAY = 86400,
+  MS_PER_SECOND = 1000,
+  US_PER_MS = 1000,
+  US_PER_SECOND = 1000000,
+  DAY_PER_MONTH = 30,
+  DAY_PER_WEEK = 7,
+  MONTH_PER_YEAR = 12,
+};
 
 /**
  * @brief 获取毫秒时间戳

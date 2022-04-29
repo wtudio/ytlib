@@ -47,7 +47,7 @@ TEST(BOOST_ASIO_TEST, NET_LOG) {
     svr1_sys_ptr->Join();
     DBG_PRINT("svr1_sys_ptr exit");
   });
-  std::this_thread::sleep_for(std::chrono::seconds(1));
+  std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
   YTBL_SET_LEVEL(info);
 
@@ -58,7 +58,7 @@ TEST(BOOST_ASIO_TEST, NET_LOG) {
   YTBL_ERROR << "test error log" << std::endl;
   YTBL_FATAL << "test fatal log" << std::endl;
 
-  std::this_thread::sleep_for(std::chrono::seconds(7));
+  std::this_thread::sleep_for(std::chrono::seconds(6));
   svr1_sys_ptr->Stop();
   t_svr1.join();
 
@@ -76,7 +76,7 @@ TEST(BOOST_ASIO_TEST, NET_LOG) {
     svr2_sys_ptr->Join();
     DBG_PRINT("svr2_sys_ptr exit");
   });
-  std::this_thread::sleep_for(std::chrono::seconds(1));
+  std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
   YTBL_TRACE << "test trace log" << std::endl;
   YTBL_DEBUG << "test debug log" << std::endl;
@@ -85,7 +85,7 @@ TEST(BOOST_ASIO_TEST, NET_LOG) {
   YTBL_ERROR << "test error log" << std::endl;
   YTBL_FATAL << "test fatal log" << std::endl;
 
-  std::this_thread::sleep_for(std::chrono::seconds(7));
+  std::this_thread::sleep_for(std::chrono::seconds(6));
 
   YTBL_TRACE << "test trace log" << std::endl;
   YTBL_DEBUG << "test debug log" << std::endl;
@@ -94,7 +94,7 @@ TEST(BOOST_ASIO_TEST, NET_LOG) {
   YTBL_ERROR << "test error log" << std::endl;
   YTBL_FATAL << "test fatal log" << std::endl;
 
-  std::this_thread::sleep_for(std::chrono::seconds(7));
+  std::this_thread::sleep_for(std::chrono::seconds(6));
 
   YTBL_TRACE << "test trace log" << std::endl;
   YTBL_DEBUG << "test debug log" << std::endl;
@@ -103,7 +103,7 @@ TEST(BOOST_ASIO_TEST, NET_LOG) {
   YTBL_ERROR << "test error log" << std::endl;
   YTBL_FATAL << "test fatal log" << std::endl;
 
-  std::this_thread::sleep_for(std::chrono::seconds(7));
+  std::this_thread::sleep_for(std::chrono::seconds(6));
 
   svr2_sys_ptr->Stop();
   t_svr2.join();

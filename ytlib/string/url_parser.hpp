@@ -57,15 +57,13 @@ struct Url {
  * @param url_str url字符串
  * @return std::optional<UrlView> url结构，nullopt则代表解析失败
  */
-inline std::optional<UrlView> ParseUrl(const std::string& url_str) {
-  unsigned counter = 0;
-
+inline std::optional<UrlView> ParseUrl(std::string_view url_str) {
   std::regex url_regex(
       R"(^(([^:\/?#]+)://)?(([^\/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?)",
       std::regex::ECMAScript);
-  std::smatch url_match_result;
+  std::match_results<std::string_view::const_iterator> url_match_result;
 
-  if (!std::regex_match(url_str, url_match_result, url_regex)) return std::nullopt;
+  if (!std::regex_match(url_str.begin(), url_str.end(), url_match_result, url_regex)) return std::nullopt;
 
   UrlView url;
   if (url_match_result[2].matched) url.protocol = std::string_view(url_match_result[2].first, url_match_result[2].second);

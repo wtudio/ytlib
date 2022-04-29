@@ -13,12 +13,11 @@
 #include <map>
 #include <memory>
 
+#include <boost/asio.hpp>
 #include <boost/beast.hpp>
 
 #include "ytlib/boost_asio/asio_debug_tools.hpp"
-#include "ytlib/boost_asio/net_util.hpp"
 #include "ytlib/misc/misc_macro.h"
-#include "ytlib/misc/time.hpp"
 
 namespace ytlib {
 

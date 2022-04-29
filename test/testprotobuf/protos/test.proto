@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package testrpc;
+
+message testreq {
+  uint64 id = 1;
+  string name = 2;
+  int32 age = 3;
+}
+
+message testrsp {
+  uint64 code = 1;
+  string msg = 2;
+}
+
+service TestService {
+  rpc TestRpc(testreq) returns (testrsp);
+}

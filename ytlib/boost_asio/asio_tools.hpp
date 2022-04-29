@@ -25,6 +25,7 @@ namespace ytlib {
  * @note 使用时先调用RegisterSvrFunc注册子服务的启动、停止方法，
  * 然后调用Start方法异步启动，之后可以调用join方法，等待kill信号或其他异步程序里调用Stop方法结束整个服务。
  * 并不会调用asio的stop方法，只会调用注册的stop方法，等各个子服务自己停止。
+ * signals_同时承担了work_guard的功能，保证没有显式Stop之前io不会退出。
  */
 class AsioExecutor {
  public:
@@ -35,6 +36,7 @@ class AsioExecutor {
 
   ~AsioExecutor() noexcept {
     try {
+      Stop();
       Join();
     } catch (const std::exception& e) {
       DBG_PRINT("AsioExecutor destruct get exception, %s", e.what());

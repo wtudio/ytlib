@@ -18,7 +18,6 @@
 #include <boost/asio.hpp>
 
 #include "ytlib/boost_asio/asio_debug_tools.hpp"
-#include "ytlib/boost_asio/net_util.hpp"
 #include "ytlib/misc/misc_macro.h"
 #include "ytlib/misc/time.hpp"
 
@@ -29,6 +28,7 @@ namespace ytlib {
  * @note 默认监听50001端口，为每个ip-port创建一个文件夹存放滚动日志文件
  * 无协议，收到什么打印什么
  * 必须以智能指针形式构造，调用Start启动服务，在结束使用前手动调用Stop方法
+ * todo: 同地址多个连接时的处理
  */
 class AsioNetLogServer : public std::enable_shared_from_this<AsioNetLogServer> {
  public:

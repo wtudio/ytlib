@@ -12,23 +12,24 @@
 
 namespace ytlib {
 
-struct GlSysCfg {
-  bool print_fps = true;       // 是否打印帧率
-  std::string title = "demo";  // 标题
-
-  int w = 800;  // 窗体宽
-  int h = 800;  // 窗体高
-
-  int x = 0;  // 窗体左上角x坐标
-  int y = 0;  // 窗体左上角y坐标
-
-  double base_len = 10000.0;  // 坐标系轴长度
-};
-
 class GlSys {
  public:
   using DisplayFunc = void (*)(void);
   using KeyboardFunc = void (*)(unsigned char key, int x, int y);
+
+ public:
+  struct Cfg {
+    bool print_fps = true;       // 是否打印帧率
+    std::string title = "demo";  // 标题
+
+    int w = 800;  // 窗体宽
+    int h = 800;  // 窗体高
+
+    int x = 0;  // 窗体左上角x坐标
+    int y = 0;  // 窗体左上角y坐标
+
+    double base_len = 10000.0;  // 坐标系轴长度
+  };
 
  public:
   static GlSys& Ins() {
@@ -49,7 +50,7 @@ class GlSys {
     keyboard_func_ = keyboard_func;
   }
 
-  void Init(const GlSysCfg& cfg) {
+  void Init(const GlSys::Cfg& cfg) {
     cfg_ = cfg;
   }
 
@@ -251,7 +252,7 @@ class GlSys {
   }
 
  private:
-  GlSysCfg cfg_;  // 配置
+  GlSys::Cfg cfg_;  // 配置
 
   // 用于记录鼠标位置
   int32_t mouse_x_ = 0;

@@ -197,7 +197,7 @@ int32_t main(int32_t argc, char** argv) {
   thr = min_val;
 
   // 初始化
-  GlSysCfg cfg;
+  GlSys::Cfg cfg;
   cfg.w = 1000;
   cfg.h = 1000;
   cfg.title = "cube";

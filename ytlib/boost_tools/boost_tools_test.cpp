@@ -5,12 +5,10 @@
 
 namespace ytlib {
 
-using std::string;
-
 class CTest {
   T_CLASS_SERIALIZE(&name &age &m &v &dbl_arr)
  public:
-  string name;
+  std::string name;
   uint32_t age;
   std::map<std::string, std::string> m;
   std::vector<uint32_t> v;
@@ -26,7 +24,7 @@ TEST(BOOST_TOOLS_TEST, SERIALIZE_BASE) {
   obj1.dbl_arr[0] = 1.23456;
 
   // string
-  string re = Serialize(obj1, SerializeType::BinaryType);
+  std::string re = Serialize(obj1, SerializeType::BinaryType);
 
   CTest obj2;
   Deserialize(obj2, re, SerializeType::BinaryType);

@@ -31,7 +31,7 @@ class GlGameDisplayer : public GameDisplayerInf, public std::enable_shared_from_
 
  private:
   GlGameDisplayer() {
-    GlSysCfg cfg;
+    GlSys::Cfg cfg;
     cfg.w = 1000;
     cfg.h = 1000;
     cfg.title = "cube";
