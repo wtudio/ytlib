@@ -29,7 +29,23 @@ namespace ytlib {
  */
 class AsioHttpServer : public std::enable_shared_from_this<AsioHttpServer> {
  public:
+  /**
+   * @brief http handle返回的状态
+   *
+   */
+  enum class Status : uint8_t {
+    OK = 0,
+    Fail,
+    Timeout,
+  };
+
   using HttpReq = boost::beast::http::request<boost::beast::http::dynamic_body>;
+
+  template <typename RspBodyType>
+  using HttpRsp = boost::beast::http::response<RspBodyType>;
+
+  template <typename RspBodyType>
+  using HttpHandle = std::function<boost::asio::awaitable<AsioHttpServer::Status>(const HttpReq&, HttpRsp<RspBodyType>&, std::chrono::steady_clock::duration)>;
 
  public:
   /**
@@ -55,9 +71,9 @@ class AsioHttpServer : public std::enable_shared_from_this<AsioHttpServer> {
       if (cfg.max_session_num < 1) cfg.max_session_num = 1;
       if (cfg.max_session_num > boost::asio::ip::tcp::acceptor::max_listen_connections)
         cfg.max_session_num = boost::asio::ip::tcp::acceptor::max_listen_connections;
-      if (cfg.mgr_timer_dt < std::chrono::seconds(1)) cfg.mgr_timer_dt = std::chrono::seconds(1);
+      if (cfg.mgr_timer_dt < std::chrono::milliseconds(100)) cfg.mgr_timer_dt = std::chrono::milliseconds(100);
 
-      if (cfg.timer_dt < std::chrono::seconds(1)) cfg.timer_dt = std::chrono::seconds(1);
+      if (cfg.timer_dt < std::chrono::milliseconds(100)) cfg.timer_dt = std::chrono::milliseconds(100);
       if (cfg.max_no_data_duration < cfg.timer_dt * 2) cfg.max_no_data_duration = cfg.timer_dt * 2;
 
       return cfg;
@@ -206,8 +222,7 @@ class AsioHttpServer : public std::enable_shared_from_this<AsioHttpServer> {
    * @param handle http处理接口
    */
   template <typename RspBodyType = boost::beast::http::string_body>
-  void RegisterHttpHandleFunc(std::string_view pattern,
-                              std::function<boost::asio::awaitable<boost::beast::http::response<RspBodyType>>(const HttpReq&)>&& handle) {
+  void RegisterHttpHandleFunc(std::string_view pattern, HttpHandle<RspBodyType>&& handle) {
     http_dispatcher_ptr_->RegisterHttpHandle(pattern, Session::GenHttpHandle(std::move(handle)));
   }
 
@@ -219,8 +234,7 @@ class AsioHttpServer : public std::enable_shared_from_this<AsioHttpServer> {
    * @param handle http处理接口
    */
   template <typename RspBodyType = boost::beast::http::string_body>
-  void RegisterHttpHandleFunc(std::string_view pattern,
-                              const std::function<boost::asio::awaitable<boost::beast::http::response<RspBodyType>>(const HttpReq&)>& handle) {
+  void RegisterHttpHandleFunc(std::string_view pattern, const HttpHandle<RspBodyType>& handle) {
     auto h = handle;
     http_dispatcher_ptr_->RegisterHttpHandle(pattern, Session::GenHttpHandle(std::move(h)));
   }
@@ -466,31 +480,38 @@ class AsioHttpServer : public std::enable_shared_from_this<AsioHttpServer> {
     const std::atomic_bool& IsRunning() { return run_flag_; }
 
     template <typename RspBodyType = boost::beast::http::string_body>
-    static std::function<boost::asio::awaitable<void>(std::shared_ptr<Session>, const HttpReq&)> GenHttpHandle(
-        std::function<boost::asio::awaitable<boost::beast::http::response<RspBodyType>>(const HttpReq&)>&& handle) {
+    static std::function<boost::asio::awaitable<void>(std::shared_ptr<Session>, const HttpReq&)> GenHttpHandle(HttpHandle<RspBodyType>&& handle) {
       return [h = std::move(handle)](std::shared_ptr<Session> session_ptr, const HttpReq& req) -> boost::asio::awaitable<void> {
         boost::beast::http::response<RspBodyType> handle_rsp;
-        std::string exp_info;
+        Status handle_status;
+
+        const std::chrono::steady_clock::duration handle_timeout = std::chrono::seconds(5);
+
+        std::string err_info;
         try {
-          handle_rsp = co_await h(req);
+          handle_status = co_await h(req, handle_rsp, handle_timeout);
+          if (handle_status != Status::OK)
+            err_info = "handle failed, status: " + std::to_string(static_cast<uint8_t>(handle_status));
         } catch (const std::exception& e) {
-          exp_info = e.what();
+          err_info = e.what();
         }
 
-        if (!exp_info.empty()) {
-          const auto& rsp = ServerErrorHandle(req, exp_info);
+        if (!err_info.empty()) [[unlikely]] {
+          const auto& rsp = ServerErrorHandle(req, err_info);
           session_ptr->close_connect_flag_ = rsp.need_eof();
 
           DBG_PRINT("http svr session custom handle request get exp, close_connect_flag: %d", session_ptr->close_connect_flag_);
           size_t write_data_size = co_await boost::beast::http::async_write(session_ptr->stream_, rsp, boost::asio::use_awaitable);
           DBG_PRINT("http svr session async write %llu bytes", write_data_size);
-        } else {
-          session_ptr->close_connect_flag_ = handle_rsp.need_eof();
 
-          DBG_PRINT("http svr session custom handle request, close_connect_flag: %d", session_ptr->close_connect_flag_);
-          size_t write_data_size = co_await boost::beast::http::async_write(session_ptr->stream_, handle_rsp, boost::asio::use_awaitable);
-          DBG_PRINT("http svr session async write %llu bytes", write_data_size);
+          co_return;
         }
+
+        session_ptr->close_connect_flag_ = handle_rsp.need_eof();
+
+        DBG_PRINT("http svr session custom handle request, close_connect_flag: %d", session_ptr->close_connect_flag_);
+        size_t write_data_size = co_await boost::beast::http::async_write(session_ptr->stream_, handle_rsp, boost::asio::use_awaitable);
+        DBG_PRINT("http svr session async write %llu bytes", write_data_size);
       };
     }
 

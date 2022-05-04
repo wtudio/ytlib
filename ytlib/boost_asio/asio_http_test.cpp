@@ -318,14 +318,14 @@ TEST(BOOST_ASIO_TEST, HTTP_proxy_handle) {
   svr_sys_ptr->RegisterSvrFunc([http_svr_ptr] { http_svr_ptr->Start(); },
                                [http_svr_ptr] { http_svr_ptr->Stop(); });
 
-  std::function<boost::asio::awaitable<http::response<http::string_body>>(const http::request<http::dynamic_body>&)>
-      HttpHandle = [](const http::request<http::dynamic_body>& req)
-      -> boost::asio::awaitable<http::response<http::string_body>> {
+  AsioHttpServer::HttpHandle<http::string_body> HttpHandle =
+      [](const http::request<http::dynamic_body>& req, http::response<http::string_body>& rsp, std::chrono::steady_clock::duration timeout)
+      -> boost::asio::awaitable<AsioHttpServer::Status> {
     std::stringstream ss;
     ss << req << std::endl;
     DBG_PRINT("handle req:\n%s", ss.str().c_str());
 
-    auto rsp = http::response<http::string_body>{http::status::ok, req.version()};
+    rsp = http::response<http::string_body>{http::status::ok, req.version()};
     rsp.set(http::field::server, BOOST_BEAST_VERSION_STRING);
     rsp.set(http::field::content_type, "text/html");
     rsp.keep_alive(req.keep_alive());
@@ -336,7 +336,7 @@ TEST(BOOST_ASIO_TEST, HTTP_proxy_handle) {
     ss << rsp << std::endl;
     DBG_PRINT("handle rsp:\n%s", ss.str().c_str());
 
-    co_return rsp;
+    co_return AsioHttpServer::Status::OK;
   };
   http_svr_ptr->RegisterHttpHandleFunc<http::string_body>("/test/.*", HttpHandle);
 

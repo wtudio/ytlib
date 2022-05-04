@@ -25,7 +25,7 @@ namespace ytlib {
 
 /**
  * @brief 远程日志服务器
- * @note 默认监听50001端口，为每个ip-port创建一个文件夹存放滚动日志文件
+ * @note 默认监听52684端口，为每个ip-port创建一个文件夹存放滚动日志文件
  * 无协议，收到什么打印什么
  * 必须以智能指针形式构造，调用Start启动服务，在结束使用前手动调用Stop方法
  * todo: 同地址多个连接时的处理
@@ -36,14 +36,14 @@ class AsioNetLogServer : public std::enable_shared_from_this<AsioNetLogServer> {
    * @brief 远程日志服务器配置
    */
   struct Cfg {
-    uint16_t port = 50001;                     // 监听的端口
+    uint16_t port = 52684;                     // 监听的端口
     std::filesystem::path log_path = "./log";  // 日志路径
     size_t max_file_size = 1 * 1024 * 1024;    // 最大日志文件尺寸
 
     size_t max_session_num = 1000000;                                            // 最大连接数
     std::chrono::steady_clock::duration mgr_timer_dt = std::chrono::seconds(5);  // 管理协程定时器间隔
 
-    size_t session_buf_size = 1024 * 8;                                                   // session接受数据时的缓存
+    size_t session_buf_size = 1024 * 16;                                                  // session接受数据时的缓存
     std::chrono::steady_clock::duration timer_dt = std::chrono::seconds(5);               // 定时器间隔
     std::chrono::steady_clock::duration max_no_data_duration = std::chrono::seconds(60);  // 最长无数据时间
 
@@ -51,7 +51,7 @@ class AsioNetLogServer : public std::enable_shared_from_this<AsioNetLogServer> {
     static Cfg Verify(const Cfg& verify_cfg) {
       Cfg cfg(verify_cfg);
 
-      if (cfg.port > 65535 || cfg.port < 1000) cfg.port = 50001;
+      if (cfg.port > 65535 || cfg.port < 1000) cfg.port = 52684;
 
       if (cfg.max_file_size < 100 * 1024) cfg.max_file_size = 100 * 1024;
       if (cfg.max_file_size > 1024 * 1024 * 1024) cfg.max_file_size = 1024 * 1024 * 1024;
@@ -59,9 +59,9 @@ class AsioNetLogServer : public std::enable_shared_from_this<AsioNetLogServer> {
       if (cfg.max_session_num < 1) cfg.max_session_num = 1;
       if (cfg.max_session_num > boost::asio::ip::tcp::acceptor::max_listen_connections)
         cfg.max_session_num = boost::asio::ip::tcp::acceptor::max_listen_connections;
-      if (cfg.mgr_timer_dt < std::chrono::seconds(1)) cfg.mgr_timer_dt = std::chrono::seconds(1);
+      if (cfg.mgr_timer_dt < std::chrono::milliseconds(100)) cfg.mgr_timer_dt = std::chrono::milliseconds(100);
 
-      if (cfg.timer_dt < std::chrono::seconds(1)) cfg.timer_dt = std::chrono::seconds(1);
+      if (cfg.timer_dt < std::chrono::milliseconds(100)) cfg.timer_dt = std::chrono::milliseconds(100);
       if (cfg.max_no_data_duration < cfg.timer_dt * 2) cfg.max_no_data_duration = cfg.timer_dt * 2;
 
       return cfg;

@@ -41,7 +41,7 @@ class AsioNetLogClient : public std::enable_shared_from_this<AsioNetLogClient> {
     static Cfg Verify(const Cfg& verify_cfg) {
       Cfg cfg(verify_cfg);
 
-      if (cfg.timer_dt < std::chrono::seconds(1)) cfg.timer_dt = std::chrono::seconds(1);
+      if (cfg.timer_dt < std::chrono::milliseconds(100)) cfg.timer_dt = std::chrono::milliseconds(100);
       if (cfg.max_no_data_duration < cfg.timer_dt * 2) cfg.max_no_data_duration = cfg.timer_dt * 2;
 
       return cfg;
@@ -164,33 +164,16 @@ class AsioNetLogClient : public std::enable_shared_from_this<AsioNetLogClient> {
                 co_await timer_.async_wait(boost::asio::use_awaitable);
 
                 if (!data_list.empty()) {
+                  std::list<std::shared_ptr<boost::asio::streambuf> > tmp_data_list;
+                  tmp_data_list.swap(data_list);
+
                   std::list<boost::asio::streambuf::const_buffers_type> data_buf_list;
-                  std::queue<size_t> data_buf_size_queue;
-                  size_t total_data_size = 0;
-
-                  for (auto& itr : data_list) {
+                  for (auto& itr : tmp_data_list) {
                     data_buf_list.emplace_back(itr->data());
-                    total_data_size += data_buf_size_queue.emplace(itr->size());
                   }
 
-                  while (!data_list.empty()) {
-                    DBG_PRINT("net log cli session start async write %llu bytes to %s", total_data_size, TcpEp2Str(session_cfg_ptr_->svr_ep).c_str());
-                    size_t write_data_size = co_await sock_.async_write_some(data_buf_list, boost::asio::use_awaitable);
-                    DBG_PRINT("net log cli session async write %llu bytes", write_data_size);
-
-                    if (write_data_size >= total_data_size) {
-                      data_list.clear();
-                    } else {
-                      total_data_size -= write_data_size;
-                      while (write_data_size >= data_buf_size_queue.front()) {
-                        write_data_size -= data_buf_size_queue.front();
-                        data_list.pop_front();
-                        data_buf_list.pop_front();
-                        data_buf_size_queue.pop();
-                      }
-                      data_list.front()->consume(write_data_size);
-                    }
-                  }
+                  size_t write_data_size = co_await boost::asio::async_write(sock_, data_buf_list, boost::asio::use_awaitable);
+                  DBG_PRINT("net log cli session async write %llu bytes", write_data_size);
 
                   last_data_time_point = chrono::steady_clock::now();
                 } else {

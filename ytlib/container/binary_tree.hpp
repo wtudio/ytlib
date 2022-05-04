@@ -28,6 +28,7 @@ class BinTreeNode : public std::enable_shared_from_this<BinTreeNode<T> > {
  public:
   BinTreeNode() {}
   explicit BinTreeNode(const T& input_obj) : obj(input_obj) {}
+  explicit BinTreeNode(T&& input_obj) : obj(std::move(input_obj)) {}
 
  public:
   T obj;           ///<实际节点值
@@ -50,6 +51,7 @@ class BinSearchTreeNode : public std::enable_shared_from_this<BinSearchTreeNode<
  public:
   BinSearchTreeNode() {}
   explicit BinSearchTreeNode(const T& input_obj) : obj(input_obj) {}
+  explicit BinSearchTreeNode(T&& input_obj) : obj(std::move(input_obj)) {}
 
   ///向当前节点为根节点的二叉查找树中插入一个节点
   void Insert(NodePtr node) {
@@ -72,9 +74,10 @@ class BinSearchTreeNode : public std::enable_shared_from_this<BinSearchTreeNode<
 
   ///删除当前节点，并返回替代的节点
   NodePtr Erase() {
+    NodePtr self = this->shared_from_this();
     if (!pl && !pr) {
       //左右都为空，为叶子节点
-      BreakFather(this->shared_from_this());
+      BreakFather(self);
       return NodePtr();
     }
     auto real_pf = pf.lock();
@@ -95,7 +98,7 @@ class BinSearchTreeNode : public std::enable_shared_from_this<BinSearchTreeNode<
       //只有右子树
       NodePtr re = pr;
       if (!real_pf) {
-        BreakRChild(this->shared_from_this());
+        BreakRChild(self);
       } else {
         pr->pf = real_pf;
         real_pf->pr = pr;
@@ -119,7 +122,7 @@ class BinSearchTreeNode : public std::enable_shared_from_this<BinSearchTreeNode<
     re->pr = pr;
     pr->pf = re;
     if (real_pf) {
-      if (GetLR(this->shared_from_this())) {
+      if (GetLR(self)) {
         real_pf->pl = re;
       } else {
         real_pf->pr = re;
@@ -152,6 +155,7 @@ class AVLTreeNode : public std::enable_shared_from_this<AVLTreeNode<T> > {
  public:
   AVLTreeNode() {}
   explicit AVLTreeNode(const T& input_obj) : obj(input_obj) {}
+  explicit AVLTreeNode(T&& input_obj) : obj(std::move(input_obj)) {}
 
   ///获取节点hgt值
   static size_t GetHgt(const NodePtr& p) {
@@ -430,6 +434,7 @@ class BRTreeNode : public std::enable_shared_from_this<BRTreeNode<T> > {
  public:
   BRTreeNode() {}
   explicit BRTreeNode(const T& input_obj) : obj(input_obj) {}
+  explicit BRTreeNode(T&& input_obj) : obj(std::move(input_obj)) {}
 
   ///插入，必须是根节点才能进行此操作。因为根节点可能会变，所以返回插入后的新根节点
   NodePtr Insert(NodePtr node) {

@@ -21,7 +21,8 @@ TEST(BOOST_ASIO_TEST, NET_LOG) {
 
   // cli
   AsioNetLogClient::Cfg net_log_client_cfg;
-  net_log_client_cfg.svr_ep = boost::asio::ip::tcp::endpoint{boost::asio::ip::address_v4({127, 0, 0, 1}), 50001};
+  net_log_client_cfg.svr_ep = boost::asio::ip::tcp::endpoint{boost::asio::ip::address_v4({127, 0, 0, 1}), 52684};
+  net_log_client_cfg.timer_dt = std::chrono::milliseconds(100);
 
   auto net_log_cli_ptr = std::make_shared<AsioNetLogClient>(cli_sys_ptr->IO(), net_log_client_cfg);
   cli_sys_ptr->RegisterSvrFunc(std::function<void()>(),
@@ -39,7 +40,9 @@ TEST(BOOST_ASIO_TEST, NET_LOG) {
 
   // svr1
   thread t_svr1([svr1_sys_ptr] {
-    auto lgsvr_ptr = std::make_shared<AsioNetLogServer>(svr1_sys_ptr->IO(), AsioNetLogServer::Cfg());
+    AsioNetLogServer::Cfg cfg;
+    cfg.timer_dt = std::chrono::milliseconds(100);
+    auto lgsvr_ptr = std::make_shared<AsioNetLogServer>(svr1_sys_ptr->IO(), cfg);
     svr1_sys_ptr->RegisterSvrFunc([lgsvr_ptr] { lgsvr_ptr->Start(); },
                                   [lgsvr_ptr] { lgsvr_ptr->Stop(); });
 
@@ -51,23 +54,24 @@ TEST(BOOST_ASIO_TEST, NET_LOG) {
 
   YTBL_SET_LEVEL(info);
 
+  // cli建立连接并发送到svr1上
   YTBL_TRACE << "test trace log" << std::endl;
   YTBL_DEBUG << "test debug log" << std::endl;
   YTBL_INFO << "test info log" << std::endl;
   YTBL_WARN << "test warning log" << std::endl;
   YTBL_ERROR << "test error log" << std::endl;
   YTBL_FATAL << "test fatal log" << std::endl;
+  std::this_thread::sleep_for(std::chrono::seconds(1));
 
-  std::this_thread::sleep_for(std::chrono::seconds(6));
   svr1_sys_ptr->Stop();
   t_svr1.join();
 
   // svr2
   thread t_svr2([svr2_sys_ptr] {
     AsioNetLogServer::Cfg cfg;
-    cfg.port = 50001;
+    cfg.port = 52684;
     cfg.log_path = "./log2";
-    cfg.timer_dt = std::chrono::seconds(1);
+    cfg.timer_dt = std::chrono::milliseconds(100);
     cfg.max_no_data_duration = std::chrono::seconds(10);
     auto lgsvr_ptr = std::make_shared<AsioNetLogServer>(svr2_sys_ptr->IO(), cfg);
     svr2_sys_ptr->RegisterSvrFunc([lgsvr_ptr] { lgsvr_ptr->Start(); },
@@ -78,32 +82,41 @@ TEST(BOOST_ASIO_TEST, NET_LOG) {
   });
   std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
+  // 连接已经被svr1关闭，cli虽然能正常发送，但会触发svr端回复rst
   YTBL_TRACE << "test trace log" << std::endl;
   YTBL_DEBUG << "test debug log" << std::endl;
   YTBL_INFO << "test info log" << std::endl;
   YTBL_WARN << "test warning log" << std::endl;
   YTBL_ERROR << "test error log" << std::endl;
   YTBL_FATAL << "test fatal log" << std::endl;
+  std::this_thread::sleep_for(std::chrono::seconds(1));
 
-  std::this_thread::sleep_for(std::chrono::seconds(6));
-
+  // cli 再次发送，触发cli端连接异常，关闭cli端连接
   YTBL_TRACE << "test trace log" << std::endl;
   YTBL_DEBUG << "test debug log" << std::endl;
   YTBL_INFO << "test info log" << std::endl;
   YTBL_WARN << "test warning log" << std::endl;
   YTBL_ERROR << "test error log" << std::endl;
   YTBL_FATAL << "test fatal log" << std::endl;
+  std::this_thread::sleep_for(std::chrono::seconds(1));
 
-  std::this_thread::sleep_for(std::chrono::seconds(6));
-
+  // cli建立连接并发送到svr2
   YTBL_TRACE << "test trace log" << std::endl;
   YTBL_DEBUG << "test debug log" << std::endl;
   YTBL_INFO << "test info log" << std::endl;
   YTBL_WARN << "test warning log" << std::endl;
   YTBL_ERROR << "test error log" << std::endl;
   YTBL_FATAL << "test fatal log" << std::endl;
+  std::this_thread::sleep_for(std::chrono::seconds(1));
 
-  std::this_thread::sleep_for(std::chrono::seconds(6));
+  // cli发送到svr2
+  YTBL_TRACE << "test trace log" << std::endl;
+  YTBL_DEBUG << "test debug log" << std::endl;
+  YTBL_INFO << "test info log" << std::endl;
+  YTBL_WARN << "test warning log" << std::endl;
+  YTBL_ERROR << "test error log" << std::endl;
+  YTBL_FATAL << "test fatal log" << std::endl;
+  std::this_thread::sleep_for(std::chrono::seconds(1));
 
   svr2_sys_ptr->Stop();
   t_svr2.join();

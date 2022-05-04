@@ -29,9 +29,10 @@ namespace ytlib {
  */
 class AsioExecutor {
  public:
-  explicit AsioExecutor(uint32_t threads_num = 1) : threads_num_(threads_num),
-                                                    io_ptr_(std::make_shared<boost::asio::io_context>(threads_num)),
-                                                    signals_(*io_ptr_, SIGINT, SIGTERM) {
+  explicit AsioExecutor(uint32_t threads_num = std::max<uint32_t>(std::thread::hardware_concurrency(), 1))
+      : threads_num_(threads_num),
+        io_ptr_(std::make_shared<boost::asio::io_context>(threads_num)),
+        signals_(*io_ptr_, SIGINT, SIGTERM) {
   }
 
   ~AsioExecutor() noexcept {

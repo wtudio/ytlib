@@ -98,7 +98,7 @@ void Deserialize(T& obj, const std::string& data, SerializeType Type = Serialize
  */
 template <class T>
 uint32_t Serialize(const T& obj, char* buf, uint32_t len, SerializeType Type = SerializeType::TextType) {
-  class ostreambuf : public std::basic_streambuf<char, std::char_traits<char> > {
+  class ostreambuf : public std::streambuf {
    public:
     ostreambuf(char* buf, std::streamsize len) { setp(buf, buf + len); }
     size_t getlen() const { return pptr() - pbase(); }
@@ -127,7 +127,7 @@ uint32_t Serialize(const T& obj, char* buf, uint32_t len, SerializeType Type = S
  */
 template <class T>
 void Deserialize(T& obj, const char* buf, uint32_t len, SerializeType Type = SerializeType::TextType) {
-  class istreambuf : public std::basic_streambuf<char, std::char_traits<char> > {
+  class istreambuf : public std::streambuf {
    public:
     istreambuf(char* buf, std::streamsize len) { setg(buf, buf, buf + len); }
   };
