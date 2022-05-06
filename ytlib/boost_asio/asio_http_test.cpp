@@ -15,7 +15,7 @@ namespace http = boost::beast::http;
 TEST(BOOST_ASIO_TEST, HTTP_base) {
   AsioDebugTool::Ins().Reset();
 
-  auto cli_sys_ptr = std::make_shared<AsioExecutor>(1);
+  auto cli_sys_ptr = std::make_shared<AsioExecutor>(2);
   auto svr1_sys_ptr = std::make_shared<AsioExecutor>(2);
   auto svr2_sys_ptr = std::make_shared<AsioExecutor>(2);
 
@@ -135,7 +135,7 @@ TEST(BOOST_ASIO_TEST, HTTP_base) {
 TEST(BOOST_ASIO_TEST, HTTP_proxy_base) {
   AsioDebugTool::Ins().Reset();
 
-  auto cli_sys_ptr = std::make_shared<AsioExecutor>(1);
+  auto cli_sys_ptr = std::make_shared<AsioExecutor>(2);
   auto svr1_sys_ptr = std::make_shared<AsioExecutor>(2);
   auto svr2_sys_ptr = std::make_shared<AsioExecutor>(2);
 
@@ -258,7 +258,7 @@ TEST(BOOST_ASIO_TEST, HTTP_proxy_base) {
 TEST(BOOST_ASIO_TEST, HTTP_proxy_handle) {
   AsioDebugTool::Ins().Reset();
 
-  auto cli_sys_ptr = std::make_shared<AsioExecutor>(1);
+  auto cli_sys_ptr = std::make_shared<AsioExecutor>(2);
   auto svr_sys_ptr = std::make_shared<AsioExecutor>(2);
 
   // cli

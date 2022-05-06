@@ -62,7 +62,6 @@ class AsioNetLogServer : public std::enable_shared_from_this<AsioNetLogServer> {
       if (cfg.mgr_timer_dt < std::chrono::milliseconds(100)) cfg.mgr_timer_dt = std::chrono::milliseconds(100);
 
       if (cfg.timer_dt < std::chrono::milliseconds(100)) cfg.timer_dt = std::chrono::milliseconds(100);
-      if (cfg.max_no_data_duration < cfg.timer_dt * 2) cfg.max_no_data_duration = cfg.timer_dt * 2;
 
       return cfg;
     }

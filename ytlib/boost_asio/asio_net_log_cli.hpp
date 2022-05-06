@@ -11,7 +11,6 @@
 #include <chrono>
 #include <list>
 #include <memory>
-#include <queue>
 
 #include <boost/asio.hpp>
 
@@ -42,7 +41,6 @@ class AsioNetLogClient : public std::enable_shared_from_this<AsioNetLogClient> {
       Cfg cfg(verify_cfg);
 
       if (cfg.timer_dt < std::chrono::milliseconds(100)) cfg.timer_dt = std::chrono::milliseconds(100);
-      if (cfg.max_no_data_duration < cfg.timer_dt * 2) cfg.max_no_data_duration = cfg.timer_dt * 2;
 
       return cfg;
     }
@@ -167,7 +165,7 @@ class AsioNetLogClient : public std::enable_shared_from_this<AsioNetLogClient> {
                   std::list<std::shared_ptr<boost::asio::streambuf> > tmp_data_list;
                   tmp_data_list.swap(data_list);
 
-                  std::list<boost::asio::streambuf::const_buffers_type> data_buf_list;
+                  std::list<boost::asio::const_buffer> data_buf_list;
                   for (auto& itr : tmp_data_list) {
                     data_buf_list.emplace_back(itr->data());
                   }
@@ -247,6 +245,7 @@ class AsioNetLogClient : public std::enable_shared_from_this<AsioNetLogClient> {
     std::list<std::shared_ptr<boost::asio::streambuf> > data_list;
   };
 
+ private:
   const AsioNetLogClient::Cfg cfg_;
   std::atomic_bool run_flag_ = true;
   std::shared_ptr<boost::asio::io_context> io_ptr_;

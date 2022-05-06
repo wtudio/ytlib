@@ -41,7 +41,7 @@ class AsioDebugTool {
     thread_local uint64_t thread_id = thread_count_++;
 
     if (thread_id >= max_thread_num_)
-      throw std::logic_error("thread num is greater than the maximum.");
+      throw std::logic_error("Thread num is greater than the maximum.");
 
     uint64_t t = (std::chrono::steady_clock::now() - start_time_point_).count();
 

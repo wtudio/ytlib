@@ -15,7 +15,7 @@ using namespace std;
 TEST(BOOST_ASIO_TEST, NET_LOG) {
   AsioDebugTool::Ins().Reset();
 
-  auto cli_sys_ptr = std::make_shared<AsioExecutor>(1);
+  auto cli_sys_ptr = std::make_shared<AsioExecutor>(2);
   auto svr1_sys_ptr = std::make_shared<AsioExecutor>(2);
   auto svr2_sys_ptr = std::make_shared<AsioExecutor>(2);
 

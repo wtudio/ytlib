@@ -60,7 +60,6 @@ class AsioHttpServer : public std::enable_shared_from_this<AsioHttpServer> {
     size_t max_session_num = 1000000;                                            // 最大连接数
     std::chrono::steady_clock::duration mgr_timer_dt = std::chrono::seconds(5);  // 管理协程定时器间隔
 
-    std::chrono::steady_clock::duration timer_dt = std::chrono::seconds(5);               // 定时器间隔
     std::chrono::steady_clock::duration max_no_data_duration = std::chrono::seconds(60);  // 最长无数据时间
 
     static Cfg Verify(const Cfg& verify_cfg) {
@@ -73,8 +72,7 @@ class AsioHttpServer : public std::enable_shared_from_this<AsioHttpServer> {
         cfg.max_session_num = boost::asio::ip::tcp::acceptor::max_listen_connections;
       if (cfg.mgr_timer_dt < std::chrono::milliseconds(100)) cfg.mgr_timer_dt = std::chrono::milliseconds(100);
 
-      if (cfg.timer_dt < std::chrono::milliseconds(100)) cfg.timer_dt = std::chrono::milliseconds(100);
-      if (cfg.max_no_data_duration < cfg.timer_dt * 2) cfg.max_no_data_duration = cfg.timer_dt * 2;
+      if (cfg.max_no_data_duration < std::chrono::seconds(10)) cfg.max_no_data_duration = std::chrono::seconds(10);
 
       return cfg;
     }
@@ -243,12 +241,10 @@ class AsioHttpServer : public std::enable_shared_from_this<AsioHttpServer> {
   struct SessionCfg {
     SessionCfg(const Cfg& cfg)
         : doc_root(cfg.doc_root),
-          timer_dt(cfg.timer_dt),
           max_no_data_duration(cfg.max_no_data_duration) {}
 
     std::string doc_root;
 
-    std::chrono::steady_clock::duration timer_dt;
     std::chrono::steady_clock::duration max_no_data_duration;
   };
 
@@ -270,7 +266,6 @@ class AsioHttpServer : public std::enable_shared_from_this<AsioHttpServer> {
 
     void Start() {
       const boost::asio::ip::tcp::endpoint& ep = stream_.socket().remote_endpoint();
-      session_name_ = (ep.address().to_string() + "_" + std::to_string(ep.port()));
 
       auto self = this->shared_from_this();
 
@@ -288,6 +283,7 @@ class AsioHttpServer : public std::enable_shared_from_this<AsioHttpServer> {
                 HttpReq req;
                 size_t read_data_size = co_await http::async_read(stream_, buffer, req, boost::asio::use_awaitable);
                 DBG_PRINT("http svr session async read %llu bytes", read_data_size);
+                tick_has_data_ = true;
 
                 // 检查bad req
                 std::string_view bad_req_check_ret = CheckBadRequest(req);
@@ -380,7 +376,7 @@ class AsioHttpServer : public std::enable_shared_from_this<AsioHttpServer> {
                 DBG_PRINT("http svr session async write %llu bytes", write_data_size);
               }
             } catch (std::exception& e) {
-              DBG_PRINT("http svr session get exception and exit, addr %s, exception %s", session_name_.c_str(), e.what());
+              DBG_PRINT("http svr session get exception and exit, addr %s, exception %s", TcpEp2Str(stream_.socket().remote_endpoint()).c_str(), e.what());
             }
 
             Stop();
@@ -397,26 +393,20 @@ class AsioHttpServer : public std::enable_shared_from_this<AsioHttpServer> {
 
             try {
               namespace chrono = std::chrono;
-              chrono::steady_clock::time_point last_data_time_point = chrono::steady_clock::now();  // 上次有数据时间
 
               while (run_flag_) {
-                timer_.expires_after(session_cfg_ptr_->timer_dt);
+                timer_.expires_after(session_cfg_ptr_->max_no_data_duration);
                 co_await timer_.async_wait(boost::asio::use_awaitable);
 
                 if (tick_has_data_) {
                   tick_has_data_ = false;
-                  last_data_time_point = chrono::steady_clock::now();
-
                 } else {
-                  chrono::steady_clock::duration no_data_duration = chrono::steady_clock::now() - last_data_time_point;
-                  if (no_data_duration >= session_cfg_ptr_->max_no_data_duration) {
-                    DBG_PRINT("http svr session exit due to timeout(%llums), addr %s.", chrono::duration_cast<chrono::milliseconds>(no_data_duration).count(), session_name_.c_str());
-                    break;
-                  }
+                  DBG_PRINT("http svr session exit due to timeout(%llums), addr %s.", chrono::duration_cast<chrono::milliseconds>(session_cfg_ptr_->max_no_data_duration).count(), TcpEp2Str(stream_.socket().remote_endpoint()).c_str());
+                  break;
                 }
               }
             } catch (const std::exception& e) {
-              DBG_PRINT("http svr session timer get exception and exit, addr %s, exception %s", session_name_.c_str(), e.what());
+              DBG_PRINT("http svr session timer get exception and exit, addr %s, exception %s", TcpEp2Str(stream_.socket().remote_endpoint()).c_str(), e.what());
             }
 
             Stop();
@@ -628,7 +618,6 @@ class AsioHttpServer : public std::enable_shared_from_this<AsioHttpServer> {
     boost::asio::steady_timer timer_;
 
     std::shared_ptr<HttpDispatcher<boost::asio::awaitable<void>(std::shared_ptr<AsioHttpServer::Session>, const HttpReq&)>> http_dispatcher_ptr_;
-    std::string session_name_;
     bool close_connect_flag_ = false;
     bool tick_has_data_ = false;
   };

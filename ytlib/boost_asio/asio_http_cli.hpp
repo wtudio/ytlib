@@ -43,9 +43,6 @@ class AsioHttpClientProxy : public std::enable_shared_from_this<AsioHttpClientPr
     static Cfg Verify(const Cfg& verify_cfg) {
       Cfg cfg(verify_cfg);
 
-      if (cfg.max_no_data_duration < std::chrono::seconds(10))
-        cfg.max_no_data_duration = std::chrono::seconds(10);
-
       if (cfg.max_session_num < 1) cfg.max_session_num = 1;
 
       return cfg;

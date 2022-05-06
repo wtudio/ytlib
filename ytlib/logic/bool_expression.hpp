@@ -61,7 +61,7 @@ class BoolExpCalculator {
    */
   MidResultClass PreCalc(std::string_view expression) const {
     if (!CheckExp(expression))
-      throw std::logic_error("expression invalid.");
+      throw std::logic_error("Expression invalid.");
 
     std::stack<char> st;  // 辅助栈
     st.push('#');
