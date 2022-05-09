@@ -176,7 +176,7 @@ class TcpConnection : public ConnBase {
   void on_read_head(RecvDataPtr& RData_, const boost::system::error_code& err, size_t read_bytes) {
     if (read_get_err(err)) return;
     if (header[0] == TCPHEAD1 && header[1] == TCPHEAD2 && read_bytes == HEAD_SIZE) {
-      uint32_t pack_size = GetNumFromBuf(&header[4]);
+      uint32_t pack_size = GetUint32FromBuf(&header[4]);
       if (!RData_) {
         if (header[2] == CLASSHEAD) {
           //新建一个数据包
@@ -228,7 +228,7 @@ class TcpConnection : public ConnBase {
       }
     }
     stopflag = true;
-    YT_DEBUG_PRINTF("read failed : recv an invalid header : %c %c %c %d %d", header[0], header[1], header[2], header[3], GetNumFromBuf(&header[4]));
+    YT_DEBUG_PRINTF("read failed : recv an invalid header : %c %c %c %d %d", header[0], header[1], header[2], header[3], GetUint32FromBuf(&header[4]));
     errcb_(remote_ep);
     return;
   }
@@ -466,14 +466,14 @@ class TcpNetAdapter : public ConnPool<TcpConnection<T>> {
     boost::asio::streambuf objbuff;
     boost::archive::binary_oarchive oar(objbuff);
     oar << Tdata_->obj;
-    SetBufFromNum(&c_head_buff[4], static_cast<uint32_t>(objbuff.size()));
+    SetBufFromUint32(&c_head_buff[4], static_cast<uint32_t>(objbuff.size()));
     buffersPtr->push_back(boost::asio::const_buffer(c_head_buff, HEAD_SIZE));
     buffersPtr->push_back(std::move(objbuff.data()));
 
     //第二步，发送快速数据
     char q_head_buff[HEAD_SIZE]{TcpConnection<T>::TCPHEAD1, TcpConnection<T>::TCPHEAD2, TcpConnection<T>::QUICKHEAD, 0};
     if (Tdata_->quick_data.buf_size > 0) {
-      SetBufFromNum(&q_head_buff[4], Tdata_->quick_data.buf_size);
+      SetBufFromUint32(&q_head_buff[4], Tdata_->quick_data.buf_size);
       buffersPtr->push_back(boost::asio::const_buffer(q_head_buff, HEAD_SIZE));
       buffersPtr->push_back(boost::asio::const_buffer(Tdata_->quick_data.buf.get(), Tdata_->quick_data.buf_size));
     }
@@ -492,7 +492,7 @@ class TcpNetAdapter : public ConnPool<TcpConnection<T>> {
         file_tips += boost::filesystem::path(itr->second).filename().string();
         file_tips += '\n';
       }
-      SetBufFromNum(&f0_head_buff[4], static_cast<uint32_t>(file_tips.size()));
+      SetBufFromUint32(&f0_head_buff[4], static_cast<uint32_t>(file_tips.size()));
       buffersPtr->push_back(boost::asio::const_buffer(f0_head_buff, HEAD_SIZE));
       buffersPtr->push_back(boost::asio::const_buffer(file_tips.c_str(), file_tips.size()));
       //再发送每个文件。二进制方式。文件不存在的话就跳过该文件
@@ -509,7 +509,7 @@ class TcpNetAdapter : public ConnPool<TcpConnection<T>> {
           f_head_buff[cur_offerset + 3] = static_cast<char>(ii);
           f.seekg(0, f.end);
           uint32_t length = static_cast<uint32_t>(f.tellg());
-          SetBufFromNum(&f_head_buff[cur_offerset + 4], length);
+          SetBufFromUint32(&f_head_buff[cur_offerset + 4], length);
           f.seekg(0, f.beg);
           boost::shared_array<char> file_buf = boost::shared_array<char>(new char[length]);
           f.read(file_buf.get(), length);
@@ -539,7 +539,7 @@ class TcpNetAdapter : public ConnPool<TcpConnection<T>> {
         data_tips += itr->first;
         data_tips += '\n';
       }
-      SetBufFromNum(&d0_head_buff[4], static_cast<uint32_t>(data_tips.size()));
+      SetBufFromUint32(&d0_head_buff[4], static_cast<uint32_t>(data_tips.size()));
       buffersPtr->push_back(boost::asio::const_buffer(d0_head_buff, HEAD_SIZE));
       buffersPtr->push_back(boost::asio::const_buffer(data_tips.c_str(), data_tips.size()));
       //再发送每个数据包。size为0则不发送
@@ -549,7 +549,7 @@ class TcpNetAdapter : public ConnPool<TcpConnection<T>> {
           size_t cur_offerset = ii * HEAD_SIZE;
           memcpy(&d_head_buff[cur_offerset], d0_head_buff, 3);
           d_head_buff[cur_offerset + 3] = static_cast<char>(ii);
-          SetBufFromNum(&d_head_buff[cur_offerset + 4], itr->second.buf_size);
+          SetBufFromUint32(&d_head_buff[cur_offerset + 4], itr->second.buf_size);
           buffersPtr->push_back(boost::asio::const_buffer(&d_head_buff[cur_offerset], HEAD_SIZE));
           buffersPtr->push_back(boost::asio::const_buffer(itr->second.buf.get(), itr->second.buf_size));
         }
@@ -693,12 +693,12 @@ class DemoConn {
     if (!(header[0] == TCPHEAD1 && header[1] == TCPHEAD2 && read_bytes == HEAD_SIZE)) {
       stopflag_ = true;
       DBG_PRINT("read failed: recv an invalid header : %c %c %c %c %d",
-                header[0], header[1], header[2], header[3], GetNumFromBuf(&header[4]));
+                header[0], header[1], header[2], header[3], GetUint32FromBuf(&header[4]));
       errcb_(remote_ep_);
       return;
     }
 
-    uint32_t pack_size = GetNumFromBuf(&header[4]);
+    uint32_t pack_size = GetUint32FromBuf(&header[4]);
     // do something
     return;
   }
@@ -818,7 +818,7 @@ class NetBackend : public boost::log::sinks::basic_sink_backend<boost::log::sink
     //设置本机id和日志等级。如果以后要添加其他信息也在此处添加拓展
     HostInfoSize = 1 + 8 + 4;
     HostInfoBuff = boost::shared_array<char>(new char[HostInfoSize]);
-    SetBufFromNum(&HostInfoBuff[9], myid_);
+    SetBufFromUint32(&HostInfoBuff[9], myid_);
     logBuff.push_back(boost::asio::const_buffer(HostInfoBuff.get(), HostInfoSize));
     connect();
   }
@@ -829,7 +829,7 @@ class NetBackend : public boost::log::sinks::basic_sink_backend<boost::log::sink
   void consume(const boost::log::record_view& rec) {
     //如果有连接才发送，否则不发送
     if (connect()) {
-      SetBufFromNum(&header[4], static_cast<uint32_t>(rec[boost::log::expressions::smessage]->size() + HostInfoSize));
+      SetBufFromUint32(&header[4], static_cast<uint32_t>(rec[boost::log::expressions::smessage]->size() + HostInfoSize));
       HostInfoBuff[0] = static_cast<uint8_t>(*rec[boost::log::trivial::severity]);
       const boost::posix_time::ptime* tnow = (rec[boost::log::aux::default_attribute_names::timestamp()].extract<boost::posix_time::ptime>()).get_ptr();
       TransEndian(&HostInfoBuff[1], (char*)tnow, 8);

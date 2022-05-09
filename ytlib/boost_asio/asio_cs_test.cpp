@@ -73,7 +73,6 @@ TEST(BOOST_ASIO_TEST, CS_base) {
 
   {
     TestMsg msg{111, "test msg 111"};
-
     std::shared_ptr<boost::asio::streambuf> msg_buf_ptr = std::make_shared<boost::asio::streambuf>();
     boost::archive::binary_oarchive oar(*msg_buf_ptr);
     oar << msg;
@@ -114,7 +113,22 @@ TEST(BOOST_ASIO_TEST, CS_base) {
 
   {
     TestMsg msg{222, "test msg 222"};
+    std::shared_ptr<boost::asio::streambuf> msg_buf_ptr = std::make_shared<boost::asio::streambuf>();
+    boost::archive::binary_oarchive oar(*msg_buf_ptr);
+    oar << msg;
+    cs_cli_ptr->SendMsg(msg_buf_ptr);
+  }
 
+  {
+    TestMsg msg{333, "test msg 333"};
+    std::shared_ptr<boost::asio::streambuf> msg_buf_ptr = std::make_shared<boost::asio::streambuf>();
+    boost::archive::binary_oarchive oar(*msg_buf_ptr);
+    oar << msg;
+    cs_cli_ptr->SendMsg(msg_buf_ptr);
+  }
+
+  {
+    TestMsg msg{444, "test msg 444"};
     std::shared_ptr<boost::asio::streambuf> msg_buf_ptr = std::make_shared<boost::asio::streambuf>();
     boost::archive::binary_oarchive oar(*msg_buf_ptr);
     oar << msg;

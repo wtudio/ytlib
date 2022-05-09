@@ -47,8 +47,8 @@ TEST(BOOST_ASIO_TEST, HTTP_base) {
   });
 
   // cli
-  auto http_cli_ptr = std::make_shared<AsioHttpClient>(cli_sys_ptr->IO(), AsioHttpClient::Cfg());
-  cli_sys_ptr->RegisterSvrFunc(std::function<void()>(), [http_cli_ptr] { http_cli_ptr->Stop(); });
+  auto http_cli_pool_ptr = std::make_shared<AsioHttpClientPool>(cli_sys_ptr->IO(), AsioHttpClientPool::Cfg());
+  cli_sys_ptr->RegisterSvrFunc(std::function<void()>(), [http_cli_pool_ptr] { http_cli_pool_ptr->Stop(); });
 
   std::thread t_cli([cli_sys_ptr] {
     DBG_PRINT("cli_sys_ptr start");
@@ -57,13 +57,13 @@ TEST(BOOST_ASIO_TEST, HTTP_base) {
     DBG_PRINT("cli_sys_ptr exit");
   });
 
-  auto http_send_recv = [http_cli_ptr](AsioHttpClientProxy::Cfg proxy_cfg, bool expect_exp = false) -> asio::awaitable<void> {
+  auto http_send_recv = [http_cli_pool_ptr](AsioHttpClient::Cfg client_cfg, bool expect_exp = false) -> asio::awaitable<void> {
     ASIO_DEBUG_HANDLE(http_send_recv_co);
     bool exp_flag = false;
     try {
-      auto proxy_ptr = http_cli_ptr->GetProxy(proxy_cfg);
-      auto proxy_ptr2 = http_cli_ptr->GetProxy(proxy_cfg);
-      EXPECT_EQ(proxy_ptr, proxy_ptr2);
+      auto client_ptr = http_cli_pool_ptr->GetClient(client_cfg);
+      auto client_ptr2 = http_cli_pool_ptr->GetClient(client_cfg);
+      EXPECT_EQ(client_ptr, client_ptr2);
 
       http::request<http::string_body> req{http::verb::get, "/", 11};
       req.set(http::field::host, "127.0.0.1");
@@ -73,7 +73,7 @@ TEST(BOOST_ASIO_TEST, HTTP_base) {
       ss << req << std::endl;
       DBG_PRINT("req:\n%s", ss.str().c_str());
 
-      auto rsp = co_await asio::co_spawn(proxy_ptr->Strand(), proxy_ptr->HttpSendRecvCo(req), asio::use_awaitable);
+      auto rsp = co_await asio::co_spawn(client_ptr->Strand(), client_ptr->HttpSendRecvCo(req), asio::use_awaitable);
 
       ss.str("");
       ss << rsp << std::endl;
@@ -115,8 +115,8 @@ TEST(BOOST_ASIO_TEST, HTTP_base) {
 
   std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-  asio::co_spawn(http_cli_ptr->Strand(), http_send_recv(AsioHttpClientProxy::Cfg{"127.0.0.1", "50080"}), asio::detached);
-  asio::co_spawn(http_cli_ptr->Strand(), http_send_recv(AsioHttpClientProxy::Cfg{"127.0.0.1", "50081"}), asio::detached);
+  asio::co_spawn(http_cli_pool_ptr->Strand(), http_send_recv(AsioHttpClient::Cfg{"127.0.0.1", "50080"}), asio::detached);
+  asio::co_spawn(http_cli_pool_ptr->Strand(), http_send_recv(AsioHttpClient::Cfg{"127.0.0.1", "50081"}), asio::detached);
 
   std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
@@ -132,7 +132,7 @@ TEST(BOOST_ASIO_TEST, HTTP_base) {
   DBG_PRINT("%s", AsioDebugTool::Ins().GetStatisticalResult().c_str());
 }
 
-TEST(BOOST_ASIO_TEST, HTTP_proxy_base) {
+TEST(BOOST_ASIO_TEST, HTTP_client_base) {
   AsioDebugTool::Ins().Reset();
 
   auto cli_sys_ptr = std::make_shared<AsioExecutor>(2);
@@ -140,10 +140,10 @@ TEST(BOOST_ASIO_TEST, HTTP_proxy_base) {
   auto svr2_sys_ptr = std::make_shared<AsioExecutor>(2);
 
   // cli
-  auto http_cli_proxy_ptr = std::make_shared<AsioHttpClientProxy>(cli_sys_ptr->IO(), AsioHttpClientProxy::Cfg{"127.0.0.1", "80"});
-  cli_sys_ptr->RegisterSvrFunc(std::function<void()>(), [http_cli_proxy_ptr] { http_cli_proxy_ptr->Stop(); });
+  auto http_cli_ptr = std::make_shared<AsioHttpClient>(cli_sys_ptr->IO(), AsioHttpClient::Cfg{"127.0.0.1", "80"});
+  cli_sys_ptr->RegisterSvrFunc(std::function<void()>(), [http_cli_ptr] { http_cli_ptr->Stop(); });
 
-  auto http_send_recv = [http_cli_proxy_ptr](bool expect_exp = false) -> asio::awaitable<void> {
+  auto http_send_recv = [http_cli_ptr](bool expect_exp = false) -> asio::awaitable<void> {
     ASIO_DEBUG_HANDLE(http_send_recv_co);
     bool exp_flag = false;
     try {
@@ -155,7 +155,7 @@ TEST(BOOST_ASIO_TEST, HTTP_proxy_base) {
       ss << req << std::endl;
       DBG_PRINT("req:\n%s", ss.str().c_str());
 
-      auto rsp = co_await http_cli_proxy_ptr->HttpSendRecvCo(req);
+      auto rsp = co_await http_cli_ptr->HttpSendRecvCo(req);
 
       ss.str("");
       ss << rsp << std::endl;
@@ -215,12 +215,12 @@ TEST(BOOST_ASIO_TEST, HTTP_proxy_base) {
   });
   std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-  asio::co_spawn(http_cli_proxy_ptr->Strand(), http_send_recv(), asio::detached);
-  asio::co_spawn(http_cli_proxy_ptr->Strand(), http_send_recv(), asio::detached);
+  asio::co_spawn(http_cli_ptr->Strand(), http_send_recv(), asio::detached);
+  asio::co_spawn(http_cli_ptr->Strand(), http_send_recv(), asio::detached);
   std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-  asio::co_spawn(http_cli_proxy_ptr->Strand(), http_send_recv(), asio::detached);
-  asio::co_spawn(http_cli_proxy_ptr->Strand(), http_send_recv(), asio::detached);
+  asio::co_spawn(http_cli_ptr->Strand(), http_send_recv(), asio::detached);
+  asio::co_spawn(http_cli_ptr->Strand(), http_send_recv(), asio::detached);
   std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
   svr1_sys_ptr->Stop();
@@ -239,11 +239,11 @@ TEST(BOOST_ASIO_TEST, HTTP_proxy_base) {
   });
   std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-  asio::co_spawn(http_cli_proxy_ptr->Strand(), http_send_recv(true), asio::detached);
-  asio::co_spawn(http_cli_proxy_ptr->Strand(), http_send_recv(true), asio::detached);
+  asio::co_spawn(http_cli_ptr->Strand(), http_send_recv(true), asio::detached);
+  asio::co_spawn(http_cli_ptr->Strand(), http_send_recv(true), asio::detached);
   std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-  asio::co_spawn(http_cli_proxy_ptr->Strand(), http_send_recv(), asio::detached);
+  asio::co_spawn(http_cli_ptr->Strand(), http_send_recv(), asio::detached);
   std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
   svr2_sys_ptr->Stop();
@@ -255,17 +255,17 @@ TEST(BOOST_ASIO_TEST, HTTP_proxy_base) {
   DBG_PRINT("%s", AsioDebugTool::Ins().GetStatisticalResult().c_str());
 }
 
-TEST(BOOST_ASIO_TEST, HTTP_proxy_handle) {
+TEST(BOOST_ASIO_TEST, HTTP_client_handle) {
   AsioDebugTool::Ins().Reset();
 
   auto cli_sys_ptr = std::make_shared<AsioExecutor>(2);
   auto svr_sys_ptr = std::make_shared<AsioExecutor>(2);
 
   // cli
-  auto http_cli_proxy_ptr = std::make_shared<AsioHttpClientProxy>(cli_sys_ptr->IO(), AsioHttpClientProxy::Cfg{"127.0.0.1", "80"});
-  cli_sys_ptr->RegisterSvrFunc(std::function<void()>(), [http_cli_proxy_ptr] { http_cli_proxy_ptr->Stop(); });
+  auto http_cli_ptr = std::make_shared<AsioHttpClient>(cli_sys_ptr->IO(), AsioHttpClient::Cfg{"127.0.0.1", "80"});
+  cli_sys_ptr->RegisterSvrFunc(std::function<void()>(), [http_cli_ptr] { http_cli_ptr->Stop(); });
 
-  auto http_send_recv = [http_cli_proxy_ptr](std::string msg, bool expect_exp = false) -> asio::awaitable<void> {
+  auto http_send_recv = [http_cli_ptr](std::string msg, bool expect_exp = false) -> asio::awaitable<void> {
     ASIO_DEBUG_HANDLE(http_send_recv_co);
     bool exp_flag = false;
     try {
@@ -280,7 +280,7 @@ TEST(BOOST_ASIO_TEST, HTTP_proxy_handle) {
       ss << req << std::endl;
       DBG_PRINT("req:\n%s", ss.str().c_str());
 
-      auto rsp = co_await http_cli_proxy_ptr->HttpSendRecvCo(req);
+      auto rsp = co_await http_cli_ptr->HttpSendRecvCo(req);
 
       ss.str("");
       ss << rsp << std::endl;
@@ -348,10 +348,10 @@ TEST(BOOST_ASIO_TEST, HTTP_proxy_handle) {
   });
   std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-  asio::co_spawn(http_cli_proxy_ptr->Strand(), http_send_recv("msg11111111"), asio::detached);
+  asio::co_spawn(http_cli_ptr->Strand(), http_send_recv("msg11111111"), asio::detached);
   std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-  asio::co_spawn(http_cli_proxy_ptr->Strand(), http_send_recv("msg2222222"), asio::detached);
+  asio::co_spawn(http_cli_ptr->Strand(), http_send_recv("msg2222222"), asio::detached);
   std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
   svr_sys_ptr->Stop();

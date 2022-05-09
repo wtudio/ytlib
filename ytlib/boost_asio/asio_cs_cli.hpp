@@ -57,7 +57,8 @@ class AsioCsClient : public std::enable_shared_from_this<AsioCsClient> {
       : cfg_(AsioCsClient::Cfg::Verify(cfg)),
         io_ptr_(io_ptr),
         session_cfg_ptr_(std::make_shared<const AsioCsClient::SessionCfg>(cfg_)),
-        mgr_strand_(boost::asio::make_strand(*io_ptr_)) {}
+        mgr_strand_(boost::asio::make_strand(*io_ptr_)),
+        msg_handle_ptr_(std::make_shared<MsgHandleFunc>([](std::shared_ptr<boost::asio::streambuf>) {})) {}
 
   ~AsioCsClient() {}
 
@@ -138,7 +139,7 @@ class AsioCsClient : public std::enable_shared_from_this<AsioCsClient> {
         : session_cfg_ptr_(session_cfg_ptr),
           session_strand_(session_strand),
           sock_(session_strand_),
-          timer_(session_strand_),
+          sig_timer_(session_strand_),
           io_ptr_(io_ptr),
           msg_handle_ptr_(msg_handle_ptr) {}
 
@@ -154,7 +155,7 @@ class AsioCsClient : public std::enable_shared_from_this<AsioCsClient> {
           [this, self, msg_buf_ptr]() {
             ASIO_DEBUG_HANDLE(cs_cli_session_send_msg_to_svr_co);
             data_list.emplace_back(msg_buf_ptr);
-            timer_.cancel();
+            sig_timer_.cancel();
           });
     }
 
@@ -190,7 +191,7 @@ class AsioCsClient : public std::enable_shared_from_this<AsioCsClient> {
                           for (auto& itr : tmp_data_list) {
                             head_buf[ct * HEAD_SIZE] = HEAD_BYTE_1;
                             head_buf[ct * HEAD_SIZE + 1] = HEAD_BYTE_2;
-                            SetBufFromNum(&head_buf[ct * HEAD_SIZE + 2], static_cast<uint32_t>(itr->size()));
+                            SetBufFromUint32(&head_buf[ct * HEAD_SIZE + 2], static_cast<uint32_t>(itr->size()));
                             data_buf_list.emplace_back(boost::asio::const_buffer(&head_buf[ct * HEAD_SIZE], HEAD_SIZE));
                             ++ct;
 
@@ -203,8 +204,8 @@ class AsioCsClient : public std::enable_shared_from_this<AsioCsClient> {
 
                         bool heartbeat_flag = false;
                         try {
-                          timer_.expires_after(session_cfg_ptr_->timer_dt);
-                          co_await timer_.async_wait(boost::asio::use_awaitable);
+                          sig_timer_.expires_after(session_cfg_ptr_->timer_dt);
+                          co_await sig_timer_.async_wait(boost::asio::use_awaitable);
                           heartbeat_flag = true;
                         } catch (const std::exception& e) {
                           DBG_PRINT("cs cli session timer canceled, exception info: %s", e.what());
@@ -238,19 +239,19 @@ class AsioCsClient : public std::enable_shared_from_this<AsioCsClient> {
                       std::vector<char> head_buf(HEAD_SIZE);
                       while (run_flag_) {
                         size_t read_data_size = co_await boost::asio::async_read(sock_, boost::asio::buffer(head_buf, HEAD_SIZE), boost::asio::transfer_exactly(HEAD_SIZE), boost::asio::use_awaitable);
-                        DBG_PRINT("net log svr session async read %llu bytes for head", read_data_size);
+                        DBG_PRINT("cs cli session async read %llu bytes for head", read_data_size);
 
                         if (read_data_size != HEAD_SIZE || head_buf[0] != HEAD_BYTE_1 || head_buf[1] != HEAD_BYTE_2) [[unlikely]]
                           throw std::runtime_error("Get an invalid head.");
 
-                        uint32_t msg_len = GetNumFromBuf(&head_buf[2]);
+                        uint32_t msg_len = GetUint32FromBuf(&head_buf[2]);
                         if (msg_len == 0) [[unlikely]]
                           continue;
 
                         std::shared_ptr<boost::asio::streambuf> msg_buf = std::make_shared<boost::asio::streambuf>();
 
                         read_data_size = co_await boost::asio::async_read(sock_, msg_buf->prepare(msg_len), boost::asio::transfer_exactly(msg_len), boost::asio::use_awaitable);
-                        DBG_PRINT("net log svr session async read %llu bytes", read_data_size);
+                        DBG_PRINT("cs cli session async read %llu bytes", read_data_size);
 
                         if (read_data_size != msg_len) [[unlikely]]
                           throw std::runtime_error("Get an invalid pkg.");
@@ -292,7 +293,7 @@ class AsioCsClient : public std::enable_shared_from_this<AsioCsClient> {
               try {
                 switch (stop_step) {
                   case 1:
-                    timer_.cancel();
+                    sig_timer_.cancel();
                     ++stop_step;
                   case 2:
                     sock_.shutdown(boost::asio::ip::tcp::socket::shutdown_both);
@@ -325,7 +326,7 @@ class AsioCsClient : public std::enable_shared_from_this<AsioCsClient> {
     std::atomic_bool run_flag_ = true;
     boost::asio::strand<boost::asio::io_context::executor_type> session_strand_;
     boost::asio::ip::tcp::socket sock_;
-    boost::asio::steady_timer timer_;
+    boost::asio::steady_timer sig_timer_;
 
     std::list<std::shared_ptr<boost::asio::streambuf> > data_list;
     std::shared_ptr<boost::asio::io_context> io_ptr_;

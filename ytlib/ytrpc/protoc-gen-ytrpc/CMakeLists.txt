@@ -10,6 +10,7 @@ File(GLOB_RECURSE src ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 
 # 添加目标
 add_executable(${CUR_TARGET_NAME})
+add_executable(ytlib::${CUR_TARGET_NAME} ALIAS ${CUR_TARGET_NAME})
 
 # 设置源文件
 target_sources(${CUR_TARGET_NAME} PRIVATE ${src})
@@ -23,9 +24,9 @@ set_property(TARGET ${CUR_TARGET_NAME} PROPERTY PRIVATE_HEADER ${head_files})
 # 设置链接库
 target_link_libraries(${CUR_TARGET_NAME} PRIVATE
   ytlib::misc
+  ytlib::string
   protobuf::libprotobuf
-  testgencode::testgencode
-  testgencode::testgencode_rpc
+  protobuf::libprotoc
 )
 
 # 设置编译选项
@@ -33,4 +34,6 @@ target_link_libraries(${CUR_TARGET_NAME} PRIVATE
 
 # 设置其他属性
 set_property(TARGET ${CUR_TARGET_NAME} PROPERTY UNITY_BUILD ON)
-set_property(TARGET ${CUR_TARGET_NAME} PROPERTY FOLDER test/testprotobuf/${CUR_TARGET_NAME})
+set_property(TARGET ${CUR_TARGET_NAME} PROPERTY FOLDER ytrpc/${CUR_TARGET_NAME})
+
+include(${CMAKE_CURRENT_SOURCE_DIR}/YTRpcGenCode.cmake)

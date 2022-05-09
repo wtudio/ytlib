@@ -62,6 +62,7 @@ class AsioHttpServer : public std::enable_shared_from_this<AsioHttpServer> {
 
     std::chrono::steady_clock::duration max_no_data_duration = std::chrono::seconds(60);  // 最长无数据时间
 
+    /// 校验配置
     static Cfg Verify(const Cfg& verify_cfg) {
       Cfg cfg(verify_cfg);
 
@@ -392,8 +393,6 @@ class AsioHttpServer : public std::enable_shared_from_this<AsioHttpServer> {
             ASIO_DEBUG_HANDLE(http_svr_session_timer_co);
 
             try {
-              namespace chrono = std::chrono;
-
               while (run_flag_) {
                 timer_.expires_after(session_cfg_ptr_->max_no_data_duration);
                 co_await timer_.async_wait(boost::asio::use_awaitable);
@@ -401,7 +400,7 @@ class AsioHttpServer : public std::enable_shared_from_this<AsioHttpServer> {
                 if (tick_has_data_) {
                   tick_has_data_ = false;
                 } else {
-                  DBG_PRINT("http svr session exit due to timeout(%llums), addr %s.", chrono::duration_cast<chrono::milliseconds>(session_cfg_ptr_->max_no_data_duration).count(), TcpEp2Str(stream_.socket().remote_endpoint()).c_str());
+                  DBG_PRINT("http svr session exit due to timeout(%llums), addr %s.", std::chrono::duration_cast<std::chrono::milliseconds>(session_cfg_ptr_->max_no_data_duration).count(), TcpEp2Str(stream_.socket().remote_endpoint()).c_str());
                   break;
                 }
               }

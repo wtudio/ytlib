@@ -48,7 +48,7 @@ inline void TransEndian(char* pd, const char* ps, uint32_t len) {
   }
 }
 
-inline void SetBufFromNum(char* p, uint32_t n) {
+inline void SetBufFromUint32(char* p, uint32_t n) {
   static_assert(std::endian::native == std::endian::big || std::endian::native == std::endian::little, "unknown endian");
   if constexpr (std::endian::native == std::endian::big) {
     p[0] = ((char*)&n)[3];
@@ -60,7 +60,7 @@ inline void SetBufFromNum(char* p, uint32_t n) {
   }
 }
 
-inline uint32_t GetNumFromBuf(const char* p) {
+inline uint32_t GetUint32FromBuf(const char* p) {
   static_assert(std::endian::native == std::endian::big || std::endian::native == std::endian::little, "unknown endian");
   if constexpr (std::endian::native == std::endian::big) {
     uint32_t n;
@@ -71,6 +71,28 @@ inline uint32_t GetNumFromBuf(const char* p) {
     return n;
   } else if constexpr (std::endian::native == std::endian::little) {
     return *((uint32_t*)p);
+  }
+}
+
+inline void SetBufFromUint16(char* p, uint16_t n) {
+  static_assert(std::endian::native == std::endian::big || std::endian::native == std::endian::little, "unknown endian");
+  if constexpr (std::endian::native == std::endian::big) {
+    p[0] = ((char*)&n)[1];
+    p[1] = ((char*)&n)[0];
+  } else if constexpr (std::endian::native == std::endian::little) {
+    memcpy(p, &n, 2);
+  }
+}
+
+inline uint16_t GetUint16FromBuf(const char* p) {
+  static_assert(std::endian::native == std::endian::big || std::endian::native == std::endian::little, "unknown endian");
+  if constexpr (std::endian::native == std::endian::big) {
+    uint16_t n;
+    ((char*)&n)[1] = p[0];
+    ((char*)&n)[0] = p[1];
+    return n;
+  } else if constexpr (std::endian::native == std::endian::little) {
+    return *((uint16_t*)p);
   }
 }
 

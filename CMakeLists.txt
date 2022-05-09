@@ -69,6 +69,11 @@ if(YTLIB_BUILD_WITH_FREEGLUT)
   include(GetFreeglut)
 endif()
 
+option(YTLIB_BUILD_WITH_PROTOBUF "Build with protobuf lib." OFF)
+if(YTLIB_BUILD_WITH_PROTOBUF)
+  include(GetProtoBuf)
+endif()
+
 #设置测试
 option(YTLIB_BUILD_TESTS "Build tests." OFF)
 if(YTLIB_BUILD_TESTS)
@@ -82,11 +87,11 @@ if(YTLIB_BUILD_BENCH_TESTS)
   include(GetGoogleBenchmark)
 endif()
 
+#设置下一级目录
+add_subdirectory(ytlib)
+
 #设置个性化测试（ytlib开发测试专用）
 option(YTLIB_BUILD_CUSTOM_TESTS "Build custom tests." OFF)
 if(YTLIB_BUILD_CUSTOM_TESTS)
   add_subdirectory(test)
 endif()
-
-#设置下一级目录
-add_subdirectory(ytlib)

@@ -16,8 +16,8 @@
 #include <boost/asio.hpp>
 
 #include "ytlib/boost_asio/asio_debug_tools.hpp"
+#include "ytlib/boost_asio/net_util.hpp"
 #include "ytlib/misc/misc_macro.h"
-#include "ytlib/misc/time.hpp"
 
 namespace ytlib {
 
@@ -57,7 +57,8 @@ class AsioCsServer : public std::enable_shared_from_this<AsioCsServer> {
         mgr_strand_(boost::asio::make_strand(*io_ptr_)),
         acceptor_(mgr_strand_, boost::asio::ip::tcp::endpoint{boost::asio::ip::address_v4(), cfg_.port}),
         acceptor_timer_(mgr_strand_),
-        mgr_timer_(mgr_strand_) {}
+        mgr_timer_(mgr_strand_),
+        msg_handle_ptr_(std::make_shared<MsgHandleFunc>([](boost::asio::ip::tcp::endpoint, std::shared_ptr<boost::asio::streambuf>) {})) {}
 
   ~AsioCsServer() {}
 
@@ -265,7 +266,7 @@ class AsioCsServer : public std::enable_shared_from_this<AsioCsServer> {
                   for (auto& itr : tmp_data_list) {
                     head_buf[ct * HEAD_SIZE] = HEAD_BYTE_1;
                     head_buf[ct * HEAD_SIZE + 1] = HEAD_BYTE_2;
-                    SetBufFromNum(&head_buf[ct * HEAD_SIZE + 2], static_cast<uint32_t>(itr->size()));
+                    SetBufFromUint32(&head_buf[ct * HEAD_SIZE + 2], static_cast<uint32_t>(itr->size()));
                     data_buf_list.emplace_back(boost::asio::const_buffer(&head_buf[ct * HEAD_SIZE], HEAD_SIZE));
                     ++ct;
 
@@ -304,24 +305,24 @@ class AsioCsServer : public std::enable_shared_from_this<AsioCsServer> {
               std::vector<char> head_buf(HEAD_SIZE);
               while (run_flag_) {
                 size_t read_data_size = co_await boost::asio::async_read(sock_, boost::asio::buffer(head_buf, HEAD_SIZE), boost::asio::transfer_exactly(HEAD_SIZE), boost::asio::use_awaitable);
-                DBG_PRINT("net log svr session async read %llu bytes for head", read_data_size);
+                DBG_PRINT("cs svr session async read %llu bytes for head", read_data_size);
                 tick_has_data_ = true;
 
                 if (read_data_size != HEAD_SIZE || head_buf[0] != HEAD_BYTE_1 || head_buf[1] != HEAD_BYTE_2) [[unlikely]]
                   throw std::runtime_error("Get an invalid head.");
 
-                uint32_t msg_len = GetNumFromBuf(&head_buf[2]);
+                uint32_t msg_len = GetUint32FromBuf(&head_buf[2]);
                 if (msg_len == 0) [[unlikely]]
                   continue;
 
                 std::shared_ptr<boost::asio::streambuf> msg_buf = std::make_shared<boost::asio::streambuf>();
 
                 read_data_size = co_await boost::asio::async_read(sock_, msg_buf->prepare(msg_len), boost::asio::transfer_exactly(msg_len), boost::asio::use_awaitable);
-                DBG_PRINT("net log svr session async read %llu bytes", read_data_size);
+                DBG_PRINT("cs svr session async read %llu bytes", read_data_size);
                 tick_has_data_ = true;
 
                 if (read_data_size != msg_len) [[unlikely]]
-                  throw std::runtime_error("Get an invalid pkg.");
+                  throw std::runtime_error("Get an invalid msg.");
 
                 msg_buf->commit(msg_len);
                 boost::asio::post(*io_ptr_, std::bind(*msg_handle_ptr_, sock_.remote_endpoint(), msg_buf));
@@ -340,11 +341,9 @@ class AsioCsServer : public std::enable_shared_from_this<AsioCsServer> {
       boost::asio::co_spawn(
           session_strand_,
           [this, self]() -> boost::asio::awaitable<void> {
-            ASIO_DEBUG_HANDLE(http_svr_session_timer_co);
+            ASIO_DEBUG_HANDLE(cs_svr_session_timer_co);
 
             try {
-              namespace chrono = std::chrono;
-
               while (run_flag_) {
                 timer_.expires_after(session_cfg_ptr_->max_no_data_duration);
                 co_await timer_.async_wait(boost::asio::use_awaitable);
@@ -352,7 +351,7 @@ class AsioCsServer : public std::enable_shared_from_this<AsioCsServer> {
                 if (tick_has_data_) {
                   tick_has_data_ = false;
                 } else {
-                  DBG_PRINT("cs svr session exit due to timeout(%llums), addr %s.", chrono::duration_cast<chrono::milliseconds>(session_cfg_ptr_->max_no_data_duration).count(), TcpEp2Str(sock_.remote_endpoint()).c_str());
+                  DBG_PRINT("cs svr session exit due to timeout(%llums), addr %s.", std::chrono::duration_cast<std::chrono::milliseconds>(session_cfg_ptr_->max_no_data_duration).count(), TcpEp2Str(sock_.remote_endpoint()).c_str());
                   break;
                 }
               }

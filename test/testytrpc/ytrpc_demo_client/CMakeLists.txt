@@ -10,7 +10,6 @@ File(GLOB_RECURSE src ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 
 # 添加目标
 add_executable(${CUR_TARGET_NAME})
-add_executable(ytlib::${CUR_TARGET_NAME} ALIAS ${CUR_TARGET_NAME})
 
 # 设置源文件
 target_sources(${CUR_TARGET_NAME} PRIVATE ${src})
@@ -25,12 +24,13 @@ set_property(TARGET ${CUR_TARGET_NAME} PROPERTY PRIVATE_HEADER ${head_files})
 target_link_libraries(${CUR_TARGET_NAME} PRIVATE
   ytlib::misc
   protobuf::libprotobuf
-  protobuf::libprotoc
+  ytlib::ytrpc_demo_protos_gencode
+  ytlib::ytrpc
+  ytlib::ytrpc_demo_rpc_gencode
 )
 
 # 设置编译选项
 # target_compile_definitions(${CUR_TARGET_NAME} PRIVATE xxx)
 
 # 设置其他属性
-set_property(TARGET ${CUR_TARGET_NAME} PROPERTY UNITY_BUILD ON)
-set_property(TARGET ${CUR_TARGET_NAME} PROPERTY FOLDER test/testprotobuf/${CUR_TARGET_NAME})
+set_property(TARGET ${CUR_TARGET_NAME} PROPERTY FOLDER test/testytrpc/${CUR_TARGET_NAME})

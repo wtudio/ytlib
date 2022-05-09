@@ -24,13 +24,13 @@ set_property(TARGET ${CUR_TARGET_NAME} PROPERTY PRIVATE_HEADER ${head_files})
 target_link_libraries(${CUR_TARGET_NAME} PRIVATE
   ytlib::misc
   protobuf::libprotobuf
-  testgencode::testgencode
-  testgencode::testgencode_rpc
+  ytlib::ytrpc_demo_protos_gencode
+  ytlib::ytrpc
+  ytlib::ytrpc_demo_rpc_gencode
 )
 
 # 设置编译选项
 # target_compile_definitions(${CUR_TARGET_NAME} PRIVATE xxx)
 
 # 设置其他属性
-set_property(TARGET ${CUR_TARGET_NAME} PROPERTY UNITY_BUILD ON)
-set_property(TARGET ${CUR_TARGET_NAME} PROPERTY FOLDER test/testprotobuf/${CUR_TARGET_NAME})
+set_property(TARGET ${CUR_TARGET_NAME} PROPERTY FOLDER test/testytrpc/${CUR_TARGET_NAME})

@@ -46,6 +46,16 @@ inline uint64_t GetCurTimestampMs() {
 }
 
 /**
+ * @brief 从毫秒时间戳转换为system_clock::time_point
+ *
+ * @param ms 毫秒时间戳
+ * @return const std::chrono::system_clock::time_point
+ */
+inline const std::chrono::system_clock::time_point GetTimePointFromTimestampMs(uint64_t ms) {
+  return std::chrono::system_clock::time_point(std::chrono::milliseconds(ms));
+}
+
+/**
  * @brief 获取秒时间戳
  *
  * @param t 时间点
@@ -62,6 +72,16 @@ inline uint64_t GetTimestampSec(const std::chrono::system_clock::time_point& t) 
  */
 inline uint64_t GetCurTimestampSec() {
   return GetTimestampSec(std::chrono::system_clock::now());
+}
+
+/**
+ * @brief 从秒时间戳转换为system_clock::time_point
+ *
+ * @param sec 秒时间戳
+ * @return const std::chrono::system_clock::time_point
+ */
+inline const std::chrono::system_clock::time_point GetTimePointFromTimestampSec(uint64_t sec) {
+  return std::chrono::system_clock::time_point(std::chrono::seconds(sec));
 }
 
 /**
