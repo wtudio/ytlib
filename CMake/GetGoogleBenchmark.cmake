@@ -4,7 +4,7 @@ message(STATUS "get googlebenchmark ...")
 
 FetchContent_Declare(
   googlebenchmark
-  URL https://github.com/google/benchmark/archive/v1.6.0.tar.gz
+  URL https://github.com/google/benchmark/archive/v1.6.1.tar.gz
 )
 
 set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "")

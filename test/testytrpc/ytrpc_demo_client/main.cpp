@@ -57,7 +57,7 @@ int32_t main(int32_t argc, char** argv) {
   boost::asio::co_spawn(
       *(asio_sys_ptr->IO()),
       [cli_ptr]() -> boost::asio::awaitable<void> {
-        uint32_t ct = 10000;
+        uint32_t ct = 10;
         auto demo_service_proxy_ptr = std::make_shared<demo::DemoServiceProxy>(cli_ptr);
         while (ct--) {
           auto ctx = std::make_shared<ytrpc::Context>();

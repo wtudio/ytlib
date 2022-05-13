@@ -102,9 +102,9 @@ class FileObj {
   /**
    * @brief 获取文件结构体智能指针
    *
-   * @return std::shared_ptr<T> 文件结构体智能指针
+   * @return const std::shared_ptr<T>& 文件结构体智能指针
    */
-  std::shared_ptr<T> GetObjPtr() const {
+  const std::shared_ptr<T>& GetObjPtr() const {
     return obj_ptr_;
   }
 

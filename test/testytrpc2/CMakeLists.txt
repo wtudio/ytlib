@@ -1,0 +1,4 @@
+add_subdirectory(testytrpc2_protos)
+
+add_subdirectory(testytrpc2_server)
+add_subdirectory(testytrpc2_client)

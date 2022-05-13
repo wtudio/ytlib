@@ -21,15 +21,16 @@ target_include_directories(${CUR_TARGET_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR
 set_property(TARGET ${CUR_TARGET_NAME} PROPERTY PRIVATE_HEADER ${head_files})
 
 # 设置链接库
-target_link_libraries(${CUR_TARGET_NAME} PRIVATE 
-  benchmark::benchmark
-  benchmark::benchmark_main
+target_link_libraries(${CUR_TARGET_NAME} PRIVATE
+  ytlib::misc
+  protobuf::libprotobuf
+  ytlib::testytrpc2_protos_gencode
   ytlib::ytrpc
+  ytlib::testytrpc2_rpc_gencode
 )
 
 # 设置编译选项
 # target_compile_definitions(${CUR_TARGET_NAME} PRIVATE xxx)
 
 # 设置其他属性
-set_property(TARGET ${CUR_TARGET_NAME} PROPERTY UNITY_BUILD ON)
-set_property(TARGET ${CUR_TARGET_NAME} PROPERTY FOLDER test/${CUR_TARGET_NAME})
+set_property(TARGET ${CUR_TARGET_NAME} PROPERTY FOLDER test/testytrpc2/${CUR_TARGET_NAME})

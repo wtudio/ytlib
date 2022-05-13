@@ -24,7 +24,6 @@ target_link_libraries(${CUR_TARGET_NAME} INTERFACE Boost::boost Boost::date_time
 
 # 设置编译选项
 target_compile_definitions(${CUR_TARGET_NAME} INTERFACE BOOST_ASIO_NO_DEPRECATED BOOST_BEAST_USE_STD_STRING_VIEW)
-target_compile_definitions(${CUR_TARGET_NAME} INTERFACE ASIO_ENABLE_DEBUG)
 
 # 设置其他属性
 set_property(TARGET ${CUR_TARGET_NAME} PROPERTY FOLDER ${CUR_TARGET_NAME})
@@ -36,6 +35,7 @@ install(TARGETS ${CUR_TARGET_NAME} PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INC
 if (YTLIB_BUILD_TESTS AND test_files)
   add_gtest_target(TEST_TARGET ${CUR_TARGET_NAME} TEST_SRC ${test_files})
   set_property(TARGET ${CUR_TARGET_NAME}_test PROPERTY FOLDER ${CUR_TARGET_NAME})
+  target_compile_definitions(${CUR_TARGET_NAME}_test PRIVATE ASIO_ENABLE_DEBUG)
   target_link_libraries(${CUR_TARGET_NAME}_test PRIVATE ytlib::boost_tools)
   if(WIN32)
     target_compile_options(${CUR_TARGET_NAME}_test PRIVATE /bigobj)

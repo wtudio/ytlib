@@ -125,7 +125,7 @@ class AsioExecutor {
    * @brief 获取io
    * @return io_context
    */
-  std::shared_ptr<boost::asio::io_context> IO() { return io_ptr_; }
+  const std::shared_ptr<boost::asio::io_context>& IO() { return io_ptr_; }
 
  private:
   uint32_t threads_num_;

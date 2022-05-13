@@ -1,15 +1,16 @@
 #include <benchmark/benchmark.h>
 
-namespace ytlib {
+// #include "alloc_bench.hpp"
+// #include "pb_bench.hpp"
+#include "map_bench.hpp"
 
-static void BM_Demo(benchmark::State& state) {
-  for (auto _ : state) {
-    int i = 0;
-  }
+int main(int argc, char** argv) {
+  // PbBenchInit();
+  MapBenchInit();
+
+  ::benchmark::Initialize(&argc, argv);
+  if (::benchmark::ReportUnrecognizedArguments(argc, argv)) return 1;
+  ::benchmark::RunSpecifiedBenchmarks();
+  ::benchmark::Shutdown();
+  return 0;
 }
-
-BENCHMARK(BM_Demo);
-
-}  // namespace ytlib
-
-BENCHMARK_MAIN();
