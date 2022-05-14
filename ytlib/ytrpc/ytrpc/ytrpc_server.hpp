@@ -2,7 +2,6 @@
 
 #include <concepts>
 #include <list>
-#include <map>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -22,6 +21,7 @@
 namespace ytlib {
 namespace ytrpc {
 
+class RpcService;
 class RpcServer : public std::enable_shared_from_this<RpcServer> {
   friend class RpcService;
 
@@ -31,18 +31,18 @@ class RpcServer : public std::enable_shared_from_this<RpcServer> {
    *
    */
   struct Cfg {
-    uint16_t port = 55399;  // 监听的端口
+    boost::asio::ip::tcp::endpoint ep = boost::asio::ip::tcp::endpoint{boost::asio::ip::address_v4(), 55399};  // 监听的地址
 
     size_t max_session_num = 1000000;                                             // 最大连接数
     std::chrono::steady_clock::duration mgr_timer_dt = std::chrono::seconds(10);  // 管理协程定时器间隔
 
     std::chrono::steady_clock::duration max_no_data_duration = std::chrono::seconds(300);  // 最长无数据时间
 
+    uint32_t max_recv_size = 1024 * 1024 * 10;  // 回包最大尺寸，最大10m
+
     /// 校验配置
     static Cfg Verify(const Cfg& verify_cfg) {
       Cfg cfg(verify_cfg);
-
-      if (cfg.port > 65535 || cfg.port < 1000) cfg.port = 55399;
 
       if (cfg.max_session_num < 1) cfg.max_session_num = 1;
       if (cfg.max_session_num > boost::asio::ip::tcp::acceptor::max_listen_connections)
@@ -61,12 +61,12 @@ class RpcServer : public std::enable_shared_from_this<RpcServer> {
    * @param io_ptr
    * @param cfg
    */
-  RpcServer(std::shared_ptr<boost::asio::io_context> io_ptr, const RpcServer::Cfg& cfg)
+  RpcServer(const std::shared_ptr<boost::asio::io_context>& io_ptr, const RpcServer::Cfg& cfg)
       : cfg_(RpcServer::Cfg::Verify(cfg)),
         io_ptr_(io_ptr),
         session_cfg_ptr_(std::make_shared<const RpcServer::SessionCfg>(cfg_)),
         mgr_strand_(boost::asio::make_strand(*io_ptr_)),
-        acceptor_(mgr_strand_, boost::asio::ip::tcp::endpoint{boost::asio::ip::address_v4(), cfg_.port}),
+        acceptor_(mgr_strand_, cfg_.ep),
         acceptor_timer_(mgr_strand_),
         mgr_timer_(mgr_strand_),
         func_map_ptr_(std::make_shared<std::unordered_map<std::string, AdapterFunc>>()) {}
@@ -77,7 +77,7 @@ class RpcServer : public std::enable_shared_from_this<RpcServer> {
   RpcServer& operator=(const RpcServer&) = delete;  ///< no copy
 
   template <std::derived_from<RpcService> ServiceType>
-  void RegisterService(std::shared_ptr<ServiceType> service_ptr) {
+  void RegisterService(const std::shared_ptr<ServiceType>& service_ptr) {
     std::shared_ptr<RpcService> rpc_service_ptr = std::static_pointer_cast<RpcService>(service_ptr);
     service_ptr_list_.emplace_back(rpc_service_ptr);
     func_map_ptr_->insert(rpc_service_ptr->FuncMap().begin(), rpc_service_ptr->FuncMap().end());
@@ -229,9 +229,12 @@ class RpcServer : public std::enable_shared_from_this<RpcServer> {
 
   struct SessionCfg {
     SessionCfg(const Cfg& cfg)
-        : max_no_data_duration(cfg.max_no_data_duration) {}
+        : max_no_data_duration(cfg.max_no_data_duration),
+          max_recv_size(cfg.max_recv_size) {}
 
     std::chrono::steady_clock::duration max_no_data_duration;
+
+    uint32_t max_recv_size;
   };
 
   class Session : public std::enable_shared_from_this<Session> {
@@ -308,11 +311,15 @@ class RpcServer : public std::enable_shared_from_this<RpcServer> {
                   throw std::runtime_error("Get an invalid head.");
 
                 // 接收pb包头+pb业务包
-                uint32_t pb_msg_len = GetUint16FromBuf(&head_buf[4]);
+                uint32_t pb_msg_len = GetUint32FromBuf(&head_buf[4]);
 
                 // msg长度为0表示是心跳包
                 if (pb_msg_len == 0) [[unlikely]]
                   continue;
+
+                if (pb_msg_len > session_cfg_ptr_->max_recv_size) [[unlikely]] {
+                  throw std::runtime_error("Msg too large.");
+                }
 
                 std::vector<char> req_buf(pb_msg_len);
 
@@ -322,7 +329,7 @@ class RpcServer : public std::enable_shared_from_this<RpcServer> {
                 // 处理数据，需要post到整个ioctx上
                 auto handle = [self, pb_head_len = GetUint16FromBuf(&head_buf[2]), req_buf{std::move(req_buf)}]() mutable -> boost::asio::awaitable<void> {
                   try {
-                    ytrpchead::ReqHead req_head;
+                    thread_local ytrpchead::ReqHead req_head;
                     req_head.ParseFromArray(req_buf.data(), pb_head_len);
 
                     MsgContext msg_ctx(req_head.req_id(), req_buf, pb_head_len);
@@ -502,7 +509,7 @@ class RpcService {
   template <typename ReqType, typename RspType>
   void RegisterRpcServiceFunc(
       const std::string& func_name,
-      const std::function<boost::asio::awaitable<Status>(const std::shared_ptr<Context>& ctx_ptr, const ReqType& req, RspType& rsp)>& func) {
+      const std::function<boost::asio::awaitable<Status>(const std::shared_ptr<const Context>& ctx_ptr, const ReqType& req, RspType& rsp)>& func) {
     func_map_.emplace(
         func_name,
         [func](RpcServer::MsgContext& msg_ctx) -> boost::asio::awaitable<void> {
@@ -511,12 +518,14 @@ class RpcService {
           head_buf[0] = RpcServer::HEAD_BYTE_1;
           head_buf[1] = RpcServer::HEAD_BYTE_2;
 
-          ytrpchead::RspHead rsp_head;
-          rsp_head.set_req_id(msg_ctx.req_id);
+          thread_local ytrpchead::RspHead rsp_head;
 
           ReqType req;
           if (!req.ParseFromArray(msg_ctx.req_buf.data() + msg_ctx.req_pos, msg_ctx.req_buf.size() - msg_ctx.req_pos)) [[unlikely]] {
+            rsp_head.set_req_id(msg_ctx.req_id);
             rsp_head.set_ret_code(static_cast<int32_t>(StatusCode::SVR_PARSE_REQ_FAILED));
+            rsp_head.set_func_ret_code(0);
+            rsp_head.set_func_ret_msg("");
 
             rsp_head.SerializeToZeroCopyStream(&os);
             SetBufFromUint16(&head_buf[2], static_cast<uint16_t>(os.ByteCount() - RpcServer::HEAD_SIZE));
@@ -529,6 +538,7 @@ class RpcService {
           RspType rsp;
           const Status& ret_status = co_await func(msg_ctx.ctx_ptr, req, rsp);
 
+          rsp_head.set_req_id(msg_ctx.req_id);
           rsp_head.set_ret_code(static_cast<int32_t>(ret_status.Ret()));
           rsp_head.set_func_ret_code(static_cast<int32_t>(ret_status.FuncRet()));
           rsp_head.set_func_ret_msg(ret_status.FuncRetMsg());

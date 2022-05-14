@@ -14,7 +14,7 @@ using namespace ytlib;
 
 class GreeterImpl : public trpc::test::helloworld::Greeter {
  public:
-  virtual boost::asio::awaitable<ytrpc::Status> SayHello(const std::shared_ptr<ytrpc::Context>& ctx, const trpc::test::helloworld::HelloRequest& req, trpc::test::helloworld::HelloReply& rsp) override {
+  virtual boost::asio::awaitable<ytrpc::Status> SayHello(const std::shared_ptr<const ytrpc::Context>& ctx_ptr, const trpc::test::helloworld::HelloRequest& req, trpc::test::helloworld::HelloReply& rsp) override {
     rsp.set_msg("Hello, " + req.msg());
     co_return ytrpc::Status(ytrpc::StatusCode::OK);
   }
@@ -28,7 +28,6 @@ int32_t main(int32_t argc, char** argv) {
   auto asio_sys_ptr = std::make_shared<AsioExecutor>(8);
 
   ytrpc::RpcServer::Cfg cfg;
-  cfg.port = 55399;
   auto svr_ptr = std::make_shared<ytrpc::RpcServer>(asio_sys_ptr->IO(), cfg);
   svr_ptr->RegisterService(std::make_shared<GreeterImpl>());
 

@@ -13,15 +13,15 @@ namespace ytrpc {
 
 class BufferVec {
  public:
-  BufferVec() noexcept {}
+  BufferVec() {}
 
-  ~BufferVec() noexcept {
+  ~BufferVec() {
     for (auto& buffer : buffer_vec_) {
       std::free(buffer.first);
     }
   }
 
-  BufferVec(BufferVec&& v) noexcept {
+  BufferVec(BufferVec&& v) {
     buffer_vec_.swap(v.buffer_vec_);
     v.buffer_vec_.clear();
   }
@@ -44,7 +44,7 @@ class BufferVec {
     return buffer_vec_.emplace_back(std::malloc(buf_size), buf_size);
   }
 
-  const std::pair<void*, size_t>& CurBuffer() const noexcept {
+  const std::pair<void*, size_t>& CurBuffer() const {
     return *(buffer_vec_.rbegin());
   }
 
@@ -53,7 +53,7 @@ class BufferVec {
    * @note 必须保证当前已经申请过buf，必须保证buf_size小于当前最后一个buf的size
    * @param buf_size
    */
-  void CommitLastBuf(size_t buf_size) noexcept {
+  void CommitLastBuf(size_t buf_size) {
     buffer_vec_.rbegin()->second = buf_size;
   }
 
@@ -66,7 +66,7 @@ class BufferVec {
     return asio_const_buffer_vec;
   }
 
-  const std::vector<std::pair<void*, size_t>>& Vec() const noexcept {
+  const std::vector<std::pair<void*, size_t>>& Vec() const {
     return buffer_vec_;
   }
 
@@ -74,7 +74,6 @@ class BufferVec {
   std::vector<std::pair<void*, size_t>> buffer_vec_;
 };
 
-template <size_t block_size = 1024>
 class BufferVecZeroCopyOutputStream : public ::google::protobuf::io::ZeroCopyOutputStream {
  public:
   explicit BufferVecZeroCopyOutputStream(BufferVec& buffer_vec)
@@ -83,13 +82,13 @@ class BufferVecZeroCopyOutputStream : public ::google::protobuf::io::ZeroCopyOut
   ~BufferVecZeroCopyOutputStream() {}
 
   bool Next(void** data, int* size) override {
-    if (cur_buf_used_size_ == block_size) {
-      *data = buffer_vec_.NewBuffer(block_size).first;
-      byte_count_ += (*size = block_size);
+    if (cur_buf_used_size_ == cur_block_size) {
+      *data = buffer_vec_.NewBuffer(cur_block_size <<= 1).first;
+      byte_count_ += (*size = cur_buf_used_size_ = cur_block_size);
     } else {
       *data = static_cast<char*>(buffer_vec_.CurBuffer().first) + cur_buf_used_size_;
-      byte_count_ += (*size = block_size - cur_buf_used_size_);
-      cur_buf_used_size_ = block_size;
+      byte_count_ += (*size = cur_block_size - cur_buf_used_size_);
+      cur_buf_used_size_ = cur_block_size;
     }
     return true;
   }
@@ -115,12 +114,15 @@ class BufferVecZeroCopyOutputStream : public ::google::protobuf::io::ZeroCopyOut
    */
   void* InitHead(size_t head_size) {
     byte_count_ = cur_buf_used_size_ = head_size;
-    return buffer_vec_.NewBuffer(block_size).first;
+    return buffer_vec_.NewBuffer(cur_block_size <<= 1).first;
   }
 
  private:
+  enum { kInitBlockSize = 256 };
+
   BufferVec& buffer_vec_;
-  size_t cur_buf_used_size_ = block_size;
+  size_t cur_block_size = kInitBlockSize / 2;
+  size_t cur_buf_used_size_ = kInitBlockSize / 2;
   int64_t byte_count_ = 0;
 };
 

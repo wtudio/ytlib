@@ -38,30 +38,30 @@ TEST(YTRPC_TEST, BufferVecZeroCopyOutputStream) {
   void* data;
   int size;
   EXPECT_TRUE(os.Next(&data, &size));
-  EXPECT_EQ(size, 1024);
-  EXPECT_EQ(os.ByteCount(), 1024);
+  EXPECT_EQ(size, 256);
+  EXPECT_EQ(os.ByteCount(), 256);
 
   EXPECT_TRUE(os.Next(&data, &size));
-  EXPECT_EQ(size, 1024);
-  EXPECT_EQ(os.ByteCount(), 2048);
+  EXPECT_EQ(size, 512);
+  EXPECT_EQ(os.ByteCount(), 768);
 
-  os.BackUp(1000);
-  EXPECT_EQ(os.ByteCount(), 1048);
+  os.BackUp(100);
+  EXPECT_EQ(os.ByteCount(), 668);
 
   void* data_2;
   int size_2;
   EXPECT_TRUE(os.Next(&data_2, &size_2));
-  EXPECT_EQ(static_cast<char*>(data_2), static_cast<char*>(data) + 24);
-  EXPECT_EQ(size_2, 1000);
-  EXPECT_EQ(os.ByteCount(), 2048);
+  EXPECT_EQ(static_cast<char*>(data_2), static_cast<char*>(data) + 412);
+  EXPECT_EQ(size_2, 100);
+  EXPECT_EQ(os.ByteCount(), 768);
 
-  os.BackUp(100);
-  EXPECT_EQ(os.ByteCount(), 1948);
+  os.BackUp(10);
+  EXPECT_EQ(os.ByteCount(), 758);
 
   EXPECT_TRUE(os.Next(&data_2, &size_2));
-  EXPECT_EQ(static_cast<char*>(data_2), static_cast<char*>(data) + 924);
-  EXPECT_EQ(size_2, 100);
-  EXPECT_EQ(os.ByteCount(), 2048);
+  EXPECT_EQ(static_cast<char*>(data_2), static_cast<char*>(data) + 502);
+  EXPECT_EQ(size_2, 10);
+  EXPECT_EQ(os.ByteCount(), 768);
 }
 
 TEST(YTRPC_TEST, BufferVecZeroCopyInputStream) {
@@ -125,7 +125,7 @@ TEST(YTRPC_TEST, BufferVec_MISC) {
 
   BufferVec buffer_vec;
 
-  BufferVecZeroCopyOutputStream<20> os(buffer_vec);
+  BufferVecZeroCopyOutputStream os(buffer_vec);
 
   EXPECT_TRUE(req_head.SerializeToZeroCopyStream(&os));
   size_t req_head_size = os.ByteCount();

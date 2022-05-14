@@ -16,7 +16,7 @@ const static std::string t_ccfile = R"str(/**
 const static std::string t_hfile_one_service_register_func = R"str(    RegisterRpcServiceFunc<{{rpc_req_name}}, {{rpc_rsp_name}}>("/{{package_name}}.{{service_name}}/{{rpc_func_name}}", std::bind(&{{service_name}}::{{rpc_func_name}}, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));)str";
 
 const static std::string t_hfile_one_service_func = R"str(
-  virtual boost::asio::awaitable<ytlib::ytrpc::Status> {{rpc_func_name}}(const std::shared_ptr<ytlib::ytrpc::Context>& ctx, const {{rpc_req_name}}& req, {{rpc_rsp_name}}& rsp) {
+  virtual boost::asio::awaitable<ytlib::ytrpc::Status> {{rpc_func_name}}(const std::shared_ptr<const ytlib::ytrpc::Context>& ctx_ptr, const {{rpc_req_name}}& req, {{rpc_rsp_name}}& rsp) {
     co_return ytlib::ytrpc::Status(ytlib::ytrpc::StatusCode::NOT_IMPLEMENTED);
   })str";
 
@@ -32,9 +32,9 @@ class {{service_name}} : public ytlib::ytrpc::RpcService {
 };)str";
 
 const static std::string t_hfile_one_service_proxy_func = R"str(
-  boost::asio::awaitable<ytlib::ytrpc::Status> {{rpc_func_name}}(const std::shared_ptr<ytlib::ytrpc::Context>& ctx, const {{rpc_req_name}}& req, {{rpc_rsp_name}}& rsp) {
+  boost::asio::awaitable<ytlib::ytrpc::Status> {{rpc_func_name}}(const std::shared_ptr<const ytlib::ytrpc::Context>& ctx_ptr, const {{rpc_req_name}}& req, {{rpc_rsp_name}}& rsp) {
     const static std::string func_name("/{{package_name}}.{{service_name}}/{{rpc_func_name}}");
-    return Invoke<{{rpc_req_name}}, {{rpc_rsp_name}}>(func_name, ctx, req, rsp);
+    return Invoke<{{rpc_req_name}}, {{rpc_rsp_name}}>(func_name, ctx_ptr, req, rsp);
   })str";
 
 const static std::string t_hfile_one_service_proxy_class = R"str(

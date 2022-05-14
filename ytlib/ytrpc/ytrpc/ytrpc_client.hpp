@@ -2,6 +2,7 @@
 
 #include <atomic>
 #include <memory>
+#include <unordered_map>
 
 #include <boost/asio.hpp>
 
@@ -30,6 +31,8 @@ class RpcClient : public std::enable_shared_from_this<RpcClient> {
     boost::asio::ip::tcp::endpoint svr_ep;  // 服务端地址
 
     std::chrono::steady_clock::duration heart_beat_time = std::chrono::seconds(60);  // 心跳包间隔
+
+    uint32_t max_recv_size = 1024 * 1024 * 10;  // 回包最大尺寸，最大10m
 
     /// 校验配置
     static Cfg Verify(const Cfg& verify_cfg) {
@@ -84,14 +87,14 @@ class RpcClient : public std::enable_shared_from_this<RpcClient> {
   static const char HEAD_BYTE_2 = 'T';
 
   struct MsgContext {
-    MsgContext(uint32_t input_req_id, Context& input_ctx)
+    MsgContext(uint32_t input_req_id, const Context& input_ctx)
         : req_id(input_req_id),
           ctx(input_ctx) {}
 
     ~MsgContext() {}
 
     const uint32_t req_id;
-    Context& ctx;
+    const Context& ctx;
 
     BufferVec req_buf_vec;
 
@@ -131,10 +134,12 @@ class RpcClient : public std::enable_shared_from_this<RpcClient> {
   struct SessionCfg {
     SessionCfg(const Cfg& cfg)
         : svr_ep(cfg.svr_ep),
-          heart_beat_time(cfg.heart_beat_time) {}
+          heart_beat_time(cfg.heart_beat_time),
+          max_recv_size(cfg.max_recv_size) {}
 
     boost::asio::ip::tcp::endpoint svr_ep;
     std::chrono::steady_clock::duration heart_beat_time;
+    uint32_t max_recv_size;
   };
 
   class Session : public std::enable_shared_from_this<Session> {
@@ -156,11 +161,6 @@ class RpcClient : public std::enable_shared_from_this<RpcClient> {
           session_strand_,
           [this, &msg_ctx]() -> boost::asio::awaitable<void> {
             ASIO_DEBUG_HANDLE(rpc_cli_session_invoke_co);
-
-            if (msg_ctx.ctx.IsDone()) [[unlikely]] {
-              msg_ctx.ret_status = Status(StatusCode::CTX_DONE);
-              co_return;
-            }
 
             MsgRecorder msg_recorder(msg_ctx, session_strand_);
             auto empalce_ret = msg_recorder_map_.emplace(msg_ctx.req_id, msg_recorder);
@@ -263,14 +263,19 @@ class RpcClient : public std::enable_shared_from_this<RpcClient> {
                           throw std::runtime_error("Get an invalid head.");
 
                         // 接收pb包头+pb业务包
-                        const uint32_t pb_msg_len = GetUint16FromBuf(&head_buf[4]);
+                        const uint32_t pb_msg_len = GetUint32FromBuf(&head_buf[4]);
+
+                        if (pb_msg_len > session_cfg_ptr_->max_recv_size) [[unlikely]] {
+                          throw std::runtime_error("Msg too large.");
+                        }
+
                         std::vector<char> rsp_buf(pb_msg_len);
 
                         read_data_size = co_await boost::asio::async_read(sock_, boost::asio::buffer(rsp_buf, pb_msg_len), boost::asio::transfer_exactly(pb_msg_len), boost::asio::use_awaitable);
                         DBG_PRINT("rpc cli session async read %llu bytes for pb head", read_data_size);
 
                         const uint16_t pb_head_len = GetUint16FromBuf(&head_buf[2]);
-                        ytrpchead::RspHead rsp_head;
+                        thread_local ytrpchead::RspHead rsp_head;
                         rsp_head.ParseFromArray(rsp_buf.data(), pb_head_len);
 
                         auto finditr = msg_recorder_map_.find(rsp_head.req_id());
@@ -367,7 +372,7 @@ class RpcClient : public std::enable_shared_from_this<RpcClient> {
     boost::asio::ip::tcp::socket sock_;
     boost::asio::steady_timer send_sig_timer_;
 
-    std::map<uint32_t, MsgRecorder&> msg_recorder_map_;
+    std::unordered_map<uint32_t, MsgRecorder&> msg_recorder_map_;
     BufferVec send_buffer_vec_;
   };
 
@@ -389,15 +394,19 @@ class RpcServiceProxy {
   virtual ~RpcServiceProxy() {}
 
   template <typename ReqType, typename RspType>
-  boost::asio::awaitable<Status> Invoke(const std::string& func_name, const std::shared_ptr<Context>& ctx_ptr, const ReqType& req, RspType& rsp) {
+  boost::asio::awaitable<Status> Invoke(const std::string& func_name, const std::shared_ptr<const Context>& ctx_ptr, const ReqType& req, RspType& rsp) {
     RpcClient::MsgContext msg_ctx(client_ptr_->GetNewReqID(), *ctx_ptr);
+
+    if (msg_ctx.ctx.IsDone()) [[unlikely]] {
+      co_return Status(StatusCode::CANCELLED);
+    }
 
     BufferVecZeroCopyOutputStream os(msg_ctx.req_buf_vec);
     char* head_buf = static_cast<char*>(os.InitHead(RpcClient::HEAD_SIZE));
     head_buf[0] = RpcClient::HEAD_BYTE_1;
     head_buf[1] = RpcClient::HEAD_BYTE_2;
 
-    ytrpchead::ReqHead req_head;
+    thread_local ytrpchead::ReqHead req_head;
     req_head.set_req_id(msg_ctx.req_id);
     req_head.set_func(func_name);
     req_head.set_ddl_ms(std::chrono::duration_cast<std::chrono::milliseconds>(msg_ctx.ctx.Deadline().time_since_epoch()).count());
@@ -414,11 +423,7 @@ class RpcServiceProxy {
     co_await client_ptr_->Invoke(msg_ctx);
 
     if (msg_ctx.ret_status.Ret() != StatusCode::OK) [[unlikely]] {
-      if (msg_ctx.ret_status.Ret() == StatusCode::TIMEOUT) {
-        msg_ctx.ctx.DoTimeout("call " + func_name + " timeout");
-      } else {
-        msg_ctx.ctx.DoCallFailed("call " + func_name + "failed, " + msg_ctx.ret_status.ToString());
-      }
+      msg_ctx.ctx.Done("call " + func_name + "failed, " + msg_ctx.ret_status.ToString());
       co_return std::move(msg_ctx.ret_status);
     }
 

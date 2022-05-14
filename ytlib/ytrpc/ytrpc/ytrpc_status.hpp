@@ -7,22 +7,19 @@ namespace ytlib {
 namespace ytrpc {
 
 enum class StatusCode : int32_t {
-  OK = 0,
-  UNKNOWN,
-  TIMEOUT,
-  CANCELLED,
-  CTX_DONE,
+  OK = 0,     // 正常
+  UNKNOWN,    // 未知
+  TIMEOUT,    // 超时
+  CANCELLED,  // 因为ctx done而取消调用
 
   // svr side
-  NOT_IMPLEMENTED,
-  NOT_FOUND,
-  SVR_PARSE_REQ_FAILED,
-  SVR_SERIALIZE_RSP_FAILED,
+  NOT_IMPLEMENTED,       // 服务未实现
+  NOT_FOUND,             // 服务未找到
+  SVR_PARSE_REQ_FAILED,  // 服务端解析req包出错
 
   // cli side
-  CLI_SERIALIZE_REQ_FAILED,
-  CLI_PARSE_RSP_FAILED,
-  CLI_IS_NOT_RUNNING,
+  CLI_PARSE_RSP_FAILED,  // 客户端解析rsp包出错
+  CLI_IS_NOT_RUNNING,    // 客户端已关闭
 
   MAX_NUM,
 };

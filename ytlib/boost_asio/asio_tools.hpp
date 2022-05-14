@@ -35,7 +35,7 @@ class AsioExecutor {
         signals_(*io_ptr_, SIGINT, SIGTERM) {
   }
 
-  ~AsioExecutor() noexcept {
+  ~AsioExecutor() {
     try {
       Stop();
       Join();

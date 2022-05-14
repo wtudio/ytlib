@@ -14,13 +14,13 @@ using namespace ytlib;
 
 class DemoServiceImpl : public demo::DemoService {
  public:
-  virtual boost::asio::awaitable<ytrpc::Status> Login(const std::shared_ptr<ytrpc::Context>& ctx, const demo::LoginReq& req, demo::LoginRsp& rsp) override {
+  virtual boost::asio::awaitable<ytrpc::Status> Login(const std::shared_ptr<const ytrpc::Context>& ctx_ptr, const demo::LoginReq& req, demo::LoginRsp& rsp) override {
     rsp.set_code(0);
     rsp.set_msg("echo " + req.msg());
     co_return ytrpc::Status(ytrpc::StatusCode::OK);
   }
 
-  virtual boost::asio::awaitable<ytrpc::Status> Logout(const std::shared_ptr<ytrpc::Context>& ctx, const demo::LogoutReq& req, demo::LogoutRsp& rsp) override {
+  virtual boost::asio::awaitable<ytrpc::Status> Logout(const std::shared_ptr<const ytrpc::Context>& ctx_ptr, const demo::LogoutReq& req, demo::LogoutRsp& rsp) override {
     rsp.set_code(0);
     rsp.set_msg("echo " + req.msg());
     co_return ytrpc::Status(ytrpc::StatusCode::OK);
@@ -37,7 +37,6 @@ int32_t main(int32_t argc, char** argv) {
   auto asio_sys_ptr = std::make_shared<AsioExecutor>(4);
 
   ytrpc::RpcServer::Cfg cfg;
-  cfg.port = 55399;
   auto svr_ptr = std::make_shared<ytrpc::RpcServer>(asio_sys_ptr->IO(), cfg);
   auto demo_service_impl = std::make_shared<DemoServiceImpl>();
   svr_ptr->RegisterService(demo_service_impl);

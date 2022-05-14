@@ -45,6 +45,7 @@ int32_t main(int32_t argc, char** argv) {
           request_msgs[ii] = std::to_string(concurrency_num + ii);
         }
 
+        uint64_t all_begin_time = GetCurTimestampMs();
         for (uint32_t ii = 0; ii < try_num; ++ii) {
           std::list<boost::asio::experimental::promise<void(std::exception_ptr), boost::asio::any_io_executor>> promise_list;
           for (auto& request_msg : request_msgs) {
@@ -56,11 +57,11 @@ int32_t main(int32_t argc, char** argv) {
                       trpc::test::helloworld::HelloReply rsp;
                       req.set_msg(request_msg);
 
-                      auto ctx = std::make_shared<ytrpc::Context>();
-                      ctx->SetTimeout(std::chrono::milliseconds(1000));
+                      auto ctx_ptr = std::make_shared<ytrpc::Context>();
+                      ctx_ptr->SetTimeout(std::chrono::milliseconds(1000));
 
                       uint64_t begin_time = GetCurTimestampMs();
-                      auto status = co_await proxy_ptr->SayHello(ctx, req, rsp);
+                      auto status = co_await proxy_ptr->SayHello(ctx_ptr, req, rsp);
                       uint64_t end_time = GetCurTimestampMs();
 
                       total_time += (end_time - begin_time);
@@ -79,8 +80,9 @@ int32_t main(int32_t argc, char** argv) {
           auto all_promise = boost::asio::experimental::promise<>::all(std::move(promise_list));
           co_await all_promise.async_wait(boost::asio::use_awaitable);
         }
+        uint64_t all_end_time = GetCurTimestampMs();
 
-        printf("all done... succ: %d, timecost(ms): %llu, average timecost(ms): %llu\n", static_cast<int>(successed_num), static_cast<uint64_t>(total_time), static_cast<uint64_t>(total_time) / try_num / concurrency_num);
+        printf("all done... succ: %d, timecost(ms): %llu, average timecost(ms): %llu\n", static_cast<int>(successed_num), all_end_time - all_begin_time, static_cast<uint64_t>(total_time) / try_num / concurrency_num);
 
         co_return;
       },
