@@ -172,6 +172,7 @@ class AsioDebugHandle {
 
 }  // namespace ytlib
 
+// ASIO_DEBUG_HANDLE，一般用于detach型协程开始处
 #ifdef ASIO_ENABLE_DEBUG
   #define _YT_ASIO_DEBUG_STRING(x) #x
   #define YT_ASIO_DEBUG_STRING(x) _YT_ASIO_DEBUG_STRING(x)

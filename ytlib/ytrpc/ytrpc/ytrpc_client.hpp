@@ -119,7 +119,7 @@ class RpcClient : public std::enable_shared_from_this<RpcClient> {
               co_return;
 
             if (!session_ptr_ || !session_ptr_->IsRunning()) [[unlikely]] {
-              session_ptr_ = std::make_shared<RpcClient::Session>(boost::asio::make_strand(*io_ptr_), session_cfg_ptr_);
+              session_ptr_ = std::make_shared<RpcClient::Session>(io_ptr_, session_cfg_ptr_);
               session_ptr_->Start();
             }
             co_return;
@@ -144,12 +144,13 @@ class RpcClient : public std::enable_shared_from_this<RpcClient> {
 
   class Session : public std::enable_shared_from_this<Session> {
    public:
-    Session(const boost::asio::strand<boost::asio::io_context::executor_type>& session_strand,
+    Session(const std::shared_ptr<boost::asio::io_context>& io_ptr,
             const std::shared_ptr<const RpcClient::SessionCfg>& session_cfg_ptr)
         : session_cfg_ptr_(session_cfg_ptr),
-          session_strand_(session_strand),
-          sock_(session_strand_),
-          send_sig_timer_(session_strand_) {}
+          session_socket_strand_(boost::asio::make_strand(*io_ptr)),
+          sock_(session_socket_strand_),
+          send_sig_timer_(session_socket_strand_),
+          session_handle_strand_(boost::asio::make_strand(*io_ptr)) {}
 
     ~Session() {}
 
@@ -158,19 +159,24 @@ class RpcClient : public std::enable_shared_from_this<RpcClient> {
 
     boost::asio::awaitable<void> Invoke(MsgContext& msg_ctx) {
       return boost::asio::co_spawn(
-          session_strand_,
+          session_handle_strand_,
           [this, &msg_ctx]() -> boost::asio::awaitable<void> {
             ASIO_DEBUG_HANDLE(rpc_cli_session_invoke_co);
 
-            MsgRecorder msg_recorder(msg_ctx, session_strand_);
+            MsgRecorder msg_recorder(msg_ctx, session_handle_strand_, msg_ctx.ctx.Deadline());
             auto empalce_ret = msg_recorder_map_.emplace(msg_ctx.req_id, msg_recorder);
 
-            send_buffer_vec_.Merge(msg_ctx.req_buf_vec);
-            send_sig_timer_.cancel();
+            co_await boost::asio::co_spawn(
+                session_socket_strand_,
+                [this, &msg_ctx]() -> boost::asio::awaitable<void> {
+                  send_buffer_vec_.Merge(msg_ctx.req_buf_vec);
+                  send_sig_timer_.cancel();
+                  co_return;
+                },
+                boost::asio::use_awaitable);
 
             bool recv_flag = true;
             try {
-              msg_recorder.recv_sig_timer.expires_at(msg_ctx.ctx.Deadline());
               co_await msg_recorder.recv_sig_timer.async_wait(boost::asio::use_awaitable);
               recv_flag = false;
             } catch (const std::exception& e) {
@@ -193,7 +199,7 @@ class RpcClient : public std::enable_shared_from_this<RpcClient> {
 
       // 启动协程
       boost::asio::co_spawn(
-          session_strand_,
+          session_socket_strand_,
           [this, self]() -> boost::asio::awaitable<void> {
             ASIO_DEBUG_HANDLE(rpc_cli_session_start_co);
 
@@ -203,7 +209,7 @@ class RpcClient : public std::enable_shared_from_this<RpcClient> {
 
               // 发送协程
               boost::asio::co_spawn(
-                  session_strand_,
+                  session_socket_strand_,
                   [this, self]() -> boost::asio::awaitable<void> {
                     ASIO_DEBUG_HANDLE(rpc_cli_session_send_co);
 
@@ -247,7 +253,7 @@ class RpcClient : public std::enable_shared_from_this<RpcClient> {
 
               // 接收协程
               boost::asio::co_spawn(
-                  session_strand_,
+                  session_socket_strand_,
                   [this, self]() -> boost::asio::awaitable<void> {
                     ASIO_DEBUG_HANDLE(rpc_cli_session_recv_co);
 
@@ -274,23 +280,33 @@ class RpcClient : public std::enable_shared_from_this<RpcClient> {
                         read_data_size = co_await boost::asio::async_read(sock_, boost::asio::buffer(rsp_buf, pb_msg_len), boost::asio::transfer_exactly(pb_msg_len), boost::asio::use_awaitable);
                         DBG_PRINT("rpc cli session async read %llu bytes for pb head", read_data_size);
 
-                        const uint16_t pb_head_len = GetUint16FromBuf(&head_buf[2]);
-                        thread_local ytrpchead::RspHead rsp_head;
-                        rsp_head.ParseFromArray(rsp_buf.data(), pb_head_len);
+                        auto handle = [this, self, pb_head_len = GetUint16FromBuf(&head_buf[2]), rsp_buf{std::move(rsp_buf)}]() mutable -> boost::asio::awaitable<void> {
+                          thread_local ytrpchead::RspHead rsp_head;
+                          rsp_head.ParseFromArray(rsp_buf.data(), pb_head_len);
 
-                        auto finditr = msg_recorder_map_.find(rsp_head.req_id());
-                        if (finditr == msg_recorder_map_.end()) [[unlikely]] {
-                          DBG_PRINT("rpc cli session get a no owner pkg, req id:", rsp_head.req_id());
-                          continue;
-                        }
+                          auto finditr = msg_recorder_map_.find(rsp_head.req_id());
+                          if (finditr == msg_recorder_map_.end()) [[unlikely]] {
+                            DBG_PRINT("rpc cli session get a no owner pkg, req id:", rsp_head.req_id());
+                            co_return;
+                          }
 
-                        finditr->second.msg_ctx.ret_status = Status(
-                            static_cast<StatusCode>(rsp_head.ret_code()),
-                            rsp_head.func_ret_code(),
-                            rsp_head.func_ret_msg());
-                        finditr->second.msg_ctx.rsp_buf = std::move(rsp_buf);
-                        finditr->second.msg_ctx.rsp_pos = pb_head_len;
-                        finditr->second.recv_sig_timer.cancel();
+                          finditr->second.msg_ctx.ret_status = Status(
+                              static_cast<StatusCode>(rsp_head.ret_code()),
+                              rsp_head.func_ret_code(),
+                              rsp_head.func_ret_msg());
+                          finditr->second.msg_ctx.rsp_buf = std::move(rsp_buf);
+                          finditr->second.msg_ctx.rsp_pos = pb_head_len;
+                          finditr->second.recv_sig_timer.cancel();
+                        };
+
+                        boost::asio::post(
+                            session_handle_strand_,
+                            [self, handle{std::move(handle)}]() mutable {
+                              boost::asio::co_spawn(
+                                  self->session_handle_strand_,
+                                  std::move(handle),
+                                  boost::asio::detached);
+                            });
                       }
 
                     } catch (const std::exception& e) {
@@ -318,7 +334,7 @@ class RpcClient : public std::enable_shared_from_this<RpcClient> {
 
       auto self = shared_from_this();
       boost::asio::dispatch(
-          session_strand_,
+          session_socket_strand_,
           [this, self]() {
             ASIO_DEBUG_HANDLE(rpc_cli_session_stop_co);
 
@@ -357,9 +373,11 @@ class RpcClient : public std::enable_shared_from_this<RpcClient> {
 
    private:
     struct MsgRecorder {
-      MsgRecorder(MsgContext& input_msg_ctx, const boost::asio::strand<boost::asio::io_context::executor_type>& session_strand)
+      MsgRecorder(MsgContext& input_msg_ctx,
+                  const boost::asio::strand<boost::asio::io_context::executor_type>& session_strand,
+                  const std::chrono::system_clock::time_point& ddl)
           : msg_ctx(input_msg_ctx),
-            recv_sig_timer(session_strand) {}
+            recv_sig_timer(session_strand, ddl) {}
       ~MsgRecorder() {}
 
       MsgContext& msg_ctx;
@@ -368,20 +386,22 @@ class RpcClient : public std::enable_shared_from_this<RpcClient> {
 
     std::shared_ptr<const RpcClient::SessionCfg> session_cfg_ptr_;
     std::atomic_bool run_flag_ = true;
-    boost::asio::strand<boost::asio::io_context::executor_type> session_strand_;
+
+    boost::asio::strand<boost::asio::io_context::executor_type> session_socket_strand_;
     boost::asio::ip::tcp::socket sock_;
     boost::asio::steady_timer send_sig_timer_;
-
-    std::unordered_map<uint32_t, MsgRecorder&> msg_recorder_map_;
     BufferVec send_buffer_vec_;
+
+    boost::asio::strand<boost::asio::io_context::executor_type> session_handle_strand_;
+    std::unordered_map<uint32_t, MsgRecorder&> msg_recorder_map_;
   };
 
  private:
   const RpcClient::Cfg cfg_;
   std::atomic_bool run_flag_ = true;
   std::shared_ptr<boost::asio::io_context> io_ptr_;
-
   std::shared_ptr<const RpcClient::SessionCfg> session_cfg_ptr_;
+
   boost::asio::strand<boost::asio::io_context::executor_type> mgr_strand_;
   std::shared_ptr<RpcClient::Session> session_ptr_;
 

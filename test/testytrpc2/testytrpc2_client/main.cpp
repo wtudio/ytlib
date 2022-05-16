@@ -69,7 +69,7 @@ int32_t main(int32_t argc, char** argv) {
                       if (status && rsp.msg() == ("Hello, " + request_msg)) {
                         ++successed_num;
                       } else {
-                        printf("tastk request error: %s\n", status.ToString().c_str());
+                        printf("task request error: %s\n", status.ToString().c_str());
                       }
 
                       co_return;

@@ -238,6 +238,64 @@ void Test3() {
   }
 }
 
+template <class CompletionToken>
+BOOST_ASIO_INITFN_RESULT_TYPE(CompletionToken, void(std::string))
+MyAsyncFunc(boost::asio::io_context& io, const std::string& instr, CompletionToken&& token) {
+  return boost::asio::async_initiate<CompletionToken, void(std::string)>(
+      [&io](auto completion_handler, const std::string& instr) {
+        boost::asio::post(io, [&io, &instr, completion_handler{std::move(completion_handler)}]() mutable {
+          std::string outstr = "echo " + instr;
+          completion_handler(outstr);
+        });
+      },
+      token,
+      instr);
+}
+
+boost::asio::awaitable<void> Test4Co1(boost::asio::io_context& io) {
+  ASIO_DEBUG_HANDLE(Test4Co1);
+
+  try {
+    std::cerr << "thread " << std::this_thread::get_id() << " run Test4Co1-a.\n";
+
+    std::string instr = "aaa";
+    auto retstr = co_await MyAsyncFunc(io, instr, boost::asio::use_awaitable);
+    std::cerr << "retstr: " << retstr << "\n";
+
+    std::cerr << "thread " << std::this_thread::get_id() << " run Test3Co3-d.\n";
+
+  } catch (const std::exception& e) {
+    std::cerr << "Test4Co1 get exception:" << e.what() << '\n';
+  }
+  co_return;
+}
+
+/**
+ * @brief 异步改协程的方式（不用timer等io）
+ *
+ */
+void Test4() {
+  uint32_t n = 2;
+  boost::asio::io_context io(n);
+
+  boost::asio::co_spawn(io, Test4Co1(io), boost::asio::detached);
+
+  std::list<std::thread> threads_;
+
+  for (uint32_t ii = 0; ii < n; ++ii) {
+    threads_.emplace(threads_.end(), [&io] {
+      std::cerr << "thread " << std::this_thread::get_id() << " start.\n";
+      io.run();
+      std::cerr << "thread " << std::this_thread::get_id() << " exit.\n";
+    });
+  }
+
+  for (auto itr = threads_.begin(); itr != threads_.end();) {
+    itr->join();
+    threads_.erase(itr++);
+  }
+}
+
 int32_t main(int32_t argc, char** argv) {
   DBG_PRINT("-------------------start test-------------------");
 
@@ -245,7 +303,9 @@ int32_t main(int32_t argc, char** argv) {
 
   // Test2();
 
-  Test3();
+  // Test3();
+
+  Test4();
 
   DBG_PRINT("%s", AsioDebugTool::Ins().GetStatisticalResult().c_str());
 
