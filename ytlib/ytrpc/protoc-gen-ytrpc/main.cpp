@@ -34,7 +34,7 @@ class {{service_name}} : public ytlib::ytrpc::RpcService {
 const static std::string t_hfile_one_service_proxy_func = R"str(
   boost::asio::awaitable<ytlib::ytrpc::Status> {{rpc_func_name}}(const std::shared_ptr<const ytlib::ytrpc::Context>& ctx_ptr, const {{rpc_req_name}}& req, {{rpc_rsp_name}}& rsp) {
     const static std::string func_name("/{{package_name}}.{{service_name}}/{{rpc_func_name}}");
-    return Invoke<{{rpc_req_name}}, {{rpc_rsp_name}}>(func_name, ctx_ptr, req, rsp);
+    return Invoke(func_name, ctx_ptr, req, rsp);
   })str";
 
 const static std::string t_hfile_one_service_proxy_class = R"str(

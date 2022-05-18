@@ -140,7 +140,7 @@ TEST(BOOST_ASIO_TEST, HTTP_client_base) {
   auto svr2_sys_ptr = std::make_shared<AsioExecutor>(2);
 
   // cli
-  auto http_cli_ptr = std::make_shared<AsioHttpClient>(cli_sys_ptr->IO(), AsioHttpClient::Cfg{"127.0.0.1", "80"});
+  auto http_cli_ptr = std::make_shared<AsioHttpClient>(cli_sys_ptr->IO(), AsioHttpClient::Cfg{"127.0.0.1", "50080"});
   cli_sys_ptr->RegisterSvrFunc(std::function<void()>(), [http_cli_ptr] { http_cli_ptr->Stop(); });
 
   auto http_send_recv = [http_cli_ptr](bool expect_exp = false) -> asio::awaitable<void> {
@@ -262,7 +262,7 @@ TEST(BOOST_ASIO_TEST, HTTP_client_handle) {
   auto svr_sys_ptr = std::make_shared<AsioExecutor>(2);
 
   // cli
-  auto http_cli_ptr = std::make_shared<AsioHttpClient>(cli_sys_ptr->IO(), AsioHttpClient::Cfg{"127.0.0.1", "80"});
+  auto http_cli_ptr = std::make_shared<AsioHttpClient>(cli_sys_ptr->IO(), AsioHttpClient::Cfg{"127.0.0.1", "50080"});
   cli_sys_ptr->RegisterSvrFunc(std::function<void()>(), [http_cli_ptr] { http_cli_ptr->Stop(); });
 
   auto http_send_recv = [http_cli_ptr](std::string msg, bool expect_exp = false) -> asio::awaitable<void> {

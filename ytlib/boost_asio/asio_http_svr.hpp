@@ -53,7 +53,7 @@ class AsioHttpServer : public std::enable_shared_from_this<AsioHttpServer> {
    *
    */
   struct Cfg {
-    uint16_t port = 80;  // 监听的端口
+    uint16_t port = 50080;  // 监听的端口
 
     std::string doc_root = ".";  // http页面根目录
 
@@ -66,7 +66,7 @@ class AsioHttpServer : public std::enable_shared_from_this<AsioHttpServer> {
     static Cfg Verify(const Cfg& verify_cfg) {
       Cfg cfg(verify_cfg);
 
-      if (cfg.port > 65535) cfg.port = 80;
+      if (cfg.port > 65535) cfg.port = 50080;
 
       if (cfg.max_session_num < 1) cfg.max_session_num = 1;
       if (cfg.max_session_num > boost::asio::ip::tcp::acceptor::max_listen_connections)

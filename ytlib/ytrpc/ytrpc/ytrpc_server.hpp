@@ -21,10 +21,45 @@
 namespace ytlib {
 namespace ytrpc {
 
-class RpcService;
-class RpcServer : public std::enable_shared_from_this<RpcServer> {
-  friend class RpcService;
+class RpcService {
+ public:
+  struct FuncAdapter {
+    std::function<boost::asio::awaitable<Status>(const std::shared_ptr<const Context>&, const google::protobuf::Message&, google::protobuf::Message&)> handle_func;
+    std::function<std::unique_ptr<google::protobuf::Message>(void)> req_ptr_gener;
+    std::function<std::unique_ptr<google::protobuf::Message>(void)> rsp_ptr_gener;
+  };
 
+  const std::unordered_map<std::string, FuncAdapter>& FuncAdapterMap() const {
+    return func_adapter_map_;
+  }
+
+ protected:
+  RpcService() {}
+  virtual ~RpcService() {}
+
+  template <typename ReqType, typename RspType>
+  void RegisterRpcServiceFunc(
+      const std::string& func_name,
+      const std::function<boost::asio::awaitable<Status>(const std::shared_ptr<const Context>&, const ReqType&, RspType&)>& func) {
+    func_adapter_map_.emplace(
+        func_name,
+        FuncAdapter{
+            .handle_func = [func](const std::shared_ptr<const Context>& ctx_ptr, const google::protobuf::Message& req, google::protobuf::Message& rsp) -> boost::asio::awaitable<Status> {
+              return func(ctx_ptr, static_cast<const ReqType&>(req), static_cast<RspType&>(rsp));
+            },
+            .req_ptr_gener = []() -> std::unique_ptr<google::protobuf::Message> {
+              return std::make_unique<ReqType>();
+            },
+            .rsp_ptr_gener = []() -> std::unique_ptr<google::protobuf::Message> {
+              return std::make_unique<RspType>();
+            }});
+  }
+
+ private:
+  std::unordered_map<std::string, FuncAdapter> func_adapter_map_;
+};
+
+class RpcServer : public std::enable_shared_from_this<RpcServer> {
  public:
   /**
    * @brief 配置
@@ -32,13 +67,10 @@ class RpcServer : public std::enable_shared_from_this<RpcServer> {
    */
   struct Cfg {
     boost::asio::ip::tcp::endpoint ep = boost::asio::ip::tcp::endpoint{boost::asio::ip::address_v4(), 55399};  // 监听的地址
-
-    size_t max_session_num = 1000000;                                             // 最大连接数
-    std::chrono::steady_clock::duration mgr_timer_dt = std::chrono::seconds(10);  // 管理协程定时器间隔
-
-    std::chrono::steady_clock::duration max_no_data_duration = std::chrono::seconds(300);  // 最长无数据时间
-
-    uint32_t max_recv_size = 1024 * 1024 * 10;  // 回包最大尺寸，最大10m
+    size_t max_session_num = 1000000;                                                                          // 最大连接数
+    std::chrono::steady_clock::duration mgr_timer_dt = std::chrono::seconds(10);                               // 管理协程定时器间隔
+    std::chrono::steady_clock::duration max_no_data_duration = std::chrono::seconds(300);                      // 最长无数据时间
+    uint32_t max_recv_size = 1024 * 1024 * 10;                                                                 // 回包最大尺寸，最大10m
 
     /// 校验配置
     static Cfg Verify(const Cfg& verify_cfg) {
@@ -69,7 +101,7 @@ class RpcServer : public std::enable_shared_from_this<RpcServer> {
         acceptor_(mgr_strand_, cfg_.ep),
         acceptor_timer_(mgr_strand_),
         mgr_timer_(mgr_strand_),
-        func_map_ptr_(std::make_shared<std::unordered_map<std::string, AdapterFunc>>()) {}
+        func_map_ptr_(std::make_shared<std::unordered_map<std::string, RpcService::FuncAdapter>>()) {}
 
   ~RpcServer() {}
 
@@ -78,9 +110,9 @@ class RpcServer : public std::enable_shared_from_this<RpcServer> {
 
   template <std::derived_from<RpcService> ServiceType>
   void RegisterService(const std::shared_ptr<ServiceType>& service_ptr) {
-    std::shared_ptr<RpcService> rpc_service_ptr = std::static_pointer_cast<RpcService>(service_ptr);
+    const std::shared_ptr<const RpcService>& rpc_service_ptr = std::static_pointer_cast<const RpcService>(service_ptr);
     service_ptr_list_.emplace_back(rpc_service_ptr);
-    func_map_ptr_->insert(rpc_service_ptr->FuncMap().begin(), rpc_service_ptr->FuncMap().end());
+    func_map_ptr_->insert(rpc_service_ptr->FuncAdapterMap().begin(), rpc_service_ptr->FuncAdapterMap().end());
 
     if (start_flag_)
       throw std::runtime_error("Should not register service after server start.");
@@ -108,7 +140,7 @@ class RpcServer : public std::enable_shared_from_this<RpcServer> {
                 continue;
               }
 
-              auto session_ptr = std::make_shared<RpcServer::Session>(boost::asio::make_strand(*io_ptr_), session_cfg_ptr_, io_ptr_, func_map_ptr_);
+              auto session_ptr = std::make_shared<RpcServer::Session>(io_ptr_, session_cfg_ptr_, func_map_ptr_);
               co_await acceptor_.async_accept(session_ptr->Socket(), boost::asio::use_awaitable);
               session_ptr->Start();
 
@@ -207,48 +239,27 @@ class RpcServer : public std::enable_shared_from_this<RpcServer> {
   static const char HEAD_BYTE_1 = 'Y';
   static const char HEAD_BYTE_2 = 'T';
 
-  struct MsgContext {
-    MsgContext(uint32_t input_req_id, std::vector<char>& input_req_buf, uint32_t input_req_pos)
-        : req_id(input_req_id),
-          req_buf(input_req_buf),
-          req_pos(input_req_pos) {}
-
-    ~MsgContext() {}
-
-    uint32_t req_id;
-
-    std::shared_ptr<Context> ctx_ptr;
-
-    const std::vector<char>& req_buf;
-    const uint32_t req_pos = 0;
-
-    BufferVec rsp_buf_vec;
-  };
-
-  using AdapterFunc = std::function<boost::asio::awaitable<void>(RpcServer::MsgContext&)>;
-
   struct SessionCfg {
     SessionCfg(const Cfg& cfg)
         : max_no_data_duration(cfg.max_no_data_duration),
           max_recv_size(cfg.max_recv_size) {}
 
     std::chrono::steady_clock::duration max_no_data_duration;
-
     uint32_t max_recv_size;
   };
 
   class Session : public std::enable_shared_from_this<Session> {
    public:
-    Session(const boost::asio::strand<boost::asio::io_context::executor_type>& session_strand,
+    Session(const std::shared_ptr<boost::asio::io_context>& io_ptr,
             const std::shared_ptr<const RpcServer::SessionCfg>& session_cfg_ptr,
-            const std::shared_ptr<boost::asio::io_context>& io_ptr,
-            const std::shared_ptr<std::unordered_map<std::string, AdapterFunc>>& func_map_ptr)
+            const std::shared_ptr<std::unordered_map<std::string, RpcService::FuncAdapter>>& func_map_ptr)
         : session_cfg_ptr_(session_cfg_ptr),
-          session_strand_(session_strand),
-          sock_(session_strand_),
-          send_sig_timer_(session_strand_),
-          timer_(session_strand_),
           io_ptr_(io_ptr),
+          session_socket_strand_(boost::asio::make_strand(*io_ptr)),
+          sock_(session_socket_strand_),
+          send_sig_timer_(session_socket_strand_),
+          session_mgr_strand_(boost::asio::make_strand(*io_ptr)),
+          timer_(session_mgr_strand_),
           func_map_ptr_(func_map_ptr) {}
 
     ~Session() {}
@@ -261,7 +272,7 @@ class RpcServer : public std::enable_shared_from_this<RpcServer> {
 
       // 发送协程
       boost::asio::co_spawn(
-          session_strand_,
+          session_socket_strand_,
           [this, self]() -> boost::asio::awaitable<void> {
             ASIO_DEBUG_HANDLE(rpc_svr_session_send_co);
 
@@ -294,7 +305,7 @@ class RpcServer : public std::enable_shared_from_this<RpcServer> {
 
       // 接收协程
       boost::asio::co_spawn(
-          session_strand_,
+          session_socket_strand_,
           [this, self]() -> boost::asio::awaitable<void> {
             ASIO_DEBUG_HANDLE(rpc_svr_session_recv_co);
 
@@ -326,45 +337,64 @@ class RpcServer : public std::enable_shared_from_this<RpcServer> {
                 read_data_size = co_await boost::asio::async_read(sock_, boost::asio::buffer(req_buf, pb_msg_len), boost::asio::transfer_exactly(pb_msg_len), boost::asio::use_awaitable);
                 DBG_PRINT("rpc svr session async read %llu bytes for pb head", read_data_size);
 
-                // 处理数据，需要post到整个ioctx上
-                auto handle = [self, pb_head_len = GetUint16FromBuf(&head_buf[2]), req_buf{std::move(req_buf)}]() mutable -> boost::asio::awaitable<void> {
+                // 处理数据，需要post到整个io_ctx上
+                auto handle = [this, self, pb_head_len = GetUint16FromBuf(&head_buf[2]), req_buf{std::move(req_buf)}]() mutable -> boost::asio::awaitable<void> {
                   try {
-                    thread_local ytrpchead::ReqHead req_head;
+                    ytrpchead::ReqHead req_head;
                     req_head.ParseFromArray(req_buf.data(), pb_head_len);
 
-                    MsgContext msg_ctx(req_head.req_id(), req_buf, pb_head_len);
+                    BufferVec rsp_buf_vec;
+                    BufferVecZeroCopyOutputStream os(rsp_buf_vec);
+                    char* head_buf = static_cast<char*>(os.InitHead(RpcServer::HEAD_SIZE));
+                    head_buf[0] = RpcServer::HEAD_BYTE_1;
+                    head_buf[1] = RpcServer::HEAD_BYTE_2;
+
+                    ytrpchead::RspHead rsp_head;
+                    rsp_head.set_req_id(req_head.req_id());
 
                     // 查func
-                    auto finditr = self->func_map_ptr_->find(req_head.func());
-                    if (finditr != self->func_map_ptr_->end()) {
+                    auto finditr = func_map_ptr_->find(req_head.func());
+                    if (finditr != func_map_ptr_->end()) {
                       // 调用func
-                      msg_ctx.ctx_ptr = std::make_shared<Context>();
-                      msg_ctx.ctx_ptr->SetDeadline(std::chrono::system_clock::time_point(std::chrono::milliseconds(req_head.ddl_ms())));
-                      msg_ctx.ctx_ptr->ContextKv() = std::map<std::string, std::string>(req_head.context_kv().begin(), req_head.context_kv().end());
+                      const RpcService::FuncAdapter& func_adapter = finditr->second;
 
-                      co_await finditr->second(msg_ctx);
+                      std::unique_ptr<google::protobuf::Message> req_ptr = func_adapter.req_ptr_gener();
+                      if (!req_ptr->ParseFromArray(req_buf.data() + pb_head_len, req_buf.size() - pb_head_len)) [[unlikely]] {
+                        rsp_head.set_ret_code(static_cast<int32_t>(StatusCode::SVR_PARSE_REQ_FAILED));
+                        rsp_head.SerializeToZeroCopyStream(&os);
+                        SetBufFromUint16(&head_buf[2], static_cast<uint16_t>(os.ByteCount() - RpcServer::HEAD_SIZE));
+                        SetBufFromUint32(&head_buf[4], static_cast<uint32_t>(os.ByteCount() - RpcServer::HEAD_SIZE));
+                      } else {
+                        std::shared_ptr<Context> ctx_ptr = std::make_shared<Context>();
+                        ctx_ptr->SetDeadline(std::chrono::system_clock::time_point(std::chrono::milliseconds(req_head.ddl_ms())));
+                        ctx_ptr->ContextKv() = std::map<std::string, std::string>(req_head.context_kv().begin(), req_head.context_kv().end());
+
+                        std::unique_ptr<google::protobuf::Message> rsp_ptr = func_adapter.rsp_ptr_gener();
+                        const Status& ret_status = co_await func_adapter.handle_func(ctx_ptr, *req_ptr, *rsp_ptr);
+                        rsp_head.set_ret_code(static_cast<int32_t>(ret_status.Ret()));
+                        rsp_head.set_func_ret_code(static_cast<int32_t>(ret_status.FuncRet()));
+                        rsp_head.set_func_ret_msg(ret_status.FuncRetMsg());
+                        rsp_head.SerializeToZeroCopyStream(&os);
+                        SetBufFromUint16(&head_buf[2], static_cast<uint16_t>(os.ByteCount() - RpcServer::HEAD_SIZE));
+
+                        rsp_ptr->SerializeToZeroCopyStream(&os);
+                        SetBufFromUint32(&head_buf[4], static_cast<uint32_t>(os.ByteCount() - RpcServer::HEAD_SIZE));
+                      }
 
                     } else {
-                      BufferVecZeroCopyOutputStream os(msg_ctx.rsp_buf_vec);
-                      char* head_buf = static_cast<char*>(os.InitHead(RpcServer::HEAD_SIZE));
-                      head_buf[0] = RpcServer::HEAD_BYTE_1;
-                      head_buf[1] = RpcServer::HEAD_BYTE_2;
-
-                      ytrpchead::RspHead rsp_head;
-                      rsp_head.set_req_id(msg_ctx.req_id);
                       rsp_head.set_ret_code(static_cast<int32_t>(StatusCode::NOT_FOUND));
-
                       rsp_head.SerializeToZeroCopyStream(&os);
                       SetBufFromUint16(&head_buf[2], static_cast<uint16_t>(os.ByteCount() - RpcServer::HEAD_SIZE));
                       SetBufFromUint32(&head_buf[4], static_cast<uint32_t>(os.ByteCount() - RpcServer::HEAD_SIZE));
-                      msg_ctx.rsp_buf_vec.CommitLastBuf(os.LastBufSize());
                     }
 
+                    rsp_buf_vec.CommitLastBuf(os.LastBufSize());
+
                     boost::asio::dispatch(
-                        self->session_strand_,
-                        [self, rsp_buf_vec{std::move(msg_ctx.rsp_buf_vec)}]() mutable {
-                          self->send_buffer_vec_.Merge(rsp_buf_vec);
-                          self->send_sig_timer_.cancel();
+                        session_socket_strand_,
+                        [this, self, rsp_buf_vec{std::move(rsp_buf_vec)}]() mutable {
+                          send_buffer_vec_.Merge(rsp_buf_vec);
+                          send_sig_timer_.cancel();
                         });
 
                   } catch (const std::exception& e) {
@@ -376,9 +406,9 @@ class RpcServer : public std::enable_shared_from_this<RpcServer> {
 
                 boost::asio::post(
                     *io_ptr_,
-                    [self, handle{std::move(handle)}]() mutable {
+                    [this, self, handle{std::move(handle)}]() mutable {
                       boost::asio::co_spawn(
-                          *(self->io_ptr_),
+                          *io_ptr_,
                           std::move(handle),
                           boost::asio::detached);
                     });
@@ -395,7 +425,7 @@ class RpcServer : public std::enable_shared_from_this<RpcServer> {
 
       // 定时器协程
       boost::asio::co_spawn(
-          session_strand_,
+          session_mgr_strand_,
           [this, self]() -> boost::asio::awaitable<void> {
             ASIO_DEBUG_HANDLE(rpc_svr_session_timer_co);
 
@@ -428,9 +458,9 @@ class RpcServer : public std::enable_shared_from_this<RpcServer> {
 
       auto self = shared_from_this();
       boost::asio::dispatch(
-          session_strand_,
+          session_socket_strand_,
           [this, self]() {
-            ASIO_DEBUG_HANDLE(rpc_svr_session_stop_co);
+            ASIO_DEBUG_HANDLE(rpc_svr_session_sock_stop_co);
 
             uint32_t stop_step = 1;
             while (stop_step) {
@@ -440,18 +470,15 @@ class RpcServer : public std::enable_shared_from_this<RpcServer> {
                     send_sig_timer_.cancel();
                     ++stop_step;
                   case 2:
-                    timer_.cancel();
-                    ++stop_step;
-                  case 3:
                     sock_.shutdown(boost::asio::ip::tcp::socket::shutdown_both);
                     ++stop_step;
-                  case 4:
+                  case 3:
                     sock_.cancel();
                     ++stop_step;
-                  case 5:
+                  case 4:
                     sock_.close();
                     ++stop_step;
-                  case 6:
+                  case 5:
                     sock_.release();
                     ++stop_step;
                   default:
@@ -459,7 +486,30 @@ class RpcServer : public std::enable_shared_from_this<RpcServer> {
                     break;
                 }
               } catch (const std::exception& e) {
-                DBG_PRINT("rpc svr session stop get exception at step %u, exception info: %s", stop_step, e.what());
+                DBG_PRINT("rpc svr session sock stop get exception at step %u, exception info: %s", stop_step, e.what());
+                ++stop_step;
+              }
+            }
+          });
+
+      boost::asio::dispatch(
+          session_mgr_strand_,
+          [this, self]() {
+            ASIO_DEBUG_HANDLE(rpc_svr_session_mgr_stop_co);
+
+            uint32_t stop_step = 1;
+            while (stop_step) {
+              try {
+                switch (stop_step) {
+                  case 1:
+                    timer_.cancel();
+                    ++stop_step;
+                  default:
+                    stop_step = 0;
+                    break;
+                }
+              } catch (const std::exception& e) {
+                DBG_PRINT("rpc svr session mgr stop get exception at step %u, exception info: %s", stop_step, e.what());
                 ++stop_step;
               }
             }
@@ -473,15 +523,19 @@ class RpcServer : public std::enable_shared_from_this<RpcServer> {
    private:
     std::shared_ptr<const RpcServer::SessionCfg> session_cfg_ptr_;
     std::atomic_bool run_flag_ = true;
-    boost::asio::strand<boost::asio::io_context::executor_type> session_strand_;
+    std::shared_ptr<boost::asio::io_context> io_ptr_;
+
+    boost::asio::strand<boost::asio::io_context::executor_type> session_socket_strand_;
     boost::asio::ip::tcp::socket sock_;
     boost::asio::steady_timer send_sig_timer_;
+
+    boost::asio::strand<boost::asio::io_context::executor_type> session_mgr_strand_;
     boost::asio::steady_timer timer_;
 
-    std::shared_ptr<boost::asio::io_context> io_ptr_;
-    const std::shared_ptr<const std::unordered_map<std::string, AdapterFunc>> func_map_ptr_;
     bool tick_has_data_ = false;
     BufferVec send_buffer_vec_;
+
+    const std::shared_ptr<const std::unordered_map<std::string, RpcService::FuncAdapter>> func_map_ptr_;
   };
 
  private:
@@ -497,71 +551,8 @@ class RpcServer : public std::enable_shared_from_this<RpcServer> {
   boost::asio::steady_timer mgr_timer_;                                     // 管理session池的定时器
   std::list<std::shared_ptr<RpcServer::Session>> session_ptr_list_;         // session池
 
-  std::list<std::shared_ptr<RpcService>> service_ptr_list_;
-  std::shared_ptr<std::unordered_map<std::string, AdapterFunc>> func_map_ptr_;
-};
-
-class RpcService {
- protected:
-  RpcService() {}
-  virtual ~RpcService() {}
-
-  template <typename ReqType, typename RspType>
-  void RegisterRpcServiceFunc(
-      const std::string& func_name,
-      const std::function<boost::asio::awaitable<Status>(const std::shared_ptr<const Context>& ctx_ptr, const ReqType& req, RspType& rsp)>& func) {
-    func_map_.emplace(
-        func_name,
-        [func](RpcServer::MsgContext& msg_ctx) -> boost::asio::awaitable<void> {
-          BufferVecZeroCopyOutputStream os(msg_ctx.rsp_buf_vec);
-          char* head_buf = static_cast<char*>(os.InitHead(RpcServer::HEAD_SIZE));
-          head_buf[0] = RpcServer::HEAD_BYTE_1;
-          head_buf[1] = RpcServer::HEAD_BYTE_2;
-
-          thread_local ytrpchead::RspHead rsp_head;
-
-          ReqType req;
-          if (!req.ParseFromArray(msg_ctx.req_buf.data() + msg_ctx.req_pos, msg_ctx.req_buf.size() - msg_ctx.req_pos)) [[unlikely]] {
-            rsp_head.set_req_id(msg_ctx.req_id);
-            rsp_head.set_ret_code(static_cast<int32_t>(StatusCode::SVR_PARSE_REQ_FAILED));
-            rsp_head.set_func_ret_code(0);
-            rsp_head.set_func_ret_msg("");
-
-            rsp_head.SerializeToZeroCopyStream(&os);
-            SetBufFromUint16(&head_buf[2], static_cast<uint16_t>(os.ByteCount() - RpcServer::HEAD_SIZE));
-            SetBufFromUint32(&head_buf[4], static_cast<uint32_t>(os.ByteCount() - RpcServer::HEAD_SIZE));
-            msg_ctx.rsp_buf_vec.CommitLastBuf(os.LastBufSize());
-
-            co_return;
-          }
-
-          RspType rsp;
-          const Status& ret_status = co_await func(msg_ctx.ctx_ptr, req, rsp);
-
-          rsp_head.set_req_id(msg_ctx.req_id);
-          rsp_head.set_ret_code(static_cast<int32_t>(ret_status.Ret()));
-          rsp_head.set_func_ret_code(static_cast<int32_t>(ret_status.FuncRet()));
-          rsp_head.set_func_ret_msg(ret_status.FuncRetMsg());
-
-          rsp_head.SerializeToZeroCopyStream(&os);
-          SetBufFromUint16(&head_buf[2], static_cast<uint16_t>(os.ByteCount() - RpcServer::HEAD_SIZE));
-
-          rsp.SerializeToZeroCopyStream(&os);
-          SetBufFromUint32(&head_buf[4], static_cast<uint32_t>(os.ByteCount() - RpcServer::HEAD_SIZE));
-
-          msg_ctx.rsp_buf_vec.CommitLastBuf(os.LastBufSize());
-
-          co_return;
-        });
-  }
-
- public:
-  const std::unordered_map<std::string, RpcServer::AdapterFunc>& FuncMap() const {
-    return func_map_;
-  }
-
- private:
-  std::unordered_map<std::string, RpcServer::AdapterFunc> func_map_;
+  std::list<std::shared_ptr<const RpcService>> service_ptr_list_;
+  std::shared_ptr<std::unordered_map<std::string, RpcService::FuncAdapter>> func_map_ptr_;
 };
 
 }  // namespace ytrpc

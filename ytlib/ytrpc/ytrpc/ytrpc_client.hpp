@@ -20,19 +20,15 @@ namespace ytlib {
 namespace ytrpc {
 
 class RpcClient : public std::enable_shared_from_this<RpcClient> {
-  friend class RpcServiceProxy;
-
  public:
   /**
    * @brief 配置
    *
    */
   struct Cfg {
-    boost::asio::ip::tcp::endpoint svr_ep;  // 服务端地址
-
+    boost::asio::ip::tcp::endpoint svr_ep;                                           // 服务端地址
     std::chrono::steady_clock::duration heart_beat_time = std::chrono::seconds(60);  // 心跳包间隔
-
-    uint32_t max_recv_size = 1024 * 1024 * 10;  // 回包最大尺寸，最大10m
+    uint32_t max_recv_size = 1024 * 1024 * 10;                                       // 回包最大尺寸，最大10m
 
     /// 校验配置
     static Cfg Verify(const Cfg& verify_cfg) {
@@ -60,6 +56,68 @@ class RpcClient : public std::enable_shared_from_this<RpcClient> {
 
   RpcClient(const RpcClient&) = delete;             ///< no copy
   RpcClient& operator=(const RpcClient&) = delete;  ///< no copy
+
+  boost::asio::awaitable<Status> Invoke(const std::string& func_name, const std::shared_ptr<const Context>& ctx_ptr, const google::protobuf::Message& req, google::protobuf::Message& rsp) {
+    RpcClient::MsgContext msg_ctx(GetNewReqID(), *ctx_ptr);
+
+    if (msg_ctx.ctx.IsDone()) [[unlikely]] {
+      co_return Status(StatusCode::CANCELLED);
+    }
+
+    BufferVecZeroCopyOutputStream os(msg_ctx.req_buf_vec);
+    char* head_buf = static_cast<char*>(os.InitHead(RpcClient::HEAD_SIZE));
+    head_buf[0] = RpcClient::HEAD_BYTE_1;
+    head_buf[1] = RpcClient::HEAD_BYTE_2;
+
+    ytrpchead::ReqHead req_head;
+    req_head.set_req_id(msg_ctx.req_id);
+    req_head.set_func(func_name);
+    req_head.set_ddl_ms(std::chrono::duration_cast<std::chrono::milliseconds>(msg_ctx.ctx.Deadline().time_since_epoch()).count());
+    (*req_head.mutable_context_kv()) = google::protobuf::Map<std::string, std::string>(msg_ctx.ctx.ContextKv().begin(), msg_ctx.ctx.ContextKv().end());
+
+    req_head.SerializeToZeroCopyStream(&os);
+    SetBufFromUint16(&head_buf[2], static_cast<uint16_t>(os.ByteCount() - RpcClient::HEAD_SIZE));
+
+    req.SerializeToZeroCopyStream(&os);
+    SetBufFromUint32(&head_buf[4], static_cast<uint32_t>(os.ByteCount() - RpcClient::HEAD_SIZE));
+
+    msg_ctx.req_buf_vec.CommitLastBuf(os.LastBufSize());
+
+    std::shared_ptr<RpcClient::Session> cur_session_ptr = session_ptr_;
+    while (!cur_session_ptr || !cur_session_ptr->IsRunning()) {
+      if (!run_flag_) [[unlikely]] {
+        co_return Status(StatusCode::CLI_IS_NOT_RUNNING);
+      }
+
+      co_await boost::asio::co_spawn(
+          mgr_strand_,
+          [this]() -> boost::asio::awaitable<void> {
+            if (!run_flag_) [[unlikely]]
+              co_return;
+
+            if (!session_ptr_ || !session_ptr_->IsRunning()) [[unlikely]] {
+              session_ptr_ = std::make_shared<RpcClient::Session>(io_ptr_, session_cfg_ptr_);
+              session_ptr_->Start();
+            }
+            co_return;
+          },
+          boost::asio::use_awaitable);
+
+      cur_session_ptr = session_ptr_;
+    }
+
+    co_await cur_session_ptr->Invoke(msg_ctx);
+
+    if (msg_ctx.ret_status.Ret() != StatusCode::OK) [[unlikely]] {
+      msg_ctx.ctx.Done("call " + func_name + "failed, " + msg_ctx.ret_status.ToString());
+      co_return std::move(msg_ctx.ret_status);
+    }
+
+    if (!rsp.ParseFromArray(msg_ctx.rsp_buf.data() + msg_ctx.rsp_pos, msg_ctx.rsp_buf.size() - msg_ctx.rsp_pos)) [[unlikely]]
+      co_return Status(StatusCode::CLI_PARSE_RSP_FAILED);
+
+    co_return std::move(msg_ctx.ret_status);
+  }
 
   /**
    * @brief 停止
@@ -105,32 +163,6 @@ class RpcClient : public std::enable_shared_from_this<RpcClient> {
 
   uint32_t GetNewReqID() { return ++req_id_; }
 
-  boost::asio::awaitable<void> Invoke(MsgContext& msg_ctx) {
-    while (!session_ptr_ || !session_ptr_->IsRunning()) {
-      if (!run_flag_) [[unlikely]] {
-        msg_ctx.ret_status = Status(StatusCode::CLI_IS_NOT_RUNNING);
-        co_return;
-      }
-
-      co_await boost::asio::co_spawn(
-          mgr_strand_,
-          [this]() -> boost::asio::awaitable<void> {
-            if (!run_flag_) [[unlikely]]
-              co_return;
-
-            if (!session_ptr_ || !session_ptr_->IsRunning()) [[unlikely]] {
-              session_ptr_ = std::make_shared<RpcClient::Session>(io_ptr_, session_cfg_ptr_);
-              session_ptr_->Start();
-            }
-            co_return;
-          },
-          boost::asio::use_awaitable);
-    }
-
-    co_await session_ptr_->Invoke(msg_ctx);
-    co_return;
-  }
-
   struct SessionCfg {
     SessionCfg(const Cfg& cfg)
         : svr_ep(cfg.svr_ep),
@@ -144,8 +176,7 @@ class RpcClient : public std::enable_shared_from_this<RpcClient> {
 
   class Session : public std::enable_shared_from_this<Session> {
    public:
-    Session(const std::shared_ptr<boost::asio::io_context>& io_ptr,
-            const std::shared_ptr<const RpcClient::SessionCfg>& session_cfg_ptr)
+    Session(const std::shared_ptr<boost::asio::io_context>& io_ptr, const std::shared_ptr<const RpcClient::SessionCfg>& session_cfg_ptr)
         : session_cfg_ptr_(session_cfg_ptr),
           session_socket_strand_(boost::asio::make_strand(*io_ptr)),
           sock_(session_socket_strand_),
@@ -161,8 +192,6 @@ class RpcClient : public std::enable_shared_from_this<RpcClient> {
       return boost::asio::co_spawn(
           session_handle_strand_,
           [this, &msg_ctx]() -> boost::asio::awaitable<void> {
-            ASIO_DEBUG_HANDLE(rpc_cli_session_invoke_co);
-
             MsgRecorder msg_recorder(msg_ctx, session_handle_strand_, msg_ctx.ctx.Deadline());
             auto empalce_ret = msg_recorder_map_.emplace(msg_ctx.req_id, msg_recorder);
 
@@ -280,32 +309,27 @@ class RpcClient : public std::enable_shared_from_this<RpcClient> {
                         read_data_size = co_await boost::asio::async_read(sock_, boost::asio::buffer(rsp_buf, pb_msg_len), boost::asio::transfer_exactly(pb_msg_len), boost::asio::use_awaitable);
                         DBG_PRINT("rpc cli session async read %llu bytes for pb head", read_data_size);
 
-                        auto handle = [this, self, pb_head_len = GetUint16FromBuf(&head_buf[2]), rsp_buf{std::move(rsp_buf)}]() mutable -> boost::asio::awaitable<void> {
-                          thread_local ytrpchead::RspHead rsp_head;
-                          rsp_head.ParseFromArray(rsp_buf.data(), pb_head_len);
-
-                          auto finditr = msg_recorder_map_.find(rsp_head.req_id());
-                          if (finditr == msg_recorder_map_.end()) [[unlikely]] {
-                            DBG_PRINT("rpc cli session get a no owner pkg, req id:", rsp_head.req_id());
-                            co_return;
-                          }
-
-                          finditr->second.msg_ctx.ret_status = Status(
-                              static_cast<StatusCode>(rsp_head.ret_code()),
-                              rsp_head.func_ret_code(),
-                              rsp_head.func_ret_msg());
-                          finditr->second.msg_ctx.rsp_buf = std::move(rsp_buf);
-                          finditr->second.msg_ctx.rsp_pos = pb_head_len;
-                          finditr->second.recv_sig_timer.cancel();
-                        };
-
                         boost::asio::post(
                             session_handle_strand_,
-                            [self, handle{std::move(handle)}]() mutable {
-                              boost::asio::co_spawn(
-                                  self->session_handle_strand_,
-                                  std::move(handle),
-                                  boost::asio::detached);
+                            [this, self, pb_head_len = GetUint16FromBuf(&head_buf[2]), rsp_buf{std::move(rsp_buf)}]() mutable {
+                              ASIO_DEBUG_HANDLE(rpc_cli_session_recv_handle_co);
+
+                              ytrpchead::RspHead rsp_head;
+                              rsp_head.ParseFromArray(rsp_buf.data(), pb_head_len);
+
+                              auto finditr = msg_recorder_map_.find(rsp_head.req_id());
+                              if (finditr == msg_recorder_map_.end()) [[unlikely]] {
+                                DBG_PRINT("rpc cli session get a no owner pkg, req id:", rsp_head.req_id());
+                                return;
+                              }
+
+                              finditr->second.msg_ctx.ret_status = Status(
+                                  static_cast<StatusCode>(rsp_head.ret_code()),
+                                  rsp_head.func_ret_code(),
+                                  rsp_head.func_ret_msg());
+                              finditr->second.msg_ctx.rsp_buf = std::move(rsp_buf);
+                              finditr->second.msg_ctx.rsp_pos = pb_head_len;
+                              finditr->second.recv_sig_timer.cancel();
                             });
                       }
 
@@ -413,44 +437,8 @@ class RpcServiceProxy {
   explicit RpcServiceProxy(const std::shared_ptr<RpcClient>& client_ptr) : client_ptr_(client_ptr) {}
   virtual ~RpcServiceProxy() {}
 
-  template <typename ReqType, typename RspType>
-  boost::asio::awaitable<Status> Invoke(const std::string& func_name, const std::shared_ptr<const Context>& ctx_ptr, const ReqType& req, RspType& rsp) {
-    RpcClient::MsgContext msg_ctx(client_ptr_->GetNewReqID(), *ctx_ptr);
-
-    if (msg_ctx.ctx.IsDone()) [[unlikely]] {
-      co_return Status(StatusCode::CANCELLED);
-    }
-
-    BufferVecZeroCopyOutputStream os(msg_ctx.req_buf_vec);
-    char* head_buf = static_cast<char*>(os.InitHead(RpcClient::HEAD_SIZE));
-    head_buf[0] = RpcClient::HEAD_BYTE_1;
-    head_buf[1] = RpcClient::HEAD_BYTE_2;
-
-    thread_local ytrpchead::ReqHead req_head;
-    req_head.set_req_id(msg_ctx.req_id);
-    req_head.set_func(func_name);
-    req_head.set_ddl_ms(std::chrono::duration_cast<std::chrono::milliseconds>(msg_ctx.ctx.Deadline().time_since_epoch()).count());
-    (*req_head.mutable_context_kv()) = google::protobuf::Map<std::string, std::string>(msg_ctx.ctx.ContextKv().begin(), msg_ctx.ctx.ContextKv().end());
-
-    req_head.SerializeToZeroCopyStream(&os);
-    SetBufFromUint16(&head_buf[2], static_cast<uint16_t>(os.ByteCount() - RpcClient::HEAD_SIZE));
-
-    req.SerializeToZeroCopyStream(&os);
-    SetBufFromUint32(&head_buf[4], static_cast<uint32_t>(os.ByteCount() - RpcClient::HEAD_SIZE));
-
-    msg_ctx.req_buf_vec.CommitLastBuf(os.LastBufSize());
-
-    co_await client_ptr_->Invoke(msg_ctx);
-
-    if (msg_ctx.ret_status.Ret() != StatusCode::OK) [[unlikely]] {
-      msg_ctx.ctx.Done("call " + func_name + "failed, " + msg_ctx.ret_status.ToString());
-      co_return std::move(msg_ctx.ret_status);
-    }
-
-    if (!rsp.ParseFromArray(msg_ctx.rsp_buf.data() + msg_ctx.rsp_pos, msg_ctx.rsp_buf.size() - msg_ctx.rsp_pos)) [[unlikely]]
-      co_return Status(StatusCode::CLI_PARSE_RSP_FAILED);
-
-    co_return std::move(msg_ctx.ret_status);
+  boost::asio::awaitable<Status> Invoke(const std::string& func_name, const std::shared_ptr<const Context>& ctx_ptr, const google::protobuf::Message& req, google::protobuf::Message& rsp) {
+    return client_ptr_->Invoke(func_name, ctx_ptr, req, rsp);
   }
 
  private:

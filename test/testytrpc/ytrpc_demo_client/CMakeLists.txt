@@ -23,6 +23,7 @@ set_property(TARGET ${CUR_TARGET_NAME} PROPERTY PRIVATE_HEADER ${head_files})
 # 设置链接库
 target_link_libraries(${CUR_TARGET_NAME} PRIVATE
   ytlib::misc
+  ytlib::pb_tools
   protobuf::libprotobuf
   ytlib::ytrpc_demo_protos_gencode
   ytlib::ytrpc

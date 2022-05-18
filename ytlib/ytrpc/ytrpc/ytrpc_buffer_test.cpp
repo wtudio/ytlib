@@ -1,21 +1,8 @@
 #include <gtest/gtest.h>
 
 #include "Head.pb.h"
+#include "ytlib/pb_tools/pb_tools.hpp"
 #include "ytrpc_buffer.hpp"
-
-#include <google/protobuf/util/json_util.h>
-
-// 将pb包转换为格式化json字符串
-std::string Pb2PrettyJson(const google::protobuf::Message& st) {
-  google::protobuf::util::JsonPrintOptions op;
-  op.always_print_primitive_fields = true;
-  op.always_print_enums_as_ints = false;
-  op.preserve_proto_field_names = true;
-  op.add_whitespace = true;
-  std::string str;
-  google::protobuf::util::MessageToJsonString(st, &str, op);
-  return str;
-}
 
 namespace ytlib {
 namespace ytrpc {
