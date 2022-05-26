@@ -75,10 +75,12 @@ class RpcClient : public std::enable_shared_from_this<RpcClient> {
     req_head.set_ddl_ms(std::chrono::duration_cast<std::chrono::milliseconds>(msg_ctx.ctx.Deadline().time_since_epoch()).count());
     (*req_head.mutable_context_kv()) = google::protobuf::Map<std::string, std::string>(msg_ctx.ctx.ContextKv().begin(), msg_ctx.ctx.ContextKv().end());
 
-    req_head.SerializeToZeroCopyStream(&os);
+    if (!req_head.SerializeToZeroCopyStream(&os)) [[unlikely]]
+      throw std::runtime_error("Serialize req head failed.");
     SetBufFromUint16(&head_buf[2], static_cast<uint16_t>(os.ByteCount() - RpcClient::HEAD_SIZE));
 
-    req.SerializeToZeroCopyStream(&os);
+    if (!req.SerializeToZeroCopyStream(&os)) [[unlikely]]
+      throw std::runtime_error("Serialize req failed.");
     SetBufFromUint32(&head_buf[4], static_cast<uint32_t>(os.ByteCount() - RpcClient::HEAD_SIZE));
 
     msg_ctx.req_buf_vec.CommitLastBuf(os.LastBufSize());
@@ -314,22 +316,27 @@ class RpcClient : public std::enable_shared_from_this<RpcClient> {
                             [this, self, pb_head_len = GetUint16FromBuf(&head_buf[2]), rsp_buf{std::move(rsp_buf)}]() mutable {
                               ASIO_DEBUG_HANDLE(rpc_cli_session_recv_handle_co);
 
-                              ytrpchead::RspHead rsp_head;
-                              rsp_head.ParseFromArray(rsp_buf.data(), pb_head_len);
+                              try {
+                                ytrpchead::RspHead rsp_head;
+                                if (!rsp_head.ParseFromArray(rsp_buf.data(), pb_head_len)) [[unlikely]]
+                                  throw std::runtime_error("Parse rsp head failed.");
 
-                              auto finditr = msg_recorder_map_.find(rsp_head.req_id());
-                              if (finditr == msg_recorder_map_.end()) [[unlikely]] {
-                                DBG_PRINT("rpc cli session get a no owner pkg, req id:", rsp_head.req_id());
-                                return;
+                                auto finditr = msg_recorder_map_.find(rsp_head.req_id());
+                                if (finditr == msg_recorder_map_.end()) [[unlikely]] {
+                                  DBG_PRINT("rpc cli session get a no owner pkg, req id:", rsp_head.req_id());
+                                  return;
+                                }
+
+                                finditr->second.msg_ctx.ret_status = Status(
+                                    static_cast<StatusCode>(rsp_head.ret_code()),
+                                    rsp_head.func_ret_code(),
+                                    rsp_head.func_ret_msg());
+                                finditr->second.msg_ctx.rsp_buf = std::move(rsp_buf);
+                                finditr->second.msg_ctx.rsp_pos = pb_head_len;
+                                finditr->second.recv_sig_timer.cancel();
+                              } catch (const std::exception& e) {
+                                DBG_PRINT("rpc cli session recv handle co get exception and exit, exception info: %s", e.what());
                               }
-
-                              finditr->second.msg_ctx.ret_status = Status(
-                                  static_cast<StatusCode>(rsp_head.ret_code()),
-                                  rsp_head.func_ret_code(),
-                                  rsp_head.func_ret_msg());
-                              finditr->second.msg_ctx.rsp_buf = std::move(rsp_buf);
-                              finditr->second.msg_ctx.rsp_pos = pb_head_len;
-                              finditr->second.recv_sig_timer.cancel();
                             });
                       }
 

@@ -12,6 +12,7 @@ add_subdirectory(thread)
 
 if(YTLIB_BUILD_WITH_BOOST)
   add_subdirectory(boost_asio)
+  add_subdirectory(boost_fiber)
   add_subdirectory(boost_tools)
 endif()
 

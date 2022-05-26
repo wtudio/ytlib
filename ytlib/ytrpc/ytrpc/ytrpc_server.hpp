@@ -328,9 +328,8 @@ class RpcServer : public std::enable_shared_from_this<RpcServer> {
                 if (pb_msg_len == 0) [[unlikely]]
                   continue;
 
-                if (pb_msg_len > session_cfg_ptr_->max_recv_size) [[unlikely]] {
+                if (pb_msg_len > session_cfg_ptr_->max_recv_size) [[unlikely]]
                   throw std::runtime_error("Msg too large.");
-                }
 
                 std::vector<char> req_buf(pb_msg_len);
 
@@ -341,7 +340,8 @@ class RpcServer : public std::enable_shared_from_this<RpcServer> {
                 auto handle = [this, self, pb_head_len = GetUint16FromBuf(&head_buf[2]), req_buf{std::move(req_buf)}]() mutable -> boost::asio::awaitable<void> {
                   try {
                     ytrpchead::ReqHead req_head;
-                    req_head.ParseFromArray(req_buf.data(), pb_head_len);
+                    if (!req_head.ParseFromArray(req_buf.data(), pb_head_len)) [[unlikely]]
+                      throw std::runtime_error("Parse req head failed.");
 
                     BufferVec rsp_buf_vec;
                     BufferVecZeroCopyOutputStream os(rsp_buf_vec);
@@ -352,41 +352,40 @@ class RpcServer : public std::enable_shared_from_this<RpcServer> {
                     ytrpchead::RspHead rsp_head;
                     rsp_head.set_req_id(req_head.req_id());
 
+                    std::unique_ptr<google::protobuf::Message> rsp_ptr;
+
                     // 查func
                     auto finditr = func_map_ptr_->find(req_head.func());
                     if (finditr != func_map_ptr_->end()) {
                       // 调用func
                       const RpcService::FuncAdapter& func_adapter = finditr->second;
-
                       std::unique_ptr<google::protobuf::Message> req_ptr = func_adapter.req_ptr_gener();
                       if (!req_ptr->ParseFromArray(req_buf.data() + pb_head_len, req_buf.size() - pb_head_len)) [[unlikely]] {
                         rsp_head.set_ret_code(static_cast<int32_t>(StatusCode::SVR_PARSE_REQ_FAILED));
-                        rsp_head.SerializeToZeroCopyStream(&os);
-                        SetBufFromUint16(&head_buf[2], static_cast<uint16_t>(os.ByteCount() - RpcServer::HEAD_SIZE));
-                        SetBufFromUint32(&head_buf[4], static_cast<uint32_t>(os.ByteCount() - RpcServer::HEAD_SIZE));
                       } else {
                         std::shared_ptr<Context> ctx_ptr = std::make_shared<Context>();
                         ctx_ptr->SetDeadline(std::chrono::system_clock::time_point(std::chrono::milliseconds(req_head.ddl_ms())));
                         ctx_ptr->ContextKv() = std::map<std::string, std::string>(req_head.context_kv().begin(), req_head.context_kv().end());
 
-                        std::unique_ptr<google::protobuf::Message> rsp_ptr = func_adapter.rsp_ptr_gener();
+                        rsp_ptr = func_adapter.rsp_ptr_gener();
                         const Status& ret_status = co_await func_adapter.handle_func(ctx_ptr, *req_ptr, *rsp_ptr);
                         rsp_head.set_ret_code(static_cast<int32_t>(ret_status.Ret()));
                         rsp_head.set_func_ret_code(static_cast<int32_t>(ret_status.FuncRet()));
                         rsp_head.set_func_ret_msg(ret_status.FuncRetMsg());
-                        rsp_head.SerializeToZeroCopyStream(&os);
-                        SetBufFromUint16(&head_buf[2], static_cast<uint16_t>(os.ByteCount() - RpcServer::HEAD_SIZE));
-
-                        rsp_ptr->SerializeToZeroCopyStream(&os);
-                        SetBufFromUint32(&head_buf[4], static_cast<uint32_t>(os.ByteCount() - RpcServer::HEAD_SIZE));
                       }
-
                     } else {
                       rsp_head.set_ret_code(static_cast<int32_t>(StatusCode::NOT_FOUND));
-                      rsp_head.SerializeToZeroCopyStream(&os);
-                      SetBufFromUint16(&head_buf[2], static_cast<uint16_t>(os.ByteCount() - RpcServer::HEAD_SIZE));
-                      SetBufFromUint32(&head_buf[4], static_cast<uint32_t>(os.ByteCount() - RpcServer::HEAD_SIZE));
                     }
+
+                    if (!rsp_head.SerializeToZeroCopyStream(&os)) [[unlikely]]
+                      throw std::runtime_error("Serialize rsp head failed.");
+                    SetBufFromUint16(&head_buf[2], static_cast<uint16_t>(os.ByteCount() - RpcServer::HEAD_SIZE));
+
+                    if (rsp_ptr) {
+                      if (!rsp_ptr->SerializeToZeroCopyStream(&os)) [[unlikely]]
+                        throw std::runtime_error("Serialize rsp failed.");
+                    }
+                    SetBufFromUint32(&head_buf[4], static_cast<uint32_t>(os.ByteCount() - RpcServer::HEAD_SIZE));
 
                     rsp_buf_vec.CommitLastBuf(os.LastBufSize());
 

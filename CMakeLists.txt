@@ -61,17 +61,22 @@ message(STATUS "start get third party libraries, patience ...")
 option(YTLIB_BUILD_WITH_BOOST "Build with boost stage lib." OFF)
 if(YTLIB_BUILD_WITH_BOOST)
   set(Boost_USE_STATIC_LIBS ON)
-  find_package(Boost REQUIRED COMPONENTS date_time log serialization program_options)
+  find_package(Boost REQUIRED COMPONENTS date_time log serialization program_options fiber)
 endif()
 
-option(YTLIB_BUILD_WITH_FREEGLUT "Build with freeglut lib." OFF)
+option(YTLIB_BUILD_WITH_FREEGLUT "Build with freeglut." OFF)
 if(YTLIB_BUILD_WITH_FREEGLUT)
   include(GetFreeglut)
 endif()
 
-option(YTLIB_BUILD_WITH_PROTOBUF "Build with protobuf lib." OFF)
+option(YTLIB_BUILD_WITH_PROTOBUF "Build with protobuf." OFF)
 if(YTLIB_BUILD_WITH_PROTOBUF)
   include(GetProtoBuf)
+endif()
+
+option(YTLIB_BUILD_WITH_LIBUNIFEX "Build with libunifex." OFF)
+if(YTLIB_BUILD_WITH_LIBUNIFEX)
+  include(GetLibUnifex)
 endif()
 
 #设置测试
