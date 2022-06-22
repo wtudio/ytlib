@@ -18,7 +18,7 @@
 
 namespace ytlib {
 
-TEST(MISC_TEST, GUID_BASE) {
+TEST(THREAD_TEST, Guid) {
   // 生成mac值
   std::string mac = "testmac::abc::def";
   std::string svr_id = "testsvr";
@@ -67,7 +67,7 @@ class TestObj {
     id = gid++;
     DBG_PRINT("[%llu]create obj %d from %d by move", ytlib::GetThreadId(), id, obj.id);
   }
-  TestObj &operator=(const TestObj &&obj) {
+  TestObj &operator=(TestObj &&obj) {
     DBG_PRINT("[%llu]move obj %d to %d", ytlib::GetThreadId(), obj.id, id);
     data = std::move(obj.data);
     return *this;

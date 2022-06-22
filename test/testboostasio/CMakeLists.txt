@@ -24,16 +24,10 @@ set_property(TARGET ${CUR_TARGET_NAME} PROPERTY PRIVATE_HEADER ${head_files})
 target_link_libraries(${CUR_TARGET_NAME} PRIVATE
   ytlib::misc
   ytlib::boost_asio
-  ytlib::boost_fiber
-  libunifex::unifex
 )
 
 # 设置编译选项
-# target_compile_definitions(${CUR_TARGET_NAME} PRIVATE xxx)
-
-if(MSVC)
-  target_compile_options(${CUR_TARGET_NAME} PRIVATE /Zc:externConstexpr)
-endif()
+target_compile_definitions(${CUR_TARGET_NAME} PRIVATE ASIO_ENABLE_DEBUG)
 
 # 设置其他属性
 set_property(TARGET ${CUR_TARGET_NAME} PROPERTY UNITY_BUILD ON)

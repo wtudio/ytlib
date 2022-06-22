@@ -21,6 +21,7 @@ int32_t main(int32_t argc, char** argv) {
   AsioDebugTool::Ins().Reset();
 
   auto asio_sys_ptr = std::make_shared<AsioExecutor>(8);
+  asio_sys_ptr->EnableStopSignal();
 
   ytrpc::RpcClient::Cfg cfg;
   cfg.svr_ep = boost::asio::ip::tcp::endpoint{boost::asio::ip::address_v4({127, 0, 0, 1}), 55399};

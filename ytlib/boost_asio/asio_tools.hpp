@@ -32,7 +32,7 @@ class AsioExecutor {
   explicit AsioExecutor(uint32_t threads_num = std::max<uint32_t>(std::thread::hardware_concurrency(), 1))
       : threads_num_(threads_num),
         io_ptr_(std::make_shared<boost::asio::io_context>(threads_num)),
-        signals_(*io_ptr_, SIGINT, SIGTERM) {
+        work_guard_(io_ptr_->get_executor()) {
   }
 
   ~AsioExecutor() {
@@ -54,6 +54,9 @@ class AsioExecutor {
    * @param[in] stop_func 子服务结束方法，需要保证可以重复调用
    */
   void RegisterSvrFunc(std::function<void()>&& start_func, std::function<void()>&& stop_func) {
+    if (start_flag_)
+      throw std::runtime_error("Should not call RegisterSvrFunc after start.");
+
     if (start_func) start_func_vec_.emplace_back(std::move(start_func));
     if (stop_func) stop_func_vec_.emplace_back(std::move(stop_func));
   }
@@ -69,11 +72,6 @@ class AsioExecutor {
       start_func_vec_[ii]();
     }
     start_func_vec_.clear();
-
-    signals_.async_wait([&](auto, auto) {
-      DBG_PRINT("AsioExecutor get stop signal.");
-      Stop();
-    });
 
     auto run_func = [this] {
       DBG_PRINT("AsioExecutor thread %llu start.", ytlib::GetThreadId());
@@ -97,6 +95,9 @@ class AsioExecutor {
    * @note 阻塞直到所有线程退出
    */
   void Join() {
+    if (!start_flag_)
+      throw std::runtime_error("Should call Join after start.");
+
     for (auto itr = threads_.begin(); itr != threads_.end();) {
       if (itr->joinable())
         itr->join();
@@ -117,8 +118,31 @@ class AsioExecutor {
     }
     stop_func_vec_.clear();
 
-    signals_.cancel();
-    signals_.clear();
+    work_guard_.reset();
+  }
+
+  /**
+   * @brief 接收停止信号
+   *
+   */
+  void EnableStopSignal() {
+    if (start_flag_)
+      throw std::runtime_error("Should not call EnableStopSignal after start.");
+
+    std::shared_ptr<boost::asio::signal_set> sig_ptr =
+        std::make_shared<boost::asio::signal_set>(*io_ptr_, SIGINT, SIGTERM);
+
+    start_func_vec_.emplace_back([this, sig_ptr] {
+      sig_ptr->async_wait([this, sig_ptr](auto, auto) {
+        DBG_PRINT("AsioExecutor get stop signal.");
+        Stop();
+      });
+    });
+
+    stop_func_vec_.emplace_back([sig_ptr] {
+      sig_ptr->cancel();
+      sig_ptr->clear();
+    });
   }
 
   /**
@@ -127,12 +151,19 @@ class AsioExecutor {
    */
   const std::shared_ptr<boost::asio::io_context>& IO() { return io_ptr_; }
 
+  /**
+   * @brief 获取线程数
+   *
+   * @return const uint32_t
+   */
+  const uint32_t ThreadsNum() const { return threads_num_; }
+
  private:
-  uint32_t threads_num_;
+  const uint32_t threads_num_;
   std::atomic_bool start_flag_ = false;
   std::atomic_bool stop_flag_ = false;
   std::shared_ptr<boost::asio::io_context> io_ptr_;
-  boost::asio::signal_set signals_;
+  boost::asio::executor_work_guard<boost::asio::io_context::executor_type> work_guard_;
   std::list<std::thread> threads_;
   std::vector<std::function<void()> > start_func_vec_;
   std::vector<std::function<void()> > stop_func_vec_;

@@ -8,10 +8,10 @@ int sub(int a, int b) {
   return a - b;
 }
 
-class TestC1 {
+class TestC2 {
  public:
-  TestC1() {
-    printf("TestC1\n");
+  TestC2() {
+    printf("TestC2\n");
   }
 };
-static TestC1 test_c1;
+static TestC2 test_c2;

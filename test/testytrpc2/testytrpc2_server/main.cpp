@@ -26,6 +26,7 @@ int32_t main(int32_t argc, char** argv) {
   AsioDebugTool::Ins().Reset();
 
   auto asio_sys_ptr = std::make_shared<AsioExecutor>(8);
+  asio_sys_ptr->EnableStopSignal();
 
   ytrpc::RpcServer::Cfg cfg;
   auto svr_ptr = std::make_shared<ytrpc::RpcServer>(asio_sys_ptr->IO(), cfg);

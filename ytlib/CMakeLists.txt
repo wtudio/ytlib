@@ -27,3 +27,7 @@ endif()
 if(YTLIB_BUILD_WITH_FREEGLUT)
   add_subdirectory(gl)
 endif()
+
+if(YTLIB_BUILD_WITH_LIBUNIFEX AND YTLIB_BUILD_WITH_BOOST)
+  add_subdirectory(execution)
+endif()
