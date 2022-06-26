@@ -24,54 +24,6 @@
 #include "test4.hpp"
 #include "test9.hpp"
 
-void Test5() {
-  DBG_PRINT("[run in thread %llu]main", ytlib::GetThreadId());
-
-  unifex::async_mutex mutex;
-
-  int sharedState = 0;
-
-  // unifex::single_thread_context ctx1;
-  // unifex::single_thread_context ctx2;
-
-  test3::MyContext ctx1(2);  // asio ctx
-  test4::MyContext ctx2(2);  // fiber ctx
-
-  auto make_task_ctx1 = [&]() -> unifex::task<void> {
-    int id = 111;
-    for (int i = 0; i < 4; ++i) {
-      DBG_PRINT("[run in thread %llu]task id %d, count %d, before async_lock.", ytlib::GetThreadId(), id, i);
-      co_await mutex.async_lock();
-      DBG_PRINT("[run in thread %llu]task id %d, count %d, after async_lock, before schedule.", ytlib::GetThreadId(), id, i);
-      co_await unifex::schedule(ctx1.get_scheduler());
-      DBG_PRINT("[run in thread %llu]task id %d, count %d, after schedule, before unlock.", ytlib::GetThreadId(), id, i);
-      ++sharedState;
-      mutex.unlock();
-      DBG_PRINT("[run in thread %llu]task id %d, count %d, after unlock.", ytlib::GetThreadId(), id, i);
-    }
-    co_return;
-  };
-
-  auto make_task_ctx2 = [&]() -> unifex::task<void> {
-    int id = 222;
-    for (int i = 0; i < 4; ++i) {
-      DBG_PRINT("[run in thread %llu]task id %d, count %d, before async_lock.", ytlib::GetThreadId(), id, i);
-      co_await mutex.async_lock();
-      DBG_PRINT("[run in thread %llu]task id %d, count %d, after async_lock, before schedule.", ytlib::GetThreadId(), id, i);
-      co_await unifex::schedule(ctx2.get_scheduler());
-      DBG_PRINT("[run in thread %llu]task id %d, count %d, after schedule, before unlock.", ytlib::GetThreadId(), id, i);
-      ++sharedState;
-      mutex.unlock();
-      DBG_PRINT("[run in thread %llu]task id %d, count %d, after unlock.", ytlib::GetThreadId(), id, i);
-    }
-    co_return;
-  };
-
-  unifex::sync_wait(unifex::when_all(make_task_ctx1(), make_task_ctx2()));
-
-  DBG_PRINT("[run in thread %llu]sharedState %d", ytlib::GetThreadId(), sharedState);
-}
-
 void Test6() {
   // unifex::inline_scheduler sche0;
   // unifex::single_thread_context ctx1;
@@ -195,11 +147,6 @@ void Test7() {
   unifex::sync_wait(fiber_work());
 }
 
-void Test8() {
-  auto ret = unifex::just(42) | unifex::sync_wait();
-  DBG_PRINT("[run in thread %llu]step 4 run in fiber execute. ret = %d", ytlib::GetThreadId(), *ret);
-}
-
 int32_t main(int32_t argc, char** argv) {
   // 注意：只能有一个FiberExecutor
 
@@ -211,13 +158,9 @@ int32_t main(int32_t argc, char** argv) {
 
   // test4::Test4();
 
-  // Test5();
-
   Test6();
 
   // Test7();
-
-  // Test8();
 
   // test9::Test9();
 

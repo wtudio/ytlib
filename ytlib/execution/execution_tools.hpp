@@ -6,20 +6,24 @@ namespace ytlib {
 
 class DetachHolder {
  private:
-  struct Counter {
-    std::atomic_uint32_t n = 1;
-    std::function<void()> f;
+  struct InnerCounter {
+    InnerCounter() : n_(1) {}
+    ~InnerCounter() {}
+
+    InnerCounter(const InnerCounter &) = delete;             ///< no copy
+    InnerCounter &operator=(const InnerCounter &) = delete;  ///< no copy
+
+    std::atomic_uint32_t n_;
+    std::function<void()> f_;
   };
 
-  Counter *counter_ptr_;
+  InnerCounter *counter_ptr_;
 
  public:
-  DetachHolder() {
-    counter_ptr_ = new Counter();
-  }
+  DetachHolder() : counter_ptr_(new InnerCounter()) {}
 
   DetachHolder(const DetachHolder &rhs) : counter_ptr_(rhs.counter_ptr_) {
-    ++(counter_ptr_->n);
+    ++(counter_ptr_->n_);
   }
 
   DetachHolder(DetachHolder &&rhs) : counter_ptr_(rhs.counter_ptr_) {
@@ -30,14 +34,14 @@ class DetachHolder {
   DetachHolder &operator=(const DetachHolder &&rhs) = delete;
 
   ~DetachHolder() {
-    if (counter_ptr_ != nullptr && --(counter_ptr_->n) == 0) {
-      counter_ptr_->f();
+    if (counter_ptr_ != nullptr && --(counter_ptr_->n_) == 0) {
+      counter_ptr_->f_();
       delete counter_ptr_;
     }
   }
 
   void SetDeferFun(std::function<void()> &&defer_fun) {
-    counter_ptr_->f = std::move(defer_fun);
+    counter_ptr_->f_ = std::move(defer_fun);
   }
 };
 
