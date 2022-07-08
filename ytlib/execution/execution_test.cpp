@@ -58,6 +58,28 @@ TEST(EXECUTION_TEST, AsioContext) {
     EXPECT_EQ(*ret, 42);
   }
 
+  // test coro timer
+  {
+    uint32_t n = 0;
+    auto work = [&]() -> unifex::task<void> {
+      co_await unifex::schedule(asio_ctx.get_scheduler());
+      ++n;
+      co_await unifex::schedule_after(asio_ctx.get_scheduler(), std::chrono::milliseconds(100));
+      ++n;
+      co_await unifex::schedule_at(asio_ctx.get_scheduler(), std::chrono::steady_clock::now() + std::chrono::milliseconds(100));
+      ++n;
+    };
+
+    StartDetached(work());
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    EXPECT_EQ(n, 1);
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    EXPECT_EQ(n, 2);
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    EXPECT_EQ(n, 3);
+  }
+
   asio_sys_ptr->Stop();
   asio_sys_ptr->Join();
 }

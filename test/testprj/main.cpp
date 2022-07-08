@@ -1,4 +1,5 @@
 #include <iostream>
+#include <string>
 #include <type_traits>
 
 #include "ytlib/dll_tools/dynamic_lib.hpp"
@@ -136,21 +137,34 @@ void TestCPO2() {
   std::cout << do_something(c, 2) << std::endl;
 }
 
+std::tuple<int, std::string> foo() {
+  int n = 1;
+  std::string s = "aaa";
+
+  return std::make_tuple(n, std::move(s));
+}
+
 int32_t main(int32_t argc, char **argv) {
   DBG_PRINT("hello world");
+
+  // int n = 0;
+  // std::string s;
+  // std::tie(n, s) = foo();
+  auto [n, s] = foo();
+  DBG_PRINT("n: %d, s: %s", n, s.c_str());
 
   // TestCPO1();
 
   // TestCPO2();
 
-  using AddFun = int (*)(int, int);
+  // using AddFun = int (*)(int, int);
 
-  auto &dll_container = ytlib::DynamicLibContainer::Ins();
-  auto testlib = dll_container.LoadLib("D:\\project\\github.com\\wt201501\\ytlib\\build\\test\\testlib\\Debug\\testlibd.dll");
-  auto fun = (AddFun)(testlib->GetSymbol("add"));
-  int c = fun(1, 2);
+  // auto &dll_container = ytlib::DynamicLibContainer::Ins();
+  // auto testlib = dll_container.LoadLib("D:\\project\\github.com\\wt201501\\ytlib\\build\\test\\testlib\\Debug\\testlibd.dll");
+  // auto fun = (AddFun)(testlib->GetSymbol("add"));
+  // int c = fun(1, 2);
 
-  auto testlib2 = dll_container.LoadLib("D:\\project\\github.com\\wt201501\\ytlib\\build\\test\\testlib2\\Debug\\testlib2d.dll");
+  // auto testlib2 = dll_container.LoadLib("D:\\project\\github.com\\wt201501\\ytlib\\build\\test\\testlib2\\Debug\\testlib2d.dll");
 
   return 0;
 }
