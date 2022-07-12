@@ -1,4 +1,3 @@
-add_subdirectory(ytrpc_demo_protos)
+add_subdirectory(asio_rpc_demo)
+add_subdirectory(asio_rpc_bench)
 
-add_subdirectory(ytrpc_demo_server)
-add_subdirectory(ytrpc_demo_client)

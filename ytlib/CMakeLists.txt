@@ -20,14 +20,14 @@ if(YTLIB_BUILD_WITH_PROTOBUF)
   add_subdirectory(pb_tools)
 endif()
 
-if(YTLIB_BUILD_WITH_BOOST AND YTLIB_BUILD_WITH_PROTOBUF)
-  add_subdirectory(ytrpc)
-endif()
-
 if(YTLIB_BUILD_WITH_FREEGLUT)
   add_subdirectory(gl)
 endif()
 
 if(YTLIB_BUILD_WITH_LIBUNIFEX AND YTLIB_BUILD_WITH_BOOST)
   add_subdirectory(execution)
+endif()
+
+if(YTLIB_BUILD_WITH_LIBUNIFEX AND YTLIB_BUILD_WITH_BOOST AND YTLIB_BUILD_WITH_PROTOBUF)
+  add_subdirectory(ytrpc)
 endif()

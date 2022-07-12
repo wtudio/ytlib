@@ -15,22 +15,16 @@
 #include <unifex/via.hpp>
 #include <unifex/when_all.hpp>
 
+#include "ytlib/execution/boost_asio_executor.hpp"
+#include "ytlib/execution/boost_fiber_executor.hpp"
 #include "ytlib/misc/misc_macro.h"
 
 #include "test1.hpp"
-#include "test10.hpp"
 #include "test2.hpp"
-#include "test3.hpp"
-#include "test4.hpp"
-#include "test9.hpp"
 
 void Test6() {
-  // unifex::inline_scheduler sche0;
-  // unifex::single_thread_context ctx1;
-  // unifex::single_thread_context ctx2;
-
-  test3::MyContext asio_ctx(2);   // asio ctx
-  test4::MyContext fiber_ctx(2);  // fiber ctx
+  ytlib::AsioContext asio_ctx(std::make_shared<ytlib::AsioExecutor>(2));     // asio ctx
+  ytlib::FiberContext fiber_ctx(std::make_shared<ytlib::FiberExecutor>(2));  // fiber ctx
 
   test1::MyScheduler inline_sche;  // inline sche
 
@@ -85,86 +79,14 @@ void Test6() {
   unifex::sync_wait(work2());
 }
 
-struct MyReceiver {
-  void set_value() noexcept {
-    DBG_PRINT("[run in thread %llu]MyReceiver set_value.", ytlib::GetThreadId());
-  }
-
-  [[noreturn]] void set_error(std::exception_ptr) noexcept {
-    DBG_PRINT("[run in thread %llu]MyReceiver set_error.", ytlib::GetThreadId());
-    std::terminate();
-  }
-
-  void set_done() noexcept {
-    DBG_PRINT("[run in thread %llu]MyReceiver set_done.", ytlib::GetThreadId());
-  }
-};
-
-void Test7() {
-  test3::MyContext asio_ctx(2);   // asio ctx
-  test4::MyContext fiber_ctx(2);  // fiber ctx
-
-  boost::fibers::promise<int> fiber_promise;
-  boost::fibers::future<int> fiber_future = fiber_promise.get_future();
-
-  auto fiber_work = [&]() -> unifex::task<void> {
-    co_await unifex::schedule(fiber_ctx.get_scheduler());
-
-    // 模拟进入rpc server handle中
-    auto handle_work = [&]() -> unifex::task<void> {
-      // 在fiber  ctx下执行一些任务
-      DBG_PRINT("[run in thread %llu]step 1-1 run in fiber execute.", ytlib::GetThreadId());
-      boost::this_fiber::sleep_for(std::chrono::milliseconds(500));
-      DBG_PRINT("[run in thread %llu]step 1-2 run in fiber execute.", ytlib::GetThreadId());
-
-      // -----------切换到asio execute-----------
-      co_await unifex::schedule(asio_ctx.get_scheduler());
-      // 在asio ctx下执行一些任务
-      DBG_PRINT("[run in thread %llu]step 2 run in asio execute.", ytlib::GetThreadId());
-
-      // -----------切换到fiber execute-----------
-      co_await unifex::schedule(fiber_ctx.get_scheduler());
-      // 在fiber  ctx下执行一些任务
-      DBG_PRINT("[run in thread %llu]step 3-1 run in fiber execute.", ytlib::GetThreadId());
-      boost::this_fiber::sleep_for(std::chrono::milliseconds(500));
-      DBG_PRINT("[run in thread %llu]step 3-2 run in fiber execute.", ytlib::GetThreadId());
-
-      fiber_promise.set_value(42);
-
-      co_return;
-    };
-
-    MyReceiver my_receiver;
-    auto op = unifex::connect(handle_work(), my_receiver);
-    unifex::start(op);
-
-    int ret = fiber_future.get();
-    DBG_PRINT("[run in thread %llu]step 4 run in fiber execute. ret = %d", ytlib::GetThreadId(), ret);
-
-    co_return;
-  };
-
-  unifex::sync_wait(fiber_work());
-}
-
 int32_t main(int32_t argc, char** argv) {
   // 注意：只能有一个FiberExecutor
 
-  // test1::Test1();
+  test1::Test1();
 
-  // test2::Test2();
-
-  // test3::Test3();
-
-  // test4::Test4();
+  test2::Test2();
 
   Test6();
-
-  // Test7();
-
-  // test9::Test9();
-
-  // test10::Test10();
 
   return 0;
 }

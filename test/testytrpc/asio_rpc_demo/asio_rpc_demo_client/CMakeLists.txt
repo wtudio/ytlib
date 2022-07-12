@@ -23,11 +23,15 @@ set_property(TARGET ${CUR_TARGET_NAME} PROPERTY PRIVATE_HEADER ${head_files})
 # 设置链接库
 target_link_libraries(${CUR_TARGET_NAME} PRIVATE
   ytlib::misc
-  ytlib::boost_asio
+  ytlib::pb_tools
+  ytlib::ytrpc::asio_rpc
+  protobuf::libprotobuf
+  testytrpc::asio_rpc_demo_protos_gencode
+  testytrpc::asio_rpc_demo_rpc_gencode
 )
 
 # 设置编译选项
-target_compile_definitions(${CUR_TARGET_NAME} PRIVATE ASIO_ENABLE_DEBUG)
+# target_compile_definitions(${CUR_TARGET_NAME} PRIVATE xxx)
 
 # 设置其他属性
-set_property(TARGET ${CUR_TARGET_NAME} PROPERTY FOLDER test)
+set_property(TARGET ${CUR_TARGET_NAME} PROPERTY FOLDER test/testytrpc)

@@ -24,12 +24,11 @@ set_property(TARGET ${CUR_TARGET_NAME} PROPERTY PRIVATE_HEADER ${head_files})
 target_link_libraries(${CUR_TARGET_NAME} PRIVATE 
   benchmark::benchmark
   benchmark::benchmark_main
-  ytlib::ytrpc
+  ytlib::ytrpc::rpc_util
 )
 
 # 设置编译选项
 # target_compile_definitions(${CUR_TARGET_NAME} PRIVATE xxx)
 
 # 设置其他属性
-set_property(TARGET ${CUR_TARGET_NAME} PROPERTY UNITY_BUILD ON)
-set_property(TARGET ${CUR_TARGET_NAME} PROPERTY FOLDER test/${CUR_TARGET_NAME})
+set_property(TARGET ${CUR_TARGET_NAME} PROPERTY FOLDER test)

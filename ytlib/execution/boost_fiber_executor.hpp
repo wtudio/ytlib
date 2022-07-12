@@ -16,17 +16,21 @@ struct FiberOperationState {
       : fiber_executor_ptr_(fiber_executor_ptr), receiver_(new Receiver((Receiver2 &&) r)) {}
 
   void start() noexcept {
-    fiber_executor_ptr_->Post([receiver = receiver_]() {
-      try {
-        if (unifex::get_stop_token(*receiver).stop_requested()) {
-          unifex::set_done(std::move(*receiver));
-        } else {
-          unifex::set_value(std::move(*receiver));
+    try {
+      fiber_executor_ptr_->Post([receiver = receiver_]() {
+        try {
+          if (unifex::get_stop_token(*receiver).stop_requested()) {
+            unifex::set_done(std::move(*receiver));
+          } else {
+            unifex::set_value(std::move(*receiver));
+          }
+        } catch (...) {
+          unifex::set_error(std::move(*receiver), std::current_exception());
         }
-      } catch (...) {
-        unifex::set_error(std::move(*receiver), std::current_exception());
-      }
-    });
+      });
+    } catch (...) {
+      unifex::set_error(std::move(*receiver_), std::current_exception());
+    }
   }
 
   std::shared_ptr<Receiver> receiver_;
@@ -53,6 +57,112 @@ struct FiberTask {
   FiberExecutor* fiber_executor_ptr_;
 };
 
+template <typename Receiver>
+requires unifex::receiver<Receiver>
+struct FiberSchedulerAfterOperationState {
+  template <typename Receiver2>
+  requires std::constructible_from<Receiver, Receiver2>
+  explicit FiberSchedulerAfterOperationState(FiberExecutor* fiber_executor_ptr, const std::chrono::steady_clock::duration& dt, Receiver2&& r) noexcept(std::is_nothrow_constructible_v<Receiver, Receiver2>)
+      : fiber_executor_ptr_(fiber_executor_ptr), dt_(dt), receiver_(new Receiver((Receiver2 &&) r)) {}
+
+  void start() noexcept {
+    try {
+      fiber_executor_ptr_->Post([dt = dt_, receiver = receiver_]() {
+        try {
+          boost::this_fiber::sleep_for(dt);
+          if (unifex::get_stop_token(*receiver).stop_requested()) {
+            unifex::set_done(std::move(*receiver));
+          } else {
+            unifex::set_value(std::move(*receiver));
+          }
+        } catch (...) {
+          unifex::set_error(std::move(*receiver), std::current_exception());
+        }
+      });
+    } catch (...) {
+      unifex::set_error(std::move(*receiver_), std::current_exception());
+    }
+  }
+
+  std::shared_ptr<Receiver> receiver_;
+  FiberExecutor* fiber_executor_ptr_;
+  std::chrono::steady_clock::duration dt_;
+};
+
+struct FiberSchedulerAfterTask {
+  template <template <typename...> class Variant, template <typename...> class Tuple>
+  using value_types = Variant<Tuple<>>;
+
+  template <template <typename...> class Variant>
+  using error_types = Variant<std::exception_ptr>;
+
+  static constexpr bool sends_done = true;
+
+  explicit FiberSchedulerAfterTask(FiberExecutor* fiber_executor_ptr, const std::chrono::steady_clock::duration& dt) noexcept
+      : fiber_executor_ptr_(fiber_executor_ptr), dt_(dt) {}
+
+  template <typename Receiver>
+  FiberSchedulerAfterOperationState<unifex::remove_cvref_t<Receiver>> connect(Receiver&& receiver) {
+    return FiberSchedulerAfterOperationState<unifex::remove_cvref_t<Receiver>>(fiber_executor_ptr_, dt_, (Receiver &&) receiver);
+  }
+
+  FiberExecutor* fiber_executor_ptr_;
+  std::chrono::steady_clock::duration dt_;
+};
+
+template <typename Receiver>
+requires unifex::receiver<Receiver>
+struct FiberSchedulerAtOperationState {
+  template <typename Receiver2>
+  requires std::constructible_from<Receiver, Receiver2>
+  explicit FiberSchedulerAtOperationState(FiberExecutor* fiber_executor_ptr, const std::chrono::steady_clock::time_point& tp, Receiver2&& r) noexcept(std::is_nothrow_constructible_v<Receiver, Receiver2>)
+      : fiber_executor_ptr_(fiber_executor_ptr), tp_(tp), receiver_(new Receiver((Receiver2 &&) r)) {}
+
+  void start() noexcept {
+    try {
+      fiber_executor_ptr_->Post([tp = tp_, receiver = receiver_]() {
+        try {
+          boost::this_fiber::sleep_until(tp);
+          if (unifex::get_stop_token(*receiver).stop_requested()) {
+            unifex::set_done(std::move(*receiver));
+          } else {
+            unifex::set_value(std::move(*receiver));
+          }
+        } catch (...) {
+          unifex::set_error(std::move(*receiver), std::current_exception());
+        }
+      });
+    } catch (...) {
+      unifex::set_error(std::move(*receiver_), std::current_exception());
+    }
+  }
+
+  std::shared_ptr<Receiver> receiver_;
+  FiberExecutor* fiber_executor_ptr_;
+  std::chrono::steady_clock::time_point tp_;
+};
+
+struct FiberSchedulerAtTask {
+  template <template <typename...> class Variant, template <typename...> class Tuple>
+  using value_types = Variant<Tuple<>>;
+
+  template <template <typename...> class Variant>
+  using error_types = Variant<std::exception_ptr>;
+
+  static constexpr bool sends_done = true;
+
+  explicit FiberSchedulerAtTask(FiberExecutor* fiber_executor_ptr, const std::chrono::steady_clock::time_point& tp) noexcept
+      : fiber_executor_ptr_(fiber_executor_ptr), tp_(tp) {}
+
+  template <typename Receiver>
+  FiberSchedulerAtOperationState<unifex::remove_cvref_t<Receiver>> connect(Receiver&& receiver) {
+    return FiberSchedulerAtOperationState<unifex::remove_cvref_t<Receiver>>(fiber_executor_ptr_, tp_, (Receiver &&) receiver);
+  }
+
+  FiberExecutor* fiber_executor_ptr_;
+  std::chrono::steady_clock::time_point tp_;
+};
+
 class FiberScheduler {
  public:
   explicit FiberScheduler(const std::shared_ptr<FiberExecutor>& fiber_executor_ptr) noexcept
@@ -60,6 +170,14 @@ class FiberScheduler {
 
   FiberTask schedule() const noexcept {
     return FiberTask(fiber_executor_ptr_.get());
+  }
+
+  FiberSchedulerAfterTask schedule_after(const std::chrono::steady_clock::duration& dt) const noexcept {
+    return FiberSchedulerAfterTask(fiber_executor_ptr_.get(), dt);
+  }
+
+  FiberSchedulerAtTask schedule_at(const std::chrono::steady_clock::time_point& tp) const noexcept {
+    return FiberSchedulerAtTask(fiber_executor_ptr_.get(), tp);
   }
 
   friend bool operator==(FiberScheduler a, FiberScheduler b) noexcept {

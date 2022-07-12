@@ -1,0 +1,4 @@
+add_subdirectory(asio_rpc_demo_protos)
+
+add_subdirectory(asio_rpc_demo_server)
+add_subdirectory(asio_rpc_demo_client)

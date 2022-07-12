@@ -15,17 +15,21 @@ struct AsioOperationState {
       : asio_executor_ptr_(asio_executor_ptr), receiver_((Receiver2 &&) r) {}
 
   void start() noexcept {
-    boost::asio::dispatch(*(asio_executor_ptr_->IO()), [receiver_ = std::move(receiver_)]() mutable {
-      try {
-        if (unifex::get_stop_token(receiver_).stop_requested()) {
-          unifex::set_done(std::move(receiver_));
-        } else {
-          unifex::set_value(std::move(receiver_));
+    try {
+      boost::asio::dispatch(*(asio_executor_ptr_->IO()), [receiver_ = std::move(receiver_)]() mutable {
+        try {
+          if (unifex::get_stop_token(receiver_).stop_requested()) {
+            unifex::set_done(std::move(receiver_));
+          } else {
+            unifex::set_value(std::move(receiver_));
+          }
+        } catch (...) {
+          unifex::set_error(std::move(receiver_), std::current_exception());
         }
-      } catch (...) {
-        unifex::set_error(std::move(receiver_), std::current_exception());
-      }
-    });
+      });
+    } catch (...) {
+      unifex::set_error(std::move(receiver_), std::current_exception());
+    }
   }
 
   Receiver receiver_;
@@ -61,24 +65,28 @@ struct AsioSchedulerAfterOperationState {
       : asio_executor_ptr_(asio_executor_ptr), dt_(dt), receiver_((Receiver2 &&) r) {}
 
   void start() noexcept {
-    std::shared_ptr<boost::asio::steady_timer> timer_ptr = std::make_shared<boost::asio::steady_timer>(*(asio_executor_ptr_->IO()), dt_);
-    timer_ptr->async_wait([timer_ptr, receiver_ = std::move(receiver_)](const boost::system::error_code& ec) mutable {
-      if (ec) {
-        std::ostringstream buffer;
-        buffer << "scheduler timer get error, " << ec;
-        unifex::set_error(std::move(receiver_), std::make_exception_ptr(std::runtime_error(buffer.str())));
-      }
-
-      try {
-        if (unifex::get_stop_token(receiver_).stop_requested()) {
-          unifex::set_done(std::move(receiver_));
-        } else {
-          unifex::set_value(std::move(receiver_));
+    try {
+      std::shared_ptr<boost::asio::steady_timer> timer_ptr = std::make_shared<boost::asio::steady_timer>(*(asio_executor_ptr_->IO()), dt_);
+      timer_ptr->async_wait([timer_ptr, receiver_ = std::move(receiver_)](const boost::system::error_code& ec) mutable {
+        if (ec) {
+          std::ostringstream buffer;
+          buffer << "scheduler timer get error, " << ec;
+          unifex::set_error(std::move(receiver_), std::make_exception_ptr(std::runtime_error(buffer.str())));
         }
-      } catch (...) {
-        unifex::set_error(std::move(receiver_), std::current_exception());
-      }
-    });
+
+        try {
+          if (unifex::get_stop_token(receiver_).stop_requested()) {
+            unifex::set_done(std::move(receiver_));
+          } else {
+            unifex::set_value(std::move(receiver_));
+          }
+        } catch (...) {
+          unifex::set_error(std::move(receiver_), std::current_exception());
+        }
+      });
+    } catch (...) {
+      unifex::set_error(std::move(receiver_), std::current_exception());
+    }
   }
 
   Receiver receiver_;
@@ -116,24 +124,28 @@ struct AsioSchedulerAtOperationState {
       : asio_executor_ptr_(asio_executor_ptr), tp_(tp), receiver_((Receiver2 &&) r) {}
 
   void start() noexcept {
-    std::shared_ptr<boost::asio::steady_timer> timer_ptr = std::make_shared<boost::asio::steady_timer>(*(asio_executor_ptr_->IO()), tp_);
-    timer_ptr->async_wait([timer_ptr, receiver_ = std::move(receiver_)](const boost::system::error_code& ec) mutable {
-      if (ec) {
-        std::ostringstream buffer;
-        buffer << "scheduler timer get error, " << ec;
-        unifex::set_error(std::move(receiver_), std::make_exception_ptr(std::runtime_error(buffer.str())));
-      }
-
-      try {
-        if (unifex::get_stop_token(receiver_).stop_requested()) {
-          unifex::set_done(std::move(receiver_));
-        } else {
-          unifex::set_value(std::move(receiver_));
+    try {
+      std::shared_ptr<boost::asio::steady_timer> timer_ptr = std::make_shared<boost::asio::steady_timer>(*(asio_executor_ptr_->IO()), tp_);
+      timer_ptr->async_wait([timer_ptr, receiver_ = std::move(receiver_)](const boost::system::error_code& ec) mutable {
+        if (ec) {
+          std::ostringstream buffer;
+          buffer << "scheduler timer get error, " << ec;
+          unifex::set_error(std::move(receiver_), std::make_exception_ptr(std::runtime_error(buffer.str())));
         }
-      } catch (...) {
-        unifex::set_error(std::move(receiver_), std::current_exception());
-      }
-    });
+
+        try {
+          if (unifex::get_stop_token(receiver_).stop_requested()) {
+            unifex::set_done(std::move(receiver_));
+          } else {
+            unifex::set_value(std::move(receiver_));
+          }
+        } catch (...) {
+          unifex::set_error(std::move(receiver_), std::current_exception());
+        }
+      });
+    } catch (...) {
+      unifex::set_error(std::move(receiver_), std::current_exception());
+    }
   }
 
   Receiver receiver_;

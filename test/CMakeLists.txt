@@ -7,7 +7,6 @@ add_subdirectory(testlib2)
 add_subdirectory(testprj)
 
 add_subdirectory(testytrpc)
-add_subdirectory(testytrpc2)
 
 add_subdirectory(testexecutor)
 add_subdirectory(testboostfiber)
