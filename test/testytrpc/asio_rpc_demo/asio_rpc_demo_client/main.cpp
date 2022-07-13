@@ -14,10 +14,6 @@ using namespace std;
 using namespace ytlib;
 
 int32_t main(int32_t argc, char** argv) {
-  DBG_PRINT("-------------------start test-------------------");
-
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
   AsioDebugTool::Ins().Reset();
 
   auto asio_sys_ptr = std::make_shared<AsioExecutor>(4);
@@ -30,7 +26,9 @@ int32_t main(int32_t argc, char** argv) {
   asio_sys_ptr->RegisterSvrFunc(std::function<void()>(),
                                 [cli_ptr] { cli_ptr->Stop(); });
 
-  boost::asio::co_spawn(
+  asio_sys_ptr->Start();
+
+  auto co_future = boost::asio::co_spawn(
       *(asio_sys_ptr->IO()),
       [cli_ptr]() -> boost::asio::awaitable<void> {
         uint32_t ct = 10;
@@ -53,15 +51,14 @@ int32_t main(int32_t argc, char** argv) {
         }
         co_return;
       },
-      boost::asio::detached);
+      boost::asio::use_future);
 
-  asio_sys_ptr->Start();
+  co_future.wait();
+
+  asio_sys_ptr->Stop();
   asio_sys_ptr->Join();
 
   DBG_PRINT("%s", AsioDebugTool::Ins().GetStatisticalResult().c_str());
 
-  google::protobuf::ShutdownProtobufLibrary();
-
-  DBG_PRINT("********************end test*******************");
   return 0;
 }

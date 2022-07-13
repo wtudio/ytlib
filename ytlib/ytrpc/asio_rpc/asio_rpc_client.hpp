@@ -1,3 +1,10 @@
+/**
+ * @file asio_rpc_client.hpp
+ * @brief 基于boost.asio的RPC客户端
+ * @note
+ * @author WT
+ * @date 2022-07-13
+ */
 #pragma once
 
 #include <atomic>
@@ -97,7 +104,7 @@ class AsioRpcClient : public std::enable_shared_from_this<AsioRpcClient> {
             if (!run_flag_) [[unlikely]]
               co_return;
 
-            if (!session_ptr_ || !session_ptr_->IsRunning()) [[unlikely]] {
+            if (!session_ptr_ || !session_ptr_->IsRunning()) {
               session_ptr_ = std::make_shared<AsioRpcClient::Session>(io_ptr_, session_cfg_ptr_);
               session_ptr_->Start();
             }
@@ -178,7 +185,8 @@ class AsioRpcClient : public std::enable_shared_from_this<AsioRpcClient> {
 
   class Session : public std::enable_shared_from_this<Session> {
    public:
-    Session(const std::shared_ptr<boost::asio::io_context>& io_ptr, const std::shared_ptr<const AsioRpcClient::SessionCfg>& session_cfg_ptr)
+    Session(const std::shared_ptr<boost::asio::io_context>& io_ptr,
+            const std::shared_ptr<const AsioRpcClient::SessionCfg>& session_cfg_ptr)
         : session_cfg_ptr_(session_cfg_ptr),
           session_socket_strand_(boost::asio::make_strand(*io_ptr)),
           sock_(session_socket_strand_),
@@ -309,9 +317,8 @@ class AsioRpcClient : public std::enable_shared_from_this<AsioRpcClient> {
                         // 接收pb包头+pb业务包
                         const uint32_t pb_msg_len = GetUint32FromBuf(&head_buf[4]);
 
-                        if (pb_msg_len > session_cfg_ptr_->max_recv_size) [[unlikely]] {
+                        if (pb_msg_len > session_cfg_ptr_->max_recv_size) [[unlikely]]
                           throw std::runtime_error("Msg too large.");
-                        }
 
                         std::vector<char> rsp_buf(pb_msg_len);
 

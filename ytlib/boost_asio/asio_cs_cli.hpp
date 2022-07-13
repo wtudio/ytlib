@@ -26,22 +26,22 @@ namespace ytlib {
  */
 class AsioCsClient : public std::enable_shared_from_this<AsioCsClient> {
  public:
-  using MsgHandleFunc = std::function<void(std::shared_ptr<boost::asio::streambuf>)>;
+  using MsgHandleFunc = std::function<void(const std::shared_ptr<boost::asio::streambuf>&)>;
 
   /**
    * @brief 配置
    *
    */
   struct Cfg {
-    boost::asio::ip::tcp::endpoint svr_ep;  // 服务端地址
-
-    std::chrono::steady_clock::duration timer_dt = std::chrono::seconds(60);  // 定时器间隔
+    boost::asio::ip::tcp::endpoint svr_ep;                                           // 服务端地址
+    std::chrono::steady_clock::duration heart_beat_time = std::chrono::seconds(60);  // 定时器间隔
+    uint32_t max_recv_size = 1024 * 1024 * 10;                                       // 包最大尺寸，最大10m
 
     /// 校验配置
     static Cfg Verify(const Cfg& verify_cfg) {
       Cfg cfg(verify_cfg);
 
-      if (cfg.timer_dt < std::chrono::milliseconds(100)) cfg.timer_dt = std::chrono::milliseconds(100);
+      if (cfg.heart_beat_time < std::chrono::milliseconds(100)) cfg.heart_beat_time = std::chrono::milliseconds(100);
 
       return cfg;
     }
@@ -53,12 +53,12 @@ class AsioCsClient : public std::enable_shared_from_this<AsioCsClient> {
    * @param io_ptr io_context智能指针
    * @param cfg 配置
    */
-  AsioCsClient(std::shared_ptr<boost::asio::io_context> io_ptr, const AsioCsClient::Cfg& cfg)
+  AsioCsClient(const std::shared_ptr<boost::asio::io_context>& io_ptr, const AsioCsClient::Cfg& cfg)
       : cfg_(AsioCsClient::Cfg::Verify(cfg)),
         io_ptr_(io_ptr),
         session_cfg_ptr_(std::make_shared<const AsioCsClient::SessionCfg>(cfg_)),
         mgr_strand_(boost::asio::make_strand(*io_ptr_)),
-        msg_handle_ptr_(std::make_shared<MsgHandleFunc>([](std::shared_ptr<boost::asio::streambuf>) {})) {}
+        msg_handle_ptr_(std::make_shared<MsgHandleFunc>([](const std::shared_ptr<boost::asio::streambuf>&) {})) {}
 
   ~AsioCsClient() {}
 
@@ -70,20 +70,31 @@ class AsioCsClient : public std::enable_shared_from_this<AsioCsClient> {
    *
    * @param msg_buf_ptr 消息内容
    */
-  void SendMsg(std::shared_ptr<boost::asio::streambuf> msg_buf_ptr) {
+  void SendMsg(const std::shared_ptr<boost::asio::streambuf>& msg_buf_ptr) {
+    if (!run_flag_) [[unlikely]]
+      return;
+
+    std::shared_ptr<AsioCsClient::Session> cur_session_ptr = session_ptr_;
+    if (cur_session_ptr && cur_session_ptr->IsRunning()) {
+      cur_session_ptr->SendMsg(msg_buf_ptr);
+      return;
+    }
+
+    // 当前session不能用，需要去新建session
     auto self = shared_from_this();
     boost::asio::dispatch(
         mgr_strand_,
         [this, self, msg_buf_ptr]() {
-          ASIO_DEBUG_HANDLE(cs_cli_send_msg_to_svr_co);
+          ASIO_DEBUG_HANDLE(cs_cli_send_msg_co);
 
           if (!run_flag_) [[unlikely]]
             return;
 
           if (!session_ptr_ || !session_ptr_->IsRunning()) {
-            session_ptr_ = std::make_shared<AsioCsClient::Session>(boost::asio::make_strand(*io_ptr_), session_cfg_ptr_, io_ptr_, msg_handle_ptr_);
+            session_ptr_ = std::make_shared<AsioCsClient::Session>(io_ptr_, session_cfg_ptr_, msg_handle_ptr_);
             session_ptr_->Start();
           }
+
           session_ptr_->SendMsg(msg_buf_ptr);
         });
   }
@@ -124,22 +135,23 @@ class AsioCsClient : public std::enable_shared_from_this<AsioCsClient> {
   struct SessionCfg {
     SessionCfg(const Cfg& cfg)
         : svr_ep(cfg.svr_ep),
-          timer_dt(cfg.timer_dt) {}
+          heart_beat_time(cfg.heart_beat_time),
+          max_recv_size(cfg.max_recv_size) {}
 
     boost::asio::ip::tcp::endpoint svr_ep;
-    std::chrono::steady_clock::duration timer_dt;
+    std::chrono::steady_clock::duration heart_beat_time;
+    uint32_t max_recv_size;
   };
 
   class Session : public std::enable_shared_from_this<Session> {
    public:
-    Session(boost::asio::strand<boost::asio::io_context::executor_type> session_strand,
-            std::shared_ptr<const AsioCsClient::SessionCfg> session_cfg_ptr,
-            std::shared_ptr<boost::asio::io_context> io_ptr,
-            std::shared_ptr<MsgHandleFunc> msg_handle_ptr)
+    Session(const std::shared_ptr<boost::asio::io_context>& io_ptr,
+            const std::shared_ptr<const AsioCsClient::SessionCfg>& session_cfg_ptr,
+            const std::shared_ptr<MsgHandleFunc>& msg_handle_ptr)
         : session_cfg_ptr_(session_cfg_ptr),
-          session_strand_(session_strand),
-          sock_(session_strand_),
-          sig_timer_(session_strand_),
+          session_socket_strand_(boost::asio::make_strand(*io_ptr)),
+          sock_(session_socket_strand_),
+          send_sig_timer_(session_socket_strand_),
           io_ptr_(io_ptr),
           msg_handle_ptr_(msg_handle_ptr) {}
 
@@ -148,14 +160,14 @@ class AsioCsClient : public std::enable_shared_from_this<AsioCsClient> {
     Session(const Session&) = delete;             ///< no copy
     Session& operator=(const Session&) = delete;  ///< no copy
 
-    void SendMsg(std::shared_ptr<boost::asio::streambuf> msg_buf_ptr) {
+    void SendMsg(const std::shared_ptr<boost::asio::streambuf>& msg_buf_ptr) {
       auto self = shared_from_this();
       boost::asio::dispatch(
-          session_strand_,
+          session_socket_strand_,
           [this, self, msg_buf_ptr]() {
-            ASIO_DEBUG_HANDLE(cs_cli_session_send_msg_to_svr_co);
+            ASIO_DEBUG_HANDLE(cs_cli_session_send_msg_co);
             data_list.emplace_back(msg_buf_ptr);
-            sig_timer_.cancel();
+            send_sig_timer_.cancel();
           });
     }
 
@@ -164,7 +176,7 @@ class AsioCsClient : public std::enable_shared_from_this<AsioCsClient> {
 
       // 启动协程
       boost::asio::co_spawn(
-          session_strand_,
+          session_socket_strand_,
           [this, self]() -> boost::asio::awaitable<void> {
             ASIO_DEBUG_HANDLE(cs_cli_session_start_co);
 
@@ -174,7 +186,7 @@ class AsioCsClient : public std::enable_shared_from_this<AsioCsClient> {
 
               // 发送协程
               boost::asio::co_spawn(
-                  session_strand_,
+                  session_socket_strand_,
                   [this, self]() -> boost::asio::awaitable<void> {
                     ASIO_DEBUG_HANDLE(cs_cli_session_send_co);
 
@@ -186,26 +198,27 @@ class AsioCsClient : public std::enable_shared_from_this<AsioCsClient> {
 
                           std::vector<char> head_buf(tmp_data_list.size() * HEAD_SIZE);
 
-                          std::list<boost::asio::const_buffer> data_buf_list;
+                          std::vector<boost::asio::const_buffer> data_buf_vec;
+                          data_buf_vec.reserve(tmp_data_list.size() * 2);
                           size_t ct = 0;
                           for (auto& itr : tmp_data_list) {
                             head_buf[ct * HEAD_SIZE] = HEAD_BYTE_1;
                             head_buf[ct * HEAD_SIZE + 1] = HEAD_BYTE_2;
                             SetBufFromUint32(&head_buf[ct * HEAD_SIZE + 2], static_cast<uint32_t>(itr->size()));
-                            data_buf_list.emplace_back(boost::asio::const_buffer(&head_buf[ct * HEAD_SIZE], HEAD_SIZE));
+                            data_buf_vec.emplace_back(boost::asio::const_buffer(&head_buf[ct * HEAD_SIZE], HEAD_SIZE));
                             ++ct;
 
-                            data_buf_list.emplace_back(itr->data());
+                            data_buf_vec.emplace_back(itr->data());
                           }
 
-                          size_t write_data_size = co_await boost::asio::async_write(sock_, data_buf_list, boost::asio::use_awaitable);
+                          size_t write_data_size = co_await boost::asio::async_write(sock_, data_buf_vec, boost::asio::use_awaitable);
                           DBG_PRINT("cs cli session async write %llu bytes", write_data_size);
                         }
 
                         bool heartbeat_flag = false;
                         try {
-                          sig_timer_.expires_after(session_cfg_ptr_->timer_dt);
-                          co_await sig_timer_.async_wait(boost::asio::use_awaitable);
+                          send_sig_timer_.expires_after(session_cfg_ptr_->heart_beat_time);
+                          co_await send_sig_timer_.async_wait(boost::asio::use_awaitable);
                           heartbeat_flag = true;
                         } catch (const std::exception& e) {
                           DBG_PRINT("cs cli session timer canceled, exception info: %s", e.what());
@@ -214,8 +227,9 @@ class AsioCsClient : public std::enable_shared_from_this<AsioCsClient> {
                         if (heartbeat_flag) {
                           // 心跳包仅用来保活，不传输业务/管理信息
                           const static char heartbeat_pkg[HEAD_SIZE] = {HEAD_BYTE_1, HEAD_BYTE_2, 0, 0, 0, 0};
+                          const static boost::asio::const_buffer heartbeat_buf(heartbeat_pkg, HEAD_SIZE);
 
-                          size_t write_data_size = co_await boost::asio::async_write(sock_, boost::asio::const_buffer(heartbeat_pkg, HEAD_SIZE), boost::asio::use_awaitable);
+                          size_t write_data_size = co_await boost::asio::async_write(sock_, heartbeat_buf, boost::asio::use_awaitable);
                           DBG_PRINT("cs cli session async write %llu bytes for heartbeat", write_data_size);
                         }
                       }
@@ -231,30 +245,29 @@ class AsioCsClient : public std::enable_shared_from_this<AsioCsClient> {
 
               // 接收协程
               boost::asio::co_spawn(
-                  session_strand_,
+                  session_socket_strand_,
                   [this, self]() -> boost::asio::awaitable<void> {
                     ASIO_DEBUG_HANDLE(cs_cli_session_recv_co);
 
                     try {
                       std::vector<char> head_buf(HEAD_SIZE);
+                      boost::asio::mutable_buffer asio_head_buf(head_buf.data(), HEAD_SIZE);
                       while (run_flag_) {
-                        size_t read_data_size = co_await boost::asio::async_read(sock_, boost::asio::buffer(head_buf, HEAD_SIZE), boost::asio::transfer_exactly(HEAD_SIZE), boost::asio::use_awaitable);
+                        size_t read_data_size = co_await boost::asio::async_read(sock_, asio_head_buf, boost::asio::transfer_exactly(HEAD_SIZE), boost::asio::use_awaitable);
                         DBG_PRINT("cs cli session async read %llu bytes for head", read_data_size);
 
                         if (read_data_size != HEAD_SIZE || head_buf[0] != HEAD_BYTE_1 || head_buf[1] != HEAD_BYTE_2) [[unlikely]]
                           throw std::runtime_error("Get an invalid head.");
 
                         uint32_t msg_len = GetUint32FromBuf(&head_buf[2]);
-                        if (msg_len == 0) [[unlikely]]
-                          continue;
+
+                        if (msg_len > session_cfg_ptr_->max_recv_size) [[unlikely]]
+                          throw std::runtime_error("Msg too large.");
 
                         std::shared_ptr<boost::asio::streambuf> msg_buf = std::make_shared<boost::asio::streambuf>();
 
                         read_data_size = co_await boost::asio::async_read(sock_, msg_buf->prepare(msg_len), boost::asio::transfer_exactly(msg_len), boost::asio::use_awaitable);
                         DBG_PRINT("cs cli session async read %llu bytes", read_data_size);
-
-                        if (read_data_size != msg_len) [[unlikely]]
-                          throw std::runtime_error("Get an invalid pkg.");
 
                         msg_buf->commit(msg_len);
                         boost::asio::post(*io_ptr_, std::bind(*msg_handle_ptr_, msg_buf));
@@ -284,7 +297,7 @@ class AsioCsClient : public std::enable_shared_from_this<AsioCsClient> {
 
       auto self = shared_from_this();
       boost::asio::dispatch(
-          session_strand_,
+          session_socket_strand_,
           [this, self]() {
             ASIO_DEBUG_HANDLE(cs_cli_session_stop_co);
 
@@ -293,7 +306,7 @@ class AsioCsClient : public std::enable_shared_from_this<AsioCsClient> {
               try {
                 switch (stop_step) {
                   case 1:
-                    sig_timer_.cancel();
+                    send_sig_timer_.cancel();
                     ++stop_step;
                   case 2:
                     sock_.shutdown(boost::asio::ip::tcp::socket::shutdown_both);
@@ -324,11 +337,12 @@ class AsioCsClient : public std::enable_shared_from_this<AsioCsClient> {
    private:
     std::shared_ptr<const AsioCsClient::SessionCfg> session_cfg_ptr_;
     std::atomic_bool run_flag_ = true;
-    boost::asio::strand<boost::asio::io_context::executor_type> session_strand_;
-    boost::asio::ip::tcp::socket sock_;
-    boost::asio::steady_timer sig_timer_;
 
+    boost::asio::strand<boost::asio::io_context::executor_type> session_socket_strand_;
+    boost::asio::ip::tcp::socket sock_;
+    boost::asio::steady_timer send_sig_timer_;
     std::list<std::shared_ptr<boost::asio::streambuf> > data_list;
+
     std::shared_ptr<boost::asio::io_context> io_ptr_;
     std::shared_ptr<MsgHandleFunc> msg_handle_ptr_;
   };
@@ -337,8 +351,8 @@ class AsioCsClient : public std::enable_shared_from_this<AsioCsClient> {
   const AsioCsClient::Cfg cfg_;
   std::atomic_bool run_flag_ = true;
   std::shared_ptr<boost::asio::io_context> io_ptr_;
-
   std::shared_ptr<const AsioCsClient::SessionCfg> session_cfg_ptr_;
+
   boost::asio::strand<boost::asio::io_context::executor_type> mgr_strand_;
   std::shared_ptr<AsioCsClient::Session> session_ptr_;
 

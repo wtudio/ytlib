@@ -16,8 +16,6 @@ using namespace std;
 using namespace ytlib;
 
 int32_t main(int32_t argc, char** argv) {
-  DBG_PRINT("-------------------start test-------------------");
-
   AsioDebugTool::Ins().Reset();
 
   auto asio_sys_ptr = std::make_shared<AsioExecutor>(8);
@@ -30,9 +28,11 @@ int32_t main(int32_t argc, char** argv) {
   asio_sys_ptr->RegisterSvrFunc(std::function<void()>(),
                                 [cli_ptr] { cli_ptr->Stop(); });
 
+  asio_sys_ptr->Start();
+
   auto co_future = boost::asio::co_spawn(
       *(asio_sys_ptr->IO()),
-      [&cli_ptr, &asio_sys_ptr]() -> boost::asio::awaitable<void> {
+      [cli_ptr, asio_sys_ptr]() -> boost::asio::awaitable<void> {
         auto proxy_ptr = std::make_shared<trpc::test::helloworld::GreeterProxy>(cli_ptr);
 
         const uint32_t concurrency_num = 1000;
@@ -89,8 +89,6 @@ int32_t main(int32_t argc, char** argv) {
       },
       boost::asio::use_future);
 
-  asio_sys_ptr->Start();
-
   co_future.wait();
 
   asio_sys_ptr->Stop();
@@ -98,6 +96,5 @@ int32_t main(int32_t argc, char** argv) {
 
   DBG_PRINT("%s", AsioDebugTool::Ins().GetStatisticalResult().c_str());
 
-  DBG_PRINT("********************end test*******************");
   return 0;
 }

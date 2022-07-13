@@ -21,8 +21,6 @@ class GreeterImpl : public trpc::test::helloworld::Greeter {
 };
 
 int32_t main(int32_t argc, char** argv) {
-  DBG_PRINT("-------------------start test-------------------");
-
   AsioDebugTool::Ins().Reset();
 
   auto asio_sys_ptr = std::make_shared<AsioExecutor>(8);
@@ -30,6 +28,7 @@ int32_t main(int32_t argc, char** argv) {
 
   ytrpc::AsioRpcServer::Cfg cfg;
   auto svr_ptr = std::make_shared<ytrpc::AsioRpcServer>(asio_sys_ptr->IO(), cfg);
+
   svr_ptr->RegisterService(std::make_shared<GreeterImpl>());
 
   asio_sys_ptr->RegisterSvrFunc([svr_ptr] { svr_ptr->Start(); },
@@ -40,6 +39,5 @@ int32_t main(int32_t argc, char** argv) {
 
   DBG_PRINT("%s", AsioDebugTool::Ins().GetStatisticalResult().c_str());
 
-  DBG_PRINT("********************end test*******************");
   return 0;
 }

@@ -28,10 +28,6 @@ class DemoServiceImpl : public demo::DemoService {
 };
 
 int32_t main(int32_t argc, char** argv) {
-  DBG_PRINT("-------------------start test-------------------");
-
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
   AsioDebugTool::Ins().Reset();
 
   auto asio_sys_ptr = std::make_shared<AsioExecutor>(4);
@@ -39,8 +35,8 @@ int32_t main(int32_t argc, char** argv) {
 
   ytrpc::AsioRpcServer::Cfg cfg;
   auto svr_ptr = std::make_shared<ytrpc::AsioRpcServer>(asio_sys_ptr->IO(), cfg);
-  auto demo_service_impl = std::make_shared<DemoServiceImpl>();
-  svr_ptr->RegisterService(demo_service_impl);
+
+  svr_ptr->RegisterService(std::make_shared<DemoServiceImpl>());
 
   asio_sys_ptr->RegisterSvrFunc([svr_ptr] { svr_ptr->Start(); },
                                 [svr_ptr] { svr_ptr->Stop(); });
@@ -50,8 +46,5 @@ int32_t main(int32_t argc, char** argv) {
 
   DBG_PRINT("%s", AsioDebugTool::Ins().GetStatisticalResult().c_str());
 
-  google::protobuf::ShutdownProtobufLibrary();
-
-  DBG_PRINT("********************end test*******************");
   return 0;
 }

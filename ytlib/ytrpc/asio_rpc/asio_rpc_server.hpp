@@ -1,3 +1,10 @@
+/**
+ * @file asio_rpc_server.hpp
+ * @brief 基于boost.asio的RPC服务端
+ * @note
+ * @author WT
+ * @date 2022-07-13
+ */
 #pragma once
 
 #include <concepts>
@@ -70,7 +77,7 @@ class AsioRpcServer : public std::enable_shared_from_this<AsioRpcServer> {
     size_t max_session_num = 1000000;                                                                          // 最大连接数
     std::chrono::steady_clock::duration mgr_timer_dt = std::chrono::seconds(10);                               // 管理协程定时器间隔
     std::chrono::steady_clock::duration max_no_data_duration = std::chrono::seconds(300);                      // 最长无数据时间
-    uint32_t max_recv_size = 1024 * 1024 * 10;                                                                 // 回包最大尺寸，最大10m
+    uint32_t max_recv_size = 1024 * 1024 * 10;                                                                 // 包最大尺寸，最大10m
 
     /// 校验配置
     static Cfg Verify(const Cfg& verify_cfg) {
@@ -161,6 +168,7 @@ class AsioRpcServer : public std::enable_shared_from_this<AsioRpcServer> {
         mgr_strand_,
         [this, self]() -> boost::asio::awaitable<void> {
           ASIO_DEBUG_HANDLE(rpc_svr_timer_co);
+
           while (run_flag_) {
             try {
               mgr_timer_.expires_after(cfg_.mgr_timer_dt);
@@ -538,7 +546,7 @@ class AsioRpcServer : public std::enable_shared_from_this<AsioRpcServer> {
     boost::asio::strand<boost::asio::io_context::executor_type> session_mgr_strand_;
     boost::asio::steady_timer timer_;
 
-    bool tick_has_data_ = false;
+    std::atomic_bool tick_has_data_ = false;
     BufferVec send_buffer_vec_;
 
     const std::shared_ptr<const std::unordered_map<std::string, AsioRpcService::FuncAdapter>> func_map_ptr_;
