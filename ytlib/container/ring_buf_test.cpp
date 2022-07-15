@@ -3,7 +3,7 @@
 #include "ring_buf.hpp"
 
 // todo 未完成
-namespace ytlib {
+using namespace ytlib;
 
 TEST(RING_BUF_TEST, BASE_TEST) {
   class TestClass {
@@ -119,5 +119,3 @@ TEST(RING_BUF_TEST, ARRAY_TEST) {
   ASSERT_EQ(ring.Size(), 0);
   ASSERT_EQ(ring.UnusedCapacity(), kBufSize - 1);
 }
-
-}  // namespace ytlib

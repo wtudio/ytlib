@@ -22,7 +22,7 @@ TEST(BOOST_ASIO_TEST, NET_LOG) {
   // cli
   AsioNetLogClient::Cfg net_log_client_cfg;
   net_log_client_cfg.svr_ep = boost::asio::ip::tcp::endpoint{boost::asio::ip::address_v4({127, 0, 0, 1}), 52684};
-  net_log_client_cfg.timer_dt = std::chrono::milliseconds(100);
+  net_log_client_cfg.heart_beat_time = std::chrono::milliseconds(100);
 
   auto net_log_cli_ptr = std::make_shared<AsioNetLogClient>(cli_sys_ptr->IO(), net_log_client_cfg);
   cli_sys_ptr->RegisterSvrFunc(std::function<void()>(),
@@ -69,7 +69,7 @@ TEST(BOOST_ASIO_TEST, NET_LOG) {
   // svr2
   thread t_svr2([svr2_sys_ptr] {
     AsioNetLogServer::Cfg cfg;
-    cfg.port = 52684;
+    cfg.ep = boost::asio::ip::tcp::endpoint{boost::asio::ip::address_v4(), 52684};
     cfg.log_path = "./log2";
     cfg.timer_dt = std::chrono::milliseconds(100);
     cfg.max_no_data_duration = std::chrono::seconds(10);

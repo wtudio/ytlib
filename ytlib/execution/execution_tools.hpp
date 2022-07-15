@@ -87,10 +87,10 @@ void StartDetached(Sender &&sender) {
   });
 }
 
-template <typename Receiver, typename... Values>
+template <typename Receiver, typename... Results>
 requires unifex::receiver<Receiver>
 struct AsyncWrapperOperationState {
-  using CallBack = std::function<void(Values &&...)>;
+  using CallBack = std::function<void(Results &&...)>;
   using AsyncFunc = std::function<void(CallBack)>;
 
   template <typename Receiver2>
@@ -100,12 +100,12 @@ struct AsyncWrapperOperationState {
 
   void start() noexcept {
     try {
-      async_func_([receiver = receiver_](Values &&...values) {
+      async_func_([receiver = receiver_](Results &&...values) {
         try {
           if (unifex::get_stop_token(*receiver).stop_requested()) {
             unifex::set_done(std::move(*receiver));
           } else {
-            unifex::set_value(std::move(*receiver), (Values &&) values...);
+            unifex::set_value(std::move(*receiver), (Results &&) values...);
           }
         } catch (...) {
           unifex::set_error(std::move(*receiver), std::current_exception());
@@ -123,16 +123,16 @@ struct AsyncWrapperOperationState {
 /**
  * @brief 将异步回调型函数封装成一个Sender
  *
- * @tparam Values 结果的类型，也就是回调函数的参数类型
+ * @tparam Results 结果的类型，也就是回调函数的参数类型
  */
-template <typename... Values>
+template <typename... Results>
 class AsyncWrapper {
  public:
-  using CallBack = std::function<void(Values &&...)>;
+  using CallBack = std::function<void(Results &&...)>;
   using AsyncFunc = std::function<void(CallBack)>;
 
   template <template <typename...> class Variant, template <typename...> class Tuple>
-  using value_types = Variant<Tuple<Values...>>;
+  using value_types = Variant<Tuple<Results...>>;
 
   template <template <typename...> class Variant>
   using error_types = Variant<std::exception_ptr>;
@@ -143,8 +143,8 @@ class AsyncWrapper {
       : async_func_(std::move(async_func)) {}
 
   template <typename Receiver>
-  AsyncWrapperOperationState<unifex::remove_cvref_t<Receiver>, Values...> connect(Receiver &&receiver) {
-    return AsyncWrapperOperationState<unifex::remove_cvref_t<Receiver>, Values...>((AsyncFunc &&) async_func_, (Receiver &&) receiver);
+  AsyncWrapperOperationState<unifex::remove_cvref_t<Receiver>, Results...> connect(Receiver &&receiver) {
+    return AsyncWrapperOperationState<unifex::remove_cvref_t<Receiver>, Results...>((AsyncFunc &&) async_func_, (Receiver &&) receiver);
   }
 
  private:

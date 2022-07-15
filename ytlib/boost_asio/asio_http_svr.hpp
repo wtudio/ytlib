@@ -17,6 +17,7 @@
 #include <boost/beast.hpp>
 
 #include "ytlib/boost_asio/asio_debug_tools.hpp"
+#include "ytlib/boost_asio/net_util.hpp"
 #include "ytlib/misc/misc_macro.h"
 #include "ytlib/string/http_dispatcher.hpp"
 #include "ytlib/string/url_parser.hpp"
@@ -45,7 +46,7 @@ class AsioHttpServer : public std::enable_shared_from_this<AsioHttpServer> {
   using HttpRsp = boost::beast::http::response<RspBodyType>;
 
   template <typename RspBodyType>
-  using HttpHandle = std::function<boost::asio::awaitable<AsioHttpServer::Status>(const HttpReq&, HttpRsp<RspBodyType>&, std::chrono::steady_clock::duration)>;
+  using HttpHandle = std::function<boost::asio::awaitable<AsioHttpServer::Status>(const HttpReq&, HttpRsp<RspBodyType>&, const std::chrono::steady_clock::duration&)>;
 
  public:
   /**
@@ -53,20 +54,15 @@ class AsioHttpServer : public std::enable_shared_from_this<AsioHttpServer> {
    *
    */
   struct Cfg {
-    uint16_t port = 50080;  // 监听的端口
-
-    std::string doc_root = ".";  // http页面根目录
-
-    size_t max_session_num = 1000000;                                            // 最大连接数
-    std::chrono::steady_clock::duration mgr_timer_dt = std::chrono::seconds(5);  // 管理协程定时器间隔
-
-    std::chrono::steady_clock::duration max_no_data_duration = std::chrono::seconds(60);  // 最长无数据时间
+    boost::asio::ip::tcp::endpoint ep = boost::asio::ip::tcp::endpoint{boost::asio::ip::address_v4(), 50080};  // 监听的地址
+    std::string doc_root = ".";                                                                                // http页面根目录
+    size_t max_session_num = 1000000;                                                                          // 最大连接数
+    std::chrono::steady_clock::duration mgr_timer_dt = std::chrono::seconds(5);                                // 管理协程定时器间隔
+    std::chrono::steady_clock::duration max_no_data_duration = std::chrono::seconds(60);                       // 最长无数据时间
 
     /// 校验配置
     static Cfg Verify(const Cfg& verify_cfg) {
       Cfg cfg(verify_cfg);
-
-      if (cfg.port > 65535) cfg.port = 50080;
 
       if (cfg.max_session_num < 1) cfg.max_session_num = 1;
       if (cfg.max_session_num > boost::asio::ip::tcp::acceptor::max_listen_connections)
@@ -85,15 +81,15 @@ class AsioHttpServer : public std::enable_shared_from_this<AsioHttpServer> {
    * @param io_ptr io_context
    * @param cfg 配置
    */
-  AsioHttpServer(std::shared_ptr<boost::asio::io_context> io_ptr, const AsioHttpServer::Cfg& cfg)
+  AsioHttpServer(const std::shared_ptr<boost::asio::io_context>& io_ptr, const AsioHttpServer::Cfg& cfg)
       : cfg_(AsioHttpServer::Cfg::Verify(cfg)),
         io_ptr_(io_ptr),
         session_cfg_ptr_(std::make_shared<const AsioHttpServer::SessionCfg>(cfg_)),
         mgr_strand_(boost::asio::make_strand(*io_ptr_)),
-        acceptor_(mgr_strand_, boost::asio::ip::tcp::endpoint{boost::asio::ip::address_v4(), cfg_.port}),
+        acceptor_(mgr_strand_, cfg_.ep),
         acceptor_timer_(mgr_strand_),
         mgr_timer_(mgr_strand_),
-        http_dispatcher_ptr_(std::make_shared<HttpDispatcher<boost::asio::awaitable<void>(std::shared_ptr<AsioHttpServer::Session>, const HttpReq&)>>()) {}
+        http_dispatcher_ptr_(std::make_shared<HttpDispatcher<boost::asio::awaitable<void>(const std::shared_ptr<AsioHttpServer::Session>&, const HttpReq&)>>()) {}
 
   ~AsioHttpServer() {}
 
@@ -105,6 +101,8 @@ class AsioHttpServer : public std::enable_shared_from_this<AsioHttpServer> {
    *
    */
   void Start() {
+    if (std::atomic_exchange(&start_flag_, true)) return;
+
     auto self = this->shared_from_this();
     boost::asio::co_spawn(
         mgr_strand_,
@@ -120,7 +118,7 @@ class AsioHttpServer : public std::enable_shared_from_this<AsioHttpServer> {
                 continue;
               }
 
-              auto session_ptr = std::make_shared<AsioHttpServer::Session>(boost::asio::make_strand(*io_ptr_), session_cfg_ptr_, http_dispatcher_ptr_);
+              auto session_ptr = std::make_shared<AsioHttpServer::Session>(io_ptr_, session_cfg_ptr_, http_dispatcher_ptr_);
               co_await acceptor_.async_accept(session_ptr->Socket(), boost::asio::use_awaitable);
               session_ptr->Start();
 
@@ -141,6 +139,7 @@ class AsioHttpServer : public std::enable_shared_from_this<AsioHttpServer> {
         mgr_strand_,
         [this, self]() -> boost::asio::awaitable<void> {
           ASIO_DEBUG_HANDLE(http_svr_timer_co);
+
           while (run_flag_) {
             try {
               mgr_timer_.expires_after(cfg_.mgr_timer_dt);
@@ -238,6 +237,15 @@ class AsioHttpServer : public std::enable_shared_from_this<AsioHttpServer> {
     http_dispatcher_ptr_->RegisterHttpHandle(pattern, Session::GenHttpHandle(std::move(h)));
   }
 
+  /**
+   * @brief 获取配置
+   *
+   * @return const AsioHttpServer::Cfg&
+   */
+  const AsioHttpServer::Cfg& GetCfg() const {
+    return cfg_;
+  }
+
  private:
   struct SessionCfg {
     SessionCfg(const Cfg& cfg)
@@ -245,19 +253,20 @@ class AsioHttpServer : public std::enable_shared_from_this<AsioHttpServer> {
           max_no_data_duration(cfg.max_no_data_duration) {}
 
     std::string doc_root;
-
     std::chrono::steady_clock::duration max_no_data_duration;
   };
 
   class Session : public std::enable_shared_from_this<Session> {
    public:
-    Session(boost::asio::strand<boost::asio::io_context::executor_type> session_strand,
-            std::shared_ptr<const AsioHttpServer::SessionCfg> session_cfg_ptr,
-            std::shared_ptr<HttpDispatcher<boost::asio::awaitable<void>(std::shared_ptr<AsioHttpServer::Session>, const HttpReq&)>> http_dispatcher_ptr)
+    Session(const std::shared_ptr<boost::asio::io_context>& io_ptr,
+            const std::shared_ptr<const AsioHttpServer::SessionCfg>& session_cfg_ptr,
+            const std::shared_ptr<HttpDispatcher<boost::asio::awaitable<void>(const std::shared_ptr<AsioHttpServer::Session>&, const HttpReq&)>>& http_dispatcher_ptr)
         : session_cfg_ptr_(session_cfg_ptr),
-          session_strand_(session_strand),
-          stream_(session_strand_),
-          timer_(session_strand_),
+          io_ptr_(io_ptr),
+          session_socket_strand_(boost::asio::make_strand(*io_ptr)),
+          stream_(session_socket_strand_),
+          session_mgr_strand_(boost::asio::make_strand(*io_ptr)),
+          timer_(session_socket_strand_),
           http_dispatcher_ptr_(http_dispatcher_ptr) {}
 
     ~Session() {}
@@ -266,13 +275,11 @@ class AsioHttpServer : public std::enable_shared_from_this<AsioHttpServer> {
     Session& operator=(const Session&) = delete;  ///< no copy
 
     void Start() {
-      const boost::asio::ip::tcp::endpoint& ep = stream_.socket().remote_endpoint();
-
       auto self = this->shared_from_this();
 
       // 请求处理协程
       boost::asio::co_spawn(
-          session_strand_,
+          session_socket_strand_,
           [this, self]() -> boost::asio::awaitable<void> {
             ASIO_DEBUG_HANDLE(http_svr_session_recv_co);
 
@@ -388,7 +395,7 @@ class AsioHttpServer : public std::enable_shared_from_this<AsioHttpServer> {
 
       // 定时器协程
       boost::asio::co_spawn(
-          session_strand_,
+          session_mgr_strand_,
           [this, self]() -> boost::asio::awaitable<void> {
             ASIO_DEBUG_HANDLE(http_svr_session_timer_co);
 
@@ -400,7 +407,9 @@ class AsioHttpServer : public std::enable_shared_from_this<AsioHttpServer> {
                 if (tick_has_data_) {
                   tick_has_data_ = false;
                 } else {
-                  DBG_PRINT("http svr session exit due to timeout(%llums), addr %s.", std::chrono::duration_cast<std::chrono::milliseconds>(session_cfg_ptr_->max_no_data_duration).count(), TcpEp2Str(stream_.socket().remote_endpoint()).c_str());
+                  DBG_PRINT("http svr session exit due to timeout(%llums), addr %s.",
+                            std::chrono::duration_cast<std::chrono::milliseconds>(session_cfg_ptr_->max_no_data_duration).count(),
+                            TcpEp2Str(stream_.socket().remote_endpoint()).c_str());
                   break;
                 }
               }
@@ -420,7 +429,7 @@ class AsioHttpServer : public std::enable_shared_from_this<AsioHttpServer> {
 
       auto self = this->shared_from_this();
       boost::asio::dispatch(
-          session_strand_,
+          session_socket_strand_,
           [this, self]() {
             ASIO_DEBUG_HANDLE(http_svr_session_stop_co);
 
@@ -429,27 +438,24 @@ class AsioHttpServer : public std::enable_shared_from_this<AsioHttpServer> {
               try {
                 switch (stop_step) {
                   case 1:
-                    timer_.cancel();
-                    ++stop_step;
-                  case 2:
                     stream_.socket().shutdown(boost::asio::ip::tcp::socket::shutdown_both);
                     ++stop_step;
-                  case 3:
+                  case 2:
                     stream_.socket().cancel();
                     ++stop_step;
-                  case 4:
+                  case 3:
                     stream_.socket().close();
                     ++stop_step;
-                  case 5:
+                  case 4:
                     stream_.socket().release();
                     ++stop_step;
-                  case 6:
+                  case 5:
                     stream_.cancel();
                     ++stop_step;
-                  case 7:
+                  case 6:
                     stream_.close();
                     ++stop_step;
-                  case 8:
+                  case 7:
                     stream_.release_socket();
                     ++stop_step;
                   default:
@@ -462,6 +468,29 @@ class AsioHttpServer : public std::enable_shared_from_this<AsioHttpServer> {
               }
             }
           });
+
+      boost::asio::dispatch(
+          session_mgr_strand_,
+          [this, self]() {
+            ASIO_DEBUG_HANDLE(http_svr_session_mgr_stop_co);
+
+            uint32_t stop_step = 1;
+            while (stop_step) {
+              try {
+                switch (stop_step) {
+                  case 1:
+                    timer_.cancel();
+                    ++stop_step;
+                  default:
+                    stop_step = 0;
+                    break;
+                }
+              } catch (const std::exception& e) {
+                DBG_PRINT("http svr session mgr stop get exception at step %u, exception info: %s", stop_step, e.what());
+                ++stop_step;
+              }
+            }
+          });
     }
 
     boost::asio::ip::tcp::socket& Socket() { return stream_.socket(); }
@@ -469,8 +498,8 @@ class AsioHttpServer : public std::enable_shared_from_this<AsioHttpServer> {
     const std::atomic_bool& IsRunning() { return run_flag_; }
 
     template <typename RspBodyType = boost::beast::http::string_body>
-    static std::function<boost::asio::awaitable<void>(std::shared_ptr<Session>, const HttpReq&)> GenHttpHandle(HttpHandle<RspBodyType>&& handle) {
-      return [h = std::move(handle)](std::shared_ptr<Session> session_ptr, const HttpReq& req) -> boost::asio::awaitable<void> {
+    static std::function<boost::asio::awaitable<void>(const std::shared_ptr<Session>&, const HttpReq&)> GenHttpHandle(HttpHandle<RspBodyType>&& handle) {
+      return [handle{std::move(handle)}](const std::shared_ptr<Session>& session_ptr, const HttpReq& req) -> boost::asio::awaitable<void> {
         boost::beast::http::response<RspBodyType> handle_rsp;
         Status handle_status;
 
@@ -478,7 +507,13 @@ class AsioHttpServer : public std::enable_shared_from_this<AsioHttpServer> {
 
         std::string err_info;
         try {
-          handle_status = co_await h(req, handle_rsp, handle_timeout);
+          handle_status = co_await boost::asio::co_spawn(
+              *(session_ptr->io_ptr_),
+              [&]() -> boost::asio::awaitable<AsioHttpServer::Status> {
+                return handle(req, handle_rsp, handle_timeout);
+              },
+              boost::asio::use_awaitable);
+
           if (handle_status != Status::OK)
             err_info = "handle failed, status: " + std::to_string(static_cast<uint8_t>(handle_status));
         } catch (const std::exception& e) {
@@ -612,17 +647,22 @@ class AsioHttpServer : public std::enable_shared_from_this<AsioHttpServer> {
    private:
     std::shared_ptr<const AsioHttpServer::SessionCfg> session_cfg_ptr_;
     std::atomic_bool run_flag_ = true;
-    boost::asio::strand<boost::asio::io_context::executor_type> session_strand_;
+    std::shared_ptr<boost::asio::io_context> io_ptr_;
+
+    boost::asio::strand<boost::asio::io_context::executor_type> session_socket_strand_;
     boost::beast::tcp_stream stream_;
+
+    boost::asio::strand<boost::asio::io_context::executor_type> session_mgr_strand_;
     boost::asio::steady_timer timer_;
 
-    std::shared_ptr<HttpDispatcher<boost::asio::awaitable<void>(std::shared_ptr<AsioHttpServer::Session>, const HttpReq&)>> http_dispatcher_ptr_;
+    std::atomic_bool tick_has_data_ = false;
+    std::shared_ptr<HttpDispatcher<boost::asio::awaitable<void>(const std::shared_ptr<AsioHttpServer::Session>&, const HttpReq&)>> http_dispatcher_ptr_;
     bool close_connect_flag_ = false;
-    bool tick_has_data_ = false;
   };
 
  private:
   const AsioHttpServer::Cfg cfg_;
+  std::atomic_bool start_flag_ = false;
   std::atomic_bool run_flag_ = true;
   std::shared_ptr<boost::asio::io_context> io_ptr_;
 
@@ -633,7 +673,7 @@ class AsioHttpServer : public std::enable_shared_from_this<AsioHttpServer> {
   boost::asio::steady_timer mgr_timer_;                                     // 管理session池的定时器
   std::list<std::shared_ptr<AsioHttpServer::Session>> session_ptr_list_;    // session池
 
-  std::shared_ptr<HttpDispatcher<boost::asio::awaitable<void>(std::shared_ptr<AsioHttpServer::Session>, const HttpReq&)>> http_dispatcher_ptr_;
+  std::shared_ptr<HttpDispatcher<boost::asio::awaitable<void>(const std::shared_ptr<AsioHttpServer::Session>&, const HttpReq&)>> http_dispatcher_ptr_;
 };
 
 }  // namespace ytlib

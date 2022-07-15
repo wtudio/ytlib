@@ -147,6 +147,15 @@ class AsioRpcClient : public std::enable_shared_from_this<AsioRpcClient> {
         });
   }
 
+  /**
+   * @brief 获取配置
+   *
+   * @return const AsioRpcClient::Cfg&
+   */
+  const AsioRpcClient::Cfg& GetCfg() const {
+    return cfg_;
+  }
+
  private:
   // 包头结构：| 2byte magicnum | 2byte headlen | 4byte msglen |
   static const size_t HEAD_SIZE = 8;

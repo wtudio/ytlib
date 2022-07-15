@@ -219,6 +219,15 @@ class AsioCsServer : public std::enable_shared_from_this<AsioCsServer> {
         });
   }
 
+  /**
+   * @brief 获取配置
+   *
+   * @return const AsioCsServer::Cfg&
+   */
+  const AsioCsServer::Cfg& GetCfg() const {
+    return cfg_;
+  }
+
  private:
   // 包头结构：| 2byte magicnum | 4byte msglen |
   static const size_t HEAD_SIZE = 6;
@@ -253,7 +262,7 @@ class AsioCsServer : public std::enable_shared_from_this<AsioCsServer> {
     Session(const Session&) = delete;             ///< no copy
     Session& operator=(const Session&) = delete;  ///< no copy
 
-    void SendMsg(std::shared_ptr<boost::asio::streambuf> msg_buf_ptr) {
+    void SendMsg(const std::shared_ptr<boost::asio::streambuf>& msg_buf_ptr) {
       auto self = shared_from_this();
       boost::asio::dispatch(
           session_socket_strand_,
@@ -371,7 +380,9 @@ class AsioCsServer : public std::enable_shared_from_this<AsioCsServer> {
                 if (tick_has_data_) {
                   tick_has_data_ = false;
                 } else {
-                  DBG_PRINT("cs svr session exit due to timeout(%llums), addr %s.", std::chrono::duration_cast<std::chrono::milliseconds>(session_cfg_ptr_->max_no_data_duration).count(), TcpEp2Str(sock_.remote_endpoint()).c_str());
+                  DBG_PRINT("cs svr session exit due to timeout(%llums), addr %s.",
+                            std::chrono::duration_cast<std::chrono::milliseconds>(session_cfg_ptr_->max_no_data_duration).count(),
+                            TcpEp2Str(sock_.remote_endpoint()).c_str());
                   break;
                 }
               }

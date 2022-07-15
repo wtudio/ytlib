@@ -126,6 +126,15 @@ class AsioCsClient : public std::enable_shared_from_this<AsioCsClient> {
         });
   }
 
+  /**
+   * @brief 获取配置
+   *
+   * @return const AsioCsClient::Cfg&
+   */
+  const AsioCsClient::Cfg& GetCfg() const {
+    return cfg_;
+  }
+
  private:
   // 包头结构：| 2byte magicnum | 4byte msglen |
   static const size_t HEAD_SIZE = 6;

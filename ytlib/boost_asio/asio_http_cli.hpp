@@ -32,12 +32,10 @@ class AsioHttpClient : public std::enable_shared_from_this<AsioHttpClient> {
    *
    */
   struct Cfg {
-    std::string host;     // 服务器域名或ip
-    std::string service;  // 服务（如http、ftp）或端口号
-
+    std::string host;                                                                     // 服务器域名或ip
+    std::string service;                                                                  // 服务（如http、ftp）或端口号
     std::chrono::steady_clock::duration max_no_data_duration = std::chrono::seconds(60);  // 连接最长无数据时间
-
-    size_t max_session_num = 10;  // 最大连接数
+    size_t max_session_num = 10;                                                          // 最大连接数
 
     /// 校验配置
     static Cfg Verify(const Cfg& verify_cfg) {
@@ -55,7 +53,7 @@ class AsioHttpClient : public std::enable_shared_from_this<AsioHttpClient> {
    * @param io_ptr io_context
    * @param cfg 配置
    */
-  AsioHttpClient(std::shared_ptr<boost::asio::io_context> io_ptr, const AsioHttpClient::Cfg& cfg)
+  AsioHttpClient(const std::shared_ptr<boost::asio::io_context>& io_ptr, const AsioHttpClient::Cfg& cfg)
       : cfg_(AsioHttpClient::Cfg::Verify(cfg)),
         io_ptr_(io_ptr),
         session_cfg_ptr_(std::make_shared<const AsioHttpClient::SessionCfg>(cfg_)),
@@ -73,40 +71,43 @@ class AsioHttpClient : public std::enable_shared_from_this<AsioHttpClient> {
    * @tparam RspBodyType 返回包的body类型
    * @param req 请求包
    * @param timeout 超时时间
-   * @return boost::asio::awaitable<boost::beast::http::response<RspBodyType> > 返回包协程句柄
+   * @return boost::asio::awaitable<boost::beast::http::response<RspBodyType> > 返回包
    */
   template <typename ReqBodyType = boost::beast::http::string_body, typename RspBodyType = boost::beast::http::string_body>
-  boost::asio::awaitable<boost::beast::http::response<RspBodyType> > HttpSendRecvCo(const boost::beast::http::request<ReqBodyType>& req,
-                                                                                    std::chrono::steady_clock::duration timeout = std::chrono::seconds(5)) {
-    if (!run_flag_) [[unlikely]]
-      throw std::runtime_error("Http client is closed.");
-
-    // 找可用session，没有就新建一个。同时清理已失效session
-    std::shared_ptr<AsioHttpClient::Session> session_ptr;
-    for (auto itr = session_ptr_list_.begin(); itr != session_ptr_list_.end();) {
-      if ((*itr)->IsRunning()) {
-        if ((*itr)->CheckIdleAndUse()) {
-          session_ptr = *itr;
-          break;
-        }
-        ++itr;
-      } else {
-        session_ptr_list_.erase(itr++);
-      }
-    }
-
-    if (!session_ptr) {
-      if (session_ptr_list_.size() >= cfg_.max_session_num)
-        throw std::runtime_error("Http client session num reach the upper limit.");
-
-      session_ptr = std::make_shared<AsioHttpClient::Session>(boost::asio::make_strand(*io_ptr_), session_cfg_ptr_);
-      session_ptr->Start();
-      session_ptr_list_.emplace_back(session_ptr);
-    }
-
+  auto HttpSendRecvCo(const boost::beast::http::request<ReqBodyType>& req, const std::chrono::steady_clock::duration& timeout = std::chrono::seconds(5))
+      -> boost::asio::awaitable<boost::beast::http::response<RspBodyType>> {
     return boost::asio::co_spawn(
-        session_ptr->Strand(),
-        session_ptr->HttpSendRecvCo(req, timeout),
+        mgr_strand_,
+        [this, &req, &timeout]() -> boost::asio::awaitable<boost::beast::http::response<RspBodyType>> {
+          if (!run_flag_) [[unlikely]]
+            throw std::runtime_error("Http client is closed.");
+
+          // 找可用session，没有就新建一个。同时清理已失效session
+          std::shared_ptr<AsioHttpClient::Session> session_ptr;
+
+          for (auto itr = session_ptr_list_.begin(); itr != session_ptr_list_.end();) {
+            if ((*itr)->IsRunning()) {
+              if ((*itr)->CheckIdleAndUse()) {
+                session_ptr = *itr;
+                break;
+              }
+              ++itr;
+            } else {
+              session_ptr_list_.erase(itr++);
+            }
+          }
+
+          if (!session_ptr) {
+            if (session_ptr_list_.size() >= cfg_.max_session_num)
+              throw std::runtime_error("Http client session num reach the upper limit.");
+
+            session_ptr = std::make_shared<AsioHttpClient::Session>(io_ptr_, session_cfg_ptr_);
+            session_ptr->Start();
+            session_ptr_list_.emplace_back(session_ptr);
+          }
+
+          return session_ptr->HttpSendRecvCo(req, timeout);
+        },
         boost::asio::use_awaitable);
   }
 
@@ -138,12 +139,12 @@ class AsioHttpClient : public std::enable_shared_from_this<AsioHttpClient> {
   const std::atomic_bool& IsRunning() { return run_flag_; }
 
   /**
-   * @brief 调用HttpSendRecvCo时的strand
+   * @brief 获取配置
    *
-   * @return boost::asio::strand<boost::asio::io_context::executor_type>&
+   * @return const AsioHttpClient::Cfg&
    */
-  boost::asio::strand<boost::asio::io_context::executor_type>& Strand() {
-    return mgr_strand_;
+  const AsioHttpClient::Cfg& GetCfg() const {
+    return cfg_;
   }
 
  private:
@@ -160,12 +161,13 @@ class AsioHttpClient : public std::enable_shared_from_this<AsioHttpClient> {
 
   class Session : public std::enable_shared_from_this<Session> {
    public:
-    Session(boost::asio::strand<boost::asio::io_context::executor_type> session_strand,
-            std::shared_ptr<const AsioHttpClient::SessionCfg> session_cfg_ptr)
+    Session(const std::shared_ptr<boost::asio::io_context>& io_ptr,
+            const std::shared_ptr<const AsioHttpClient::SessionCfg>& session_cfg_ptr)
         : session_cfg_ptr_(session_cfg_ptr),
-          session_strand_(session_strand),
-          stream_(session_strand_),
-          timer_(session_strand_) {}
+          session_socket_strand_(boost::asio::make_strand(*io_ptr)),
+          stream_(session_socket_strand_),
+          session_mgr_strand_(boost::asio::make_strand(*io_ptr)),
+          timer_(session_mgr_strand_) {}
 
     ~Session() {}
 
@@ -173,100 +175,99 @@ class AsioHttpClient : public std::enable_shared_from_this<AsioHttpClient> {
     Session& operator=(const Session&) = delete;  ///< no copy
 
     template <typename ReqBodyType = boost::beast::http::string_body, typename RspBodyType = boost::beast::http::string_body>
-    boost::asio::awaitable<boost::beast::http::response<RspBodyType> > HttpSendRecvCo(const boost::beast::http::request<ReqBodyType>& req,
-                                                                                      std::chrono::steady_clock::duration timeout = std::chrono::seconds(5)) {
-      if (!run_flag_) [[unlikely]]
-        throw std::logic_error("http client session is closed.");
+    auto HttpSendRecvCo(const boost::beast::http::request<ReqBodyType>& req, const std::chrono::steady_clock::duration& timeout)
+        -> boost::asio::awaitable<boost::beast::http::response<RspBodyType>> {
+      return boost::asio::co_spawn(
+          session_socket_strand_,
+          [this, &req, &timeout]() -> boost::asio::awaitable<boost::beast::http::response<RspBodyType>> {
+            if (!run_flag_) [[unlikely]]
+              throw std::logic_error("http client session is closed.");
 
-      try {
-        namespace chrono = std::chrono;
-        namespace asio = boost::asio;
-        namespace http = boost::beast::http;
+            try {
+              namespace chrono = std::chrono;
+              namespace asio = boost::asio;
+              namespace http = boost::beast::http;
 
-        chrono::steady_clock::time_point start_time_point = chrono::steady_clock::now();
-        chrono::steady_clock::duration cur_duration;
+              chrono::steady_clock::time_point start_time_point = chrono::steady_clock::now();
+              chrono::steady_clock::duration cur_duration;
 
-        if (first_time_entry_) [[unlikely]] {
-          first_time_entry_ = false;
+              if (first_time_entry_) [[unlikely]] {
+                first_time_entry_ = false;
 
-          // resolve
-          asio::ip::tcp::resolver resolver(session_strand_);
-          auto const dst = co_await resolver.async_resolve(session_cfg_ptr_->host, session_cfg_ptr_->service, asio::use_awaitable);
+                // resolve
+                asio::ip::tcp::resolver resolver(session_socket_strand_);
+                auto const dst = co_await resolver.async_resolve(session_cfg_ptr_->host, session_cfg_ptr_->service, asio::use_awaitable);
 
-          // connect
-          cur_duration = chrono::steady_clock::now() - start_time_point;
-          if (cur_duration >= timeout) [[unlikely]]
-            throw std::logic_error("Timeout.");
+                // connect
+                cur_duration = chrono::steady_clock::now() - start_time_point;
+                if (cur_duration >= timeout) [[unlikely]]
+                  throw std::logic_error("Timeout.");
 
-          DBG_PRINT("http cli session async connect, timeout %llums", chrono::duration_cast<chrono::milliseconds>(timeout - cur_duration).count());
-          stream_.expires_after(timeout - cur_duration);
-          co_await stream_.async_connect(dst, asio::use_awaitable);
-        }
+                DBG_PRINT("http cli session async connect, timeout %llums", chrono::duration_cast<chrono::milliseconds>(timeout - cur_duration).count());
+                stream_.expires_after(timeout - cur_duration);
+                co_await stream_.async_connect(dst, asio::use_awaitable);
+              }
 
-        // write
-        cur_duration = chrono::steady_clock::now() - start_time_point;
-        if (cur_duration >= timeout) [[unlikely]]
-          throw std::logic_error("Timeout.");
+              // write
+              cur_duration = chrono::steady_clock::now() - start_time_point;
+              if (cur_duration >= timeout) [[unlikely]]
+                throw std::logic_error("Timeout.");
 
-        DBG_PRINT("http cli session async write, timeout %llums", chrono::duration_cast<chrono::milliseconds>(timeout - cur_duration).count());
-        stream_.expires_after(timeout - cur_duration);
-        size_t write_size = co_await http::async_write(stream_, req, asio::use_awaitable);
-        DBG_PRINT("http cli session write %llu bytes", write_size);
+              DBG_PRINT("http cli session async write, timeout %llums", chrono::duration_cast<chrono::milliseconds>(timeout - cur_duration).count());
+              stream_.expires_after(timeout - cur_duration);
+              size_t write_size = co_await http::async_write(stream_, req, asio::use_awaitable);
+              DBG_PRINT("http cli session write %llu bytes", write_size);
 
-        // read
-        cur_duration = chrono::steady_clock::now() - start_time_point;
-        if (cur_duration >= timeout) [[unlikely]]
-          throw std::logic_error("Timeout.");
+              // read
+              cur_duration = chrono::steady_clock::now() - start_time_point;
+              if (cur_duration >= timeout) [[unlikely]]
+                throw std::logic_error("Timeout.");
 
-        DBG_PRINT("http cli session async read, timeout %llums", chrono::duration_cast<chrono::milliseconds>(timeout - cur_duration).count());
-        stream_.expires_after(timeout - cur_duration);
-        boost::beast::http::response<RspBodyType> rsp;
-        size_t read_size = co_await http::async_read(stream_, buffer_, rsp, asio::use_awaitable);
-        DBG_PRINT("http cli session read %llu bytes", read_size);
+              DBG_PRINT("http cli session async read, timeout %llums", chrono::duration_cast<chrono::milliseconds>(timeout - cur_duration).count());
+              stream_.expires_after(timeout - cur_duration);
+              boost::beast::http::response<RspBodyType> rsp;
+              size_t read_size = co_await http::async_read(stream_, buffer_, rsp, asio::use_awaitable);
+              DBG_PRINT("http cli session read %llu bytes", read_size);
 
-        if (req.need_eof() || rsp.need_eof()) {
-          DBG_PRINT("http cli session close due to eof");
-          Stop();
-        }
+              if (req.need_eof() || rsp.need_eof()) {
+                DBG_PRINT("http cli session close due to eof");
+                Stop();
+              }
 
-        idle_flag_ = true;
+              idle_flag_ = true;
 
-        co_return rsp;
+              co_return rsp;
 
-      } catch (const std::exception& e) {
-        DBG_PRINT("http cli session send recv co get exception and exit, exception info: %s", e.what());
-      }
+            } catch (const std::exception& e) {
+              DBG_PRINT("http cli session send recv co get exception and exit, exception info: %s", e.what());
+            }
 
-      Stop();
+            Stop();
 
-      throw std::logic_error("http client session send & recv failed and exit.");
+            throw std::logic_error("http client session send & recv failed and exit.");
+          },
+          boost::asio::use_awaitable);
     }
 
     void Start() {
       auto self = shared_from_this();
 
       boost::asio::co_spawn(
-          session_strand_,
+          session_mgr_strand_,
           [this, self]() -> boost::asio::awaitable<void> {
             ASIO_DEBUG_HANDLE(http_cli_session_timer_co);
 
             try {
-              namespace chrono = std::chrono;
-              chrono::steady_clock::time_point last_data_time_point = chrono::steady_clock::now();  // 上次有数据时间
-
               while (run_flag_) {
                 timer_.expires_after(session_cfg_ptr_->max_no_data_duration);
                 co_await timer_.async_wait(boost::asio::use_awaitable);
 
                 if (tick_has_data_) {
                   tick_has_data_ = false;
-                  last_data_time_point = chrono::steady_clock::now();
                 } else {
-                  chrono::steady_clock::duration no_data_duration = chrono::steady_clock::now() - last_data_time_point;
-                  if (no_data_duration >= session_cfg_ptr_->max_no_data_duration) {
-                    DBG_PRINT("http cli session exit due to timeout(%llums).", chrono::duration_cast<chrono::milliseconds>(no_data_duration).count());
-                    break;
-                  }
+                  DBG_PRINT("http cli session exit due to timeout(%llums).",
+                            std::chrono::duration_cast<std::chrono::milliseconds>(session_cfg_ptr_->max_no_data_duration).count());
+                  break;
                 }
               }
             } catch (const std::exception& e) {
@@ -285,7 +286,7 @@ class AsioHttpClient : public std::enable_shared_from_this<AsioHttpClient> {
 
       auto self = shared_from_this();
       boost::asio::dispatch(
-          session_strand_,
+          session_socket_strand_,
           [this, self]() {
             ASIO_DEBUG_HANDLE(http_cli_session_stop_co);
 
@@ -294,27 +295,24 @@ class AsioHttpClient : public std::enable_shared_from_this<AsioHttpClient> {
               try {
                 switch (stop_step) {
                   case 1:
-                    timer_.cancel();
-                    ++stop_step;
-                  case 2:
                     stream_.socket().shutdown(boost::asio::ip::tcp::socket::shutdown_both);
                     ++stop_step;
-                  case 3:
+                  case 2:
                     stream_.socket().cancel();
                     ++stop_step;
-                  case 4:
+                  case 3:
                     stream_.socket().close();
                     ++stop_step;
-                  case 5:
+                  case 4:
                     stream_.socket().release();
                     ++stop_step;
-                  case 6:
+                  case 5:
                     stream_.cancel();
                     ++stop_step;
-                  case 7:
+                  case 6:
                     stream_.close();
                     ++stop_step;
-                  case 8:
+                  case 7:
                     stream_.release_socket();
                     ++stop_step;
                   default:
@@ -323,6 +321,29 @@ class AsioHttpClient : public std::enable_shared_from_this<AsioHttpClient> {
                 }
               } catch (const std::exception& e) {
                 DBG_PRINT("http cli session stop get exception at step %u, exception info: %s", stop_step, e.what());
+                ++stop_step;
+              }
+            }
+          });
+
+      boost::asio::dispatch(
+          session_mgr_strand_,
+          [this, self]() {
+            ASIO_DEBUG_HANDLE(http_cli_session_mgr_stop_co);
+
+            uint32_t stop_step = 1;
+            while (stop_step) {
+              try {
+                switch (stop_step) {
+                  case 1:
+                    timer_.cancel();
+                    ++stop_step;
+                  default:
+                    stop_step = 0;
+                    break;
+                }
+              } catch (const std::exception& e) {
+                DBG_PRINT("http cli session mgr stop get exception at step %u, exception info: %s", stop_step, e.what());
                 ++stop_step;
               }
             }
@@ -337,30 +358,28 @@ class AsioHttpClient : public std::enable_shared_from_this<AsioHttpClient> {
 
     const std::atomic_bool& IsRunning() { return run_flag_; }
 
-    boost::asio::strand<boost::asio::io_context::executor_type>& Strand() {
-      return session_strand_;
-    }
-
    private:
     std::shared_ptr<const AsioHttpClient::SessionCfg> session_cfg_ptr_;
     std::atomic_bool run_flag_ = true;
     std::atomic_bool idle_flag_ = false;
-    boost::asio::strand<boost::asio::io_context::executor_type> session_strand_;
+    boost::asio::strand<boost::asio::io_context::executor_type> session_socket_strand_;
     boost::beast::tcp_stream stream_;
+
+    boost::asio::strand<boost::asio::io_context::executor_type> session_mgr_strand_;
     boost::asio::steady_timer timer_;
 
+    std::atomic_bool tick_has_data_ = false;
     boost::beast::flat_buffer buffer_;
-    bool tick_has_data_ = false;
     bool first_time_entry_ = true;
   };
 
   const AsioHttpClient::Cfg cfg_;
   std::atomic_bool run_flag_ = true;
   std::shared_ptr<boost::asio::io_context> io_ptr_;
-
   std::shared_ptr<const AsioHttpClient::SessionCfg> session_cfg_ptr_;
+
   boost::asio::strand<boost::asio::io_context::executor_type> mgr_strand_;
-  std::list<std::shared_ptr<AsioHttpClient::Session> > session_ptr_list_;
+  std::list<std::shared_ptr<AsioHttpClient::Session>> session_ptr_list_;
 };
 
 class AsioHttpClientPool : public std::enable_shared_from_this<AsioHttpClientPool> {
@@ -388,7 +407,7 @@ class AsioHttpClientPool : public std::enable_shared_from_this<AsioHttpClientPoo
    * @param io_ptr io_context
    * @param cfg 配置
    */
-  AsioHttpClientPool(std::shared_ptr<boost::asio::io_context> io_ptr, const AsioHttpClientPool::Cfg& cfg)
+  AsioHttpClientPool(const std::shared_ptr<boost::asio::io_context>& io_ptr, const AsioHttpClientPool::Cfg& cfg)
       : cfg_(AsioHttpClientPool::Cfg::Verify(cfg)),
         io_ptr_(io_ptr),
         mgr_strand_(boost::asio::make_strand(*io_ptr_)) {}
@@ -400,28 +419,42 @@ class AsioHttpClientPool : public std::enable_shared_from_this<AsioHttpClientPoo
 
   /**
    * @brief 获取http client
-   * @note 非线程安全，需要在Strand下运行以保证线程安全
+   * @note 如果http client目的地址相同，则会复用已有的http client
    * @param cfg http client的配置
-   * @return std::shared_ptr<AsioHttpClient> http client
+   * @return boost::asio::awaitable<std::shared_ptr<AsioHttpClient> > http client
    */
-  std::shared_ptr<AsioHttpClient> GetClient(const AsioHttpClient::Cfg& cfg) {
-    if (!run_flag_) [[unlikely]]
-      throw std::runtime_error("Http client is closed.");
+  boost::asio::awaitable<std::shared_ptr<AsioHttpClient>> GetClient(const AsioHttpClient::Cfg& cfg) {
+    return boost::asio::co_spawn(
+        mgr_strand_,
+        [this, &cfg]() -> boost::asio::awaitable<std::shared_ptr<AsioHttpClient>> {
+          if (!run_flag_) [[unlikely]]
+            throw std::runtime_error("Http client is closed.");
 
-    const size_t client_hash = std::hash<std::string>{}(cfg.host + cfg.service);
+          const size_t client_hash = std::hash<std::string>{}(cfg.host + cfg.service);
 
-    auto itr = client_map_.find(client_hash);
-    if (itr != client_map_.end()) {
-      if (itr->second->IsRunning()) return itr->second;
-      client_map_.erase(itr);
-    }
+          auto itr = client_map_.find(client_hash);
+          if (itr != client_map_.end()) {
+            if (itr->second->IsRunning()) co_return itr->second;
+            client_map_.erase(itr);
+          }
 
-    if (client_map_.size() >= cfg_.max_client_num)
-      throw std::runtime_error("Http client num reach the upper limit.");
+          if (client_map_.size() >= cfg_.max_client_num) [[unlikely]] {
+            for (auto itr = client_map_.begin(); itr != client_map_.end();) {
+              if (itr->second->IsRunning())
+                ++itr;
+              else
+                client_map_.erase(itr++);
+            }
 
-    std::shared_ptr<AsioHttpClient> client_ptr = std::make_shared<AsioHttpClient>(io_ptr_, cfg);
-    client_map_.emplace(client_hash, client_ptr);
-    return client_ptr;
+            if (client_map_.size() >= cfg_.max_client_num) [[unlikely]]
+              throw std::runtime_error("Http client num reach the upper limit.");
+          }
+
+          std::shared_ptr<AsioHttpClient> client_ptr = std::make_shared<AsioHttpClient>(io_ptr_, cfg);
+          client_map_.emplace(client_hash, client_ptr);
+          co_return client_ptr;
+        },
+        boost::asio::use_awaitable);
   }
 
   /**
@@ -435,7 +468,7 @@ class AsioHttpClientPool : public std::enable_shared_from_this<AsioHttpClientPoo
     boost::asio::dispatch(
         mgr_strand_,
         [this, self]() {
-          ASIO_DEBUG_HANDLE(http_cli_stop_co);
+          ASIO_DEBUG_HANDLE(http_cli_pool_stop_co);
 
           for (auto& itr : client_map_)
             itr.second->Stop();
@@ -451,22 +484,13 @@ class AsioHttpClientPool : public std::enable_shared_from_this<AsioHttpClientPoo
    */
   const std::atomic_bool& IsRunning() { return run_flag_; }
 
-  /**
-   * @brief 调用GetClient时的strand
-   *
-   * @return boost::asio::strand<boost::asio::io_context::executor_type>&
-   */
-  boost::asio::strand<boost::asio::io_context::executor_type>& Strand() {
-    return mgr_strand_;
-  }
-
  private:
   const AsioHttpClientPool::Cfg cfg_;
   std::atomic_bool run_flag_ = true;
   std::shared_ptr<boost::asio::io_context> io_ptr_;
 
   boost::asio::strand<boost::asio::io_context::executor_type> mgr_strand_;
-  std::map<size_t, std::shared_ptr<AsioHttpClient> > client_map_;
+  std::map<size_t, std::shared_ptr<AsioHttpClient>> client_map_;
 };
 
 }  // namespace ytlib

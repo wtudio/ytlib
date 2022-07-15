@@ -22,7 +22,7 @@
 #include "test1.hpp"
 #include "test2.hpp"
 
-void Test6() {
+void Test3() {
   ytlib::AsioContext asio_ctx(std::make_shared<ytlib::AsioExecutor>(2));     // asio ctx
   ytlib::FiberContext fiber_ctx(std::make_shared<ytlib::FiberExecutor>(2));  // fiber ctx
 
@@ -86,7 +86,7 @@ int32_t main(int32_t argc, char** argv) {
 
   test2::Test2();
 
-  Test6();
+  Test3();
 
   return 0;
 }

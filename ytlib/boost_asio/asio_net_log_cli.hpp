@@ -31,16 +31,15 @@ class AsioNetLogClient : public std::enable_shared_from_this<AsioNetLogClient> {
    *
    */
   struct Cfg {
-    boost::asio::ip::tcp::endpoint svr_ep;  // 服务端地址
-
-    std::chrono::steady_clock::duration timer_dt = std::chrono::seconds(5);               // 定时器间隔
+    boost::asio::ip::tcp::endpoint svr_ep;                                                // 服务端地址
+    std::chrono::steady_clock::duration heart_beat_time = std::chrono::seconds(5);        // 定时器间隔
     std::chrono::steady_clock::duration max_no_data_duration = std::chrono::seconds(60);  // 最长无数据时间
 
     /// 校验配置
     static Cfg Verify(const Cfg& verify_cfg) {
       Cfg cfg(verify_cfg);
 
-      if (cfg.timer_dt < std::chrono::milliseconds(100)) cfg.timer_dt = std::chrono::milliseconds(100);
+      if (cfg.heart_beat_time < std::chrono::milliseconds(100)) cfg.heart_beat_time = std::chrono::milliseconds(100);
 
       return cfg;
     }
@@ -52,7 +51,7 @@ class AsioNetLogClient : public std::enable_shared_from_this<AsioNetLogClient> {
    * @param io_ptr io_context智能指针
    * @param cfg 配置
    */
-  AsioNetLogClient(std::shared_ptr<boost::asio::io_context> io_ptr, const AsioNetLogClient::Cfg& cfg)
+  AsioNetLogClient(const std::shared_ptr<boost::asio::io_context>& io_ptr, const AsioNetLogClient::Cfg& cfg)
       : cfg_(AsioNetLogClient::Cfg::Verify(cfg)),
         io_ptr_(io_ptr),
         session_cfg_ptr_(std::make_shared<const AsioNetLogClient::SessionCfg>(cfg_)),
@@ -68,7 +67,17 @@ class AsioNetLogClient : public std::enable_shared_from_this<AsioNetLogClient> {
    *
    * @param log_buf_ptr 日志内容
    */
-  void LogToSvr(std::shared_ptr<boost::asio::streambuf> log_buf_ptr) {
+  void LogToSvr(const std::shared_ptr<boost::asio::streambuf>& log_buf_ptr) {
+    if (!run_flag_) [[unlikely]]
+      return;
+
+    std::shared_ptr<AsioNetLogClient::Session> cur_session_ptr = session_ptr_;
+    if (cur_session_ptr && cur_session_ptr->IsRunning()) {
+      cur_session_ptr->LogToSvr(log_buf_ptr);
+      return;
+    }
+
+    // 当前session不能用，需要去新建session
     auto self = shared_from_this();
     boost::asio::dispatch(
         mgr_strand_,
@@ -79,7 +88,7 @@ class AsioNetLogClient : public std::enable_shared_from_this<AsioNetLogClient> {
             return;
 
           if (!session_ptr_ || !session_ptr_->IsRunning()) {
-            session_ptr_ = std::make_shared<AsioNetLogClient::Session>(boost::asio::make_strand(*io_ptr_), session_cfg_ptr_);
+            session_ptr_ = std::make_shared<AsioNetLogClient::Session>(io_ptr_, session_cfg_ptr_);
             session_ptr_->Start();
           }
           session_ptr_->LogToSvr(log_buf_ptr);
@@ -105,24 +114,33 @@ class AsioNetLogClient : public std::enable_shared_from_this<AsioNetLogClient> {
         });
   }
 
+  /**
+   * @brief 获取配置
+   *
+   * @return const AsioNetLogClient::Cfg&
+   */
+  const AsioNetLogClient::Cfg& GetCfg() const {
+    return cfg_;
+  }
+
  private:
   struct SessionCfg {
     SessionCfg(const Cfg& cfg)
         : svr_ep(cfg.svr_ep),
-          timer_dt(cfg.timer_dt),
+          heart_beat_time(cfg.heart_beat_time),
           max_no_data_duration(cfg.max_no_data_duration) {}
 
     boost::asio::ip::tcp::endpoint svr_ep;
-    std::chrono::steady_clock::duration timer_dt;
+    std::chrono::steady_clock::duration heart_beat_time;
     std::chrono::steady_clock::duration max_no_data_duration;
   };
 
   class Session : public std::enable_shared_from_this<Session> {
    public:
-    Session(boost::asio::strand<boost::asio::io_context::executor_type> session_strand,
-            std::shared_ptr<const AsioNetLogClient::SessionCfg> session_cfg_ptr)
+    Session(const std::shared_ptr<boost::asio::io_context>& io_ptr,
+            const std::shared_ptr<const AsioNetLogClient::SessionCfg>& session_cfg_ptr)
         : session_cfg_ptr_(session_cfg_ptr),
-          session_strand_(session_strand),
+          session_strand_(boost::asio::make_strand(*io_ptr)),
           sock_(session_strand_),
           timer_(session_strand_) {}
 
@@ -131,7 +149,7 @@ class AsioNetLogClient : public std::enable_shared_from_this<AsioNetLogClient> {
     Session(const Session&) = delete;             ///< no copy
     Session& operator=(const Session&) = delete;  ///< no copy
 
-    void LogToSvr(std::shared_ptr<boost::asio::streambuf> log_buf_ptr) {
+    void LogToSvr(const std::shared_ptr<boost::asio::streambuf>& log_buf_ptr) {
       auto self = shared_from_this();
       boost::asio::dispatch(
           session_strand_,
@@ -143,7 +161,8 @@ class AsioNetLogClient : public std::enable_shared_from_this<AsioNetLogClient> {
 
     void Start() {
       auto self = shared_from_this();
-      // 定时器协程
+
+      // 定时发送协程
       boost::asio::co_spawn(
           session_strand_,
           [this, self]() -> boost::asio::awaitable<void> {
@@ -158,19 +177,20 @@ class AsioNetLogClient : public std::enable_shared_from_this<AsioNetLogClient> {
               chrono::steady_clock::time_point last_data_time_point = chrono::steady_clock::now();  // 上次有数据时间
 
               while (run_flag_) {
-                timer_.expires_after(session_cfg_ptr_->timer_dt);
+                timer_.expires_after(session_cfg_ptr_->heart_beat_time);
                 co_await timer_.async_wait(boost::asio::use_awaitable);
 
                 if (!data_list.empty()) {
                   std::list<std::shared_ptr<boost::asio::streambuf> > tmp_data_list;
                   tmp_data_list.swap(data_list);
 
-                  std::list<boost::asio::const_buffer> data_buf_list;
+                  std::vector<boost::asio::const_buffer> data_buf_vec;
+                  data_buf_vec.reserve(tmp_data_list.size());
                   for (auto& itr : tmp_data_list) {
-                    data_buf_list.emplace_back(itr->data());
+                    data_buf_vec.emplace_back(itr->data());
                   }
 
-                  size_t write_data_size = co_await boost::asio::async_write(sock_, data_buf_list, boost::asio::use_awaitable);
+                  size_t write_data_size = co_await boost::asio::async_write(sock_, data_buf_vec, boost::asio::use_awaitable);
                   DBG_PRINT("net log cli session async write %llu bytes", write_data_size);
 
                   last_data_time_point = chrono::steady_clock::now();
@@ -238,6 +258,7 @@ class AsioNetLogClient : public std::enable_shared_from_this<AsioNetLogClient> {
    private:
     std::shared_ptr<const AsioNetLogClient::SessionCfg> session_cfg_ptr_;
     std::atomic_bool run_flag_ = true;
+
     boost::asio::strand<boost::asio::io_context::executor_type> session_strand_;
     boost::asio::ip::tcp::socket sock_;
     boost::asio::steady_timer timer_;
@@ -249,8 +270,8 @@ class AsioNetLogClient : public std::enable_shared_from_this<AsioNetLogClient> {
   const AsioNetLogClient::Cfg cfg_;
   std::atomic_bool run_flag_ = true;
   std::shared_ptr<boost::asio::io_context> io_ptr_;
-
   std::shared_ptr<const AsioNetLogClient::SessionCfg> session_cfg_ptr_;
+
   boost::asio::strand<boost::asio::io_context::executor_type> mgr_strand_;
   std::shared_ptr<AsioNetLogClient::Session> session_ptr_;
 };

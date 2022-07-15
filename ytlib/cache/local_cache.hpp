@@ -15,32 +15,45 @@
 namespace ytlib {
 
 /**
- * @brief LocalCache初始化配置
- *
- */
-struct LocalCacheCfg {
-  size_t capacity = 1000;   ///< 容量上限
-  size_t clean_size = 900;  ///< 超过容量上限进行清理的目标size
-  uint32_t ttl_ms = 5000;   ///< 超时时间，ms
-};
-
-/**
  * @brief LocalCache本地缓存工具
  * @note 支持TTL和LRU淘汰，接近上限时自动清出一部分容量，底层使用unordered_map
  * key和val值是直接保存在map中的，且存在复制开销。如果val尺寸较大建议用智能指针
- * 需要上层保证线程安全
- * @tparam KeyType
- * @tparam ValType
+ * 非线程安全，需要上层保证线程安全
+ * @tparam KeyType 值类型，需要支持比较
+ * @tparam ValType 数据类型
  */
 template <typename KeyType, typename ValType>
 class LocalCache {
  public:
-  LocalCache(const LocalCacheCfg& cfg) : cfg_(cfg),
-                                         data_map_(cfg_.capacity) {
-    if (cfg_.clean_size >= cfg_.capacity)
-      cfg_.clean_size = static_cast<size_t>(cfg_.capacity * 0.9);
+  /**
+   * @brief 配置
+   *
+   */
+  struct Cfg {
+    size_t capacity = 1000;                                             ///< 容量上限
+    size_t clean_size = 900;                                            ///< 超过容量上限进行清理的目标size
+    std::chrono::steady_clock::duration ttl = std::chrono::seconds(5);  ///< 超时时间
+
+    /// 校验配置
+    static Cfg Verify(const Cfg& verify_cfg) {
+      Cfg cfg(verify_cfg);
+
+      if (cfg.clean_size >= cfg.capacity)
+        cfg.clean_size = static_cast<size_t>(cfg.capacity * 0.9);
+
+      return cfg;
+    }
+  };
+
+  LocalCache(const LocalCache::Cfg& cfg)
+      : cfg_(LocalCache::Cfg::Verify(cfg)),
+        data_map_(cfg_.capacity) {
   }
+
   ~LocalCache() {}
+
+  LocalCache(const LocalCache&) = delete;             ///< no copy
+  LocalCache& operator=(const LocalCache&) = delete;  ///< no copy
 
   /**
    * @brief 获取缓存数据
@@ -52,10 +65,11 @@ class LocalCache {
     CleanExpireddata();
 
     auto finditr = data_map_.find(key);
-    if (finditr == data_map_.end()) return std::nullopt;
+    if (finditr == data_map_.end()) [[unlikely]]
+      return std::nullopt;
 
     ValContent& val_content = finditr->second;
-    lru_list_.splice(lru_list_.end(), lru_list_, *(static_cast<std::list<MapItr>::iterator*>(static_cast<void*>(&(val_content.lru_itr)))));
+    lru_list_.splice(lru_list_.end(), lru_list_, val_content.lru_itr);
     return val_content.val;
   }
 
@@ -69,17 +83,18 @@ class LocalCache {
     const auto& emplace_ret = data_map_.emplace(key, val);
     ValContent& val_content = emplace_ret.first->second;
     val_content.load_time = std::chrono::steady_clock::now();
+
     if (emplace_ret.second) {
       // 新增
-      *(static_cast<std::list<MapItr>::iterator*>(static_cast<void*>(&(val_content.lru_itr)))) = lru_list_.emplace(lru_list_.end(), emplace_ret.first);
-      *(static_cast<std::list<MapItr>::iterator*>(static_cast<void*>(&(val_content.ttl_itr)))) = ttl_list_.emplace(ttl_list_.end(), emplace_ret.first);
-      // 如果超出容量上限需要清理
-      if (data_map_.size() >= cfg_.clean_size) Clean();
+      val_content.lru_itr = lru_list_.emplace(lru_list_.end(), key);
+      val_content.ttl_itr = ttl_list_.emplace(ttl_list_.end(), key);
+      // 如果达到容量上限则需要清理
+      if (data_map_.size() >= cfg_.capacity) Clean();
     } else {
       // 更新
       val_content.val = val;
-      lru_list_.splice(lru_list_.end(), lru_list_, *(static_cast<std::list<MapItr>::iterator*>(static_cast<void*>(&(val_content.lru_itr)))));
-      ttl_list_.splice(ttl_list_.end(), ttl_list_, *(static_cast<std::list<MapItr>::iterator*>(static_cast<void*>(&(val_content.ttl_itr)))));
+      lru_list_.splice(lru_list_.end(), lru_list_, val_content.lru_itr);
+      ttl_list_.splice(ttl_list_.end(), ttl_list_, val_content.ttl_itr);
     }
   }
 
@@ -88,13 +103,15 @@ class LocalCache {
    * @note 一般不需要手动调用此接口
    */
   void CleanExpireddata() {
-    TimePoint time_line = std::chrono::steady_clock::now() - std::chrono::milliseconds(cfg_.ttl_ms);
+    std::chrono::steady_clock::time_point time_line = std::chrono::steady_clock::now() - cfg_.ttl;
+
     auto itr = ttl_list_.begin();
     for (; itr != ttl_list_.end(); ++itr) {
-      ValContent& val_content = (*itr)->second;
+      auto finditr = data_map_.find(*itr);  // 此处一定能找到
+      ValContent& val_content = finditr->second;
       if (val_content.load_time < time_line) {
-        lru_list_.erase(*(static_cast<std::list<MapItr>::iterator*>(static_cast<void*>(&(val_content.lru_itr)))));
-        data_map_.erase(*itr);
+        lru_list_.erase(val_content.lru_itr);
+        data_map_.erase(finditr);
       } else {
         break;
       }
@@ -114,9 +131,10 @@ class LocalCache {
     auto itr = lru_list_.begin();
     for (; itr != lru_list_.end(); ++itr) {
       if (to_clean_size) {
-        ttl_list_.erase(*(static_cast<std::list<MapItr>::iterator*>(static_cast<void*>(&((*itr)->second.ttl_itr)))));
-        data_map_.erase(*itr);
         --to_clean_size;
+        auto finditr = data_map_.find(*itr);  // 此处一定能找到
+        ttl_list_.erase(finditr->second.ttl_itr);
+        data_map_.erase(finditr);
       } else {
         break;
       }
@@ -124,25 +142,47 @@ class LocalCache {
     lru_list_.erase(lru_list_.begin(), itr);
   }
 
- private:
-  using TimePoint = std::chrono::steady_clock::time_point;
-  using ListItrBuf = char[sizeof(std::list<int>::iterator)];
+  /**
+   * @brief 获取缓存数据大小
+   *
+   * @return const size_t
+   */
+  const size_t Size() const {
+    return data_map_.size();
+  }
 
+  /**
+   * @brief 获取配置
+   *
+   * @return const LocalCache::Cfg&
+   */
+  const LocalCache::Cfg& GetCfg() const {
+    return cfg_;
+  }
+
+ private:
   struct ValContent {
-    ValType val;          // 数据
-    TimePoint load_time;  // 上次更新时间
-    ListItrBuf lru_itr;
-    ListItrBuf ttl_itr;
+   public:
+    ValContent(const ValType& in_val) : val(in_val) {}
+    ~ValContent() {}
+
+    ValContent(const ValContent&) = delete;             ///< no copy
+    ValContent& operator=(const ValContent&) = delete;  ///< no copy
+
+   public:
+    ValType val;  // 数据
+
+    std::chrono::steady_clock::time_point load_time;  // 上次更新时间
+
+    std::list<KeyType>::iterator lru_itr;
+    std::list<KeyType>::iterator ttl_itr;
   };
 
-  using MapItr = std::unordered_map<KeyType, ValContent>::iterator;
-
- private:
-  LocalCacheCfg cfg_;
+  const LocalCache::Cfg cfg_;
   std::unordered_map<KeyType, ValContent> data_map_;
 
-  std::list<MapItr> lru_list_;
-  std::list<MapItr> ttl_list_;
+  std::list<KeyType> lru_list_;
+  std::list<KeyType> ttl_list_;
 };
 
 }  // namespace ytlib

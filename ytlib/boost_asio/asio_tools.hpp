@@ -129,8 +129,7 @@ class AsioExecutor {
     if (start_flag_)
       throw std::runtime_error("Should not call EnableStopSignal after start.");
 
-    std::shared_ptr<boost::asio::signal_set> sig_ptr =
-        std::make_shared<boost::asio::signal_set>(*io_ptr_, SIGINT, SIGTERM);
+    std::shared_ptr<boost::asio::signal_set> sig_ptr = std::make_shared<boost::asio::signal_set>(*io_ptr_, SIGINT, SIGTERM);
 
     start_func_vec_.emplace_back([this, sig_ptr] {
       sig_ptr->async_wait([this, sig_ptr](auto, auto) {

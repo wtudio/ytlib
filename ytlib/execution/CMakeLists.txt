@@ -23,6 +23,7 @@ set_property(TARGET ${CUR_TARGET_NAME} PROPERTY PUBLIC_HEADER ${head_files})
 target_link_libraries(${CUR_TARGET_NAME} INTERFACE
   ytlib::boost_asio
   ytlib::boost_fiber
+  ytlib::cache
   libunifex::unifex
 )
 

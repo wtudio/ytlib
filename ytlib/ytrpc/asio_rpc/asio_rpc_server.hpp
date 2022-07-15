@@ -241,6 +241,15 @@ class AsioRpcServer : public std::enable_shared_from_this<AsioRpcServer> {
         });
   }
 
+  /**
+   * @brief 获取配置
+   *
+   * @return const AsioRpcServer::Cfg&
+   */
+  const AsioRpcServer::Cfg& GetCfg() const {
+    return cfg_;
+  }
+
  private:
   // 包头结构：| 2byte magicnum | 2byte headlen | 4byte msglen |
   static const size_t HEAD_SIZE = 8;
@@ -451,7 +460,9 @@ class AsioRpcServer : public std::enable_shared_from_this<AsioRpcServer> {
                 if (tick_has_data_) {
                   tick_has_data_ = false;
                 } else {
-                  DBG_PRINT("rpc svr session exit due to timeout(%llums), addr %s.", std::chrono::duration_cast<std::chrono::milliseconds>(session_cfg_ptr_->max_no_data_duration).count(), TcpEp2Str(sock_.remote_endpoint()).c_str());
+                  DBG_PRINT("rpc svr session exit due to timeout(%llums), addr %s.",
+                            std::chrono::duration_cast<std::chrono::milliseconds>(session_cfg_ptr_->max_no_data_duration).count(),
+                            TcpEp2Str(sock_.remote_endpoint()).c_str());
                   break;
                 }
               }

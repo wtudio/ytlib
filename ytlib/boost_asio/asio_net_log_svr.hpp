@@ -36,7 +36,8 @@ class AsioNetLogServer : public std::enable_shared_from_this<AsioNetLogServer> {
    * @brief 远程日志服务器配置
    */
   struct Cfg {
-    uint16_t port = 52684;                     // 监听的端口
+    boost::asio::ip::tcp::endpoint ep = boost::asio::ip::tcp::endpoint{boost::asio::ip::address_v4(), 52684};  // 监听的地址
+
     std::filesystem::path log_path = "./log";  // 日志路径
     size_t max_file_size = 1 * 1024 * 1024;    // 最大日志文件尺寸
 
@@ -50,8 +51,6 @@ class AsioNetLogServer : public std::enable_shared_from_this<AsioNetLogServer> {
     /// 校验配置
     static Cfg Verify(const Cfg& verify_cfg) {
       Cfg cfg(verify_cfg);
-
-      if (cfg.port > 65535 || cfg.port < 1000) cfg.port = 52684;
 
       if (cfg.max_file_size < 100 * 1024) cfg.max_file_size = 100 * 1024;
       if (cfg.max_file_size > 1024 * 1024 * 1024) cfg.max_file_size = 1024 * 1024 * 1024;
@@ -73,12 +72,12 @@ class AsioNetLogServer : public std::enable_shared_from_this<AsioNetLogServer> {
    * @param io_ptr io_context智能指针
    * @param cfg 配置
    */
-  AsioNetLogServer(std::shared_ptr<boost::asio::io_context> io_ptr, const AsioNetLogServer::Cfg& cfg)
+  AsioNetLogServer(const std::shared_ptr<boost::asio::io_context>& io_ptr, const AsioNetLogServer::Cfg& cfg)
       : cfg_(AsioNetLogServer::Cfg::Verify(cfg)),
         io_ptr_(io_ptr),
         session_cfg_ptr_(std::make_shared<const AsioNetLogServer::SessionCfg>(cfg_)),
         mgr_strand_(boost::asio::make_strand(*io_ptr_)),
-        acceptor_(mgr_strand_, boost::asio::ip::tcp::endpoint{boost::asio::ip::address_v4(), cfg_.port}),
+        acceptor_(mgr_strand_, cfg_.ep),
         acceptor_timer_(mgr_strand_),
         mgr_timer_(mgr_strand_) {}
 
@@ -92,6 +91,8 @@ class AsioNetLogServer : public std::enable_shared_from_this<AsioNetLogServer> {
    *
    */
   void Start() {
+    if (std::atomic_exchange(&start_flag_, true)) return;
+
     if (std::filesystem::status(cfg_.log_path).type() != std::filesystem::file_type::directory)
       std::filesystem::create_directories(cfg_.log_path);
 
@@ -110,7 +111,7 @@ class AsioNetLogServer : public std::enable_shared_from_this<AsioNetLogServer> {
                 continue;
               }
 
-              auto session_ptr = std::make_shared<AsioNetLogServer::Session>(boost::asio::make_strand(*io_ptr_), session_cfg_ptr_);
+              auto session_ptr = std::make_shared<AsioNetLogServer::Session>(io_ptr_, session_cfg_ptr_);
               co_await acceptor_.async_accept(session_ptr->Socket(), boost::asio::use_awaitable);
               session_ptr->Start();
 
@@ -131,6 +132,7 @@ class AsioNetLogServer : public std::enable_shared_from_this<AsioNetLogServer> {
         mgr_strand_,
         [this, self]() -> boost::asio::awaitable<void> {
           ASIO_DEBUG_HANDLE(net_log_svr_timer_co);
+
           while (run_flag_) {
             try {
               mgr_timer_.expires_after(cfg_.mgr_timer_dt);
@@ -203,6 +205,15 @@ class AsioNetLogServer : public std::enable_shared_from_this<AsioNetLogServer> {
         });
   }
 
+  /**
+   * @brief 获取配置
+   *
+   * @return const AsioNetLogServer::Cfg&
+   */
+  const AsioNetLogServer::Cfg& GetCfg() const {
+    return cfg_;
+  }
+
  private:
   struct SessionCfg {
     SessionCfg(const Cfg& cfg)
@@ -221,10 +232,10 @@ class AsioNetLogServer : public std::enable_shared_from_this<AsioNetLogServer> {
 
   class Session : public std::enable_shared_from_this<Session> {
    public:
-    Session(boost::asio::strand<boost::asio::io_context::executor_type> session_strand,
-            std::shared_ptr<const AsioNetLogServer::SessionCfg> session_cfg_ptr)
+    Session(const std::shared_ptr<boost::asio::io_context>& io_ptr,
+            const std::shared_ptr<const AsioNetLogServer::SessionCfg>& session_cfg_ptr)
         : session_cfg_ptr_(session_cfg_ptr),
-          session_strand_(session_strand),
+          session_strand_(boost::asio::make_strand(*io_ptr)),
           sock_(session_strand_),
           timer_(session_strand_) {}
 
@@ -378,18 +389,20 @@ class AsioNetLogServer : public std::enable_shared_from_this<AsioNetLogServer> {
    private:
     std::shared_ptr<const AsioNetLogServer::SessionCfg> session_cfg_ptr_;
     std::atomic_bool run_flag_ = true;
+
     boost::asio::strand<boost::asio::io_context::executor_type> session_strand_;
     boost::asio::ip::tcp::socket sock_;
     boost::asio::steady_timer timer_;
 
+    bool tick_has_data_ = false;
     std::string session_name_;
     std::filesystem::path log_file_;  // 当前日志文件路径
     std::ofstream ofs_;               // 当前日志文件写入句柄
-    bool tick_has_data_ = false;
   };
 
  private:
   const AsioNetLogServer::Cfg cfg_;
+  std::atomic_bool start_flag_ = false;
   std::atomic_bool run_flag_ = true;
   std::shared_ptr<boost::asio::io_context> io_ptr_;
 
