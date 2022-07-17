@@ -30,8 +30,8 @@ class LocalCache {
    *
    */
   struct Cfg {
-    size_t capacity = 1000;                                             ///< 容量上限
-    size_t clean_size = 900;                                            ///< 超过容量上限进行清理的目标size
+    size_t capacity = 1000 * 1024;                                      ///< 容量上限
+    size_t clean_size = 900 * 1024;                                     ///< 超过容量上限进行清理的目标size
     std::chrono::steady_clock::duration ttl = std::chrono::seconds(5);  ///< 超时时间
 
     /// 校验配置
@@ -76,11 +76,13 @@ class LocalCache {
   /**
    * @brief 更新缓存数据
    * @note 有则更新，无则新增
+   * @tparam Args 缓存数据类型，或缓存数据的构造参数类型
    * @param[in] key 缓存key
-   * @param[in] val 缓存数据
+   * @param[in] args 缓存数据，或缓存数据的构造参数
    */
-  void Update(const KeyType& key, const ValType& val) {
-    const auto& emplace_ret = data_map_.emplace(key, val);
+  template <typename... Args>
+  void Update(const KeyType& key, Args&&... args) {
+    const auto& emplace_ret = data_map_.emplace(key, std::forward<Args>(args)...);
     ValContent& val_content = emplace_ret.first->second;
     val_content.load_time = std::chrono::steady_clock::now();
 
@@ -92,7 +94,7 @@ class LocalCache {
       if (data_map_.size() >= cfg_.capacity) Clean();
     } else {
       // 更新
-      val_content.val = val;
+      val_content.val = ValType(std::forward<Args>(args)...);
       lru_list_.splice(lru_list_.end(), lru_list_, val_content.lru_itr);
       ttl_list_.splice(ttl_list_.end(), ttl_list_, val_content.ttl_itr);
     }
@@ -163,7 +165,9 @@ class LocalCache {
  private:
   struct ValContent {
    public:
-    ValContent(const ValType& in_val) : val(in_val) {}
+    template <typename... Args>
+    explicit ValContent(Args&&... args) : val(std::forward<Args>(args)...) {}
+
     ~ValContent() {}
 
     ValContent(const ValContent&) = delete;             ///< no copy

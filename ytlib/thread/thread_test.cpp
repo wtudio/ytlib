@@ -193,7 +193,7 @@ TEST(THREAD_TOOLS_TEST, LightSignal_BASE) {
 
   std::thread t2([&] {
     ASSERT_EQ(i, 0);
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(20));
     i = 1;
     s.notify();  // node1
   });
@@ -215,7 +215,7 @@ TEST(THREAD_TOOLS_TEST, LightSignalAtomic_BASE) {
 
   std::thread t2([&] {
     ASSERT_EQ(i, 0);
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(20));
     i = 1;
     s.notify();  // node1
   });
@@ -264,7 +264,7 @@ TEST(THREAD_TOOLS_TEST, ThreadIdTool_BASE) {
 // 模拟异步请求
 void AsyncSendRecv(const TestObj &in_buf, std::function<void(TestObj &&)> callback) {
   std::thread t([&in_buf, callback]() {
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
     TestObj out_buf;
     out_buf.data = in_buf.data + "-echo";
     callback(std::move(out_buf));

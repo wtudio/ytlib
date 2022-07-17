@@ -33,7 +33,7 @@ TEST(EXECUTION_TEST, StartDetached) {
 // 模拟异步请求
 void AsyncSendRecv(uint32_t in, const std::function<void(uint32_t)> &callback) {
   std::thread t([in, callback]() {
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
     callback(in + 1);
   });
   t.detach();
@@ -41,7 +41,7 @@ void AsyncSendRecv(uint32_t in, const std::function<void(uint32_t)> &callback) {
 
 void AsyncSendRecv2(uint32_t in, const std::function<void(uint32_t, std::string &&)> &callback) {
   std::thread t([in, callback]() {
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
     callback(in + 1, std::string("abc"));
   });
   t.detach();

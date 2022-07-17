@@ -32,12 +32,14 @@ TEST(BOOST_ASIO_TEST, AsioExecutor) {
   EXPECT_EQ(asio_sys_ptr->ThreadsNum(), 2);
 
   std::thread t([asio_sys_ptr] {
-    std::this_thread::sleep_for(std::chrono::seconds(2));
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
     asio_sys_ptr->Stop();
   });
 
   asio_sys_ptr->Start();
   asio_sys_ptr->Join();
+
+  t.join();
 }
 
 }  // namespace ytlib
