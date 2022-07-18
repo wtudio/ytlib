@@ -81,6 +81,7 @@ class LocalCache {
    * @param[in] args 缓存数据，或缓存数据的构造参数
    */
   template <typename... Args>
+  requires std::constructible_from<ValType, Args...>
   void Update(const KeyType& key, Args&&... args) {
     const auto& emplace_ret = data_map_.emplace(key, std::forward<Args>(args)...);
     ValContent& val_content = emplace_ret.first->second;

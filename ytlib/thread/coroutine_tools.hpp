@@ -30,20 +30,20 @@ class CoroSched {
 
     void return_value(T&& re) {
       p_coro_sched->ret_ = std::move(re);
-      p_coro_sched->flag_ = static_cast<uint8_t>(CoroState::END);
+      p_coro_sched->flag_.store(static_cast<uint8_t>(CoroState::END));
       p_coro_sched->flag_.notify_all();
     }
 
     std::suspend_always yield_value(const T& re) {
       p_coro_sched->ret_ = re;
-      p_coro_sched->flag_ = static_cast<uint8_t>(CoroState::YIELD);
+      p_coro_sched->flag_.store(static_cast<uint8_t>(CoroState::YIELD));
       p_coro_sched->flag_.notify_all();
       return {};
     }
 
     std::suspend_always yield_value(T&& re) {
       p_coro_sched->ret_ = std::move(re);
-      p_coro_sched->flag_ = static_cast<uint8_t>(CoroState::YIELD);
+      p_coro_sched->flag_.store(static_cast<uint8_t>(CoroState::YIELD));
       p_coro_sched->flag_.notify_all();
       return {};
     }
@@ -58,16 +58,17 @@ class CoroSched {
   }
 
   ///等待协程下一次调用co_yield或co_return，并获取其返回的值
-  T& Get() {
+  const T& Get() {
     flag_.wait(static_cast<uint8_t>(CoroState::RUN));
     return ret_;
   }
 
   ///继续运行co_yield挂起的协程
   void Resume() {
-    if (flag_ == static_cast<uint8_t>(CoroState::YIELD)) {
-      flag_ = static_cast<uint8_t>(CoroState::RUN);
-      handle_.resume();
+    if (flag_.load() != static_cast<uint8_t>(CoroState::END)) {
+      if (std::atomic_exchange(&flag_, static_cast<uint8_t>(CoroState::RUN)) == static_cast<uint8_t>(CoroState::YIELD)) {
+        handle_.resume();
+      }
     }
   }
 
@@ -96,8 +97,8 @@ class Awaitable {
  public:
   using RetCallback = std::function<void(T&&)>;
 
-  Awaitable(const std::function<void(RetCallback)>& anyscfun) : anyscfun_(anyscfun) {}
-  Awaitable(std::function<void(RetCallback)>&& anyscfun) : anyscfun_(std::move(anyscfun)) {}
+  Awaitable(const std::function<void(RetCallback&&)>& anyscfun) : anyscfun_(anyscfun) {}
+  Awaitable(std::function<void(RetCallback&&)>&& anyscfun) : anyscfun_(std::move(anyscfun)) {}
 
   bool await_ready() const noexcept { return false; }
   void await_suspend(std::coroutine_handle<> h) {
@@ -109,7 +110,7 @@ class Awaitable {
   T await_resume() noexcept { return std::move(re_); }
 
  private:
-  std::function<void(RetCallback)> anyscfun_;
+  std::function<void(RetCallback&&)> anyscfun_;
   T re_;
 };
 
@@ -121,8 +122,8 @@ class Awaitable<void> {
  public:
   using RetCallback = std::function<void()>;
 
-  Awaitable(const std::function<void(RetCallback)>& anyscfun) : anyscfun_(anyscfun) {}
-  Awaitable(std::function<void(RetCallback)>&& anyscfun) : anyscfun_(std::move(anyscfun)) {}
+  Awaitable(const std::function<void(RetCallback&&)>& anyscfun) : anyscfun_(anyscfun) {}
+  Awaitable(std::function<void(RetCallback&&)>&& anyscfun) : anyscfun_(std::move(anyscfun)) {}
 
   bool await_ready() const noexcept { return false; }
   void await_suspend(std::coroutine_handle<> h) {
@@ -133,7 +134,7 @@ class Awaitable<void> {
   void await_resume() noexcept {}
 
  private:
-  std::function<void(RetCallback)> anyscfun_;
+  std::function<void(RetCallback&&)> anyscfun_;
 };
 
 }  // namespace ytlib

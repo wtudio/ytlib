@@ -52,7 +52,6 @@ class TestObj {
   TestObj() {
     id = gid++;
     DBG_PRINT("[%llu]create obj %d", ytlib::GetThreadId(), id);
-    data = "";
   }
   TestObj(const TestObj &obj) : data(obj.data) {
     id = gid++;
@@ -261,9 +260,9 @@ TEST(THREAD_TOOLS_TEST, ThreadIdTool_BASE) {
   }
 }
 
-// 模拟异步请求
-void AsyncSendRecv(const TestObj &in_buf, std::function<void(TestObj &&)> callback) {
-  std::thread t([&in_buf, callback]() {
+// 模拟异步请求。TODO：在win下release版本大概率会出现bug，待查验
+void AsyncSendRecv(const TestObj &in_buf, std::function<void(TestObj &&)> &&callback) {
+  std::thread t([&in_buf, callback{std::move(callback)}]() {
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
     TestObj out_buf;
     out_buf.data = in_buf.data + "-echo";
@@ -281,46 +280,46 @@ TEST(THREAD_TOOLS_TEST, coroutine_BASE) {
   auto task_fun = [&buf]() -> CoroSched<TestObj> {
     // 调用co_await后，当前协程去执行Awaitable<TestObj>的await_suspend函数
     // await_suspend函数需要确保h.resume()在之后某个时间被调用，此时返回Awaitable<TestObj>的await_resume函数的返回值
-    TestObj ret_buf = co_await Awaitable<TestObj>([&buf](std::function<void(TestObj &&)> cb) {
-      AsyncSendRecv(buf, cb);
+    TestObj ret_buf = co_await Awaitable<TestObj>([&buf](std::function<void(TestObj &&)> &&cb) {
+      AsyncSendRecv(buf, std::move(cb));
     });
-    co_yield ret_buf;
+    co_yield ret_buf;  // (1)
 
-    TestObj ret_buf2 = co_await Awaitable<TestObj>([&ret_buf](std::function<void(TestObj &&)> cb) {
-      AsyncSendRecv(ret_buf, cb);
+    TestObj ret_buf2 = co_await Awaitable<TestObj>([&ret_buf](std::function<void(TestObj &&)> &&cb) {
+      AsyncSendRecv(ret_buf, std::move(cb));
     });
 
-    co_yield ret_buf2;
+    co_yield ret_buf2;  // (2)
 
-    co_yield std::move(ret_buf);
+    co_yield std::move(ret_buf);  // (3)
 
-    co_return ret_buf2;
+    co_return ret_buf2;  // (4)
   };
 
   // 开始运行协程
   auto sched = task_fun();
 
   // run
-  TestObj out_buf = sched.Get();
+  TestObj out_buf = sched.Get();  // (1)
   ASSERT_STREQ(out_buf.data.c_str(), "abcd-echo");
 
   // not run
-  out_buf = sched.Get();
+  out_buf = sched.Get();  // (1)
   ASSERT_STREQ(out_buf.data.c_str(), "abcd-echo");
 
   // run
   sched.Resume();
-  out_buf = sched.Get();
+  out_buf = sched.Get();  // (2)
   ASSERT_STREQ(out_buf.data.c_str(), "abcd-echo-echo");
 
   // run
   sched.Resume();
-  out_buf = sched.Get();
+  out_buf = sched.Get();  // (3)
   ASSERT_STREQ(out_buf.data.c_str(), "abcd-echo");
 
   // run
   sched.Resume();
-  out_buf = sched.Get();
+  out_buf = sched.Get();  // (4)
   ASSERT_STREQ(out_buf.data.c_str(), "abcd-echo-echo");
 }
 
