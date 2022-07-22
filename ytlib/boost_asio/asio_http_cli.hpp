@@ -143,9 +143,7 @@ class AsioHttpClient : public std::enable_shared_from_this<AsioHttpClient> {
    *
    * @return const AsioHttpClient::Cfg&
    */
-  const AsioHttpClient::Cfg& GetCfg() const {
-    return cfg_;
-  }
+  const AsioHttpClient::Cfg& GetCfg() const { return cfg_; }
 
  private:
   struct SessionCfg {

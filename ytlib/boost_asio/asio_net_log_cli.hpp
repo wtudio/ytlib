@@ -119,9 +119,7 @@ class AsioNetLogClient : public std::enable_shared_from_this<AsioNetLogClient> {
    *
    * @return const AsioNetLogClient::Cfg&
    */
-  const AsioNetLogClient::Cfg& GetCfg() const {
-    return cfg_;
-  }
+  const AsioNetLogClient::Cfg& GetCfg() const { return cfg_; }
 
  private:
   struct SessionCfg {

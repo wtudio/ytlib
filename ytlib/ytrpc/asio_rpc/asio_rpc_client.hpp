@@ -152,9 +152,7 @@ class AsioRpcClient : public std::enable_shared_from_this<AsioRpcClient> {
    *
    * @return const AsioRpcClient::Cfg&
    */
-  const AsioRpcClient::Cfg& GetCfg() const {
-    return cfg_;
-  }
+  const AsioRpcClient::Cfg& GetCfg() const { return cfg_; }
 
  private:
   // 包头结构：| 2byte magicnum | 2byte headlen | 4byte msglen |

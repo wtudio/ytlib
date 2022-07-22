@@ -87,6 +87,46 @@ void StartDetached(Sender &&sender) {
   });
 }
 
+template <typename CallBack>
+struct CallBackReceiver {
+  CallBackReceiver(const DetachHolder &holder, CallBack &&cb)
+      : holder_ptr(new DetachHolder(holder)),
+        callback((CallBack &&) cb) {}
+
+  template <typename... Values>
+  void set_value(Values &&...values) noexcept {
+    callback((Values &&) values...);
+    delete holder_ptr;
+  }
+
+  [[noreturn]] void set_error(std::exception_ptr) noexcept {
+    delete holder_ptr;
+    std::terminate();
+  }
+
+  void set_done() noexcept {
+    delete holder_ptr;
+  }
+
+  CallBack callback;
+  DetachHolder *holder_ptr;
+};
+
+template <typename Sender, typename CallBack>
+requires unifex::sender<Sender>
+void StartDetached(Sender &&sender, CallBack &&cb) {
+  DetachHolder holder;
+  CallBackReceiver r(holder, (CallBack &&) cb);
+
+  using OpType = decltype(unifex::connect((Sender &&) sender, std::move(r)));
+  OpType *op = new OpType(unifex::connect((Sender &&) sender, std::move(r)));
+  unifex::start(*op);
+
+  holder.SetDeferFun([op] {
+    delete op;
+  });
+}
+
 template <typename Receiver, typename... Results>
 requires unifex::receiver<Receiver>
 struct AsyncWrapperOperationState {

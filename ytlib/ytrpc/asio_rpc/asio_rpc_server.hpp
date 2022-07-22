@@ -246,9 +246,7 @@ class AsioRpcServer : public std::enable_shared_from_this<AsioRpcServer> {
    *
    * @return const AsioRpcServer::Cfg&
    */
-  const AsioRpcServer::Cfg& GetCfg() const {
-    return cfg_;
-  }
+  const AsioRpcServer::Cfg& GetCfg() const { return cfg_; }
 
  private:
   // 包头结构：| 2byte magicnum | 2byte headlen | 4byte msglen |

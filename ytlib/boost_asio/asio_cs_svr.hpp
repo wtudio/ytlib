@@ -224,9 +224,7 @@ class AsioCsServer : public std::enable_shared_from_this<AsioCsServer> {
    *
    * @return const AsioCsServer::Cfg&
    */
-  const AsioCsServer::Cfg& GetCfg() const {
-    return cfg_;
-  }
+  const AsioCsServer::Cfg& GetCfg() const { return cfg_; }
 
  private:
   // 包头结构：| 2byte magicnum | 4byte msglen |

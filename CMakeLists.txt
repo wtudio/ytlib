@@ -53,6 +53,8 @@ if(YTLIB_MASTER_PROJECT)
     add_compile_options(/wd4819)
   endif()
 
+  set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 endif()
 
 #设置第三方库。使用 FETCHCONTENT_BASE_DIR 以设置下载目录

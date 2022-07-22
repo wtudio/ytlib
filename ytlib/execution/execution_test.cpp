@@ -28,6 +28,13 @@ TEST(EXECUTION_TEST, StartDetached) {
 
   std::this_thread::sleep_for(std::chrono::milliseconds(100));
   EXPECT_EQ(n, 2);
+
+  uint32_t m = 0;
+  StartDetached(work(), [&m](int ret) { m = ret; });
+  EXPECT_EQ(m, 0);
+
+  std::this_thread::sleep_for(std::chrono::milliseconds(100));
+  EXPECT_EQ(m, 42);
 }
 
 // 模拟异步请求

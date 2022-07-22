@@ -159,9 +159,7 @@ class LocalCache {
    *
    * @return const LocalCache::Cfg&
    */
-  const LocalCache::Cfg& GetCfg() const {
-    return cfg_;
-  }
+  const LocalCache::Cfg& GetCfg() const { return cfg_; }
 
  private:
   struct ValContent {

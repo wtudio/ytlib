@@ -131,9 +131,7 @@ class AsioCsClient : public std::enable_shared_from_this<AsioCsClient> {
    *
    * @return const AsioCsClient::Cfg&
    */
-  const AsioCsClient::Cfg& GetCfg() const {
-    return cfg_;
-  }
+  const AsioCsClient::Cfg& GetCfg() const { return cfg_; }
 
  private:
   // 包头结构：| 2byte magicnum | 4byte msglen |

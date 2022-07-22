@@ -1,5 +1,8 @@
 # ytlib开发测试专用
 
+include(GetHiRedis)
+include(GetLibevent)
+
 add_subdirectory(custom_bench)
 
 add_subdirectory(testlib)
@@ -11,6 +14,8 @@ add_subdirectory(testytrpc)
 add_subdirectory(testexecutor)
 add_subdirectory(testboostfiber)
 add_subdirectory(testboostasio)
+
+add_subdirectory(testredis)
 
 if(WIN32)
   add_subdirectory(testgame)
