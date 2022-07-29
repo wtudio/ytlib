@@ -199,7 +199,7 @@ class FiberContext {
 
   ~FiberContext() noexcept {}
 
-  FiberScheduler get_scheduler() const noexcept {
+  FiberScheduler GetScheduler() const noexcept {
     return FiberScheduler(fiber_executor_ptr_);
   }
 

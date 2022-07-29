@@ -24,7 +24,7 @@ set_property(TARGET ${CUR_TARGET_NAME} PROPERTY PRIVATE_HEADER ${head_files})
 target_link_libraries(${CUR_TARGET_NAME} PRIVATE
   ytlib::misc
   libunifex::unifex
-  hiredis::hiredis_static
+  hiredis::hiredis_auto
   libevent::event
 )
 

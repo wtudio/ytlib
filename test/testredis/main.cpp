@@ -16,6 +16,7 @@ using namespace std;
 
 const char redis_host[] = "9.135.63.43";
 const int redis_port = 56379;
+const char redis_auth[] = "abcabc";
 
 void SyncTest() {
   redisContext *ctx = nullptr;
@@ -119,6 +120,7 @@ void Loop(event_base *events, uint32_t loop_times = 100) {
 
 void AsyncTest2() {
   event_base *events = event_base_new();
+
   redisAsyncContext *ctx = nullptr;
 
   // connect
@@ -132,10 +134,15 @@ void AsyncTest2() {
     redisAsyncFree(ctx);
     exit(1);
   } else {
-    redisLibeventAttach(ctx, events);
     redisAsyncSetConnectCallback(ctx, OnConnect);
     redisAsyncSetDisconnectCallback(ctx, OnDisconnect);
+    redisLibeventAttach(ctx, events);
   }
+  Loop(events);
+
+  // auth
+  printf("start cmd auth\n");
+  redisAsyncCommand(ctx, RedisCallback, NULL, "AUTH %s", redis_auth);
   Loop(events);
 
   // ping

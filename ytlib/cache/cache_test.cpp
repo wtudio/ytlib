@@ -71,6 +71,20 @@ TEST(CACHE_TEST, BASE_test) {
     ASSERT_TRUE(cache.Get(5));
     ASSERT_TRUE(cache.Get(6));
   }
+
+  // test del
+  {
+    ASSERT_TRUE(cache.Get(4));
+    cache.Del(4);
+    EXPECT_FALSE(cache.Get(4));
+  }
+
+  // test clear
+  {
+    ASSERT_EQ(cache.Size(), 2);
+    cache.Clear();
+    EXPECT_EQ(cache.Size(), 0);
+  }
 }
 
 }  // namespace ytlib

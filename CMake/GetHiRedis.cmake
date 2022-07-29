@@ -11,6 +11,15 @@ set(DISABLE_TESTS ON CACHE BOOL "")
 
 FetchContent_MakeAvailable(hiredis)
 
+if(NOT TARGET hiredis::hiredis_auto)
+  if(BUILD_SHARED_LIBS)
+    add_library(hiredis::hiredis_auto ALIAS hiredis)
+  else()
+    add_library(hiredis::hiredis_auto ALIAS hiredis_static)
+  endif()
+endif()
+
 # import targets：
 # hiredis::hiredis
 # hiredis::hiredis_static
+# hiredis::hiredis_auto

@@ -59,7 +59,7 @@ class LocalCache {
    * @brief 获取缓存数据
    * @note 如果没有缓存数据，则返回std::nullopt
    * @param[in] key 缓存key
-   * @return std::optional<ValType>
+   * @return std::optional<ValType> 缓存数据
    */
   std::optional<ValType> Get(const KeyType& key) {
     CleanExpireddata();
@@ -99,6 +99,25 @@ class LocalCache {
       lru_list_.splice(lru_list_.end(), lru_list_, val_content.lru_itr);
       ttl_list_.splice(ttl_list_.end(), ttl_list_, val_content.ttl_itr);
     }
+  }
+
+  /**
+   * @brief 删除某个数据
+   *
+   * @param[in] key 待删除数据的key
+   */
+  void Del(const KeyType& key) {
+    CleanExpireddata();
+
+    auto finditr = data_map_.find(key);
+    if (finditr == data_map_.end()) [[unlikely]]
+      return;
+
+    ValContent& val_content = finditr->second;
+    lru_list_.erase(val_content.lru_itr);
+    ttl_list_.erase(val_content.ttl_itr);
+
+    data_map_.erase(finditr);
   }
 
   /**
@@ -146,9 +165,19 @@ class LocalCache {
   }
 
   /**
-   * @brief 获取缓存数据大小
+   * @brief 删除所有数据，恢复到初始状态
    *
-   * @return const size_t
+   */
+  void Clear() {
+    lru_list_.clear();
+    ttl_list_.clear();
+    data_map_.clear();
+  }
+
+  /**
+   * @brief 获取当前缓存数据量
+   *
+   * @return const size_t 当前缓存数据量
    */
   const size_t Size() const {
     return data_map_.size();

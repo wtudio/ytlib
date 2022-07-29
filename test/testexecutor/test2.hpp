@@ -97,7 +97,7 @@ struct MyContext {
     }
   }
 
-  MyScheduler get_scheduler() noexcept {
+  MyScheduler GetScheduler() noexcept {
     return MyScheduler{this};
   }
 
@@ -130,7 +130,7 @@ void Test2() {
   MyContext ctx;
 
   for (int i = 0; i < 5; ++i) {
-    unifex::execute(ctx.get_scheduler(), [i]() {
+    unifex::execute(ctx.GetScheduler(), [i]() {
       DBG_PRINT("[run in thread %llu]hello new thread execute().", ytlib::GetThreadId());
     });
   }

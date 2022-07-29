@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
 
+#include "ytlib/boost_asio/asio_tools.hpp"
+
 #include "boost_asio_executor.hpp"
 #include "boost_fiber_executor.hpp"
 #include "execution_tools.hpp"
@@ -81,13 +83,13 @@ TEST(EXECUTION_TEST, AsyncWrapper) {
 
 TEST(EXECUTION_TEST, AsioContext) {
   auto asio_sys_ptr = std::make_shared<AsioExecutor>(2);
-  AsioContext asio_ctx(asio_sys_ptr);
+  AsioContext asio_ctx(asio_sys_ptr->IO());
   asio_sys_ptr->Start();
 
   // test execute
   {
     uint32_t n = 0;
-    unifex::execute(asio_ctx.get_scheduler(), [&n]() {
+    unifex::execute(asio_ctx.GetScheduler(), [&n]() {
       DBG_PRINT("[run in thread %llu]hello asio execute().", ytlib::GetThreadId());
       n = 42;
     });
@@ -96,10 +98,27 @@ TEST(EXECUTION_TEST, AsioContext) {
     EXPECT_EQ(n, 42);
   }
 
+  // test strand
+  {
+    uint32_t n = 0;
+    uint32_t ct = 1000;
+
+    auto asio_strand_scheduler = asio_ctx.GetStrandScheduler();
+    for (uint32_t ii = 0; ii < ct; ++ii) {
+      unifex::execute(asio_strand_scheduler, [&n]() {
+        // DBG_PRINT("[run in thread %llu]hello asio strand execute().", ytlib::GetThreadId());
+        n++;
+      });
+    }
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    EXPECT_EQ(n, ct);
+  }
+
   // test coro
   {
     auto work = [&]() -> unifex::task<int> {
-      co_await unifex::schedule(asio_ctx.get_scheduler());
+      co_await unifex::schedule(asio_ctx.GetScheduler());
       co_return 42;
     };
 
@@ -111,11 +130,11 @@ TEST(EXECUTION_TEST, AsioContext) {
   {
     uint32_t n = 0;
     auto work = [&]() -> unifex::task<void> {
-      co_await unifex::schedule(asio_ctx.get_scheduler());
+      co_await unifex::schedule(asio_ctx.GetScheduler());
       ++n;
-      co_await unifex::schedule_after(asio_ctx.get_scheduler(), std::chrono::milliseconds(100));
+      co_await unifex::schedule_after(asio_ctx.GetScheduler(), std::chrono::milliseconds(100));
       ++n;
-      co_await unifex::schedule_at(asio_ctx.get_scheduler(), std::chrono::steady_clock::now() + std::chrono::milliseconds(100));
+      co_await unifex::schedule_at(asio_ctx.GetScheduler(), std::chrono::steady_clock::now() + std::chrono::milliseconds(100));
       ++n;
     };
 
@@ -141,7 +160,7 @@ TEST(EXECUTION_TEST, FiberContext) {
   // test execute
   {
     uint32_t n = 0;
-    unifex::execute(fiber_ctx.get_scheduler(), [&n]() {
+    unifex::execute(fiber_ctx.GetScheduler(), [&n]() {
       DBG_PRINT("[run in thread %llu]hello fiber execute().", ytlib::GetThreadId());
       n = 42;
     });
@@ -153,7 +172,7 @@ TEST(EXECUTION_TEST, FiberContext) {
   // test coro
   {
     auto work = [&]() -> unifex::task<int> {
-      co_await unifex::schedule(fiber_ctx.get_scheduler());
+      co_await unifex::schedule(fiber_ctx.GetScheduler());
       co_return 42;
     };
 
@@ -184,11 +203,11 @@ TEST(EXECUTION_TEST, FiberContext) {
   {
     uint32_t n = 0;
     auto work = [&]() -> unifex::task<void> {
-      co_await unifex::schedule(fiber_ctx.get_scheduler());
+      co_await unifex::schedule(fiber_ctx.GetScheduler());
       ++n;
-      co_await unifex::schedule_after(fiber_ctx.get_scheduler(), std::chrono::milliseconds(100));
+      co_await unifex::schedule_after(fiber_ctx.GetScheduler(), std::chrono::milliseconds(100));
       ++n;
-      co_await unifex::schedule_at(fiber_ctx.get_scheduler(), std::chrono::steady_clock::now() + std::chrono::milliseconds(100));
+      co_await unifex::schedule_at(fiber_ctx.GetScheduler(), std::chrono::steady_clock::now() + std::chrono::milliseconds(100));
       ++n;
     };
 
@@ -210,7 +229,7 @@ TEST(EXECUTION_TEST, async_mutex) {
   unifex::async_mutex mutex;
 
   auto asio_sys_ptr = std::make_shared<AsioExecutor>(2);
-  AsioContext asio_ctx(asio_sys_ptr);
+  AsioContext asio_ctx(asio_sys_ptr->IO());
   asio_sys_ptr->Start();
 
   unifex::timed_single_thread_context thread_ctx;
@@ -220,7 +239,7 @@ TEST(EXECUTION_TEST, async_mutex) {
   auto asio_ctx_task = [&]() -> unifex::task<void> {
     for (int i = 0; i < 10; ++i) {
       co_await mutex.async_lock();
-      co_await unifex::schedule(asio_ctx.get_scheduler());
+      co_await unifex::schedule(asio_ctx.GetScheduler());
       ++shared_state;
       mutex.unlock();
     }
