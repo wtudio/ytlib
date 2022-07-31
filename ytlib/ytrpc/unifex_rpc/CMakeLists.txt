@@ -23,8 +23,10 @@ set_property(TARGET ${CUR_TARGET_NAME} PROPERTY PUBLIC_HEADER ${head_files})
 target_link_libraries(${CUR_TARGET_NAME} INTERFACE
   ytlib::misc
   ytlib::boost_asio
+  ytlib::execution
   ytlib::ytrpc::rpc_util
   ytlib::ytrpc::head_proto_gencode
+  libunifex::unifex
   protobuf::libprotobuf
 )
 

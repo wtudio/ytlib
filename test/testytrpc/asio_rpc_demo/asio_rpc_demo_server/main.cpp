@@ -14,16 +14,16 @@ using namespace ytlib;
 
 class DemoServiceImpl : public demo::DemoService {
  public:
-  virtual boost::asio::awaitable<ytrpc::Status> Login(const std::shared_ptr<const ytrpc::Context>& ctx_ptr, const demo::LoginReq& req, demo::LoginRsp& rsp) override {
+  virtual boost::asio::awaitable<ytrpc::AsioRpcStatus> Login(const std::shared_ptr<const ytrpc::AsioRpcContext>& ctx_ptr, const demo::LoginReq& req, demo::LoginRsp& rsp) override {
     rsp.set_code(0);
     rsp.set_msg("echo " + req.msg());
-    co_return ytrpc::Status(ytrpc::StatusCode::OK);
+    co_return ytrpc::AsioRpcStatus(ytrpc::AsioRpcStatus::Code::OK);
   }
 
-  virtual boost::asio::awaitable<ytrpc::Status> Logout(const std::shared_ptr<const ytrpc::Context>& ctx_ptr, const demo::LogoutReq& req, demo::LogoutRsp& rsp) override {
+  virtual boost::asio::awaitable<ytrpc::AsioRpcStatus> Logout(const std::shared_ptr<const ytrpc::AsioRpcContext>& ctx_ptr, const demo::LogoutReq& req, demo::LogoutRsp& rsp) override {
     rsp.set_code(0);
     rsp.set_msg("echo " + req.msg());
-    co_return ytrpc::Status(ytrpc::StatusCode::OK);
+    co_return ytrpc::AsioRpcStatus(ytrpc::AsioRpcStatus::Code::OK);
   }
 };
 

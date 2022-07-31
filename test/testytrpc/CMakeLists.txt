@@ -1,3 +1,4 @@
 add_subdirectory(asio_rpc_demo)
 add_subdirectory(asio_rpc_bench)
 
+add_subdirectory(unifex_rpc_demo)

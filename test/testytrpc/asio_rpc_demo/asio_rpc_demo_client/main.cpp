@@ -34,7 +34,7 @@ int32_t main(int32_t argc, char** argv) {
         uint32_t ct = 10;
         auto demo_service_proxy_ptr = std::make_shared<demo::DemoServiceProxy>(cli_ptr);
         while (ct--) {
-          auto ctx_ptr = std::make_shared<ytrpc::Context>();
+          auto ctx_ptr = std::make_shared<ytrpc::AsioRpcContext>();
           ctx_ptr->SetTimeout(std::chrono::milliseconds(3000));
 
           demo::LoginReq req;

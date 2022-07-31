@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
 
 #include "Head.pb.h"
+#include "buffer.hpp"
 #include "ytlib/pb_tools/pb_tools.hpp"
-#include "ytrpc_buffer.hpp"
 
 namespace ytlib {
 namespace ytrpc {

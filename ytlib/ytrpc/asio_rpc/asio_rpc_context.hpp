@@ -18,10 +18,10 @@ namespace ytrpc {
  * 2、超时能力
  * 3、meta信息能力
  */
-class Context {
+class AsioRpcContext {
  public:
-  Context() {}
-  ~Context() {}
+  AsioRpcContext() {}
+  ~AsioRpcContext() {}
 
   // done 相关功能，线程安全
   void Done(const std::string& info = "") const {

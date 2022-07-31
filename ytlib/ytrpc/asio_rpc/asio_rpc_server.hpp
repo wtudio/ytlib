@@ -19,9 +19,9 @@
 #include "ytlib/boost_asio/net_util.hpp"
 #include "ytlib/misc/misc_macro.h"
 
-#include "ytlib/ytrpc/rpc_util/ytrpc_buffer.hpp"
-#include "ytlib/ytrpc/rpc_util/ytrpc_context.hpp"
-#include "ytlib/ytrpc/rpc_util/ytrpc_status.hpp"
+#include "asio_rpc_context.hpp"
+#include "asio_rpc_status.hpp"
+#include "ytlib/ytrpc/rpc_util/buffer.hpp"
 
 #include "Head.pb.h"
 
@@ -31,7 +31,7 @@ namespace ytrpc {
 class AsioRpcService {
  public:
   struct FuncAdapter {
-    std::function<boost::asio::awaitable<Status>(const std::shared_ptr<const Context>&, const google::protobuf::Message&, google::protobuf::Message&)> handle_func;
+    std::function<boost::asio::awaitable<AsioRpcStatus>(const std::shared_ptr<const AsioRpcContext>&, const google::protobuf::Message&, google::protobuf::Message&)> handle_func;
     std::function<std::unique_ptr<google::protobuf::Message>(void)> req_ptr_gener;
     std::function<std::unique_ptr<google::protobuf::Message>(void)> rsp_ptr_gener;
   };
@@ -47,11 +47,11 @@ class AsioRpcService {
   template <typename ReqType, typename RspType>
   void RegisterRpcServiceFunc(
       const std::string& func_name,
-      const std::function<boost::asio::awaitable<Status>(const std::shared_ptr<const Context>&, const ReqType&, RspType&)>& func) {
+      const std::function<boost::asio::awaitable<AsioRpcStatus>(const std::shared_ptr<const AsioRpcContext>&, const ReqType&, RspType&)>& func) {
     func_adapter_map_.emplace(
         func_name,
         FuncAdapter{
-            .handle_func = [func](const std::shared_ptr<const Context>& ctx_ptr, const google::protobuf::Message& req, google::protobuf::Message& rsp) -> boost::asio::awaitable<Status> {
+            .handle_func = [func](const std::shared_ptr<const AsioRpcContext>& ctx_ptr, const google::protobuf::Message& req, google::protobuf::Message& rsp) -> boost::asio::awaitable<AsioRpcStatus> {
               return func(ctx_ptr, static_cast<const ReqType&>(req), static_cast<RspType&>(rsp));
             },
             .req_ptr_gener = []() -> std::unique_ptr<google::protobuf::Message> {
@@ -383,20 +383,20 @@ class AsioRpcServer : public std::enable_shared_from_this<AsioRpcServer> {
                       const AsioRpcService::FuncAdapter& func_adapter = finditr->second;
                       std::unique_ptr<google::protobuf::Message> req_ptr = func_adapter.req_ptr_gener();
                       if (!req_ptr->ParseFromArray(req_buf.data() + pb_head_len, req_buf.size() - pb_head_len)) [[unlikely]] {
-                        rsp_head.set_ret_code(static_cast<int32_t>(StatusCode::SVR_PARSE_REQ_FAILED));
+                        rsp_head.set_ret_code(static_cast<int32_t>(AsioRpcStatus::Code::SVR_PARSE_REQ_FAILED));
                       } else {
-                        std::shared_ptr<Context> ctx_ptr = std::make_shared<Context>();
+                        std::shared_ptr<AsioRpcContext> ctx_ptr = std::make_shared<AsioRpcContext>();
                         ctx_ptr->SetDeadline(std::chrono::system_clock::time_point(std::chrono::milliseconds(req_head.ddl_ms())));
                         ctx_ptr->ContextKv() = std::map<std::string, std::string>(req_head.context_kv().begin(), req_head.context_kv().end());
 
                         rsp_ptr = func_adapter.rsp_ptr_gener();
-                        const Status& ret_status = co_await func_adapter.handle_func(ctx_ptr, *req_ptr, *rsp_ptr);
+                        const AsioRpcStatus& ret_status = co_await func_adapter.handle_func(ctx_ptr, *req_ptr, *rsp_ptr);
                         rsp_head.set_ret_code(static_cast<int32_t>(ret_status.Ret()));
                         rsp_head.set_func_ret_code(static_cast<int32_t>(ret_status.FuncRet()));
                         rsp_head.set_func_ret_msg(ret_status.FuncRetMsg());
                       }
                     } else {
-                      rsp_head.set_ret_code(static_cast<int32_t>(StatusCode::NOT_FOUND));
+                      rsp_head.set_ret_code(static_cast<int32_t>(AsioRpcStatus::Code::NOT_FOUND));
                     }
 
                     if (!rsp_head.SerializeToZeroCopyStream(&os)) [[unlikely]]

@@ -17,9 +17,9 @@
 #include "ytlib/boost_asio/net_util.hpp"
 #include "ytlib/misc/misc_macro.h"
 
-#include "ytlib/ytrpc/rpc_util/ytrpc_buffer.hpp"
-#include "ytlib/ytrpc/rpc_util/ytrpc_context.hpp"
-#include "ytlib/ytrpc/rpc_util/ytrpc_status.hpp"
+#include "asio_rpc_context.hpp"
+#include "asio_rpc_status.hpp"
+#include "ytlib/ytrpc/rpc_util/buffer.hpp"
 
 #include "Head.pb.h"
 
@@ -64,11 +64,11 @@ class AsioRpcClient : public std::enable_shared_from_this<AsioRpcClient> {
   AsioRpcClient(const AsioRpcClient&) = delete;             ///< no copy
   AsioRpcClient& operator=(const AsioRpcClient&) = delete;  ///< no copy
 
-  boost::asio::awaitable<Status> Invoke(const std::string& func_name, const std::shared_ptr<const Context>& ctx_ptr, const google::protobuf::Message& req, google::protobuf::Message& rsp) {
+  boost::asio::awaitable<AsioRpcStatus> Invoke(const std::string& func_name, const std::shared_ptr<const AsioRpcContext>& ctx_ptr, const google::protobuf::Message& req, google::protobuf::Message& rsp) {
     AsioRpcClient::MsgContext msg_ctx(GetNewReqID(), *ctx_ptr);
 
     if (msg_ctx.ctx.IsDone()) [[unlikely]] {
-      co_return Status(StatusCode::CANCELLED);
+      co_return AsioRpcStatus(AsioRpcStatus::Code::CANCELLED);
     }
 
     BufferVecZeroCopyOutputStream os(msg_ctx.req_buf_vec);
@@ -95,7 +95,7 @@ class AsioRpcClient : public std::enable_shared_from_this<AsioRpcClient> {
     std::shared_ptr<AsioRpcClient::Session> cur_session_ptr = session_ptr_;
     while (!cur_session_ptr || !cur_session_ptr->IsRunning()) {
       if (!run_flag_) [[unlikely]] {
-        co_return Status(StatusCode::CLI_IS_NOT_RUNNING);
+        co_return AsioRpcStatus(AsioRpcStatus::Code::CLI_IS_NOT_RUNNING);
       }
 
       co_await boost::asio::co_spawn(
@@ -117,13 +117,13 @@ class AsioRpcClient : public std::enable_shared_from_this<AsioRpcClient> {
 
     co_await cur_session_ptr->Invoke(msg_ctx);
 
-    if (msg_ctx.ret_status.Ret() != StatusCode::OK) [[unlikely]] {
+    if (msg_ctx.ret_status.Ret() != AsioRpcStatus::Code::OK) [[unlikely]] {
       msg_ctx.ctx.Done("call " + func_name + "failed, " + msg_ctx.ret_status.ToString());
       co_return std::move(msg_ctx.ret_status);
     }
 
     if (!rsp.ParseFromArray(msg_ctx.rsp_buf.data() + msg_ctx.rsp_pos, msg_ctx.rsp_buf.size() - msg_ctx.rsp_pos)) [[unlikely]]
-      co_return Status(StatusCode::CLI_PARSE_RSP_FAILED);
+      co_return AsioRpcStatus(AsioRpcStatus::Code::CLI_PARSE_RSP_FAILED);
 
     co_return std::move(msg_ctx.ret_status);
   }
@@ -161,18 +161,18 @@ class AsioRpcClient : public std::enable_shared_from_this<AsioRpcClient> {
   static const char HEAD_BYTE_2 = 'T';
 
   struct MsgContext {
-    MsgContext(uint32_t input_req_id, const Context& input_ctx)
+    MsgContext(uint32_t input_req_id, const AsioRpcContext& input_ctx)
         : req_id(input_req_id),
           ctx(input_ctx) {}
 
     ~MsgContext() {}
 
     const uint32_t req_id;
-    const Context& ctx;
+    const AsioRpcContext& ctx;
 
     BufferVec req_buf_vec;
 
-    Status ret_status;
+    AsioRpcStatus ret_status;
     std::vector<char> rsp_buf;
     uint32_t rsp_pos = 0;
   };
@@ -230,7 +230,7 @@ class AsioRpcClient : public std::enable_shared_from_this<AsioRpcClient> {
             }
 
             if (!recv_flag) [[unlikely]] {
-              msg_ctx.ret_status = Status(StatusCode::TIMEOUT);
+              msg_ctx.ret_status = AsioRpcStatus(AsioRpcStatus::Code::TIMEOUT);
             }
 
             msg_recorder_map_.erase(empalce_ret.first);
@@ -348,8 +348,8 @@ class AsioRpcClient : public std::enable_shared_from_this<AsioRpcClient> {
                                   return;
                                 }
 
-                                finditr->second.msg_ctx.ret_status = Status(
-                                    static_cast<StatusCode>(rsp_head.ret_code()),
+                                finditr->second.msg_ctx.ret_status = AsioRpcStatus(
+                                    static_cast<AsioRpcStatus::Code>(rsp_head.ret_code()),
                                     rsp_head.func_ret_code(),
                                     rsp_head.func_ret_msg());
                                 finditr->second.msg_ctx.rsp_buf = std::move(rsp_buf);
@@ -465,7 +465,7 @@ class AsioRpcServiceProxy {
   explicit AsioRpcServiceProxy(const std::shared_ptr<AsioRpcClient>& client_ptr) : client_ptr_(client_ptr) {}
   virtual ~AsioRpcServiceProxy() {}
 
-  boost::asio::awaitable<Status> Invoke(const std::string& func_name, const std::shared_ptr<const Context>& ctx_ptr, const google::protobuf::Message& req, google::protobuf::Message& rsp) {
+  boost::asio::awaitable<AsioRpcStatus> Invoke(const std::string& func_name, const std::shared_ptr<const AsioRpcContext>& ctx_ptr, const google::protobuf::Message& req, google::protobuf::Message& rsp) {
     return client_ptr_->Invoke(func_name, ctx_ptr, req, rsp);
   }
 

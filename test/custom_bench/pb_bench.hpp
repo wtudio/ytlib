@@ -3,7 +3,7 @@
 #include "Head.pb.h"
 #include "ytrpc_zero_copy_stream.hpp"
 
-#include "ytrpc_buffer.hpp"
+#include "ytlib/ytrpc/rpc_util/buffer.hpp"
 
 inline ytlib::ytrpc::ReqHead g_req_head;
 inline boost::asio::streambuf g_req_head_buf;

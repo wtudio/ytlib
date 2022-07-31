@@ -58,7 +58,7 @@ int32_t main(int32_t argc, char** argv) {
                       trpc::test::helloworld::HelloReply rsp;
                       req.set_msg(request_msg);
 
-                      auto ctx_ptr = std::make_shared<ytrpc::Context>();
+                      auto ctx_ptr = std::make_shared<ytrpc::AsioRpcContext>();
                       ctx_ptr->SetTimeout(std::chrono::milliseconds(1000));
 
                       uint64_t begin_time = GetCurTimestampMs();

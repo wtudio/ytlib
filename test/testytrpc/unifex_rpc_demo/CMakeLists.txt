@@ -1,0 +1,4 @@
+add_subdirectory(unifex_rpc_demo_protos)
+
+add_subdirectory(unifex_rpc_demo_server)
+add_subdirectory(unifex_rpc_demo_client)
