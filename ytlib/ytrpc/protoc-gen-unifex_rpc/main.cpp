@@ -25,7 +25,7 @@ class UnifexRpcCodeGenerator final : public google::protobuf::compiler::CodeGene
 
   const std::string t_hfile_one_service_func = R"str(
   virtual unifex::task<std::tuple<ytlib::ytrpc::UnifexRpcStatus, {{rpc_rsp_name}}>> {{rpc_func_name}}(const std::shared_ptr<const ytlib::ytrpc::UnifexRpcContext>& ctx_ptr, const {{rpc_req_name}}& req) {
-    co_return std::make_tuple(ytlib::ytrpc::UnifexRpcStatus(ytlib::ytrpc::UnifexRpcStatus::Code::NOT_IMPLEMENTED), {{rpc_rsp_name}}());
+    co_return {ytlib::ytrpc::UnifexRpcStatus(ytlib::ytrpc::UnifexRpcStatus::Code::NOT_IMPLEMENTED), {{rpc_rsp_name}}()};
   })str";
 
   const std::string t_hfile_one_service_class = R"str(

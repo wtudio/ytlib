@@ -141,7 +141,8 @@ std::tuple<int, std::string> foo() {
   int n = 1;
   std::string s = "aaa";
 
-  return std::make_tuple(n, std::move(s));
+  // return std::make_tuple(n, std::move(s));
+  return {n, std::move(s)};
 }
 
 int32_t main(int32_t argc, char **argv) {

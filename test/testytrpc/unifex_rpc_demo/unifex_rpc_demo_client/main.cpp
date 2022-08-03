@@ -33,7 +33,7 @@ int32_t main(int32_t argc, char** argv) {
       DBG_PRINT("ctx: %s", ctx_ptr->ToString().c_str());
       DBG_PRINT("req: %s", Pb2PrettyJson(req).c_str());
 
-      // auto [status, rsp] = co_await demo_service_proxy_ptr->Login(ctx_ptr, req);
+      // const auto& [status, rsp] = co_await demo_service_proxy_ptr->Login(ctx_ptr, req);
 
       // DBG_PRINT("status: %s", status.ToString().c_str());
       // DBG_PRINT("rsp: %s", Pb2PrettyJson(rsp).c_str());

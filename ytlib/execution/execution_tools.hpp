@@ -162,7 +162,7 @@ struct AsyncWrapperOperationState {
 
 /**
  * @brief 将异步回调型函数封装成一个Sender
- *
+ * @note todo：解决引用类型等问题
  * @tparam Results 结果的类型，也就是回调函数的参数类型
  */
 template <typename... Results>

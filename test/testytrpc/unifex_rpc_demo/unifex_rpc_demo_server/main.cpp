@@ -17,14 +17,14 @@ class DemoServiceImpl : public demo::DemoService {
     demo::LoginRsp rsp;
     rsp.set_code(0);
     rsp.set_msg("echo " + req.msg());
-    co_return std::make_tuple(ytrpc::UnifexRpcStatus(ytrpc::UnifexRpcStatus::Code::OK), std::move(rsp));
+    co_return {ytrpc::UnifexRpcStatus(ytrpc::UnifexRpcStatus::Code::OK), std::move(rsp)};
   }
 
   virtual unifex::task<std::tuple<ytrpc::UnifexRpcStatus, demo::LogoutRsp>> Logout(const std::shared_ptr<const ytrpc::UnifexRpcContext>& ctx_ptr, const demo::LogoutReq& req) override {
     demo::LogoutRsp rsp;
     rsp.set_code(0);
     rsp.set_msg("echo " + req.msg());
-    co_return std::make_tuple(ytrpc::UnifexRpcStatus(ytrpc::UnifexRpcStatus::Code::OK), std::move(rsp));
+    co_return {ytrpc::UnifexRpcStatus(ytrpc::UnifexRpcStatus::Code::OK), std::move(rsp)};
   }
 };
 
