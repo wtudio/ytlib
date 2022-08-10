@@ -285,6 +285,9 @@ TEST(EXECUTION_TEST, SignalSender) {
 
   sig_2.Notify();
   EXPECT_EQ(n, 43);
+
+  StartDetached(work());
+  EXPECT_EQ(n, 43);
 }
 
 }  // namespace ytlib

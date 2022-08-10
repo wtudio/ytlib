@@ -158,6 +158,30 @@ class UnifexRpcClient : public std::enable_shared_from_this<UnifexRpcClient> {
     uint32_t rsp_pos = 0;
   };
 
+  template <typename Receiver>
+  requires unifex::receiver<Receiver>
+  struct RecvSigOperationState {
+    template <typename Receiver2>
+    requires std::constructible_from<Receiver, Receiver2>
+    RecvSigOperationState(std::function<void()>& recv_callback, Receiver2&& r)
+    noexcept(std::is_nothrow_constructible_v<Receiver, Receiver2>)
+        : recv_callback_(recv_callback), receiver_(new Receiver((Receiver2 &&) r)) {}
+
+    void start() noexcept {
+      recv_callback_ = [receiver = receiver_]() {
+        try {
+          unifex::set_value(std::move(*receiver));
+        } catch (...) {
+          unifex::set_error(std::move(*receiver), std::current_exception());
+        }
+      };
+    }
+
+    std::function<void()>& recv_callback_;
+
+    std::shared_ptr<Receiver> receiver_;
+  };
+
   class RecvSigSender {
    public:
     template <template <typename...> class Variant, template <typename...> class Tuple>
@@ -167,6 +191,17 @@ class UnifexRpcClient : public std::enable_shared_from_this<UnifexRpcClient> {
     using error_types = Variant<std::exception_ptr>;
 
     static constexpr bool sends_done = false;
+
+    RecvSigSender(std::function<void()>& recv_callback)
+        : recv_callback_(recv_callback) {}
+
+    template <typename Receiver>
+    RecvSigOperationState<unifex::remove_cvref_t<Receiver>> connect(Receiver&& receiver) {
+      return RecvSigOperationState<unifex::remove_cvref_t<Receiver>>(recv_callback_, (Receiver &&) receiver);
+    }
+
+   private:
+    std::function<void()>& recv_callback_;
   };
 
   struct SessionCfg {
@@ -199,13 +234,14 @@ class UnifexRpcClient : public std::enable_shared_from_this<UnifexRpcClient> {
       auto empalce_ret = msg_recorder_map_.emplace(msg_ctx.req_id, msg_recorder);
       msg_recorder_map_mutex_.unlock();
 
+      // todo：可以优化到TrySend中，不必使用atomic_bool，省一次加锁
       co_await send_buffer_vec_mutex_.async_lock();
       send_buffer_vec_.Merge(msg_ctx.req_buf_vec);
       send_buffer_vec_mutex_.unlock();
 
-      TrySend();
+      StartDetached(TrySend());
 
-      // co_await msg_recorder.recv_sig;
+      co_await msg_recorder.recv_sig;
 
       co_await msg_recorder_map_mutex_.async_lock();
       msg_recorder_map_.erase(empalce_ret.first);
@@ -214,28 +250,141 @@ class UnifexRpcClient : public std::enable_shared_from_this<UnifexRpcClient> {
       co_return;
     }
 
-    void Start() {}
+    void Start() {
+      auto self = shared_from_this();
 
-    void Stop() {}
+      StartDetached(unifex::co_invoke([this, self]() -> unifex::task<void> {
+        DBG_PRINT("rpc cli session start create a new connect to %s", TcpEp2Str(session_cfg_ptr_->svr_ep).c_str());
+        boost::system::error_code ec = co_await AsyncWrapper<boost::system::error_code>([&](std::function<void(boost::system::error_code)>&& cb) {
+          sock_.async_connect(session_cfg_ptr_->svr_ep, std::move(cb));
+        });
+
+        if (ec) {
+          DBG_PRINT("rpc cli session async connect get error, %s", ec.message().c_str());
+          Stop();
+          co_return;
+        }
+
+        std::vector<char> head_buf(HEAD_SIZE);
+        boost::asio::mutable_buffer asio_head_buf(head_buf.data(), HEAD_SIZE);
+        while (run_flag_) {
+          // 接收固定包头
+          auto [ec, read_data_size] = co_await AsyncWrapper<boost::system::error_code, size_t>([&](std::function<void(boost::system::error_code, size_t)>&& cb) {
+            boost::asio::async_read(sock_, asio_head_buf, boost::asio::transfer_exactly(HEAD_SIZE), std::move(cb));
+          });
+          DBG_PRINT("rpc cli session async read %llu bytes for head", read_data_size);
+
+          if (ec) {
+            DBG_PRINT("rpc cli session async read get error, %s", ec.message().c_str());
+            Stop();
+            co_return;
+          }
+
+          if (read_data_size != HEAD_SIZE || head_buf[0] != HEAD_BYTE_1 || head_buf[1] != HEAD_BYTE_2) [[unlikely]]
+            throw std::runtime_error("Get an invalid head.");
+
+          // 接收pb包头+pb业务包
+          const uint32_t pb_msg_len = GetUint32FromBuf(&head_buf[4]);
+
+          if (pb_msg_len > session_cfg_ptr_->max_recv_size) [[unlikely]]
+            throw std::runtime_error("Msg too large.");
+
+          std::vector<char> rsp_buf(pb_msg_len);
+
+          std::tie(ec, read_data_size) = co_await AsyncWrapper<boost::system::error_code, size_t>([&](std::function<void(boost::system::error_code, size_t)>&& cb) {
+            boost::asio::async_read(sock_, boost::asio::buffer(rsp_buf, pb_msg_len), boost::asio::transfer_exactly(pb_msg_len), std::move(cb));
+          });
+          DBG_PRINT("rpc cli session async read %llu bytes for pb head", read_data_size);
+
+          if (ec) {
+            DBG_PRINT("rpc cli session async read get error, %s", ec.message().c_str());
+            Stop();
+            co_return;
+          }
+
+          size_t pb_head_len = GetUint16FromBuf(&head_buf[2]);
+
+          RspHead rsp_head;
+          if (!rsp_head.ParseFromArray(rsp_buf.data(), pb_head_len)) [[unlikely]]
+            throw std::runtime_error("Parse rsp head failed.");
+
+          auto finditr = msg_recorder_map_.find(rsp_head.req_id());
+          if (finditr == msg_recorder_map_.end()) [[unlikely]] {
+            DBG_PRINT("rpc cli session get a no owner pkg, req id:", rsp_head.req_id());
+            continue;
+          }
+
+          finditr->second.msg_ctx.ret_status = UnifexRpcStatus(
+              static_cast<UnifexRpcStatus::Code>(rsp_head.ret_code()),
+              rsp_head.func_ret_code(),
+              rsp_head.func_ret_msg());
+          finditr->second.msg_ctx.rsp_buf = std::move(rsp_buf);
+          finditr->second.msg_ctx.rsp_pos = pb_head_len;
+          finditr->second.recv_callback();
+        }
+      }));
+    }
+
+    void Stop() {
+      if (!std::atomic_exchange(&run_flag_, false)) return;
+    }
 
     const std::atomic_bool& IsRunning() { return run_flag_; }
 
    private:
-    void TrySend() {
+    unifex::task<void> TrySend() {
+      if (std::atomic_exchange(&sending_flag_, true)) co_return;
+
+      while (run_flag_) {
+        BufferVec tmp_send_buffer_vec;
+
+        co_await send_buffer_vec_mutex_.async_lock();
+        if (send_buffer_vec_.Vec().empty()) {
+          sending_flag_ = false;
+          send_buffer_vec_mutex_.unlock();
+          co_return;
+        }
+        tmp_send_buffer_vec.Swap(send_buffer_vec_);
+        send_buffer_vec_mutex_.unlock();
+
+        const auto& buffer_vec = tmp_send_buffer_vec.Vec();
+        std::vector<boost::asio::const_buffer> asio_const_buffer_vec;
+        asio_const_buffer_vec.reserve(buffer_vec.size());
+        for (const auto& buffer : buffer_vec) {
+          asio_const_buffer_vec.push_back(boost::asio::const_buffer(buffer.first, buffer.second));
+        }
+
+        auto [ec, write_data_size] = co_await AsyncWrapper<boost::system::error_code, size_t>([&](std::function<void(boost::system::error_code, size_t)>&& cb) {
+          boost::asio::async_write(sock_, asio_const_buffer_vec, std::move(cb));
+        });
+
+        if (ec) {
+          DBG_PRINT("rpc cli session async write get error, %s", ec.message().c_str());
+          sending_flag_ = false;
+          Stop();
+          co_return;
+        }
+
+        DBG_PRINT("rpc cli session async write %llu bytes", write_data_size);
+      }
+
+      co_return;
     }
 
    private:
     struct MsgRecorder {
       MsgRecorder(MsgContext& input_msg_ctx)
-          : msg_ctx(input_msg_ctx) {}
+          : msg_ctx(input_msg_ctx), recv_sig(recv_callback) {}
 
       MsgContext& msg_ctx;
+      std::function<void()> recv_callback;
       RecvSigSender recv_sig;
     };
 
     std::shared_ptr<const UnifexRpcClient::SessionCfg> session_cfg_ptr_;
     std::atomic_bool run_flag_ = true;
 
+    std::atomic_bool sending_flag_ = false;
     boost::asio::ip::tcp::socket sock_;
 
     unifex::async_mutex send_buffer_vec_mutex_;

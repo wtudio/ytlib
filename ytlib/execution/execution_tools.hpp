@@ -195,79 +195,88 @@ class AsyncWrapper {
   AsyncFunc async_func_;
 };
 
-template <typename Receiver>
-requires unifex::receiver<Receiver>
-struct AsyncSignalOperationState {
-  template <typename Receiver2>
-  requires std::constructible_from<Receiver, Receiver2>
-  AsyncSignalOperationState(unifex::async_mutex *receivers_list_mutex, std::list<std::function<void()>> *receivers_list, Receiver2 &&r)
-  noexcept(std::is_nothrow_constructible_v<Receiver, Receiver2>)
-      : receivers_list_mutex_(receivers_list_mutex), receivers_list_(receivers_list), receiver_(new Receiver((Receiver2 &&) r)) {}
-
-  void start() noexcept {
-    StartDetached(unifex::co_invoke([receivers_list_mutex = receivers_list_mutex_, receivers_list = receivers_list_, receiver = receiver_]() -> unifex::task<void> {
-      co_await receivers_list_mutex->async_lock();
-      receivers_list->emplace_back([receiver]() {
-        try {
-          unifex::set_value(std::move(*receiver));
-        } catch (...) {
-          unifex::set_error(std::move(*receiver), std::current_exception());
-        }
-      });
-      receivers_list_mutex->unlock();
-    }));
-  }
-
-  unifex::async_mutex *receivers_list_mutex_;
-  std::list<std::function<void()>> *receivers_list_;
-
-  std::shared_ptr<Receiver> receiver_;
-};
-
-class AsyncSignalSender {
- public:
-  template <template <typename...> class Variant, template <typename...> class Tuple>
-  using value_types = Variant<Tuple<>>;
-
-  template <template <typename...> class Variant>
-  using error_types = Variant<std::exception_ptr>;
-
-  static constexpr bool sends_done = false;
-
-  AsyncSignalSender(unifex::async_mutex *receivers_list_mutex, std::list<std::function<void()>> *receivers_list)
-      : receivers_list_mutex_(receivers_list_mutex), receivers_list_(receivers_list) {}
-
-  template <typename Receiver>
-  AsyncSignalOperationState<unifex::remove_cvref_t<Receiver>> connect(Receiver &&receiver) {
-    return AsyncSignalOperationState<unifex::remove_cvref_t<Receiver>>(receivers_list_mutex_, receivers_list_, (Receiver &&) receiver);
-  }
-
- private:
-  unifex::async_mutex *receivers_list_mutex_;
-  std::list<std::function<void()>> *receivers_list_;
-};
-
+/**
+ * @brief 异步信号量
+ * @note 仅能使用一次，Notify之后所有的wait都将立即返回
+ */
 class AsyncSignal {
  public:
+  template <typename Receiver>
+  requires unifex::receiver<Receiver>
+  struct OperationState {
+    template <typename Receiver2>
+    requires std::constructible_from<Receiver, Receiver2>
+    OperationState(AsyncSignal *sig_ptr, Receiver2 &&r)
+    noexcept(std::is_nothrow_constructible_v<Receiver, Receiver2>)
+        : sig_ptr_(sig_ptr), receiver_(new Receiver((Receiver2 &&) r)) {}
+
+    void start() noexcept {
+      StartDetached(unifex::co_invoke([sig_ptr = sig_ptr_, receiver = receiver_]() -> unifex::task<void> {
+        co_await sig_ptr->receivers_list_mutex_.async_lock();
+        if (sig_ptr->flag_) {
+          sig_ptr->receivers_list_.emplace_back([receiver]() {
+            try {
+              unifex::set_value(std::move(*receiver));
+            } catch (...) {
+              unifex::set_error(std::move(*receiver), std::current_exception());
+            }
+          });
+        } else {
+          try {
+            unifex::set_value(std::move(*receiver));
+          } catch (...) {
+            unifex::set_error(std::move(*receiver), std::current_exception());
+          }
+        }
+        sig_ptr->receivers_list_mutex_.unlock();
+      }));
+    }
+
+    AsyncSignal *sig_ptr_;
+
+    std::shared_ptr<Receiver> receiver_;
+  };
+
+  class Sender {
+   public:
+    template <template <typename...> class Variant, template <typename...> class Tuple>
+    using value_types = Variant<Tuple<>>;
+
+    template <template <typename...> class Variant>
+    using error_types = Variant<std::exception_ptr>;
+
+    static constexpr bool sends_done = false;
+
+    Sender(AsyncSignal *sig_ptr)
+        : sig_ptr_(sig_ptr) {}
+
+    template <typename Receiver>
+    OperationState<unifex::remove_cvref_t<Receiver>> connect(Receiver &&receiver) {
+      return OperationState<unifex::remove_cvref_t<Receiver>>(sig_ptr_, (Receiver &&) receiver);
+    }
+
+   private:
+    AsyncSignal *sig_ptr_;
+  };
+
   void Notify() {
     StartDetached(unifex::co_invoke([this]() -> unifex::task<void> {
-      std::list<std::function<void()>> tmp_receivers_list;
       co_await receivers_list_mutex_.async_lock();
-      tmp_receivers_list.swap(receivers_list_);
+      flag_ = false;
       receivers_list_mutex_.unlock();
 
-      for (auto &f : tmp_receivers_list) {
-        f();
-      }
+      for (auto &f : receivers_list_) f();
+      receivers_list_.clear();
     }));
   }
 
-  AsyncSignalSender Wait() {
-    return AsyncSignalSender(&receivers_list_mutex_, &receivers_list_);
+  AsyncSignal::Sender Wait() {
+    return AsyncSignal::Sender(this);
   }
 
  private:
   unifex::async_mutex receivers_list_mutex_;
+  bool flag_ = true;
   std::list<std::function<void()>> receivers_list_;
 };
 

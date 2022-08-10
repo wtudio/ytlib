@@ -1,0 +1,13 @@
+add_protobuf_gencode_for_path_target(
+  TARGET_NAME unifex_rpc_bench_protos_gencode
+  PROTO_PATH ${CMAKE_CURRENT_SOURCE_DIR}
+  GENCODE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/gen
+)
+add_library(testytrpc::unifex_rpc_bench_protos_gencode ALIAS unifex_rpc_bench_protos_gencode)
+
+add_unifex_rpc_gencode_for_one_file_target(
+  TARGET_NAME unifex_rpc_bench_rpc_gencode
+  PROTO_FILE ${CMAKE_CURRENT_SOURCE_DIR}/helloworld.proto
+  GENCODE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/gen
+)
+add_library(testytrpc::unifex_rpc_bench_rpc_gencode ALIAS unifex_rpc_bench_rpc_gencode)

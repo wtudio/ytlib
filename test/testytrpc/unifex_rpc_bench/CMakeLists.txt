@@ -1,0 +1,4 @@
+add_subdirectory(unifex_rpc_bench_protos)
+
+# add_subdirectory(asio_rpc_bench_server)
+add_subdirectory(unifex_rpc_bench_client)
