@@ -264,4 +264,27 @@ TEST(EXECUTION_TEST, async_mutex) {
   asio_sys_ptr->Join();
 }
 
+TEST(EXECUTION_TEST, SignalSender) {
+  AsyncSignal sig_1;
+  AsyncSignal sig_2;
+  int n = 0;
+
+  auto work = [&]() -> unifex::task<void> {
+    co_await sig_1.Wait();
+    n = 42;
+    co_await sig_2.Wait();
+    n = 43;
+    co_return;
+  };
+
+  StartDetached(work());
+  EXPECT_EQ(n, 0);
+
+  sig_1.Notify();
+  EXPECT_EQ(n, 42);
+
+  sig_2.Notify();
+  EXPECT_EQ(n, 43);
+}
+
 }  // namespace ytlib

@@ -160,6 +160,8 @@ class AsioRpcClient : public std::enable_shared_from_this<AsioRpcClient> {
   static const char HEAD_BYTE_1 = 'Y';
   static const char HEAD_BYTE_2 = 'T';
 
+  uint32_t GetNewReqID() { return ++req_id_; }
+
   struct MsgContext {
     MsgContext(uint32_t input_req_id, const AsioRpcContext& input_ctx)
         : req_id(input_req_id),
@@ -176,8 +178,6 @@ class AsioRpcClient : public std::enable_shared_from_this<AsioRpcClient> {
     std::vector<char> rsp_buf;
     uint32_t rsp_pos = 0;
   };
-
-  uint32_t GetNewReqID() { return ++req_id_; }
 
   struct SessionCfg {
     SessionCfg(const Cfg& cfg)

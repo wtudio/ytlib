@@ -13,14 +13,16 @@ using namespace ytlib;
 
 class DemoServiceImpl : public demo::DemoService {
  public:
-  virtual unifex::task<std::tuple<ytrpc::UnifexRpcStatus, demo::LoginRsp>> Login(const std::shared_ptr<const ytrpc::UnifexRpcContext>& ctx_ptr, const demo::LoginReq& req) override {
+  virtual auto Login(const std::shared_ptr<const ytrpc::UnifexRpcContext>& ctx_ptr, const demo::LoginReq& req)
+      -> unifex::task<std::tuple<ytrpc::UnifexRpcStatus, demo::LoginRsp>> override {
     demo::LoginRsp rsp;
     rsp.set_code(0);
     rsp.set_msg("echo " + req.msg());
     co_return {ytrpc::UnifexRpcStatus(ytrpc::UnifexRpcStatus::Code::OK), std::move(rsp)};
   }
 
-  virtual unifex::task<std::tuple<ytrpc::UnifexRpcStatus, demo::LogoutRsp>> Logout(const std::shared_ptr<const ytrpc::UnifexRpcContext>& ctx_ptr, const demo::LogoutReq& req) override {
+  virtual auto Logout(const std::shared_ptr<const ytrpc::UnifexRpcContext>& ctx_ptr, const demo::LogoutReq& req)
+      -> unifex::task<std::tuple<ytrpc::UnifexRpcStatus, demo::LogoutRsp>> override {
     demo::LogoutRsp rsp;
     rsp.set_code(0);
     rsp.set_msg("echo " + req.msg());

@@ -24,7 +24,8 @@ class UnifexRpcCodeGenerator final : public google::protobuf::compiler::CodeGene
   const std::string t_hfile_one_service_register_func = R"str()str";
 
   const std::string t_hfile_one_service_func = R"str(
-  virtual unifex::task<std::tuple<ytlib::ytrpc::UnifexRpcStatus, {{rpc_rsp_name}}>> {{rpc_func_name}}(const std::shared_ptr<const ytlib::ytrpc::UnifexRpcContext>& ctx_ptr, const {{rpc_req_name}}& req) {
+  virtual auto {{rpc_func_name}}(const std::shared_ptr<const ytlib::ytrpc::UnifexRpcContext>& ctx_ptr, const {{rpc_req_name}}& req)
+      -> unifex::task<std::tuple<ytlib::ytrpc::UnifexRpcStatus, {{rpc_rsp_name}}>> {
     co_return {ytlib::ytrpc::UnifexRpcStatus(ytlib::ytrpc::UnifexRpcStatus::Code::NOT_IMPLEMENTED), {{rpc_rsp_name}}()};
   })str";
 
@@ -39,7 +40,12 @@ class {{service_name}} : public ytlib::ytrpc::UnifexRpcService {
 {{service_func}}
 };)str";
 
-  const std::string t_hfile_one_service_proxy_func = R"str()str";
+  const std::string t_hfile_one_service_proxy_func = R"str(
+  auto {{rpc_func_name}}(const std::shared_ptr<const ytlib::ytrpc::UnifexRpcContext>& ctx_ptr, const {{rpc_req_name}}& req)
+      -> ytlib::ytrpc::UnifexRpcSender<{{rpc_req_name}}, {{rpc_rsp_name}}> {
+    const static std::string func_name("/{{package_name}}.{{service_name}}/{{rpc_func_name}}");
+    return Invoke<{{rpc_req_name}}, {{rpc_rsp_name}}>(func_name, ctx_ptr, req);
+  })str";
 
   const std::string t_hfile_one_service_proxy_class = R"str(
 class {{service_name}}Proxy final : private ytlib::ytrpc::UnifexRpcServiceProxy {

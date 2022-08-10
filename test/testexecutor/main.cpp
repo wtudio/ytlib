@@ -22,6 +22,7 @@
 
 #include "test1.hpp"
 #include "test2.hpp"
+#include "test4.hpp"
 
 void Test3() {
   auto asio_env = std::make_shared<ytlib::AsioExecutor>(2);
@@ -95,11 +96,13 @@ void Test3() {
 int32_t main(int32_t argc, char** argv) {
   // 注意：只能有一个FiberExecutor
 
-  test1::Test1();
+  // test1::Test1();
 
-  test2::Test2();
+  // test2::Test2();
 
-  Test3();
+  // Test3();
+
+  test4::Test4();
 
   return 0;
 }

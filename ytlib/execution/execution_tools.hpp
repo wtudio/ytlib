@@ -1,6 +1,10 @@
 #pragma once
 
+#include <list>
+
+#include <unifex/async_mutex.hpp>
 #include <unifex/execute.hpp>
+#include <unifex/task.hpp>
 
 namespace ytlib {
 
@@ -189,6 +193,82 @@ class AsyncWrapper {
 
  private:
   AsyncFunc async_func_;
+};
+
+template <typename Receiver>
+requires unifex::receiver<Receiver>
+struct AsyncSignalOperationState {
+  template <typename Receiver2>
+  requires std::constructible_from<Receiver, Receiver2>
+  AsyncSignalOperationState(unifex::async_mutex *receivers_list_mutex, std::list<std::function<void()>> *receivers_list, Receiver2 &&r)
+  noexcept(std::is_nothrow_constructible_v<Receiver, Receiver2>)
+      : receivers_list_mutex_(receivers_list_mutex), receivers_list_(receivers_list), receiver_(new Receiver((Receiver2 &&) r)) {}
+
+  void start() noexcept {
+    StartDetached(unifex::co_invoke([receivers_list_mutex = receivers_list_mutex_, receivers_list = receivers_list_, receiver = receiver_]() -> unifex::task<void> {
+      co_await receivers_list_mutex->async_lock();
+      receivers_list->emplace_back([receiver]() {
+        try {
+          unifex::set_value(std::move(*receiver));
+        } catch (...) {
+          unifex::set_error(std::move(*receiver), std::current_exception());
+        }
+      });
+      receivers_list_mutex->unlock();
+    }));
+  }
+
+  unifex::async_mutex *receivers_list_mutex_;
+  std::list<std::function<void()>> *receivers_list_;
+
+  std::shared_ptr<Receiver> receiver_;
+};
+
+class AsyncSignalSender {
+ public:
+  template <template <typename...> class Variant, template <typename...> class Tuple>
+  using value_types = Variant<Tuple<>>;
+
+  template <template <typename...> class Variant>
+  using error_types = Variant<std::exception_ptr>;
+
+  static constexpr bool sends_done = false;
+
+  AsyncSignalSender(unifex::async_mutex *receivers_list_mutex, std::list<std::function<void()>> *receivers_list)
+      : receivers_list_mutex_(receivers_list_mutex), receivers_list_(receivers_list) {}
+
+  template <typename Receiver>
+  AsyncSignalOperationState<unifex::remove_cvref_t<Receiver>> connect(Receiver &&receiver) {
+    return AsyncSignalOperationState<unifex::remove_cvref_t<Receiver>>(receivers_list_mutex_, receivers_list_, (Receiver &&) receiver);
+  }
+
+ private:
+  unifex::async_mutex *receivers_list_mutex_;
+  std::list<std::function<void()>> *receivers_list_;
+};
+
+class AsyncSignal {
+ public:
+  void Notify() {
+    StartDetached(unifex::co_invoke([this]() -> unifex::task<void> {
+      std::list<std::function<void()>> tmp_receivers_list;
+      co_await receivers_list_mutex_.async_lock();
+      tmp_receivers_list.swap(receivers_list_);
+      receivers_list_mutex_.unlock();
+
+      for (auto &f : tmp_receivers_list) {
+        f();
+      }
+    }));
+  }
+
+  AsyncSignalSender Wait() {
+    return AsyncSignalSender(&receivers_list_mutex_, &receivers_list_);
+  }
+
+ private:
+  unifex::async_mutex receivers_list_mutex_;
+  std::list<std::function<void()>> receivers_list_;
 };
 
 }  // namespace ytlib
