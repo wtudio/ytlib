@@ -301,7 +301,7 @@ class AsioRpcServer : public std::enable_shared_from_this<AsioRpcServer> {
                   std::vector<boost::asio::const_buffer> asio_const_buffer_vec;
                   asio_const_buffer_vec.reserve(buffer_vec.size());
                   for (const auto& buffer : buffer_vec) {
-                    asio_const_buffer_vec.push_back(boost::asio::const_buffer(buffer.first, buffer.second));
+                    asio_const_buffer_vec.emplace_back(buffer.first, buffer.second);
                   }
 
                   size_t write_data_size = co_await boost::asio::async_write(sock_, asio_const_buffer_vec, boost::asio::use_awaitable);

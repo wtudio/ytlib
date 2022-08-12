@@ -73,7 +73,7 @@ class BoolExpCalculator {
         st.push('(');
       } else if (cur_smb == ')') {
         while (st.top() != '(') {
-          qu.push_back(std::string(1, st.top()));
+          qu.emplace_back(1, st.top());
           st.pop();
         }
         st.pop();
@@ -82,7 +82,7 @@ class BoolExpCalculator {
           st.push(cur_smb);
         } else {
           while (Priority(cur_smb) <= Priority(st.top())) {
-            qu.push_back(std::string(1, st.top()));
+            qu.emplace_back(1, st.top());
             st.pop();
           }
           st.push(cur_smb);
@@ -93,13 +93,13 @@ class BoolExpCalculator {
           if (expression[ii] == '!' || expression[ii] == '&' || expression[ii] == '|' ||
               expression[ii] == '(' || expression[ii] == ')') break;
         }
-        qu.push_back(std::string(expression.substr(pos0, ii - pos0)));
+        qu.emplace_back(expression.substr(pos0, ii - pos0));
         --ii;
       }
     }
 
     while (st.top() != '#') {
-      qu.push_back(std::string(1, st.top()));
+      qu.emplace_back(1, st.top());
       st.pop();
     }
 

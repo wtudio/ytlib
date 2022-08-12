@@ -41,7 +41,7 @@ class Heap {
 
   ///压入
   void Push(const T& val) {
-    container_.push_back(val);
+    container_.emplace_back(val);
     AdjustUp(container_.size() - 1);
   }
 

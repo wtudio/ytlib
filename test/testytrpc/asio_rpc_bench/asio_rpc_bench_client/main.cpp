@@ -83,7 +83,11 @@ int32_t main(int32_t argc, char** argv) {
         }
         uint64_t all_end_time = GetCurTimestampMs();
 
-        printf("all done... succ: %d, timecost(ms): %llu, average timecost(ms): %llu\n", static_cast<int>(successed_num), all_end_time - all_begin_time, static_cast<uint64_t>(total_time) / try_num / concurrency_num);
+        printf("all done... succ: %d, timecost(ms): %llu, average concurrency timecost(ms): %llu, average rpc timecost(ms): %llu\n",
+               static_cast<int>(successed_num),
+               all_end_time - all_begin_time,
+               (all_end_time - all_begin_time) / try_num,
+               static_cast<uint64_t>(total_time) / try_num / concurrency_num);
 
         co_return;
       },

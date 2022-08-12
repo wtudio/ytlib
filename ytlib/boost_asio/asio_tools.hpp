@@ -55,7 +55,7 @@ class AsioExecutor {
    */
   void RegisterSvrFunc(std::function<void()>&& start_func, std::function<void()>&& stop_func) {
     if (start_flag_)
-      throw std::runtime_error("Should not call RegisterSvrFunc after start.");
+      throw std::runtime_error("RegisterSvrFunc should not be called after start.");
 
     if (start_func) start_func_vec_.emplace_back(std::move(start_func));
     if (stop_func) stop_func_vec_.emplace_back(std::move(stop_func));
@@ -96,7 +96,7 @@ class AsioExecutor {
    */
   void Join() {
     if (!start_flag_)
-      throw std::runtime_error("Should call Join after start.");
+      throw std::runtime_error("Join should be called after start.");
 
     for (auto itr = threads_.begin(); itr != threads_.end();) {
       if (itr->joinable())
@@ -127,7 +127,7 @@ class AsioExecutor {
    */
   void EnableStopSignal() {
     if (start_flag_)
-      throw std::runtime_error("Should not call EnableStopSignal after start.");
+      throw std::runtime_error("EnableStopSignal should not be called after start.");
 
     std::shared_ptr<boost::asio::signal_set> sig_ptr = std::make_shared<boost::asio::signal_set>(*io_ptr_, SIGINT, SIGTERM);
 

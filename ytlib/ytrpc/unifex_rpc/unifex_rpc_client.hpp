@@ -178,7 +178,6 @@ class UnifexRpcClient : public std::enable_shared_from_this<UnifexRpcClient> {
     }
 
     std::function<void()>& recv_callback_;
-
     std::shared_ptr<Receiver> receiver_;
   };
 
@@ -234,14 +233,9 @@ class UnifexRpcClient : public std::enable_shared_from_this<UnifexRpcClient> {
       auto empalce_ret = msg_recorder_map_.emplace(msg_ctx.req_id, msg_recorder);
       msg_recorder_map_mutex_.unlock();
 
-      // todo：可以优化到TrySend中，不必使用atomic_bool，省一次加锁
-      co_await send_buffer_vec_mutex_.async_lock();
-      send_buffer_vec_.Merge(msg_ctx.req_buf_vec);
-      send_buffer_vec_mutex_.unlock();
+      StartDetached(SendBuf(msg_ctx.req_buf_vec));
 
-      StartDetached(TrySend());
-
-      co_await msg_recorder.recv_sig;
+      co_await RecvSigSender(msg_recorder.recv_callback);
 
       co_await msg_recorder_map_mutex_.async_lock();
       msg_recorder_map_.erase(empalce_ret.first);
@@ -327,38 +321,81 @@ class UnifexRpcClient : public std::enable_shared_from_this<UnifexRpcClient> {
 
     void Stop() {
       if (!std::atomic_exchange(&run_flag_, false)) return;
+
+      uint32_t stop_step = 1;
+      while (stop_step) {
+        try {
+          switch (stop_step) {
+            case 1:
+              sock_.shutdown(boost::asio::ip::tcp::socket::shutdown_both);
+              ++stop_step;
+            case 2:
+              sock_.cancel();
+              ++stop_step;
+            case 3:
+              sock_.close();
+              ++stop_step;
+            case 4:
+              sock_.release();
+              ++stop_step;
+            default:
+              stop_step = 0;
+              break;
+          }
+        } catch (const std::exception& e) {
+          DBG_PRINT("rpc cli session stop get exception at step %u, exception info: %s", stop_step, e.what());
+          ++stop_step;
+        }
+      }
     }
 
     const std::atomic_bool& IsRunning() { return run_flag_; }
 
    private:
-    unifex::task<void> TrySend() {
-      if (std::atomic_exchange(&sending_flag_, true)) co_return;
+    unifex::task<void> SendBuf(BufferVec& buf_vec) {
+      bool merge_flag = false;
+
+      if (std::atomic_exchange(&sending_flag_, true)) {
+        co_await send_buffer_vec_mutex_.async_lock();
+        send_buffer_vec_.Merge(buf_vec);
+        send_buffer_vec_mutex_.unlock();
+
+        merge_flag = true;
+        if (std::atomic_exchange(&sending_flag_, true)) co_return;
+      }
 
       while (run_flag_) {
         BufferVec tmp_send_buffer_vec;
 
         co_await send_buffer_vec_mutex_.async_lock();
-        if (send_buffer_vec_.Vec().empty()) {
-          sending_flag_ = false;
-          send_buffer_vec_mutex_.unlock();
-          co_return;
+        if (send_buffer_vec_.Vec().empty()) [[unlikely]] {
+          if (merge_flag) sending_flag_ = false;
+        } else {
+          tmp_send_buffer_vec.Swap(send_buffer_vec_);
         }
-        tmp_send_buffer_vec.Swap(send_buffer_vec_);
         send_buffer_vec_mutex_.unlock();
 
+        DBG_PRINT("xxx %d, %llu, %llu", merge_flag, buf_vec.Vec().size(), tmp_send_buffer_vec.Vec().size());
+
+        if (!merge_flag) {
+          tmp_send_buffer_vec.Merge(buf_vec);
+          merge_flag = true;
+        }
         const auto& buffer_vec = tmp_send_buffer_vec.Vec();
+        if (buffer_vec.empty()) [[unlikely]]
+          co_return;
+
         std::vector<boost::asio::const_buffer> asio_const_buffer_vec;
         asio_const_buffer_vec.reserve(buffer_vec.size());
         for (const auto& buffer : buffer_vec) {
-          asio_const_buffer_vec.push_back(boost::asio::const_buffer(buffer.first, buffer.second));
+          asio_const_buffer_vec.emplace_back(buffer.first, buffer.second);
         }
 
         auto [ec, write_data_size] = co_await AsyncWrapper<boost::system::error_code, size_t>([&](std::function<void(boost::system::error_code, size_t)>&& cb) {
           boost::asio::async_write(sock_, asio_const_buffer_vec, std::move(cb));
         });
 
-        if (ec) {
+        if (ec) [[unlikely]] {
           DBG_PRINT("rpc cli session async write get error, %s", ec.message().c_str());
           sending_flag_ = false;
           Stop();
@@ -374,11 +411,10 @@ class UnifexRpcClient : public std::enable_shared_from_this<UnifexRpcClient> {
    private:
     struct MsgRecorder {
       MsgRecorder(MsgContext& input_msg_ctx)
-          : msg_ctx(input_msg_ctx), recv_sig(recv_callback) {}
+          : msg_ctx(input_msg_ctx) {}
 
       MsgContext& msg_ctx;
       std::function<void()> recv_callback;
-      RecvSigSender recv_sig;
     };
 
     std::shared_ptr<const UnifexRpcClient::SessionCfg> session_cfg_ptr_;
@@ -409,19 +445,20 @@ class UnifexRpcClient : public std::enable_shared_from_this<UnifexRpcClient> {
 // 代表单次请求中的所有数据
 template <typename Req, typename Rsp>
 struct UnifexRpcMsgContext {
-  UnifexRpcMsgContext(const std::shared_ptr<UnifexRpcClient>& client_ptr, const std::string& func_name, const std::shared_ptr<const UnifexRpcContext>& ctx_ptr, const Req& req)
-      : client_(*client_ptr), func_name_(func_name), ctx_ptr_(ctx_ptr), req_(req) {}
+  UnifexRpcMsgContext(const std::shared_ptr<UnifexRpcClient>& client_ptr, const std::string& input_func_name,
+                      const std::shared_ptr<const UnifexRpcContext>& input_ctx_ptr, const Req& input_req)
+      : client(*client_ptr), func_name(input_func_name), ctx_ptr(input_ctx_ptr), req(input_req) {}
 
   UnifexRpcMsgContext(const UnifexRpcMsgContext&) = delete;             ///< no copy
   UnifexRpcMsgContext& operator=(const UnifexRpcMsgContext&) = delete;  ///< no copy
 
-  UnifexRpcClient& client_;
+  UnifexRpcClient& client;
 
-  const std::string& func_name_;
-  std::shared_ptr<const UnifexRpcContext> ctx_ptr_;
-  const Req& req_;
+  const std::string& func_name;
+  std::shared_ptr<const UnifexRpcContext> ctx_ptr;
+  const Req& req;
 
-  Rsp rsp_;
+  Rsp rsp;
 };
 
 template <typename Req, typename Rsp, typename Receiver>
@@ -435,10 +472,10 @@ class UnifexRpcOperationState final {
 
   void start() noexcept {
     try {
-      msg_ctx_ptr_->client_.Invoke(
-          msg_ctx_ptr_->func_name_, msg_ctx_ptr_->ctx_ptr_, msg_ctx_ptr_->req_, msg_ctx_ptr_->rsp_,
+      msg_ctx_ptr_->client.Invoke(
+          msg_ctx_ptr_->func_name, msg_ctx_ptr_->ctx_ptr, msg_ctx_ptr_->req, msg_ctx_ptr_->rsp,
           [msg_ctx_ptr = msg_ctx_ptr_, receiver = receiver_](UnifexRpcStatus&& status) {
-            unifex::set_value(std::move(*receiver), std::move(status), std::move(msg_ctx_ptr->rsp_));
+            unifex::set_value(std::move(*receiver), std::move(status), std::move(msg_ctx_ptr->rsp));
           });
     } catch (...) {
       unifex::set_error(std::move(*receiver_), std::current_exception());

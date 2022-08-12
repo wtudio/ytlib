@@ -17,30 +17,19 @@
 using namespace std;
 using namespace ytlib;
 
-template <typename Rng, std::size_t... I>
-constexpr auto when_all_vec_impl(const Rng& rng, std::index_sequence<I...>) {
-  return unifex::when_all(std::move(*rng[I])...);
-}
-
-template <typename Rng, std::size_t N, typename Indices = std::make_index_sequence<N>>
-constexpr auto when_all_vec(const Rng& rng) {
-  return when_all_vec_impl(rng, Indices{});
-}
-
 int32_t main(int32_t argc, char** argv) {
-  auto asio_sys_ptr = std::make_shared<AsioExecutor>(4);
+  auto asio_sys_ptr = std::make_shared<AsioExecutor>(8);
   asio_sys_ptr->Start();
 
   ytrpc::UnifexRpcClient::Cfg cfg;
-  // cfg.svr_ep = boost::asio::ip::tcp::endpoint{boost::asio::ip::address_v4({127, 0, 0, 1}), 51965};
   cfg.svr_ep = boost::asio::ip::tcp::endpoint{boost::asio::ip::address_v4({127, 0, 0, 1}), 55399};
   auto cli_ptr = std::make_shared<ytrpc::UnifexRpcClient>(asio_sys_ptr->IO(), cfg);
 
   auto co_work = [cli_ptr]() -> unifex::task<void> {
     auto proxy_ptr = std::make_shared<trpc::test::helloworld::GreeterProxy>(cli_ptr);
 
-    constexpr uint32_t concurrency_num = 2;
-    constexpr uint32_t try_num = 1;
+    const uint32_t concurrency_num = 1000;
+    const uint32_t try_num = 100;
 
     std::atomic_int successed_num = 0;
     std::atomic_uint64_t total_time = 0;
@@ -52,9 +41,10 @@ int32_t main(int32_t argc, char** argv) {
 
     uint64_t all_begin_time = GetCurTimestampMs();
     for (uint32_t ii = 0; ii < try_num; ++ii) {
-      std::vector<std::shared_ptr<unifex::task<void>>> tasks(concurrency_num);
+      AsyncCounter ct(concurrency_num);
+
       for (auto& request_msg : request_msgs) {
-        tasks.emplace_back(std::make_shared<unifex::task<void>>(unifex::co_invoke([&proxy_ptr, &request_msg, &successed_num, &total_time]() -> unifex::task<void> {
+        StartDetached(unifex::co_invoke([&ct, &proxy_ptr, &request_msg, &successed_num, &total_time]() -> unifex::task<void> {
           trpc::test::helloworld::HelloRequest req;
           req.set_msg(request_msg);
 
@@ -72,20 +62,27 @@ int32_t main(int32_t argc, char** argv) {
           } else {
             printf("task request error: %s\n", status.ToString().c_str());
           }
+          ct.Count();
 
           co_return;
-        })));
+        }));
       }
-      co_await when_all_vec<decltype(tasks), concurrency_num>(tasks);
+      co_await ct.Wait();
     }
     uint64_t all_end_time = GetCurTimestampMs();
 
-    printf("all done... succ: %d, timecost(ms): %llu, average timecost(ms): %llu\n", static_cast<int>(successed_num), all_end_time - all_begin_time, static_cast<uint64_t>(total_time) / try_num / concurrency_num);
+    printf("all done... succ: %d, timecost(ms): %llu, average concurrency timecost(ms): %llu, average rpc timecost(ms): %llu\n",
+           static_cast<int>(successed_num),
+           all_end_time - all_begin_time,
+           (all_end_time - all_begin_time) / try_num,
+           static_cast<uint64_t>(total_time) / try_num / concurrency_num);
 
     co_return;
   };
 
   unifex::sync_wait(co_work());
+
+  cli_ptr->Stop();
 
   asio_sys_ptr->Stop();
   asio_sys_ptr->Join();

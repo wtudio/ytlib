@@ -27,7 +27,7 @@ class UnifexRpcService {
 class UnifexRpcServer : public std::enable_shared_from_this<UnifexRpcServer> {
  public:
   struct Cfg {
-    boost::asio::ip::tcp::endpoint ep = boost::asio::ip::tcp::endpoint{boost::asio::ip::address_v4(), 51965};  // 监听的地址
+    boost::asio::ip::tcp::endpoint ep = boost::asio::ip::tcp::endpoint{boost::asio::ip::address_v4(), 55399};  // 监听的地址
     size_t max_session_num = 1000000;                                                                          // 最大连接数
     std::chrono::steady_clock::duration mgr_timer_dt = std::chrono::seconds(10);                               // 管理协程定时器间隔
     std::chrono::steady_clock::duration max_no_data_duration = std::chrono::seconds(300);                      // 最长无数据时间

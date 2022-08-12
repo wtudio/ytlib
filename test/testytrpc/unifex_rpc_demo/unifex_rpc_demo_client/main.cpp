@@ -21,7 +21,7 @@ int32_t main(int32_t argc, char** argv) {
   asio_sys_ptr->Start();
 
   ytrpc::UnifexRpcClient::Cfg cfg;
-  cfg.svr_ep = boost::asio::ip::tcp::endpoint{boost::asio::ip::address_v4({127, 0, 0, 1}), 51965};
+  cfg.svr_ep = boost::asio::ip::tcp::endpoint{boost::asio::ip::address_v4({127, 0, 0, 1}), 55399};
   auto cli_ptr = std::make_shared<ytrpc::UnifexRpcClient>(asio_sys_ptr->IO(), cfg);
 
   auto co_work = [cli_ptr]() -> unifex::task<void> {
@@ -46,6 +46,8 @@ int32_t main(int32_t argc, char** argv) {
   };
 
   unifex::sync_wait(co_work());
+
+  cli_ptr->Stop();
 
   asio_sys_ptr->Stop();
   asio_sys_ptr->Join();

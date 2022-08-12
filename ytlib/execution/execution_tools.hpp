@@ -198,23 +198,30 @@ class AsyncWrapper {
 /**
  * @brief 异步信号量
  * @note 仅能使用一次，Notify之后所有的wait都将立即返回
+ * todo：尝试使用atomic改成无锁的
  */
 class AsyncSignal {
  public:
+  struct Content {
+    unifex::async_mutex mutex;
+    bool flag = true;
+    std::list<std::function<void()>> receivers_list;
+  };
+
   template <typename Receiver>
   requires unifex::receiver<Receiver>
   struct OperationState {
     template <typename Receiver2>
     requires std::constructible_from<Receiver, Receiver2>
-    OperationState(AsyncSignal *sig_ptr, Receiver2 &&r)
+    OperationState(const std::shared_ptr<Content> &content_ptr, Receiver2 &&r)
     noexcept(std::is_nothrow_constructible_v<Receiver, Receiver2>)
-        : sig_ptr_(sig_ptr), receiver_(new Receiver((Receiver2 &&) r)) {}
+        : content_ptr_(content_ptr), receiver_(new Receiver((Receiver2 &&) r)) {}
 
     void start() noexcept {
-      StartDetached(unifex::co_invoke([sig_ptr = sig_ptr_, receiver = receiver_]() -> unifex::task<void> {
-        co_await sig_ptr->receivers_list_mutex_.async_lock();
-        if (sig_ptr->flag_) {
-          sig_ptr->receivers_list_.emplace_back([receiver]() {
+      StartDetached(unifex::co_invoke([content_ptr = content_ptr_, receiver = receiver_]() -> unifex::task<void> {
+        co_await content_ptr->mutex.async_lock();
+        if (content_ptr->flag) {
+          content_ptr->receivers_list.emplace_back([receiver]() {
             try {
               unifex::set_value(std::move(*receiver));
             } catch (...) {
@@ -228,12 +235,11 @@ class AsyncSignal {
             unifex::set_error(std::move(*receiver), std::current_exception());
           }
         }
-        sig_ptr->receivers_list_mutex_.unlock();
+        content_ptr->mutex.unlock();
       }));
     }
 
-    AsyncSignal *sig_ptr_;
-
+    std::shared_ptr<Content> content_ptr_;
     std::shared_ptr<Receiver> receiver_;
   };
 
@@ -247,37 +253,137 @@ class AsyncSignal {
 
     static constexpr bool sends_done = false;
 
-    Sender(AsyncSignal *sig_ptr)
-        : sig_ptr_(sig_ptr) {}
+    Sender(const std::shared_ptr<Content> &content_ptr)
+        : content_ptr_(content_ptr) {}
 
     template <typename Receiver>
     OperationState<unifex::remove_cvref_t<Receiver>> connect(Receiver &&receiver) {
-      return OperationState<unifex::remove_cvref_t<Receiver>>(sig_ptr_, (Receiver &&) receiver);
+      return OperationState<unifex::remove_cvref_t<Receiver>>(content_ptr_, (Receiver &&) receiver);
     }
 
    private:
-    AsyncSignal *sig_ptr_;
+    std::shared_ptr<Content> content_ptr_;
   };
 
-  void Notify() {
-    StartDetached(unifex::co_invoke([this]() -> unifex::task<void> {
-      co_await receivers_list_mutex_.async_lock();
-      flag_ = false;
-      receivers_list_mutex_.unlock();
+  explicit AsyncSignal()
+      : content_ptr_(std::make_shared<Content>()) {}
 
-      for (auto &f : receivers_list_) f();
-      receivers_list_.clear();
+  void Notify() {
+    StartDetached(unifex::co_invoke([content_ptr = content_ptr_]() -> unifex::task<void> {
+      co_await content_ptr->mutex.async_lock();
+      content_ptr->flag = false;
+      content_ptr->mutex.unlock();
+
+      for (auto &f : content_ptr->receivers_list) f();
+      content_ptr->receivers_list.clear();
     }));
   }
 
   AsyncSignal::Sender Wait() {
-    return AsyncSignal::Sender(this);
+    return AsyncSignal::Sender(content_ptr_);
   }
 
  private:
-  unifex::async_mutex receivers_list_mutex_;
-  bool flag_ = true;
-  std::list<std::function<void()>> receivers_list_;
+  std::shared_ptr<Content> content_ptr_;
+};
+
+/**
+ * @brief 异步计数器
+ * @note Count一定次数后触发Wait返回。仅能使用一次，触发之后所有的wait都将立即返回
+ * todo：尝试使用atomic改成无锁的
+ */
+class AsyncCounter {
+ public:
+  struct Content {
+    explicit Content(uint32_t num)
+        : count_num(num) {}
+
+    unifex::async_mutex mutex;
+    uint32_t count_num;
+    std::list<std::function<void()>> receivers_list;
+  };
+
+  template <typename Receiver>
+  requires unifex::receiver<Receiver>
+  struct OperationState {
+    template <typename Receiver2>
+    requires std::constructible_from<Receiver, Receiver2>
+    OperationState(const std::shared_ptr<Content> &content_ptr, Receiver2 &&r)
+    noexcept(std::is_nothrow_constructible_v<Receiver, Receiver2>)
+        : content_ptr_(content_ptr), receiver_(new Receiver((Receiver2 &&) r)) {}
+
+    void start() noexcept {
+      StartDetached(unifex::co_invoke([content_ptr = content_ptr_, receiver = receiver_]() -> unifex::task<void> {
+        co_await content_ptr->mutex.async_lock();
+        if (content_ptr->count_num) {
+          content_ptr->receivers_list.emplace_back([receiver]() {
+            try {
+              unifex::set_value(std::move(*receiver));
+            } catch (...) {
+              unifex::set_error(std::move(*receiver), std::current_exception());
+            }
+          });
+        } else {
+          try {
+            unifex::set_value(std::move(*receiver));
+          } catch (...) {
+            unifex::set_error(std::move(*receiver), std::current_exception());
+          }
+        }
+        content_ptr->mutex.unlock();
+      }));
+    }
+
+    std::shared_ptr<Content> content_ptr_;
+    std::shared_ptr<Receiver> receiver_;
+  };
+
+  class Sender {
+   public:
+    template <template <typename...> class Variant, template <typename...> class Tuple>
+    using value_types = Variant<Tuple<>>;
+
+    template <template <typename...> class Variant>
+    using error_types = Variant<std::exception_ptr>;
+
+    static constexpr bool sends_done = false;
+
+    Sender(const std::shared_ptr<Content> &content_ptr)
+        : content_ptr_(content_ptr) {}
+
+    template <typename Receiver>
+    OperationState<unifex::remove_cvref_t<Receiver>> connect(Receiver &&receiver) {
+      return OperationState<unifex::remove_cvref_t<Receiver>>(content_ptr_, (Receiver &&) receiver);
+    }
+
+   private:
+    std::shared_ptr<Content> content_ptr_;
+  };
+
+  explicit AsyncCounter(uint32_t num)
+      : content_ptr_(std::make_shared<Content>(num)) {
+  }
+
+  void Count() {
+    StartDetached(unifex::co_invoke([content_ptr = content_ptr_]() -> unifex::task<void> {
+      co_await content_ptr->mutex.async_lock();
+      if (content_ptr->count_num > 0) --(content_ptr->count_num);
+      bool notify_flag = (content_ptr->count_num == 0);
+      content_ptr->mutex.unlock();
+
+      if (notify_flag) {
+        for (auto &f : content_ptr->receivers_list) f();
+        content_ptr->receivers_list.clear();
+      }
+    }));
+  }
+
+  AsyncCounter::Sender Wait() {
+    return AsyncCounter::Sender(content_ptr_);
+  }
+
+ private:
+  std::shared_ptr<Content> content_ptr_;
 };
 
 }  // namespace ytlib
