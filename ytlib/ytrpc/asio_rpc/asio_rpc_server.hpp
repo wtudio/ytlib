@@ -7,6 +7,7 @@
  */
 #pragma once
 
+#include <algorithm>
 #include <concepts>
 #include <list>
 #include <memory>
@@ -74,7 +75,7 @@ class AsioRpcServer : public std::enable_shared_from_this<AsioRpcServer> {
    */
   struct Cfg {
     boost::asio::ip::tcp::endpoint ep = boost::asio::ip::tcp::endpoint{boost::asio::ip::address_v4(), 55399};  // 监听的地址
-    size_t max_session_num = 1000000;                                                                          // 最大连接数
+    uint32_t max_session_num = 1000000;                                                                        // 最大连接数
     std::chrono::steady_clock::duration mgr_timer_dt = std::chrono::seconds(10);                               // 管理协程定时器间隔
     std::chrono::steady_clock::duration max_no_data_duration = std::chrono::seconds(300);                      // 最长无数据时间
     uint32_t max_recv_size = 1024 * 1024 * 10;                                                                 // 包最大尺寸，最大10m
@@ -250,7 +251,7 @@ class AsioRpcServer : public std::enable_shared_from_this<AsioRpcServer> {
 
  private:
   // 包头结构：| 2byte magicnum | 2byte headlen | 4byte msglen |
-  static const size_t HEAD_SIZE = 8;
+  static const uint32_t HEAD_SIZE = 8;
   static const char HEAD_BYTE_1 = 'Y';
   static const char HEAD_BYTE_2 = 'T';
 
@@ -332,107 +333,157 @@ class AsioRpcServer : public std::enable_shared_from_this<AsioRpcServer> {
             ASIO_DEBUG_HANDLE(rpc_svr_session_recv_co);
 
             try {
-              std::vector<char> head_buf(HEAD_SIZE);
-              boost::asio::mutable_buffer asio_head_buf(head_buf.data(), HEAD_SIZE);
+              constexpr uint32_t min_read_buf_size = 256;
+              uint32_t read_buf_size = min_read_buf_size;
+              uint32_t read_buf_offset = 0;
+              std::shared_ptr<char[]> read_buf_ptr = std::make_shared<char[]>(read_buf_size);
+
               while (run_flag_) {
-                // 接收固定包头
-                size_t read_data_size = co_await boost::asio::async_read(sock_, asio_head_buf, boost::asio::transfer_exactly(HEAD_SIZE), boost::asio::use_awaitable);
-                DBG_PRINT("rpc svr session async read %llu bytes for head", read_data_size);
+                // 接收数据
+                size_t read_data_size = co_await boost::asio::async_read(
+                    sock_, boost::asio::mutable_buffer(read_buf_ptr.get() + read_buf_offset, read_buf_size - read_buf_offset),
+                    [&](const boost::system::error_code& error, size_t bytes_transferred) -> size_t {
+                      if (error) [[unlikely]]
+                        return 0;
+
+                      bytes_transferred += read_buf_offset;  // buf中实际已经有的数据大小
+                      if (bytes_transferred < HEAD_SIZE) return read_buf_size - bytes_transferred;
+                      if (read_buf_ptr[0] != HEAD_BYTE_1 || read_buf_ptr[1] != HEAD_BYTE_2) return 0;
+                      if (bytes_transferred < (HEAD_SIZE + GetUint32FromBuf(read_buf_ptr.get() + 4))) return read_buf_size - bytes_transferred;
+                      return 0;
+                    },
+                    boost::asio::use_awaitable);
+                DBG_PRINT("rpc svr session async read %llu bytes", read_data_size);
                 tick_has_data_ = true;
 
-                if (read_data_size != HEAD_SIZE || head_buf[0] != HEAD_BYTE_1 || head_buf[1] != HEAD_BYTE_2) [[unlikely]]
-                  throw std::runtime_error("Get an invalid head.");
+                read_data_size += read_buf_offset;  // buf中实际数据大小
 
-                // 接收pb包头+pb业务包
-                uint32_t pb_msg_len = GetUint32FromBuf(&head_buf[4]);
+                // 根据本次数据接收情况决定下次数据buf大小
+                if (read_data_size < read_buf_size / 2) {
+                  read_buf_size = std::max(min_read_buf_size, read_buf_size / 2);
+                } else if (read_data_size >= read_buf_size) {
+                  read_buf_size = std::min(session_cfg_ptr_->max_recv_size, read_buf_size * 2);
+                }
 
-                // msg长度为0表示是心跳包
-                if (pb_msg_len == 0) [[unlikely]]
-                  continue;
+                uint32_t cur_handle_pos = 0;
+                while (true) {
+                  const uint32_t cur_unhandle_size = read_data_size - cur_handle_pos;
 
-                if (pb_msg_len > session_cfg_ptr_->max_recv_size) [[unlikely]]
-                  throw std::runtime_error("Msg too large.");
+                  if (cur_unhandle_size < HEAD_SIZE) break;
 
-                std::vector<char> req_buf(pb_msg_len);
+                  if (read_buf_ptr[cur_handle_pos] != HEAD_BYTE_1 || read_buf_ptr[cur_handle_pos + 1] != HEAD_BYTE_2) [[unlikely]]
+                    throw std::runtime_error("Get an invalid head.");
 
-                read_data_size = co_await boost::asio::async_read(sock_, boost::asio::buffer(req_buf, pb_msg_len), boost::asio::transfer_exactly(pb_msg_len), boost::asio::use_awaitable);
-                DBG_PRINT("rpc svr session async read %llu bytes for pb head", read_data_size);
+                  // pb包头+pb业务包大小
+                  const uint32_t pb_msg_len = GetUint32FromBuf(read_buf_ptr.get() + cur_handle_pos + 4);
 
-                // 处理数据，需要post到整个io_ctx上
-                auto handle = [this, self, pb_head_len = GetUint16FromBuf(&head_buf[2]), req_buf{std::move(req_buf)}]() mutable -> boost::asio::awaitable<void> {
-                  try {
-                    ReqHead req_head;
-                    if (!req_head.ParseFromArray(req_buf.data(), pb_head_len)) [[unlikely]]
-                      throw std::runtime_error("Parse req head failed.");
-
-                    BufferVec rsp_buf_vec;
-                    BufferVecZeroCopyOutputStream os(rsp_buf_vec);
-                    char* head_buf = static_cast<char*>(os.InitHead(AsioRpcServer::HEAD_SIZE));
-                    head_buf[0] = AsioRpcServer::HEAD_BYTE_1;
-                    head_buf[1] = AsioRpcServer::HEAD_BYTE_2;
-
-                    RspHead rsp_head;
-                    rsp_head.set_req_id(req_head.req_id());
-
-                    std::unique_ptr<google::protobuf::Message> rsp_ptr;
-
-                    // 查func
-                    auto finditr = func_map_ptr_->find(req_head.func());
-                    if (finditr != func_map_ptr_->end()) {
-                      // 调用func
-                      const AsioRpcService::FuncAdapter& func_adapter = finditr->second;
-                      std::unique_ptr<google::protobuf::Message> req_ptr = func_adapter.req_ptr_gener();
-                      if (!req_ptr->ParseFromArray(req_buf.data() + pb_head_len, req_buf.size() - pb_head_len)) [[unlikely]] {
-                        rsp_head.set_ret_code(static_cast<int32_t>(AsioRpcStatus::Code::SVR_PARSE_REQ_FAILED));
-                      } else {
-                        std::shared_ptr<AsioRpcContext> ctx_ptr = std::make_shared<AsioRpcContext>();
-                        ctx_ptr->SetDeadline(std::chrono::system_clock::time_point(std::chrono::milliseconds(req_head.ddl_ms())));
-                        ctx_ptr->ContextKv() = std::map<std::string, std::string>(req_head.context_kv().begin(), req_head.context_kv().end());
-
-                        rsp_ptr = func_adapter.rsp_ptr_gener();
-                        const AsioRpcStatus& ret_status = co_await func_adapter.handle_func(ctx_ptr, *req_ptr, *rsp_ptr);
-                        rsp_head.set_ret_code(static_cast<int32_t>(ret_status.Ret()));
-                        rsp_head.set_func_ret_code(static_cast<int32_t>(ret_status.FuncRet()));
-                        rsp_head.set_func_ret_msg(ret_status.FuncRetMsg());
-                      }
-                    } else {
-                      rsp_head.set_ret_code(static_cast<int32_t>(AsioRpcStatus::Code::NOT_FOUND));
-                    }
-
-                    if (!rsp_head.SerializeToZeroCopyStream(&os)) [[unlikely]]
-                      throw std::runtime_error("Serialize rsp head failed.");
-                    SetBufFromUint16(&head_buf[2], static_cast<uint16_t>(os.ByteCount() - AsioRpcServer::HEAD_SIZE));
-
-                    if (rsp_ptr) {
-                      if (!rsp_ptr->SerializeToZeroCopyStream(&os)) [[unlikely]]
-                        throw std::runtime_error("Serialize rsp failed.");
-                    }
-                    SetBufFromUint32(&head_buf[4], static_cast<uint32_t>(os.ByteCount() - AsioRpcServer::HEAD_SIZE));
-
-                    rsp_buf_vec.CommitLastBuf(os.LastBufSize());
-
-                    boost::asio::dispatch(
-                        session_socket_strand_,
-                        [this, self, rsp_buf_vec{std::move(rsp_buf_vec)}]() mutable {
-                          send_buffer_vec_.Merge(rsp_buf_vec);
-                          send_sig_timer_.cancel();
-                        });
-
-                  } catch (const std::exception& e) {
-                    DBG_PRINT("rpc svr session handle data co get exception and exit, exception info: %s", e.what());
+                  // msg长度为0表示是心跳包
+                  if (pb_msg_len == 0) [[unlikely]] {
+                    cur_handle_pos += HEAD_SIZE;
+                    continue;
                   }
 
-                  co_return;
-                };
+                  if ((HEAD_SIZE + pb_msg_len) > session_cfg_ptr_->max_recv_size) [[unlikely]]
+                    throw std::runtime_error("Msg too large.");
 
-                boost::asio::post(
-                    *io_ptr_,
-                    [this, self, handle{std::move(handle)}]() mutable {
-                      boost::asio::co_spawn(
-                          *io_ptr_,
-                          std::move(handle),
-                          boost::asio::detached);
-                    });
+                  // 如果HEAD_SIZE + pb_msg_len大于read_buf_size，则下次接收时buf会扩大
+                  if (cur_unhandle_size < (HEAD_SIZE + pb_msg_len)) {
+                    read_buf_size = std::max(read_buf_size, (HEAD_SIZE + pb_msg_len));
+                    break;
+                  }
+
+                  const char* req_buf = read_buf_ptr.get() + cur_handle_pos + HEAD_SIZE;
+                  const uint16_t pb_head_len = GetUint16FromBuf(read_buf_ptr.get() + cur_handle_pos + 2);
+
+                  // 处理数据，需要post到整个io_ctx上
+                  auto handle = [this, self, read_buf_ptr, req_buf, pb_head_len, pb_msg_len]() -> boost::asio::awaitable<void> {
+                    try {
+                      ReqHead req_head;
+                      if (!req_head.ParseFromArray(req_buf, pb_head_len)) [[unlikely]]
+                        throw std::runtime_error("Parse req head failed.");
+
+                      BufferVec rsp_buf_vec;
+                      BufferVecZeroCopyOutputStream os(rsp_buf_vec);
+                      char* head_buf = static_cast<char*>(os.InitHead(AsioRpcServer::HEAD_SIZE));
+                      head_buf[0] = AsioRpcServer::HEAD_BYTE_1;
+                      head_buf[1] = AsioRpcServer::HEAD_BYTE_2;
+
+                      RspHead rsp_head;
+                      rsp_head.set_req_id(req_head.req_id());
+
+                      std::unique_ptr<google::protobuf::Message> rsp_ptr;
+
+                      // 查func
+                      auto finditr = func_map_ptr_->find(req_head.func());
+                      if (finditr != func_map_ptr_->end()) {
+                        // 调用func
+                        const AsioRpcService::FuncAdapter& func_adapter = finditr->second;
+                        std::unique_ptr<google::protobuf::Message> req_ptr = func_adapter.req_ptr_gener();
+                        if (!req_ptr->ParseFromArray(req_buf + pb_head_len, pb_msg_len - pb_head_len)) [[unlikely]] {
+                          rsp_head.set_ret_code(static_cast<int32_t>(AsioRpcStatus::Code::SVR_PARSE_REQ_FAILED));
+                        } else {
+                          std::shared_ptr<AsioRpcContext> ctx_ptr = std::make_shared<AsioRpcContext>();
+                          ctx_ptr->SetDeadline(std::chrono::system_clock::time_point(std::chrono::milliseconds(req_head.ddl_ms())));
+                          ctx_ptr->ContextKv() = std::map<std::string, std::string>(req_head.context_kv().begin(), req_head.context_kv().end());
+
+                          rsp_ptr = func_adapter.rsp_ptr_gener();
+                          const AsioRpcStatus& ret_status = co_await func_adapter.handle_func(ctx_ptr, *req_ptr, *rsp_ptr);
+                          rsp_head.set_ret_code(static_cast<int32_t>(ret_status.Ret()));
+                          rsp_head.set_func_ret_code(static_cast<int32_t>(ret_status.FuncRet()));
+                          rsp_head.set_func_ret_msg(ret_status.FuncRetMsg());
+                        }
+                      } else {
+                        rsp_head.set_ret_code(static_cast<int32_t>(AsioRpcStatus::Code::NOT_FOUND));
+                      }
+
+                      if (!rsp_head.SerializeToZeroCopyStream(&os)) [[unlikely]]
+                        throw std::runtime_error("Serialize rsp head failed.");
+                      SetBufFromUint16(&head_buf[2], static_cast<uint16_t>(os.ByteCount() - AsioRpcServer::HEAD_SIZE));
+
+                      if (rsp_ptr) {
+                        if (!rsp_ptr->SerializeToZeroCopyStream(&os)) [[unlikely]]
+                          throw std::runtime_error("Serialize rsp failed.");
+                      }
+                      SetBufFromUint32(&head_buf[4], static_cast<uint32_t>(os.ByteCount() - AsioRpcServer::HEAD_SIZE));
+
+                      rsp_buf_vec.CommitLastBuf(os.LastBufSize());
+
+                      boost::asio::dispatch(
+                          session_socket_strand_,
+                          [this, self, rsp_buf_vec{std::move(rsp_buf_vec)}]() mutable {
+                            send_buffer_vec_.Merge(rsp_buf_vec);
+                            send_sig_timer_.cancel();
+                          });
+
+                    } catch (const std::exception& e) {
+                      DBG_PRINT("rpc svr session handle data co get exception and exit, exception info: %s", e.what());
+                    }
+
+                    co_return;
+                  };
+
+                  boost::asio::post(
+                      *io_ptr_,
+                      [this, self, handle{std::move(handle)}]() mutable {
+                        boost::asio::co_spawn(
+                            *io_ptr_,
+                            std::move(handle),
+                            boost::asio::detached);
+                      });
+
+                  cur_handle_pos += (HEAD_SIZE + pb_msg_len);
+                }
+
+                read_buf_offset = read_data_size - cur_handle_pos;
+
+                if (read_buf_offset) {
+                  // todo：考虑使用vectorbuf，不用拷贝一次
+                  std::shared_ptr<char[]> last_read_buf_ptr = read_buf_ptr;
+                  read_buf_ptr = std::make_shared<char[]>(read_buf_size);
+                  memcpy(read_buf_ptr.get(), last_read_buf_ptr.get() + cur_handle_pos, read_buf_offset);
+                } else {
+                  read_buf_ptr = std::make_shared<char[]>(read_buf_size);
+                }
               }
             } catch (const std::exception& e) {
               DBG_PRINT("rpc svr session recv co get exception and exit, exception info: %s", e.what());

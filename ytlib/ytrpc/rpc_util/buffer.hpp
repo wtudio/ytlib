@@ -68,7 +68,7 @@ class BufferVecZeroCopyOutputStream : public ::google::protobuf::io::ZeroCopyOut
   explicit BufferVecZeroCopyOutputStream(BufferVec& buffer_vec)
       : buffer_vec_(buffer_vec) {}
 
-  ~BufferVecZeroCopyOutputStream() {}
+  virtual ~BufferVecZeroCopyOutputStream() {}
 
   bool Next(void** data, int* size) override {
     if (cur_buf_used_size_ == cur_block_size) {
@@ -118,21 +118,23 @@ class BufferVecZeroCopyOutputStream : public ::google::protobuf::io::ZeroCopyOut
 class BufferVecZeroCopyInputStream : public ::google::protobuf::io::ZeroCopyInputStream {
  public:
   explicit BufferVecZeroCopyInputStream(BufferVec& buffer_vec)
+      : buffer_vec_(buffer_vec.Vec()) {}
+
+  explicit BufferVecZeroCopyInputStream(const std::vector<std::pair<void*, size_t>>& buffer_vec)
       : buffer_vec_(buffer_vec) {}
 
-  ~BufferVecZeroCopyInputStream() {}
+  virtual ~BufferVecZeroCopyInputStream() {}
 
   bool Next(const void** data, int* size) override {
-    const auto& buffer_vec = buffer_vec_.Vec();
-    if (cur_buf_index_ >= buffer_vec.size())
+    if (cur_buf_index_ >= buffer_vec_.size())
       return false;
 
     if (cur_buf_unused_size_ == 0) {
-      const auto& cur_buffer = buffer_vec[cur_buf_index_++];
+      const auto& cur_buffer = buffer_vec_[cur_buf_index_++];
       *data = cur_buffer.first;
       byte_count_ += (*size = cur_buffer.second);
     } else {
-      const auto& cur_buffer = buffer_vec[cur_buf_index_ - 1];
+      const auto& cur_buffer = buffer_vec_[cur_buf_index_ - 1];
       *data = static_cast<char*>(cur_buffer.first) + (cur_buffer.second - cur_buf_unused_size_);
       byte_count_ += (*size = cur_buf_unused_size_);
       cur_buf_unused_size_ = 0;
@@ -149,8 +151,7 @@ class BufferVecZeroCopyInputStream : public ::google::protobuf::io::ZeroCopyInpu
   bool Skip(int count) override {
     byte_count_ += count;
 
-    const auto& buffer_vec = buffer_vec_.Vec();
-    const size_t buffer_vec_size = buffer_vec.size();
+    const size_t buffer_vec_size = buffer_vec_.size();
 
     for (;;) {
       if (cur_buf_unused_size_ > count) {
@@ -163,7 +164,7 @@ class BufferVecZeroCopyInputStream : public ::google::protobuf::io::ZeroCopyInpu
 
       if (cur_buf_index_ >= buffer_vec_size) break;
 
-      cur_buf_unused_size_ = buffer_vec[cur_buf_index_++].second;
+      cur_buf_unused_size_ = buffer_vec_[cur_buf_index_++].second;
     }
 
     return (count == 0);
@@ -174,7 +175,7 @@ class BufferVecZeroCopyInputStream : public ::google::protobuf::io::ZeroCopyInpu
   }
 
  private:
-  BufferVec& buffer_vec_;
+  const std::vector<std::pair<void*, size_t>>& buffer_vec_;
   size_t cur_buf_unused_size_ = 0;
   size_t cur_buf_index_ = 0;
   int64_t byte_count_ = 0;

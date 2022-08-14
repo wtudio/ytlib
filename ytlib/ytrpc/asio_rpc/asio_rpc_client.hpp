@@ -7,6 +7,7 @@
  */
 #pragma once
 
+#include <algorithm>
 #include <atomic>
 #include <memory>
 #include <unordered_map>
@@ -122,7 +123,7 @@ class AsioRpcClient : public std::enable_shared_from_this<AsioRpcClient> {
       co_return std::move(msg_ctx.ret_status);
     }
 
-    if (!rsp.ParseFromArray(msg_ctx.rsp_buf.data() + msg_ctx.rsp_pos, msg_ctx.rsp_buf.size() - msg_ctx.rsp_pos)) [[unlikely]]
+    if (!rsp.ParseFromArray(msg_ctx.rsp_buf + msg_ctx.rsp_pos, msg_ctx.rsp_buf_len - msg_ctx.rsp_pos)) [[unlikely]]
       co_return AsioRpcStatus(AsioRpcStatus::Code::CLI_PARSE_RSP_FAILED);
 
     co_return std::move(msg_ctx.ret_status);
@@ -156,7 +157,7 @@ class AsioRpcClient : public std::enable_shared_from_this<AsioRpcClient> {
 
  private:
   // 包头结构：| 2byte magicnum | 2byte headlen | 4byte msglen |
-  static const size_t HEAD_SIZE = 8;
+  static const uint32_t HEAD_SIZE = 8;
   static const char HEAD_BYTE_1 = 'Y';
   static const char HEAD_BYTE_2 = 'T';
 
@@ -175,7 +176,9 @@ class AsioRpcClient : public std::enable_shared_from_this<AsioRpcClient> {
     BufferVec req_buf_vec;
 
     AsioRpcStatus ret_status;
-    std::vector<char> rsp_buf;
+    std::shared_ptr<char[]> read_buf_ptr;
+    const char* rsp_buf = nullptr;
+    uint32_t rsp_buf_len = 0;
     uint32_t rsp_pos = 0;
   };
 
@@ -311,56 +314,105 @@ class AsioRpcClient : public std::enable_shared_from_this<AsioRpcClient> {
                     ASIO_DEBUG_HANDLE(rpc_cli_session_recv_co);
 
                     try {
-                      std::vector<char> head_buf(HEAD_SIZE);
-                      boost::asio::mutable_buffer asio_head_buf(head_buf.data(), HEAD_SIZE);
+                      constexpr uint32_t min_read_buf_size = 256;
+                      uint32_t read_buf_size = min_read_buf_size;
+                      uint32_t read_buf_offset = 0;
+                      std::shared_ptr<char[]> read_buf_ptr = std::make_shared<char[]>(read_buf_size);
+
                       while (run_flag_) {
-                        // 接收固定包头
-                        size_t read_data_size = co_await boost::asio::async_read(sock_, asio_head_buf, boost::asio::transfer_exactly(HEAD_SIZE), boost::asio::use_awaitable);
-                        DBG_PRINT("rpc cli session async read %llu bytes for head", read_data_size);
+                        // 接收数据
+                        size_t read_data_size = co_await boost::asio::async_read(
+                            sock_, boost::asio::mutable_buffer(read_buf_ptr.get() + read_buf_offset, read_buf_size - read_buf_offset),
+                            [&](const boost::system::error_code& error, size_t bytes_transferred) -> size_t {
+                              if (error) [[unlikely]]
+                                return 0;
 
-                        if (read_data_size != HEAD_SIZE || head_buf[0] != HEAD_BYTE_1 || head_buf[1] != HEAD_BYTE_2) [[unlikely]]
-                          throw std::runtime_error("Get an invalid head.");
+                              bytes_transferred += read_buf_offset;  // buf中实际已经有的数据大小
+                              if (bytes_transferred < HEAD_SIZE) return read_buf_size - bytes_transferred;
+                              if (read_buf_ptr[0] != HEAD_BYTE_1 || read_buf_ptr[1] != HEAD_BYTE_2) return 0;
+                              if (bytes_transferred < (HEAD_SIZE + GetUint32FromBuf(read_buf_ptr.get() + 4))) return read_buf_size - bytes_transferred;
+                              return 0;
+                            },
+                            boost::asio::use_awaitable);
+                        DBG_PRINT("rpc cli session async read %llu bytes", read_data_size);
 
-                        // 接收pb包头+pb业务包
-                        const uint32_t pb_msg_len = GetUint32FromBuf(&head_buf[4]);
+                        read_data_size += read_buf_offset;  // buf中实际数据大小
 
-                        if (pb_msg_len > session_cfg_ptr_->max_recv_size) [[unlikely]]
-                          throw std::runtime_error("Msg too large.");
+                        // 根据本次数据接收情况决定下次数据buf大小
+                        if (read_data_size < read_buf_size / 2) {
+                          read_buf_size = std::max(min_read_buf_size, read_buf_size / 2);
+                        } else if (read_data_size >= read_buf_size) {
+                          read_buf_size = std::min(session_cfg_ptr_->max_recv_size, read_buf_size * 2);
+                        }
 
-                        std::vector<char> rsp_buf(pb_msg_len);
+                        uint32_t cur_handle_pos = 0;
+                        while (true) {
+                          const uint32_t cur_unhandle_size = read_data_size - cur_handle_pos;
 
-                        read_data_size = co_await boost::asio::async_read(sock_, boost::asio::buffer(rsp_buf, pb_msg_len), boost::asio::transfer_exactly(pb_msg_len), boost::asio::use_awaitable);
-                        DBG_PRINT("rpc cli session async read %llu bytes for pb head", read_data_size);
+                          if (cur_unhandle_size < HEAD_SIZE) break;
 
-                        boost::asio::post(
-                            session_handle_strand_,
-                            [this, self, pb_head_len = GetUint16FromBuf(&head_buf[2]), rsp_buf{std::move(rsp_buf)}]() mutable {
-                              ASIO_DEBUG_HANDLE(rpc_cli_session_recv_handle_co);
+                          if (read_buf_ptr[cur_handle_pos] != HEAD_BYTE_1 || read_buf_ptr[cur_handle_pos + 1] != HEAD_BYTE_2) [[unlikely]]
+                            throw std::runtime_error("Get an invalid head.");
 
-                              try {
-                                RspHead rsp_head;
-                                if (!rsp_head.ParseFromArray(rsp_buf.data(), pb_head_len)) [[unlikely]]
-                                  throw std::runtime_error("Parse rsp head failed.");
+                          // pb包头+pb业务包大小
+                          const uint32_t pb_msg_len = GetUint32FromBuf(read_buf_ptr.get() + cur_handle_pos + 4);
 
-                                auto finditr = msg_recorder_map_.find(rsp_head.req_id());
-                                if (finditr == msg_recorder_map_.end()) [[unlikely]] {
-                                  DBG_PRINT("rpc cli session get a no owner pkg, req id:", rsp_head.req_id());
-                                  return;
+                          if ((HEAD_SIZE + pb_msg_len) > session_cfg_ptr_->max_recv_size) [[unlikely]]
+                            throw std::runtime_error("Msg too large.");
+
+                          // 如果HEAD_SIZE + pb_msg_len大于read_buf_size，则下次接收时buf会扩大
+                          if (cur_unhandle_size < (HEAD_SIZE + pb_msg_len)) {
+                            read_buf_size = std::max(read_buf_size, (HEAD_SIZE + pb_msg_len));
+                            break;
+                          }
+
+                          const char* rsp_buf = read_buf_ptr.get() + cur_handle_pos + HEAD_SIZE;
+                          const uint16_t pb_head_len = GetUint16FromBuf(read_buf_ptr.get() + cur_handle_pos + 2);
+
+                          boost::asio::post(
+                              session_handle_strand_,
+                              [this, self, read_buf_ptr, rsp_buf, pb_head_len, pb_msg_len]() {
+                                ASIO_DEBUG_HANDLE(rpc_cli_session_recv_handle_co);
+
+                                try {
+                                  RspHead rsp_head;
+                                  if (!rsp_head.ParseFromArray(rsp_buf, pb_head_len)) [[unlikely]]
+                                    throw std::runtime_error("Parse rsp head failed.");
+
+                                  auto finditr = msg_recorder_map_.find(rsp_head.req_id());
+                                  if (finditr == msg_recorder_map_.end()) [[unlikely]] {
+                                    DBG_PRINT("rpc cli session get a no owner pkg, req id:", rsp_head.req_id());
+                                    return;
+                                  }
+
+                                  finditr->second.msg_ctx.ret_status = AsioRpcStatus(
+                                      static_cast<AsioRpcStatus::Code>(rsp_head.ret_code()),
+                                      rsp_head.func_ret_code(),
+                                      rsp_head.func_ret_msg());
+                                  finditr->second.msg_ctx.read_buf_ptr = read_buf_ptr;
+                                  finditr->second.msg_ctx.rsp_buf = rsp_buf;
+                                  finditr->second.msg_ctx.rsp_buf_len = pb_msg_len;
+                                  finditr->second.msg_ctx.rsp_pos = pb_head_len;
+                                  finditr->second.recv_sig_timer.cancel();
+                                } catch (const std::exception& e) {
+                                  DBG_PRINT("rpc cli session recv handle co get exception and exit, exception info: %s", e.what());
                                 }
+                              });
 
-                                finditr->second.msg_ctx.ret_status = AsioRpcStatus(
-                                    static_cast<AsioRpcStatus::Code>(rsp_head.ret_code()),
-                                    rsp_head.func_ret_code(),
-                                    rsp_head.func_ret_msg());
-                                finditr->second.msg_ctx.rsp_buf = std::move(rsp_buf);
-                                finditr->second.msg_ctx.rsp_pos = pb_head_len;
-                                finditr->second.recv_sig_timer.cancel();
-                              } catch (const std::exception& e) {
-                                DBG_PRINT("rpc cli session recv handle co get exception and exit, exception info: %s", e.what());
-                              }
-                            });
+                          cur_handle_pos += (HEAD_SIZE + pb_msg_len);
+                        }
+
+                        read_buf_offset = read_data_size - cur_handle_pos;
+
+                        if (read_buf_offset) {
+                          // todo：考虑使用vectorbuf，不用拷贝一次
+                          std::shared_ptr<char[]> last_read_buf_ptr = read_buf_ptr;
+                          read_buf_ptr = std::make_shared<char[]>(read_buf_size);
+                          memcpy(read_buf_ptr.get(), last_read_buf_ptr.get() + cur_handle_pos, read_buf_offset);
+                        } else {
+                          read_buf_ptr = std::make_shared<char[]>(read_buf_size);
+                        }
                       }
-
                     } catch (const std::exception& e) {
                       DBG_PRINT("rpc cli session recv co get exception and exit, exception info: %s", e.what());
                     }
