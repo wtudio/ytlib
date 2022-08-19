@@ -28,6 +28,10 @@ target_link_libraries(${CUR_TARGET_NAME} PRIVATE
   libevent::event
 )
 
+if(UNIX)
+  target_link_libraries(${CUR_TARGET_NAME} PRIVATE pthread)
+endif()
+
 # 设置编译选项
 # target_compile_definitions(${CUR_TARGET_NAME} PRIVATE xxx)
 

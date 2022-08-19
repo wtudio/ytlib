@@ -23,22 +23,16 @@ set_property(TARGET ${CUR_TARGET_NAME} PROPERTY PRIVATE_HEADER ${head_files})
 # 设置链接库
 target_link_libraries(${CUR_TARGET_NAME} PRIVATE
   ytlib::misc
-  ytlib::boost_asio
-  ytlib::boost_fiber
-  ytlib::execution
-  libunifex::unifex
+  ytlib::pb_tools
+  ytlib::ytrpc::unifex_rpc_inf
+  ytlib::ytrpc::asio_rpc
+  protobuf::libprotobuf
+  testytrpc::unifex_rpc_inf_for_asio_rpc_demo_protos_gencode
+  testytrpc::unifex_rpc_inf_for_asio_rpc_demo_rpc_gencode
 )
-
-if(UNIX)
-  target_link_libraries(${CUR_TARGET_NAME} PRIVATE pthread)
-endif()
 
 # 设置编译选项
 # target_compile_definitions(${CUR_TARGET_NAME} PRIVATE xxx)
 
-if(MSVC)
-  target_compile_options(${CUR_TARGET_NAME} PRIVATE /Zc:externConstexpr)
-endif()
-
 # 设置其他属性
-set_property(TARGET ${CUR_TARGET_NAME} PROPERTY FOLDER test)
+set_property(TARGET ${CUR_TARGET_NAME} PROPERTY FOLDER test/testytrpc)

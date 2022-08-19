@@ -51,9 +51,9 @@ class UnifexRpcContext {
   }
 
   // meta信息功能，线程不安全
-  std::map<std::string, std::string>& ContextKv() { return kv; }
+  std::map<std::string, std::string>& ContextKv() { return kv_; }
 
-  const std::map<std::string, std::string>& ContextKv() const { return kv; }
+  const std::map<std::string, std::string>& ContextKv() const { return kv_; }
 
   // debug功能，打印ctx
   std::string ToString() const {
@@ -61,7 +61,7 @@ class UnifexRpcContext {
     ss << "is done: " << (done_flag_ ? "true" : "false")
        << ", done info: " << done_info_
        << ", timeout: " << std::chrono::duration_cast<std::chrono::milliseconds>(Timeout()).count() << "ms\n";
-    ss << Map2Str(kv);
+    ss << Map2Str(kv_);
     return ss.str();
   }
 
@@ -71,7 +71,7 @@ class UnifexRpcContext {
 
   std::chrono::system_clock::time_point deadline_ = std::chrono::system_clock::time_point::max();
 
-  std::map<std::string, std::string> kv;
+  std::map<std::string, std::string> kv_;
 };
 
 }  // namespace ytrpc

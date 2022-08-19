@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package demo;
+
+message UserInfo {
+  string user_id = 1;
+  string user_name = 2;
+  string mail = 3;
+}
+
+message AuthInfo {
+  string auth_id = 1;
+  string auth_data = 2;
+}

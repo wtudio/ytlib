@@ -4,7 +4,7 @@ message(STATUS "get protobuf ...")
 
 FetchContent_Declare(
   protobuf
-  URL   https://github.com/protocolbuffers/protobuf/archive/v3.20.1.tar.gz
+  URL   https://github.com/protocolbuffers/protobuf/archive/v3.21.5.tar.gz
   SOURCE_SUBDIR  cmake
 )
 

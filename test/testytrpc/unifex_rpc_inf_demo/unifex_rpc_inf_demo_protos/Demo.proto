@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+import "DemoCommonInfo.proto";
+
+package demo;
+
+message LoginReq {
+  UserInfo user = 1;
+  AuthInfo auth = 2;
+  string msg = 3;
+}
+
+message LoginRsp {
+  uint64 code = 1;
+  string msg = 2;
+}
+
+message LogoutReq {
+  string user_id = 1;
+  AuthInfo auth = 2;
+  string msg = 3;
+}
+
+message LogoutRsp {
+  uint64 code = 1;
+  string msg = 2;
+}
+
+service DemoService {
+  rpc Login(LoginReq) returns (LoginRsp);
+  rpc Logout(LogoutReq) returns (LogoutRsp);
+}
