@@ -24,11 +24,11 @@ set_property(TARGET ${CUR_TARGET_NAME} PROPERTY PRIVATE_HEADER ${head_files})
 target_link_libraries(${CUR_TARGET_NAME} PRIVATE
   ytlib::misc
   ytlib::pb_tools
-  ytlib::ytrpc::unifex_rpc_inf
+  ytlib::ytrpc::unified_rpc
   ytlib::ytrpc::asio_rpc
   protobuf::libprotobuf
-  testytrpc::unifex_rpc_inf_for_asio_rpc_demo_protos_gencode
-  testytrpc::unifex_rpc_inf_for_asio_rpc_demo_rpc_gencode
+  testytrpc::unified_rpc_for_asio_rpc_demo_protos_gencode
+  testytrpc::unified_rpc_for_asio_rpc_demo_rpc_gencode
 )
 
 # 设置编译选项

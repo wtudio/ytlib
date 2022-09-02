@@ -7,7 +7,7 @@
 namespace ytlib {
 namespace ytrpc {
 
-TEST(YTRPC_TEST, BufferVec) {
+TEST(RPC_UTIL_TEST, BufferVec) {
   BufferVec buffer_vec;
 
   const auto& new_buffer = buffer_vec.NewBuffer(10);
@@ -18,7 +18,7 @@ TEST(YTRPC_TEST, BufferVec) {
   EXPECT_EQ(&new_buffer, &cur_buffer);
 }
 
-TEST(YTRPC_TEST, BufferVecZeroCopyOutputStream) {
+TEST(RPC_UTIL_TEST, BufferVecZeroCopyOutputStream) {
   BufferVec buffer_vec;
   BufferVecZeroCopyOutputStream os(buffer_vec);
 
@@ -51,7 +51,7 @@ TEST(YTRPC_TEST, BufferVecZeroCopyOutputStream) {
   EXPECT_EQ(os.ByteCount(), 768);
 }
 
-TEST(YTRPC_TEST, BufferVecZeroCopyInputStream) {
+TEST(RPC_UTIL_TEST, BufferVecZeroCopyInputStream) {
   BufferVec buffer_vec;
   buffer_vec.NewBuffer(10);
   buffer_vec.NewBuffer(20);
@@ -104,7 +104,7 @@ TEST(YTRPC_TEST, BufferVecZeroCopyInputStream) {
   EXPECT_FALSE(is.Skip(100));
 }
 
-TEST(YTRPC_TEST, BufferVec_MISC) {
+TEST(RPC_UTIL_TEST, BufferVec_MISC) {
   ReqHead req_head;
   req_head.set_req_id(12345);
   req_head.set_func("/test.helloworld.gre/testfun");

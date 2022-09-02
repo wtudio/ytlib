@@ -4,16 +4,15 @@
 #include <chrono>
 #include <map>
 #include <string>
-
-#include "ytlib/misc/stl_util.hpp"
+#include <unordered_map>
 
 namespace ytlib {
 namespace ytrpc {
 
-class UnifexRpcContextInf {
+class UnifiedContext {
  public:
-  UnifexRpcContextInf() {}
-  ~UnifexRpcContextInf() {}
+  explicit UnifiedContext() {}
+  ~UnifiedContext() {}
 
   // done 相关功能，线程安全
   void Done(const std::string& info = "") const {
@@ -26,45 +25,40 @@ class UnifexRpcContextInf {
   const std::string& DoneInfo() const { return done_info_; }
 
   // timeout相关功能，线程不安全
-  void SetDeadline(const std::chrono::system_clock::time_point& deadline) {
-    deadline_ = deadline;
-  }
+  void SetDeadline(const std::chrono::system_clock::time_point& deadline) { deadline_ = deadline; }
+  const std::chrono::system_clock::time_point& Deadline() const { return deadline_; }
+  void SetTimeout(const std::chrono::system_clock::duration& timeout) { SetDeadline(std::chrono::system_clock::now() + timeout); }
+  const std::chrono::system_clock::duration Timeout() const { return Deadline() - std::chrono::system_clock::now(); }
 
-  const std::chrono::system_clock::time_point& Deadline() const {
-    return deadline_;
-  }
-
-  void SetTimeout(const std::chrono::system_clock::duration& timeout) {
-    SetDeadline(std::chrono::system_clock::now() + timeout);
-  }
-
-  const std::chrono::system_clock::duration Timeout() const {
-    return Deadline() - std::chrono::system_clock::now();
-  }
-
-  // meta信息功能，线程不安全
-  std::map<std::string, std::string>& ContextKv() { return kv_; }
-
-  const std::map<std::string, std::string>& ContextKv() const { return kv_; }
+  // meta信息功能，线程不安全。todo：优化转换拷贝开销，尝试使用string_view？
+  std::unordered_map<std::string, std::string>& Meta() { return meta_; }
+  const std::unordered_map<std::string, std::string>& Meta() const { return meta_; }
+  void AddMeta(const std::string& k, const std::string& v) { meta_.emplace(k, v); }
 
   // debug功能，打印ctx
   std::string ToString() const {
     std::stringstream ss;
-    ss << "is done: " << (done_flag_ ? "true" : "false")
+    ss << (done_flag_ ? "ctx is done" : "ctx is not done")
        << ", done info: " << done_info_
-       << ", timeout: " << std::chrono::duration_cast<std::chrono::milliseconds>(Timeout()).count() << "ms\n";
-    ss << Map2Str(kv_);
+       << ", timeout: " << std::chrono::duration_cast<std::chrono::milliseconds>(Timeout()).count() << "ms"
+       << ", meta size: " << meta_.size()
+       << ".\n";
+
+    for (const auto& kv : meta_) {
+      ss << kv.first << ":" << kv.second << "\n";
+    }
+
     return ss.str();
   }
 
   // 原生context转换相关功能
   void RegInfToNativeFun(const std::string& native_rpc_name,
-                         std::function<void(const UnifexRpcContextInf&, std::shared_ptr<void>&)>&& inf_to_native_fun) {
+                         std::function<void(const UnifiedContext&, std::shared_ptr<void>&)>&& inf_to_native_fun) {
     inf_to_native_fun_map_.emplace(native_rpc_name, std::move(inf_to_native_fun));
   }
 
   void RegNativeToInfFun(const std::string& native_rpc_name,
-                         std::function<void(const std::shared_ptr<void>&, UnifexRpcContextInf&)>&& native_to_inf_fun) {
+                         std::function<void(const std::shared_ptr<void>&, UnifiedContext&)>&& native_to_inf_fun) {
     native_to_inf_fun_map_.emplace(native_rpc_name, std::move(native_to_inf_fun));
   }
 
@@ -91,13 +85,11 @@ class UnifexRpcContextInf {
   mutable std::string done_info_;
 
   std::chrono::system_clock::time_point deadline_ = std::chrono::system_clock::time_point::max();
-
-  std::map<std::string, std::string> kv_;
+  std::unordered_map<std::string, std::string> meta_;
 
   std::map<std::string, std::shared_ptr<void>> native_ctx_handle_map_;
-
-  std::map<std::string, std::function<void(const UnifexRpcContextInf&, std::shared_ptr<void>&)>> inf_to_native_fun_map_;
-  std::map<std::string, std::function<void(const std::shared_ptr<void>&, UnifexRpcContextInf&)>> native_to_inf_fun_map_;
+  std::map<std::string, std::function<void(const UnifiedContext&, std::shared_ptr<void>&)>> inf_to_native_fun_map_;
+  std::map<std::string, std::function<void(const std::shared_ptr<void>&, UnifiedContext&)>> native_to_inf_fun_map_;
 };
 
 }  // namespace ytrpc

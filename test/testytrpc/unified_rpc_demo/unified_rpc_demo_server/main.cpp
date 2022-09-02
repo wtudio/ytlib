@@ -3,10 +3,8 @@
 
 #include "ytlib/misc/misc_macro.h"
 
-#include "ytlib/ytrpc/unifex_rpc_inf/unifex_rpc_server_inf.hpp"
-
 #include "Demo.pb.h"
-#include "Demo.unifex_rpc_inf_for_asio_rpc.pb.h"
+#include "Demo.unified_rpc_for_asio_rpc.pb.h"
 
 using namespace std;
 using namespace ytlib;
@@ -68,7 +66,7 @@ int32_t main(int32_t argc, char** argv) {
   // 设置通用context
   shared_ptr<UnifexRpcContextInf> comm_ctx_ptr = make_shared<UnifexRpcContextInf>();
   comm_ctx_ptr->SetTimeout(chrono::milliseconds(5000));
-  comm_ctx_ptr.RegFilter(debug_log);
+  comm_ctx_ptr->RegFilter(debug_log);
 
   // 注册service
   auto asio_rpc_service = GenAsioRpcService(std::make_shared<DemoServiceImpl>(), comm_ctx_ptr);

@@ -21,7 +21,6 @@ set_property(TARGET ${CUR_TARGET_NAME} PROPERTY PUBLIC_HEADER ${head_files})
 
 # 设置链接库
 target_link_libraries(${CUR_TARGET_NAME} INTERFACE
-  ytlib::misc
   libunifex::unifex
   protobuf::libprotobuf
 )

@@ -116,6 +116,14 @@ struct CallBackReceiver {
   DetachHolder *holder_ptr;
 };
 
+/**
+ * @brief 分离式启动一个Sender
+ * @note 会将结果通过callback函数返回
+ * @tparam Sender
+ * @tparam CallBack
+ * @param sender
+ * @param cb
+ */
 template <typename Sender, typename CallBack>
 requires unifex::sender<Sender>
 void StartDetached(Sender &&sender, CallBack &&cb) {
@@ -183,8 +191,8 @@ class AsyncWrapper {
 
   static constexpr bool sends_done = true;
 
-  explicit AsyncWrapper(AsyncFunc &&async_func)
-      : async_func_(std::move(async_func)) {}
+  template <typename F>
+  explicit AsyncWrapper(F &&f) : async_func_((F &&) f) {}
 
   template <typename Receiver>
   AsyncWrapperOperationState<unifex::remove_cvref_t<Receiver>, Results...> connect(Receiver &&receiver) {
@@ -253,7 +261,7 @@ class AsyncSignal {
 
     static constexpr bool sends_done = false;
 
-    Sender(const std::shared_ptr<Content> &content_ptr)
+    explicit Sender(const std::shared_ptr<Content> &content_ptr)
         : content_ptr_(content_ptr) {}
 
     template <typename Receiver>

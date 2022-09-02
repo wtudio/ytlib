@@ -8,12 +8,11 @@
 #include "ytlib/misc/misc_macro.h"
 #include "ytlib/pb_tools/pb_tools.hpp"
 
-#include "ytlib/ytrpc/unifex_rpc_inf/unifex_rpc_client_inf_filter.hpp"
-#include "ytlib/ytrpc/unifex_rpc_inf/unifex_rpc_context_inf.hpp"
-#include "ytlib/ytrpc/unifex_rpc_inf/unifex_rpc_status_inf.hpp"
+#include "ytlib/ytrpc/unified_rpc/unified_rpc_context.hpp"
+#include "ytlib/ytrpc/unified_rpc/unified_rpc_status.hpp"
 
 #include "Demo.pb.h"
-#include "Demo.unifex_rpc_inf_for_asio_rpc.pb.h"
+#include "Demo.unified_rpc_for_asio_rpc.pb.h"
 
 using namespace std;
 using namespace ytlib;

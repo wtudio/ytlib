@@ -148,11 +148,17 @@ std::tuple<int, std::string> foo() {
 int32_t main(int32_t argc, char **argv) {
   DBG_PRINT("hello world");
 
-  // int n = 0;
-  // std::string s;
-  // std::tie(n, s) = foo();
-  auto [n, s] = foo();
-  DBG_PRINT("n: %d, s: %s", n, s.c_str());
+  {
+    int n = 0;
+    std::string s;
+    std::tie(n, s) = foo();
+    DBG_PRINT("n: %d, s: %s", n, s.c_str());
+  }
+
+  {
+    auto [n, s] = foo();
+    DBG_PRINT("n: %d, s: %s", n, s.c_str());
+  }
 
   // TestCPO1();
 
