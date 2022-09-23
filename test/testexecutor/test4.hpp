@@ -78,14 +78,28 @@ auto RpcFun(TestCtx ctx, const TestReq& req) -> RpcSender<TestRsp, TestReq> {
   return RpcSender<TestRsp, TestReq>(ctx, req);
 }
 
-void Test4() {
+auto RpcFun2(TestCtx ctx, const TestReq& req) {
+  unifex::inline_scheduler inline_sche;
+  return unifex::schedule(inline_sche) |
+         unifex::then([ctx, req]() -> std::tuple<RpcStatus, TestRsp> {
+           TestRsp rsp;
+           rsp.out = req.in;
+
+           RpcStatus st{1};
+           return std::tuple<RpcStatus, TestRsp>(st, rsp);
+         });
+}
+
+inline void Test4() {
   auto work = []() -> unifex::task<void> {
     DBG_PRINT("rpc start");
 
     TestCtx ctx{"msg"};
     TestReq req{42};
 
-    const auto& [status, rsp] = co_await RpcFun(ctx, req);
+    // const auto& [status, rsp] = co_await RpcFun(ctx, req);
+
+    const auto& [status, rsp] = co_await RpcFun2(ctx, req);
 
     DBG_PRINT("rpc end, status: %d, rsp: %d", status.st, rsp.out);
   };

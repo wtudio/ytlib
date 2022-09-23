@@ -6,7 +6,11 @@
 #include "boost_fiber_executor.hpp"
 #include "execution_tools.hpp"
 
+#include <unifex/async_manual_reset_event.hpp>
 #include <unifex/async_mutex.hpp>
+#include <unifex/async_scope.hpp>
+#include <unifex/inline_scheduler.hpp>
+#include <unifex/on.hpp>
 #include <unifex/sync_wait.hpp>
 #include <unifex/task.hpp>
 #include <unifex/timed_single_thread_context.hpp>
@@ -25,7 +29,7 @@ TEST(EXECUTION_TEST, StartDetached) {
     co_return 42;
   };
 
-  StartDetached(work());
+  StartDetached(work(), [](int) {});
   EXPECT_EQ(n, 1);
 
   std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -138,7 +142,8 @@ TEST(EXECUTION_TEST, AsioContext) {
       ++n;
     };
 
-    StartDetached(work());
+    unifex::async_scope scope;
+    scope.spawn(work());
 
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
     EXPECT_EQ(n, 1);
@@ -146,6 +151,8 @@ TEST(EXECUTION_TEST, AsioContext) {
     EXPECT_EQ(n, 2);
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     EXPECT_EQ(n, 3);
+
+    unifex::sync_wait(scope.cleanup());
   }
 
   asio_sys_ptr->Stop();
@@ -211,7 +218,8 @@ TEST(EXECUTION_TEST, FiberContext) {
       ++n;
     };
 
-    StartDetached(work());
+    unifex::async_scope scope;
+    scope.spawn(work());
 
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
     EXPECT_EQ(n, 1);
@@ -219,6 +227,8 @@ TEST(EXECUTION_TEST, FiberContext) {
     EXPECT_EQ(n, 2);
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     EXPECT_EQ(n, 3);
+
+    unifex::sync_wait(scope.cleanup());
   }
 
   fiber_sys_ptr->Stop();
@@ -264,57 +274,69 @@ TEST(EXECUTION_TEST, async_mutex) {
   asio_sys_ptr->Join();
 }
 
-TEST(EXECUTION_TEST, AsyncSignal) {
-  AsyncSignal sig_1;
-  AsyncSignal sig_2;
+TEST(EXECUTION_TEST, async_manual_reset_event) {
+  unifex::async_manual_reset_event sig_1;
+  unifex::async_manual_reset_event sig_2;
+
   int n = 0;
 
   auto work = [&]() -> unifex::task<void> {
-    co_await sig_1.Wait();
+    unifex::inline_scheduler sche;
+    co_await unifex::on(sche, sig_1.async_wait());
     n = 42;
-    co_await sig_2.Wait();
+    co_await unifex::on(sche, sig_2.async_wait());
     n = 43;
     co_return;
   };
 
-  StartDetached(work());
+  unifex::async_scope scope;
+  scope.spawn(work());
   EXPECT_EQ(n, 0);
 
-  sig_1.Notify();
+  sig_1.set();
   EXPECT_EQ(n, 42);
 
-  sig_2.Notify();
+  sig_2.set();
   EXPECT_EQ(n, 43);
 
-  StartDetached(work());
+  scope.spawn(work());
   EXPECT_EQ(n, 43);
+
+  unifex::sync_wait(scope.cleanup());
 }
 
-TEST(EXECUTION_TEST, AsyncCounter) {
+TEST(EXECUTION_TEST, AsyncLatch) {
   uint32_t num = 100;
-  AsyncCounter ct(num);
+  AsyncLatch latch(num);
   int n = 0;
 
   auto work = [&]() -> unifex::task<void> {
-    co_await ct.Wait();
+    unifex::inline_scheduler sche;
+    co_await unifex::on(sche, latch.AsyncWait());
     n = 42;
     co_return;
   };
 
-  StartDetached(work());
+  unifex::async_scope scope;
+  scope.spawn(work());
   EXPECT_EQ(n, 0);
 
   for (uint32_t ii = 0; ii < (num - 1); ++ii) {
-    ct.Count();
+    latch.CountDown();
+    EXPECT_FALSE(latch.Ready());
     EXPECT_EQ(n, 0);
   }
 
-  ct.Count();
+  latch.CountDown();
+  EXPECT_TRUE(latch.Ready());
   EXPECT_EQ(n, 42);
 
   n = 0;
-  StartDetached(work());
+  scope.spawn(work());
+  EXPECT_TRUE(latch.Ready());
   EXPECT_EQ(n, 42);
+
+  unifex::sync_wait(scope.cleanup());
 }
 
 }  // namespace ytlib

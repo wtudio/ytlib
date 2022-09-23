@@ -45,7 +45,7 @@ class LocalCache {
     }
   };
 
-  LocalCache(const LocalCache::Cfg& cfg)
+  explicit LocalCache(const LocalCache::Cfg& cfg)
       : cfg_(LocalCache::Cfg::Verify(cfg)),
         data_map_(cfg_.capacity) {
   }

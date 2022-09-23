@@ -88,7 +88,7 @@ struct MyScheduler {
   }
 };
 
-void Test1() {
+inline void Test1() {
   DBG_PRINT("[run in thread %llu]Test1 main.", ytlib::GetThreadId());
 
   // unifex::inline_scheduler sche;

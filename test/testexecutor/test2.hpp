@@ -123,7 +123,7 @@ inline void MyOperationState<Receiver>::start() noexcept {
   }
 }
 
-void Test2() {
+inline void Test2() {
   DBG_PRINT("[run in thread %llu]Test2 main.", ytlib::GetThreadId());
 
   // unifex::new_thread_context ctx;

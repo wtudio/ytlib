@@ -28,11 +28,11 @@ TEST(TIME_TEST, BASE_test) {
 
   EXPECT_EQ(GetDayCount(t, t + 3600 * 70, 0), -2);
 
-  std::chrono::system_clock::time_point tp = std::chrono::system_clock::now();
-  printf("%llu\n", GetTimestampMs(tp));
-  printf("%llu\n", GetCurTimestampMs());
-  printf("%llu\n", GetTimestampSec(tp));
-  printf("%llu\n", GetCurTimestampSec());
+  // std::chrono::system_clock::time_point tp = std::chrono::system_clock::now();
+  // printf("%llu\n", GetTimestampMs(tp));
+  // printf("%llu\n", GetCurTimestampMs());
+  // printf("%llu\n", GetTimestampSec(tp));
+  // printf("%llu\n", GetCurTimestampSec());
 }
 
 }  // namespace ytlib

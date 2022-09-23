@@ -26,6 +26,8 @@ int32_t main(int32_t argc, char** argv) {
   auto cli_ptr = std::make_shared<ytrpc::UnifexRpcClient>(asio_sys_ptr->IO(), cfg);
 
   auto co_work = [cli_ptr]() -> unifex::task<void> {
+    unifex::async_scope scope;
+
     auto proxy_ptr = std::make_shared<trpc::test::helloworld::GreeterProxy>(cli_ptr);
 
     const uint32_t concurrency_num = 1000;
@@ -41,10 +43,10 @@ int32_t main(int32_t argc, char** argv) {
 
     uint64_t all_begin_time = GetCurTimestampMs();
     for (uint32_t ii = 0; ii < try_num; ++ii) {
-      AsyncCounter ct(concurrency_num);
+      AsyncLatch latch(concurrency_num);
 
       for (auto& request_msg : request_msgs) {
-        StartDetached(unifex::co_invoke([&ct, &proxy_ptr, &request_msg, &successed_num, &total_time]() -> unifex::task<void> {
+        scope.spawn(unifex::co_invoke([&latch, &proxy_ptr, &request_msg, &successed_num, &total_time]() -> unifex::task<void> {
           trpc::test::helloworld::HelloRequest req;
           req.set_msg(request_msg);
 
@@ -62,12 +64,12 @@ int32_t main(int32_t argc, char** argv) {
           } else {
             printf("task request error: %s\n", status.ToString().c_str());
           }
-          ct.Count();
+          latch.Count();
 
           co_return;
         }));
       }
-      co_await ct.Wait();
+      co_await latch.Wait();
     }
     uint64_t all_end_time = GetCurTimestampMs();
 
@@ -76,6 +78,8 @@ int32_t main(int32_t argc, char** argv) {
            all_end_time - all_begin_time,
            (all_end_time - all_begin_time) / try_num,
            static_cast<uint64_t>(total_time) / try_num / concurrency_num);
+
+    co_await scope.cleanup();
 
     co_return;
   };
