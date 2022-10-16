@@ -18,11 +18,7 @@
 using namespace std;
 using namespace ytlib;
 
-int32_t main(int32_t argc, char** argv) {
-  DBG_PRINT("-------------------start game-------------------");
-
-  auto game_sys_ptr = std::make_shared<AsioExecutor>(8);
-
+std::shared_ptr<World> AddGameWorld(const std::shared_ptr<AsioExecutor>& game_sys_ptr) {
   // init game world
   WorldCfg cfg;
   auto game_world_ptr = std::make_shared<World>(game_sys_ptr->IO(), cfg);
@@ -44,25 +40,34 @@ int32_t main(int32_t argc, char** argv) {
   ship2->speed_ = {2.0, 2.0, 4.0};
   game_world_ptr->ship_map_.emplace(ship2->id_, ship2);
 
-  // start game sys
-  game_sys_ptr->RegisterSvrFunc([&game_world_ptr] { game_world_ptr->Start(); },
-                                [&game_world_ptr] { game_world_ptr->Stop(); });
+  game_sys_ptr->RegisterSvrStopFunc([&game_world_ptr] { game_world_ptr->Stop(); });
 
-  thread game_thread([&game_sys_ptr] {
-    game_sys_ptr->Start();
-    game_sys_ptr->Join();
-    DBG_PRINT("game_sys_ptr exit");
-  });
-
-  // std::this_thread::sleep_for(std::chrono::seconds(5));
-
+  game_world_ptr->Start();
   game_world_ptr->game_displayer_->Start();
 
+  return game_world_ptr;
+}
+
+int32_t main(int32_t argc, char** argv) {
+  DBG_PRINT("-------------------start game-------------------");
+
+  auto game_sys_ptr = std::make_shared<AsioExecutor>(8);
+  game_sys_ptr->EnableStopSignal();
+
+  game_sys_ptr->Start();
+
+  auto game_world_ptr = AddGameWorld(game_sys_ptr);
+
+  std::this_thread::sleep_for(std::chrono::seconds(5));
+
   game_sys_ptr->Stop();
-  game_thread.join();
+  game_sys_ptr->Join();
 
   // report
   uint64_t run_time = (game_world_ptr->game_end_time_point_ - game_world_ptr->game_start_time_point_).count();
+
+  auto ship1 = game_world_ptr->ship_map_[1];
+  auto ship2 = game_world_ptr->ship_map_[2];
 
   stringstream ss;
   ss << "game report:" << endl

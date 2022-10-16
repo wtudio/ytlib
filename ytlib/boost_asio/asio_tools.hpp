@@ -48,17 +48,38 @@ class AsioExecutor {
   AsioExecutor& operator=(const AsioExecutor&) = delete;  ///< no copy
 
   /**
+   * @brief 注册svr的start方法
+   * @note 越早注册的start func越早执行
+   * @param[in] start_func
+   */
+  void RegisterSvrStartFunc(std::function<void()>&& start_func) {
+    if (start_flag_)
+      throw std::runtime_error("RegisterSvrStartFunc should not be called after start.");
+
+    start_func_vec_.emplace_back(std::move(start_func));
+  }
+
+  /**
+   * @brief 注册svr的stop方法
+   * @note 越早注册的stop func越晚执行
+   * @param[in] stop_func
+   */
+  void RegisterSvrStopFunc(std::function<void()>&& stop_func) {
+    if (stop_flag_)
+      throw std::runtime_error("RegisterSvrStopFunc should not be called after stop.");
+
+    stop_func_vec_.emplace_back(std::move(stop_func));
+  }
+
+  /**
    * @brief 注册svr的start、stop方法
    * @note 越早注册的start func越早执行，越早注册的stop func越晚执行
    * @param[in] start_func 子服务启动方法，一般在其中起一个启动协程
    * @param[in] stop_func 子服务结束方法，需要保证可以重复调用
    */
   void RegisterSvrFunc(std::function<void()>&& start_func, std::function<void()>&& stop_func) {
-    if (start_flag_)
-      throw std::runtime_error("RegisterSvrFunc should not be called after start.");
-
-    if (start_func) start_func_vec_.emplace_back(std::move(start_func));
-    if (stop_func) stop_func_vec_.emplace_back(std::move(stop_func));
+    RegisterSvrStartFunc(std::move(start_func));
+    RegisterSvrStopFunc(std::move(stop_func));
   }
 
   /**
