@@ -2,6 +2,14 @@ cmake_minimum_required(VERSION 3.20)
 
 project(ytlib VERSION 0.1.0 LANGUAGES C CXX)
 
+#设置cmake工具
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/CMake)
+
+#设定c++版本
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 #是否为主项目
 if (NOT DEFINED YTLIB_MASTER_PROJECT)
   set(YTLIB_MASTER_PROJECT OFF)
@@ -11,29 +19,8 @@ if (NOT DEFINED YTLIB_MASTER_PROJECT)
   endif ()
 endif ()
 
-#设置cmake工具
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/CMake)
-
-#设定c++版本
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
-
-#设置文档
-option(YTLIB_BUILD_DOC "Build ytlib doc." OFF)
-if(YTLIB_BUILD_DOC)
-  message(STATUS "gen doc ...")
-  set(YTLIB_DOC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/doc)
-  if(WIN32)
-    execute_process(COMMAND ${YTLIB_DOC_DIR}/buildDoc.bat ${YTLIB_DOC_DIR} WORKING_DIRECTORY ${YTLIB_DOC_DIR})
-  elseif(UNIX)
-    execute_process(COMMAND ${YTLIB_DOC_DIR}/buildDoc.sh ${YTLIB_DOC_DIR} WORKING_DIRECTORY ${YTLIB_DOC_DIR})
-  endif()
-endif()
-
 #为主项目时的一些开发配置
 if(YTLIB_MASTER_PROJECT)
-
   #设置默认编译类型
   if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build.")
@@ -54,7 +41,18 @@ if(YTLIB_MASTER_PROJECT)
   endif()
 
   set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+endif()
 
+#设置文档
+option(YTLIB_BUILD_DOC "Build ytlib doc." OFF)
+if(YTLIB_BUILD_DOC)
+  message(STATUS "gen doc ...")
+  set(YTLIB_DOC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/doc)
+  if(WIN32)
+    execute_process(COMMAND ${YTLIB_DOC_DIR}/buildDoc.bat ${YTLIB_DOC_DIR} WORKING_DIRECTORY ${YTLIB_DOC_DIR})
+  elseif(UNIX)
+    execute_process(COMMAND ${YTLIB_DOC_DIR}/buildDoc.sh ${YTLIB_DOC_DIR} WORKING_DIRECTORY ${YTLIB_DOC_DIR})
+  endif()
 endif()
 
 #设置第三方库。使用 FETCHCONTENT_BASE_DIR 以设置下载目录

@@ -54,11 +54,12 @@ TEST(HTTP_DISPATCHER_TEST, HttpDispatcher_CASE1) {
       .want_match = true,
       .want_result = "CASE 4"});
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
-    auto ret = dispatcher.GetHttpHandle(test_cases[ii].path);
-    EXPECT_EQ(static_cast<bool>(ret), test_cases[ii].want_match)
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
-    EXPECT_STREQ(ret().c_str(), test_cases[ii].want_result.c_str())
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
+    TestCase& cur_test_case = test_cases[ii];
+    auto ret = dispatcher.GetHttpHandle(cur_test_case.path);
+    EXPECT_EQ(static_cast<bool>(ret), cur_test_case.want_match)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
+    EXPECT_STREQ(ret().c_str(), cur_test_case.want_result.c_str())
+        << "Test " << cur_test_case.name << " failed, index " << ii;
   }
 }
 
@@ -118,12 +119,13 @@ TEST(HTTP_DISPATCHER_TEST, HttpDispatcher_CASE2) {
       .want_match = true,
       .want_result = "CASE 1"});
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
-    auto ret = dispatcher.GetHttpHandle(test_cases[ii].path);
-    EXPECT_EQ(static_cast<bool>(ret), test_cases[ii].want_match)
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
+    TestCase& cur_test_case = test_cases[ii];
+    auto ret = dispatcher.GetHttpHandle(cur_test_case.path);
+    EXPECT_EQ(static_cast<bool>(ret), cur_test_case.want_match)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
     if (ret) {
-      EXPECT_STREQ(ret().c_str(), test_cases[ii].want_result.c_str())
-          << "Test " << test_cases[ii].name << " failed, index " << ii;
+      EXPECT_STREQ(ret().c_str(), cur_test_case.want_result.c_str())
+          << "Test " << cur_test_case.name << " failed, index " << ii;
     }
   }
 }
@@ -188,12 +190,13 @@ TEST(HTTP_DISPATCHER_TEST, HttpDispatcher_CASE3) {
       .want_match = true,
       .want_result = "CASE 4"});
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
-    auto ret = dispatcher.GetHttpHandle(test_cases[ii].path);
-    EXPECT_EQ(static_cast<bool>(ret), test_cases[ii].want_match)
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
+    TestCase& cur_test_case = test_cases[ii];
+    auto ret = dispatcher.GetHttpHandle(cur_test_case.path);
+    EXPECT_EQ(static_cast<bool>(ret), cur_test_case.want_match)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
     if (ret) {
-      EXPECT_STREQ(ret().c_str(), test_cases[ii].want_result.c_str())
-          << "Test " << test_cases[ii].name << " failed, index " << ii;
+      EXPECT_STREQ(ret().c_str(), cur_test_case.want_result.c_str())
+          << "Test " << cur_test_case.name << " failed, index " << ii;
     }
   }
 }

@@ -23,12 +23,13 @@ TEST(LOOP_TOOL_TEST, BASE_test) {
       .want_result_ct = 23});  // 2*3*4-1
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
+    TestCase& cur_test_case = test_cases[ii];
     uint64_t ct = 0;
-    LoopTool lt(test_cases[ii].input_up_vec);
+    LoopTool lt(cur_test_case.input_up_vec);
     while (++lt) {
       ++ct;
     }
-    EXPECT_EQ(ct, test_cases[ii].want_result_ct);
+    EXPECT_EQ(ct, cur_test_case.want_result_ct);
   }
 }
 

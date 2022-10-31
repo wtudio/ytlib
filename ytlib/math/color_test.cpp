@@ -27,15 +27,16 @@ TEST(COLOR_TEST, rgb2hsb_test) {
       .want_result = {355.47171, 0.519608, 0.8}});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
-    auto ret = rgb2hsb(test_cases[ii].rgb);
+    TestCase& cur_test_case = test_cases[ii];
+    auto ret = rgb2hsb(cur_test_case.rgb);
     EXPECT_EQ(ret.size(), 3)
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
-    EXPECT_FLOAT_EQ(ret[0], test_cases[ii].want_result[0])
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
-    EXPECT_FLOAT_EQ(ret[1], test_cases[ii].want_result[1])
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
-    EXPECT_FLOAT_EQ(ret[2], test_cases[ii].want_result[2])
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
+        << "Test " << cur_test_case.name << " failed, index " << ii;
+    EXPECT_FLOAT_EQ(ret[0], cur_test_case.want_result[0])
+        << "Test " << cur_test_case.name << " failed, index " << ii;
+    EXPECT_FLOAT_EQ(ret[1], cur_test_case.want_result[1])
+        << "Test " << cur_test_case.name << " failed, index " << ii;
+    EXPECT_FLOAT_EQ(ret[2], cur_test_case.want_result[2])
+        << "Test " << cur_test_case.name << " failed, index " << ii;
   }
 }
 
@@ -62,9 +63,10 @@ TEST(COLOR_TEST, hsb2rgb_test) {
       .want_result = {204, 98, 106}});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
-    auto ret = hsb2rgb(test_cases[ii].hsb);
-    EXPECT_EQ(ret, test_cases[ii].want_result)
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
+    TestCase& cur_test_case = test_cases[ii];
+    auto ret = hsb2rgb(cur_test_case.hsb);
+    EXPECT_EQ(ret, cur_test_case.want_result)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
   }
 }
 }  // namespace ytlib

@@ -84,13 +84,14 @@ TEST(COMPLEX_TEST, Add_test) {
       .want_result = {2.0, 0.0}});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
-    auto ret = test_cases[ii].a + test_cases[ii].b;
-    EXPECT_EQ(ret, test_cases[ii].want_result)
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
+    TestCase& cur_test_case = test_cases[ii];
+    auto ret = cur_test_case.a + cur_test_case.b;
+    EXPECT_EQ(ret, cur_test_case.want_result)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
 
-    test_cases[ii].a += test_cases[ii].b;
-    EXPECT_EQ(test_cases[ii].a, test_cases[ii].want_result)
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
+    cur_test_case.a += cur_test_case.b;
+    EXPECT_EQ(cur_test_case.a, cur_test_case.want_result)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
   }
 }
 
@@ -121,13 +122,14 @@ TEST(COMPLEX_TEST, Sub_test) {
       .want_result = {-1.0, -2.0}});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
-    auto ret = test_cases[ii].a - test_cases[ii].b;
-    EXPECT_EQ(ret, test_cases[ii].want_result)
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
+    TestCase& cur_test_case = test_cases[ii];
+    auto ret = cur_test_case.a - cur_test_case.b;
+    EXPECT_EQ(ret, cur_test_case.want_result)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
 
-    test_cases[ii].a -= test_cases[ii].b;
-    EXPECT_EQ(test_cases[ii].a, test_cases[ii].want_result)
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
+    cur_test_case.a -= cur_test_case.b;
+    EXPECT_EQ(cur_test_case.a, cur_test_case.want_result)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
   }
 }
 
@@ -158,13 +160,14 @@ TEST(COMPLEX_TEST, Multiply_test) {
       .want_result = {2.0, 0.0}});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
-    auto ret = test_cases[ii].a * test_cases[ii].b;
-    EXPECT_EQ(ret, test_cases[ii].want_result)
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
+    TestCase& cur_test_case = test_cases[ii];
+    auto ret = cur_test_case.a * cur_test_case.b;
+    EXPECT_EQ(ret, cur_test_case.want_result)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
 
-    test_cases[ii].a *= test_cases[ii].b;
-    EXPECT_EQ(test_cases[ii].a, test_cases[ii].want_result)
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
+    cur_test_case.a *= cur_test_case.b;
+    EXPECT_EQ(cur_test_case.a, cur_test_case.want_result)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
   }
 }
 
@@ -185,13 +188,14 @@ TEST(COMPLEX_TEST, MultiplyNum_test) {
       .want_result = {2.0, 4.0}});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
-    auto ret = test_cases[ii].a * test_cases[ii].b;
-    EXPECT_EQ(ret, test_cases[ii].want_result)
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
+    TestCase& cur_test_case = test_cases[ii];
+    auto ret = cur_test_case.a * cur_test_case.b;
+    EXPECT_EQ(ret, cur_test_case.want_result)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
 
-    test_cases[ii].a *= test_cases[ii].b;
-    EXPECT_EQ(test_cases[ii].a, test_cases[ii].want_result)
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
+    cur_test_case.a *= cur_test_case.b;
+    EXPECT_EQ(cur_test_case.a, cur_test_case.want_result)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
   }
 }
 
@@ -222,13 +226,14 @@ TEST(COMPLEX_TEST, Divide_test) {
       .want_result = {1.5, 0.5}});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
-    auto ret = test_cases[ii].a / test_cases[ii].b;
-    EXPECT_EQ(ret, test_cases[ii].want_result)
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
+    TestCase& cur_test_case = test_cases[ii];
+    auto ret = cur_test_case.a / cur_test_case.b;
+    EXPECT_EQ(ret, cur_test_case.want_result)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
 
-    test_cases[ii].a /= test_cases[ii].b;
-    EXPECT_EQ(test_cases[ii].a, test_cases[ii].want_result)
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
+    cur_test_case.a /= cur_test_case.b;
+    EXPECT_EQ(cur_test_case.a, cur_test_case.want_result)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
   }
 }
 
@@ -255,9 +260,10 @@ TEST(COMPLEX_TEST, Sqrt_test) {
       .want_result = {0.0, 2.0}});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
-    auto ret = Complex<>::Sqrt(test_cases[ii].value);
-    EXPECT_EQ(ret, test_cases[ii].want_result)
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
+    TestCase& cur_test_case = test_cases[ii];
+    auto ret = Complex<>::Sqrt(cur_test_case.value);
+    EXPECT_EQ(ret, cur_test_case.want_result)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
   }
 }
 
@@ -298,9 +304,10 @@ TEST(COMPLEX_TEST, Pow_test) {
       .want_result = {0.0, -8.0}});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
-    auto ret = Complex<>::Pow(test_cases[ii].value, test_cases[ii].n);
-    EXPECT_EQ(ret, test_cases[ii].want_result)
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
+    TestCase& cur_test_case = test_cases[ii];
+    auto ret = Complex<>::Pow(cur_test_case.value, cur_test_case.n);
+    EXPECT_EQ(ret, cur_test_case.want_result)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
   }
 }
 
@@ -335,10 +342,11 @@ TEST(COMPLEX_TEST, ostream_test) {
       .want_result = "1+1i"});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
+    TestCase& cur_test_case = test_cases[ii];
     std::stringstream ss;
-    ss << test_cases[ii].value;
-    EXPECT_STREQ(ss.str().c_str(), test_cases[ii].want_result.c_str())
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
+    ss << cur_test_case.value;
+    EXPECT_STREQ(ss.str().c_str(), cur_test_case.want_result.c_str())
+        << "Test " << cur_test_case.name << " failed, index " << ii;
   }
 }
 
@@ -361,9 +369,10 @@ TEST(COMPLEX_TEST, GetComplex_test) {
       .want_result = {{1.0, 0.0}, {2.0, 0.0}, {3.0, 0.0}}});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
-    GetComplex(test_cases[ii].len, test_cases[ii].in_vec.data(), test_cases[ii].out_vec.data());
-    EXPECT_EQ(test_cases[ii].out_vec, test_cases[ii].want_result)
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
+    TestCase& cur_test_case = test_cases[ii];
+    GetComplex(cur_test_case.len, cur_test_case.in_vec.data(), cur_test_case.out_vec.data());
+    EXPECT_EQ(cur_test_case.out_vec, cur_test_case.want_result)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
   }
 }
 
@@ -384,9 +393,10 @@ TEST(COMPLEX_TEST, ConjugateComplex_test) {
       .want_result = {{1.0, -1.0}, {2.0, -2.0}, {3.0, -3.0}}});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
-    ConjugateComplex(test_cases[ii].len, test_cases[ii].in_vec.data());
-    EXPECT_EQ(test_cases[ii].in_vec, test_cases[ii].want_result)
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
+    TestCase& cur_test_case = test_cases[ii];
+    ConjugateComplex(cur_test_case.len, cur_test_case.in_vec.data());
+    EXPECT_EQ(cur_test_case.in_vec, cur_test_case.want_result)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
   }
 }
 
@@ -409,9 +419,10 @@ TEST(COMPLEX_TEST, AbsComplex_test) {
       .want_result = {5, 13, 25}});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
-    AbsComplex(test_cases[ii].len, test_cases[ii].in_vec.data(), test_cases[ii].out_vec.data());
-    EXPECT_EQ(test_cases[ii].out_vec, test_cases[ii].want_result)
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
+    TestCase& cur_test_case = test_cases[ii];
+    AbsComplex(cur_test_case.len, cur_test_case.in_vec.data(), cur_test_case.out_vec.data());
+    EXPECT_EQ(cur_test_case.out_vec, cur_test_case.want_result)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
   }
 }
 
@@ -475,16 +486,17 @@ TEST(COMPLEX_TEST, FFT_test) {
   }
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
+    TestCase& cur_test_case = test_cases[ii];
     std::stringstream err_info;
-    err_info << "Test " << test_cases[ii].name << " failed, index " << ii << "\n"
-             << "in_vec : " << Vec2Str(test_cases[ii].in_vec) << "\n"
-             << "want_result : " << Vec2Str(test_cases[ii].want_result);
+    err_info << "Test " << cur_test_case.name << " failed, index " << ii << "\n"
+             << "in_vec : " << Vec2Str(cur_test_case.in_vec) << "\n"
+             << "want_result : " << Vec2Str(cur_test_case.want_result);
 
-    FFT(test_cases[ii].N, test_cases[ii].in_vec.data());
-    for (uint32_t jj = 0; jj < test_cases[ii].N; ++jj) {
-      EXPECT_NEAR(test_cases[ii].in_vec[jj].real, test_cases[ii].want_result[jj].real, 1e-6)
+    FFT(cur_test_case.N, cur_test_case.in_vec.data());
+    for (uint32_t jj = 0; jj < cur_test_case.N; ++jj) {
+      EXPECT_NEAR(cur_test_case.in_vec[jj].real, cur_test_case.want_result[jj].real, 1e-6)
           << err_info.str();
-      EXPECT_NEAR(test_cases[ii].in_vec[jj].imag, test_cases[ii].want_result[jj].imag, 1e-6)
+      EXPECT_NEAR(cur_test_case.in_vec[jj].imag, cur_test_case.want_result[jj].imag, 1e-6)
           << err_info.str();
     }
   }
@@ -550,16 +562,17 @@ TEST(COMPLEX_TEST, IFFT_test) {
   }
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
+    TestCase& cur_test_case = test_cases[ii];
     std::stringstream err_info;
-    err_info << "Test " << test_cases[ii].name << " failed, index " << ii << "\n"
-             << "in_vec : " << Vec2Str(test_cases[ii].in_vec) << "\n"
-             << "want_result : " << Vec2Str(test_cases[ii].want_result);
+    err_info << "Test " << cur_test_case.name << " failed, index " << ii << "\n"
+             << "in_vec : " << Vec2Str(cur_test_case.in_vec) << "\n"
+             << "want_result : " << Vec2Str(cur_test_case.want_result);
 
-    IFFT(test_cases[ii].N, test_cases[ii].in_vec.data());
-    for (uint32_t jj = 0; jj < test_cases[ii].N; ++jj) {
-      EXPECT_NEAR(test_cases[ii].in_vec[jj].real, test_cases[ii].want_result[jj].real, 1e-6)
+    IFFT(cur_test_case.N, cur_test_case.in_vec.data());
+    for (uint32_t jj = 0; jj < cur_test_case.N; ++jj) {
+      EXPECT_NEAR(cur_test_case.in_vec[jj].real, cur_test_case.want_result[jj].real, 1e-6)
           << err_info.str();
-      EXPECT_NEAR(test_cases[ii].in_vec[jj].imag, test_cases[ii].want_result[jj].imag, 1e-6)
+      EXPECT_NEAR(cur_test_case.in_vec[jj].imag, cur_test_case.want_result[jj].imag, 1e-6)
           << err_info.str();
     }
   }
@@ -587,9 +600,10 @@ TEST(COMPLEX_TEST, FFTShift_test) {
       .want_result = {{3.0, 3.0}, {4.0, 4.0}, {1.0, 1.0}, {2.0, 2.0}, {5.0, 5.0}}});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
-    FFTShift(test_cases[ii].len, test_cases[ii].in_vec.data());
-    EXPECT_EQ(test_cases[ii].in_vec, test_cases[ii].want_result)
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
+    TestCase& cur_test_case = test_cases[ii];
+    FFTShift(cur_test_case.len, cur_test_case.in_vec.data());
+    EXPECT_EQ(cur_test_case.in_vec, cur_test_case.want_result)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
   }
 }
 

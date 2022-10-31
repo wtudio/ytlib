@@ -46,9 +46,10 @@ TEST(SORT_ALGS_TEST, BubbleSort_test) {
       .want_result = {0, 1, 2, 3, 4, 5, 5, 6, 7, 8}});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
-    BubbleSort(test_cases[ii].data_vec.data(), test_cases[ii].len);
-    EXPECT_EQ(test_cases[ii].data_vec, test_cases[ii].want_result)
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
+    TestCase& cur_test_case = test_cases[ii];
+    BubbleSort(cur_test_case.data_vec.data(), cur_test_case.len);
+    EXPECT_EQ(cur_test_case.data_vec, cur_test_case.want_result)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
   }
 }
 
@@ -79,9 +80,10 @@ TEST(SORT_ALGS_TEST, MergeSort_test) {
       .want_result = {0, 1, 2, 3, 4, 5, 5, 6, 7, 8}});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
-    MergeSort(test_cases[ii].data_vec.data(), test_cases[ii].len);
-    EXPECT_EQ(test_cases[ii].data_vec, test_cases[ii].want_result)
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
+    TestCase& cur_test_case = test_cases[ii];
+    MergeSort(cur_test_case.data_vec.data(), cur_test_case.len);
+    EXPECT_EQ(cur_test_case.data_vec, cur_test_case.want_result)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
   }
 }
 
@@ -112,9 +114,10 @@ TEST(SORT_ALGS_TEST, MergeSort2_test) {
       .want_result = {0, 1, 2, 3, 4, 5, 5, 6, 7, 8}});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
-    MergeSort2(test_cases[ii].data_vec.data(), test_cases[ii].len);
-    EXPECT_EQ(test_cases[ii].data_vec, test_cases[ii].want_result)
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
+    TestCase& cur_test_case = test_cases[ii];
+    MergeSort2(cur_test_case.data_vec.data(), cur_test_case.len);
+    EXPECT_EQ(cur_test_case.data_vec, cur_test_case.want_result)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
   }
 }
 
@@ -145,9 +148,10 @@ TEST(SORT_ALGS_TEST, QuickSort_test) {
       .want_result = {0, 1, 2, 3, 4, 5, 5, 6, 7, 8}});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
-    QuickSort(test_cases[ii].data_vec.data(), test_cases[ii].len);
-    EXPECT_EQ(test_cases[ii].data_vec, test_cases[ii].want_result)
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
+    TestCase& cur_test_case = test_cases[ii];
+    QuickSort(cur_test_case.data_vec.data(), cur_test_case.len);
+    EXPECT_EQ(cur_test_case.data_vec, cur_test_case.want_result)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
   }
 }
 
@@ -188,9 +192,10 @@ TEST(SORT_ALGS_TEST, BinarySearch_test) {
       .want_result = 0});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
-    auto ret = BinarySearch(test_cases[ii].data_vec.data(), test_cases[ii].len, test_cases[ii].key);
-    EXPECT_EQ(ret, test_cases[ii].want_result)
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
+    TestCase& cur_test_case = test_cases[ii];
+    auto ret = BinarySearch(cur_test_case.data_vec.data(), cur_test_case.len, cur_test_case.key);
+    EXPECT_EQ(ret, cur_test_case.want_result)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
   }
 }
 
@@ -231,9 +236,10 @@ TEST(SORT_ALGS_TEST, BinarySearchLast_test) {
       .want_result = 0});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
-    auto ret = BinarySearchLast(test_cases[ii].data_vec.data(), test_cases[ii].len, test_cases[ii].key);
-    EXPECT_EQ(ret, test_cases[ii].want_result)
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
+    TestCase& cur_test_case = test_cases[ii];
+    auto ret = BinarySearchLast(cur_test_case.data_vec.data(), cur_test_case.len, cur_test_case.key);
+    EXPECT_EQ(ret, cur_test_case.want_result)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
   }
 }
 

@@ -146,10 +146,11 @@ TEST(MATRIX_TEST, GetData_test) {
       .want_result = {5, 6, 8, 9}});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
-    auto ret = test_cases[ii].M.GetData(test_cases[ii].row_begin, test_cases[ii].col_begin,
-                                        test_cases[ii].row_end, test_cases[ii].col_end);
-    EXPECT_EQ(ret, test_cases[ii].want_result)
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
+    TestCase& cur_test_case = test_cases[ii];
+    auto ret = cur_test_case.M.GetData(cur_test_case.row_begin, cur_test_case.col_begin,
+                                       cur_test_case.row_end, cur_test_case.col_end);
+    EXPECT_EQ(ret, cur_test_case.want_result)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
   }
 }
 
@@ -208,10 +209,11 @@ TEST(MATRIX_TEST, GetMat_test) {
       .want_result = {2, 2, {{5, 6}, {8, 9}}}});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
-    auto ret = test_cases[ii].M.GetMat(test_cases[ii].row_begin, test_cases[ii].col_begin,
-                                       test_cases[ii].row_end, test_cases[ii].col_end);
-    EXPECT_EQ(ret, test_cases[ii].want_result)
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
+    TestCase& cur_test_case = test_cases[ii];
+    auto ret = cur_test_case.M.GetMat(cur_test_case.row_begin, cur_test_case.col_begin,
+                                      cur_test_case.row_end, cur_test_case.col_end);
+    EXPECT_EQ(ret, cur_test_case.want_result)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
   }
 }
 
@@ -267,11 +269,12 @@ TEST(MATRIX_TEST, SetMat_test) {
       .want_result = {3, 3, {{100, 200, 3}, {400, 500, 6}, {7, 8, 9}}}});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
-    test_cases[ii].M.SetMat(test_cases[ii].input_M,
-                            test_cases[ii].row_begin, test_cases[ii].col_begin,
-                            test_cases[ii].row_end, test_cases[ii].col_end);
-    EXPECT_EQ(test_cases[ii].M, test_cases[ii].want_result)
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
+    TestCase& cur_test_case = test_cases[ii];
+    cur_test_case.M.SetMat(cur_test_case.input_M,
+                           cur_test_case.row_begin, cur_test_case.col_begin,
+                           cur_test_case.row_end, cur_test_case.col_end);
+    EXPECT_EQ(cur_test_case.M, cur_test_case.want_result)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
   }
 }
 
@@ -318,11 +321,12 @@ TEST(MATRIX_TEST, SetVal_test) {
       .want_result = {3, 3, {{1, 2, 3}, {4, 5, 6}, {7, 8, 123}}}});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
-    test_cases[ii].M.SetVal(test_cases[ii].in_val,
-                            test_cases[ii].row_begin, test_cases[ii].col_begin,
-                            test_cases[ii].row_end, test_cases[ii].col_end);
-    EXPECT_EQ(test_cases[ii].M, test_cases[ii].want_result)
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
+    TestCase& cur_test_case = test_cases[ii];
+    cur_test_case.M.SetVal(cur_test_case.in_val,
+                           cur_test_case.row_begin, cur_test_case.col_begin,
+                           cur_test_case.row_end, cur_test_case.col_end);
+    EXPECT_EQ(cur_test_case.M, cur_test_case.want_result)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
   }
 }
 
@@ -368,10 +372,11 @@ TEST(MATRIX_TEST, SetDiag_test) {
       .want_result = {4, 3, {{123, 2, 3}, {4, 123, 6}, {7, 8, 123}, {10, 11, 12}}}});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
-    test_cases[ii].M.SetDiag(test_cases[ii].in_val,
-                             test_cases[ii].idx_begin, test_cases[ii].idx_end);
-    EXPECT_EQ(test_cases[ii].M, test_cases[ii].want_result)
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
+    TestCase& cur_test_case = test_cases[ii];
+    cur_test_case.M.SetDiag(cur_test_case.in_val,
+                            cur_test_case.idx_begin, cur_test_case.idx_end);
+    EXPECT_EQ(cur_test_case.M, cur_test_case.want_result)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
   }
 }
 
@@ -417,10 +422,11 @@ TEST(MATRIX_TEST, SetDiag2_test) {
       .want_result = {4, 3, {{123, 2, 3}, {4, 456, 6}, {7, 8, 789}, {10, 11, 12}}}});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
-    test_cases[ii].M.SetDiag(test_cases[ii].input_vec,
-                             test_cases[ii].idx_begin, test_cases[ii].idx_end);
-    EXPECT_EQ(test_cases[ii].M, test_cases[ii].want_result)
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
+    TestCase& cur_test_case = test_cases[ii];
+    cur_test_case.M.SetDiag(cur_test_case.input_vec,
+                            cur_test_case.idx_begin, cur_test_case.idx_end);
+    EXPECT_EQ(cur_test_case.M, cur_test_case.want_result)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
   }
 }
 
@@ -455,20 +461,21 @@ TEST(MATRIX_TEST, Add_test) {
       .want_exp = false});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
+    TestCase& cur_test_case = test_cases[ii];
     bool get_exp = false;
     try {
-      auto ret = test_cases[ii].M1 + test_cases[ii].M2;
-      EXPECT_EQ(ret, test_cases[ii].want_result)
-          << "Test " << test_cases[ii].name << " failed, index " << ii;
+      auto ret = cur_test_case.M1 + cur_test_case.M2;
+      EXPECT_EQ(ret, cur_test_case.want_result)
+          << "Test " << cur_test_case.name << " failed, index " << ii;
 
-      test_cases[ii].M1 += test_cases[ii].M2;
-      EXPECT_EQ(test_cases[ii].M1, test_cases[ii].want_result)
-          << "Test " << test_cases[ii].name << " failed, index " << ii;
+      cur_test_case.M1 += cur_test_case.M2;
+      EXPECT_EQ(cur_test_case.M1, cur_test_case.want_result)
+          << "Test " << cur_test_case.name << " failed, index " << ii;
     } catch (const std::exception&) {
       get_exp = true;
     }
-    EXPECT_EQ(get_exp, test_cases[ii].want_exp)
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
+    EXPECT_EQ(get_exp, cur_test_case.want_exp)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
   }
 }
 
@@ -503,20 +510,21 @@ TEST(MATRIX_TEST, Sub_test) {
       .want_exp = false});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
+    TestCase& cur_test_case = test_cases[ii];
     bool get_exp = false;
     try {
-      auto ret = test_cases[ii].M1 - test_cases[ii].M2;
-      EXPECT_EQ(ret, test_cases[ii].want_result)
-          << "Test " << test_cases[ii].name << " failed, index " << ii;
+      auto ret = cur_test_case.M1 - cur_test_case.M2;
+      EXPECT_EQ(ret, cur_test_case.want_result)
+          << "Test " << cur_test_case.name << " failed, index " << ii;
 
-      test_cases[ii].M1 -= test_cases[ii].M2;
-      EXPECT_EQ(test_cases[ii].M1, test_cases[ii].want_result)
-          << "Test " << test_cases[ii].name << " failed, index " << ii;
+      cur_test_case.M1 -= cur_test_case.M2;
+      EXPECT_EQ(cur_test_case.M1, cur_test_case.want_result)
+          << "Test " << cur_test_case.name << " failed, index " << ii;
     } catch (const std::exception&) {
       get_exp = true;
     }
-    EXPECT_EQ(get_exp, test_cases[ii].want_exp)
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
+    EXPECT_EQ(get_exp, cur_test_case.want_exp)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
   }
 }
 
@@ -551,20 +559,21 @@ TEST(MATRIX_TEST, Multiply_test) {
       .want_exp = false});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
+    TestCase& cur_test_case = test_cases[ii];
     bool get_exp = false;
     try {
-      auto ret = test_cases[ii].M1 * test_cases[ii].M2;
-      EXPECT_EQ(ret, test_cases[ii].want_result)
-          << "Test " << test_cases[ii].name << " failed, index " << ii;
+      auto ret = cur_test_case.M1 * cur_test_case.M2;
+      EXPECT_EQ(ret, cur_test_case.want_result)
+          << "Test " << cur_test_case.name << " failed, index " << ii;
 
-      test_cases[ii].M1 *= test_cases[ii].M2;
-      EXPECT_EQ(test_cases[ii].M1, test_cases[ii].want_result)
-          << "Test " << test_cases[ii].name << " failed, index " << ii;
+      cur_test_case.M1 *= cur_test_case.M2;
+      EXPECT_EQ(cur_test_case.M1, cur_test_case.want_result)
+          << "Test " << cur_test_case.name << " failed, index " << ii;
     } catch (const std::exception&) {
       get_exp = true;
     }
-    EXPECT_EQ(get_exp, test_cases[ii].want_exp)
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
+    EXPECT_EQ(get_exp, cur_test_case.want_exp)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
   }
 }
 
@@ -595,13 +604,14 @@ TEST(MATRIX_TEST, MultiplyNum_test) {
       .want_result = {2, 3, {{2, 2, 2}, {4, 4, 4}}}});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
-    auto ret = test_cases[ii].M * test_cases[ii].in_val;
-    EXPECT_EQ(ret, test_cases[ii].want_result)
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
+    TestCase& cur_test_case = test_cases[ii];
+    auto ret = cur_test_case.M * cur_test_case.in_val;
+    EXPECT_EQ(ret, cur_test_case.want_result)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
 
-    test_cases[ii].M *= test_cases[ii].in_val;
-    EXPECT_EQ(test_cases[ii].M, test_cases[ii].want_result)
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
+    cur_test_case.M *= cur_test_case.in_val;
+    EXPECT_EQ(cur_test_case.M, cur_test_case.want_result)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
   }
 }
 
@@ -632,13 +642,14 @@ TEST(MATRIX_TEST, DivideNum_test) {
       .want_result = {2, 3, {{1, 1, 1}, {2, 2, 2}}}});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
-    auto ret = test_cases[ii].M / test_cases[ii].in_val;
-    EXPECT_EQ(ret, test_cases[ii].want_result)
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
+    TestCase& cur_test_case = test_cases[ii];
+    auto ret = cur_test_case.M / cur_test_case.in_val;
+    EXPECT_EQ(ret, cur_test_case.want_result)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
 
-    test_cases[ii].M /= test_cases[ii].in_val;
-    EXPECT_EQ(test_cases[ii].M, test_cases[ii].want_result)
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
+    cur_test_case.M /= cur_test_case.in_val;
+    EXPECT_EQ(cur_test_case.M, cur_test_case.want_result)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
   }
 }
 
@@ -673,9 +684,10 @@ TEST(MATRIX_TEST, Pow_test) {
       .want_result = {2, 2, {{1024, 0}, {0, 1024}}}});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
-    auto ret = Matrix_i32::Pow(test_cases[ii].in_val, test_cases[ii].M, test_cases[ii].n);
-    EXPECT_EQ(ret, test_cases[ii].want_result)
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
+    TestCase& cur_test_case = test_cases[ii];
+    auto ret = Matrix_i32::Pow(cur_test_case.in_val, cur_test_case.M, cur_test_case.n);
+    EXPECT_EQ(ret, cur_test_case.want_result)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
   }
 }
 
@@ -712,10 +724,11 @@ TEST(MATRIX_TEST, ostream_test) {
 )str"});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
+    TestCase& cur_test_case = test_cases[ii];
     std::stringstream ss;
-    ss << test_cases[ii].value;
-    EXPECT_STREQ(ss.str().c_str(), test_cases[ii].want_result.c_str())
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
+    ss << cur_test_case.value;
+    EXPECT_STREQ(ss.str().c_str(), cur_test_case.want_result.c_str())
+        << "Test " << cur_test_case.name << " failed, index " << ii;
   }
 }
 
@@ -744,23 +757,24 @@ TEST(MATRIX_TEST, ROTMAT_test) {
       .want_result_rotZ = {3, 3, {{0.0, -1.0, 0.0}, {1.0, 0.0, 0.0}, {0.0, 0.0, 1.0}}}});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
-    auto ret_x = RotMatX(test_cases[ii].angle);
+    TestCase& cur_test_case = test_cases[ii];
+    auto ret_x = RotMatX(cur_test_case.angle);
 
     for (size_t jj = 0; jj < 9; ++jj) {
-      EXPECT_NEAR(ret_x.val[0][jj], test_cases[ii].want_result_rotX.val[0][jj], 1e-6)
-          << "Test " << test_cases[ii].name << " failed, index " << ii;
+      EXPECT_NEAR(ret_x.val[0][jj], cur_test_case.want_result_rotX.val[0][jj], 1e-6)
+          << "Test " << cur_test_case.name << " failed, index " << ii;
     }
 
-    auto ret_y = RotMatY(test_cases[ii].angle);
+    auto ret_y = RotMatY(cur_test_case.angle);
     for (size_t jj = 0; jj < 9; ++jj) {
-      EXPECT_NEAR(ret_y.val[0][jj], test_cases[ii].want_result_rotY.val[0][jj], 1e-6)
-          << "Test " << test_cases[ii].name << " failed, index " << ii;
+      EXPECT_NEAR(ret_y.val[0][jj], cur_test_case.want_result_rotY.val[0][jj], 1e-6)
+          << "Test " << cur_test_case.name << " failed, index " << ii;
     }
 
-    auto ret_z = RotMatZ(test_cases[ii].angle);
+    auto ret_z = RotMatZ(cur_test_case.angle);
     for (size_t jj = 0; jj < 9; ++jj) {
-      EXPECT_NEAR(ret_z.val[0][jj], test_cases[ii].want_result_rotZ.val[0][jj], 1e-6)
-          << "Test " << test_cases[ii].name << " failed, index " << ii;
+      EXPECT_NEAR(ret_z.val[0][jj], cur_test_case.want_result_rotZ.val[0][jj], 1e-6)
+          << "Test " << cur_test_case.name << " failed, index " << ii;
     }
   }
 }

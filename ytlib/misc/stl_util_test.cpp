@@ -5,21 +5,21 @@
 namespace ytlib {
 
 TEST(STL_UTIL_TEST, Vec2Str_test) {
-  struct TestCaseForVec2Str {
+  struct TestCase {
     std::string name;
 
     std::vector<std::string> v;
 
     std::string want_result;
   };
-  std::vector<TestCaseForVec2Str> test_cases;
+  std::vector<TestCase> test_cases;
 
-  test_cases.emplace_back(TestCaseForVec2Str{
+  test_cases.emplace_back(TestCase{
       .name = "case 1",
       .v = {},
       .want_result = R"str(vec size = 0
 )str"});
-  test_cases.emplace_back(TestCaseForVec2Str{
+  test_cases.emplace_back(TestCase{
       .name = "case 2",
       .v = {"", "v1", "v2\nv2",
             "12345678901234567890123456789012",
@@ -45,21 +45,21 @@ v2
 }
 
 TEST(STL_UTIL_TEST, Set2Str_test) {
-  struct TestCaseForSet2Str {
+  struct TestCase {
     std::string name;
 
     std::set<std::string> s;
 
     std::string want_result;
   };
-  std::vector<TestCaseForSet2Str> test_cases;
+  std::vector<TestCase> test_cases;
 
-  test_cases.emplace_back(TestCaseForSet2Str{
+  test_cases.emplace_back(TestCase{
       .name = "case 1",
       .s = {},
       .want_result = R"str(set size = 0
 )str"});
-  test_cases.emplace_back(TestCaseForSet2Str{
+  test_cases.emplace_back(TestCase{
       .name = "case 2",
       .s = {"", "v1", "v2\nv2",
             "12345678901234567890123456789012",
@@ -85,21 +85,21 @@ v2
 }
 
 TEST(STL_UTIL_TEST, Map2Str_test) {
-  struct TestCaseForMap2Str {
+  struct TestCase {
     std::string name;
 
     std::map<std::string, std::string> m;
 
     std::string want_result;
   };
-  std::vector<TestCaseForMap2Str> test_cases;
+  std::vector<TestCase> test_cases;
 
-  test_cases.emplace_back(TestCaseForMap2Str{
+  test_cases.emplace_back(TestCase{
       .name = "case 1",
       .m = {},
       .want_result = R"str(map size = 0
 )str"});
-  test_cases.emplace_back(TestCaseForMap2Str{
+  test_cases.emplace_back(TestCase{
       .name = "case 2",
       .m = {{"k1", "v1"}, {"k2", ""}, {"", "v3"}, {"k4\nk4", "v4"}, {"k5", "v5\nv5"}},
       .want_result = R"str(map size = 5
@@ -123,7 +123,7 @@ k4
 v5
 v5
 )str"});
-  test_cases.emplace_back(TestCaseForMap2Str{
+  test_cases.emplace_back(TestCase{
       .name = "case 3",
       .m = {{"123456789012345678901234567890123", "v1"}, {"k2", "123456789012345678901234567890123"}},
       .want_result = R"str(map size = 2
@@ -144,7 +144,7 @@ v5
 }
 
 TEST(STL_UTIL_TEST, CheckVectorEqual_test) {
-  struct TestCaseForCheckVectorEqual {
+  struct TestCase {
     std::string name;
 
     std::vector<std::string> vec1;
@@ -152,24 +152,24 @@ TEST(STL_UTIL_TEST, CheckVectorEqual_test) {
 
     bool want_result;
   };
-  std::vector<TestCaseForCheckVectorEqual> test_cases;
+  std::vector<TestCase> test_cases;
 
-  test_cases.emplace_back(TestCaseForCheckVectorEqual{
+  test_cases.emplace_back(TestCase{
       .name = "case 1",
       .vec1 = {"v1", "v2"},
       .vec2 = {"v1", "v2"},
       .want_result = true});
-  test_cases.emplace_back(TestCaseForCheckVectorEqual{
+  test_cases.emplace_back(TestCase{
       .name = "case 2",
       .vec1 = {"v1", "v2"},
       .vec2 = {"v1", "v2", "v3"},
       .want_result = false});
-  test_cases.emplace_back(TestCaseForCheckVectorEqual{
+  test_cases.emplace_back(TestCase{
       .name = "case 3",
       .vec1 = {"v1", "v2"},
       .vec2 = {"v1", "v2x"},
       .want_result = false});
-  test_cases.emplace_back(TestCaseForCheckVectorEqual{
+  test_cases.emplace_back(TestCase{
       .name = "case 4",
       .vec1 = {},
       .vec2 = {},
@@ -183,7 +183,7 @@ TEST(STL_UTIL_TEST, CheckVectorEqual_test) {
 }
 
 TEST(STL_UTIL_TEST, CheckSetEqual_test) {
-  struct TestCaseForCheckSetEqual {
+  struct TestCase {
     std::string name;
 
     std::set<std::string> set1;
@@ -191,24 +191,24 @@ TEST(STL_UTIL_TEST, CheckSetEqual_test) {
 
     bool want_result;
   };
-  std::vector<TestCaseForCheckSetEqual> test_cases;
+  std::vector<TestCase> test_cases;
 
-  test_cases.emplace_back(TestCaseForCheckSetEqual{
+  test_cases.emplace_back(TestCase{
       .name = "case 1",
       .set1 = {"v1", "v2"},
       .set2 = {"v1", "v2"},
       .want_result = true});
-  test_cases.emplace_back(TestCaseForCheckSetEqual{
+  test_cases.emplace_back(TestCase{
       .name = "case 2",
       .set1 = {"v1", "v2"},
       .set2 = {"v1", "v2", "v3"},
       .want_result = false});
-  test_cases.emplace_back(TestCaseForCheckSetEqual{
+  test_cases.emplace_back(TestCase{
       .name = "case 3",
       .set1 = {"v1", "v2"},
       .set2 = {"v1", "v2x"},
       .want_result = false});
-  test_cases.emplace_back(TestCaseForCheckSetEqual{
+  test_cases.emplace_back(TestCase{
       .name = "case 4",
       .set1 = {},
       .set2 = {},
@@ -222,7 +222,7 @@ TEST(STL_UTIL_TEST, CheckSetEqual_test) {
 }
 
 TEST(STL_UTIL_TEST, CheckMapEqual_test) {
-  struct TestCaseForCheckMapEqual {
+  struct TestCase {
     std::string name;
 
     std::map<std::string, std::string> map1;
@@ -230,23 +230,23 @@ TEST(STL_UTIL_TEST, CheckMapEqual_test) {
 
     bool want_result;
   };
-  std::vector<TestCaseForCheckMapEqual> test_cases;
-  test_cases.emplace_back(TestCaseForCheckMapEqual{
+  std::vector<TestCase> test_cases;
+  test_cases.emplace_back(TestCase{
       .name = "case 1",
       .map1 = {},
       .map2 = {},
       .want_result = true});
-  test_cases.emplace_back(TestCaseForCheckMapEqual{
+  test_cases.emplace_back(TestCase{
       .name = "case 2",
       .map1 = {{"k1", "v1"}, {"k2", "v2"}},
       .map2 = {{"k1", "v1"}, {"k2", "v2"}},
       .want_result = true});
-  test_cases.emplace_back(TestCaseForCheckMapEqual{
+  test_cases.emplace_back(TestCase{
       .name = "case 3",
       .map1 = {{"k1", "v1"}, {"k2", "v2"}},
       .map2 = {{"k1", "v1"}, {"k2", "v2x"}},
       .want_result = false});
-  test_cases.emplace_back(TestCaseForCheckMapEqual{
+  test_cases.emplace_back(TestCase{
       .name = "case 4",
       .map1 = {{"k1", "v1"}, {"k2", "v2"}},
       .map2 = {{"k1", "v1"}, {"k2", "v2"}, {"k3", "v3"}},

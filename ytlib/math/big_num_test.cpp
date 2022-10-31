@@ -119,12 +119,13 @@ TEST(BIG_NUM_TEST, Construct_test) {
       .want_base = UINT32_MAX});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
-    EXPECT_EQ(test_cases[ii].num.Symbol(), test_cases[ii].want_symbol)
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
-    EXPECT_EQ(test_cases[ii].num.Content(), test_cases[ii].want_content)
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
-    EXPECT_EQ(test_cases[ii].num.Base(), test_cases[ii].want_base)
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
+    TestCase& cur_test_case = test_cases[ii];
+    EXPECT_EQ(cur_test_case.num.Symbol(), cur_test_case.want_symbol)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
+    EXPECT_EQ(cur_test_case.num.Content(), cur_test_case.want_content)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
+    EXPECT_EQ(cur_test_case.num.Base(), cur_test_case.want_base)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
   }
 }
 
@@ -198,13 +199,14 @@ TEST(BIG_NUM_TEST, ReBase_test) {
       .want_base = UINT32_MAX});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
-    test_cases[ii].num.ReBase(test_cases[ii].base);
-    EXPECT_EQ(test_cases[ii].num.Symbol(), test_cases[ii].want_symbol)
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
-    EXPECT_EQ(test_cases[ii].num.Content(), test_cases[ii].want_content)
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
-    EXPECT_EQ(test_cases[ii].num.Base(), test_cases[ii].want_base)
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
+    TestCase& cur_test_case = test_cases[ii];
+    cur_test_case.num.ReBase(cur_test_case.base);
+    EXPECT_EQ(cur_test_case.num.Symbol(), cur_test_case.want_symbol)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
+    EXPECT_EQ(cur_test_case.num.Content(), cur_test_case.want_content)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
+    EXPECT_EQ(cur_test_case.num.Base(), cur_test_case.want_base)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
   }
 }
 
@@ -282,16 +284,17 @@ TEST(BIG_NUM_TEST, EQUAL_test) {
       .want_equal = true});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
-    if (test_cases[ii].want_equal) {
-      EXPECT_TRUE(test_cases[ii].num1 == test_cases[ii].num2)
-          << "Test " << test_cases[ii].name << " failed, index " << ii;
-      EXPECT_FALSE(test_cases[ii].num1 != test_cases[ii].num2)
-          << "Test " << test_cases[ii].name << " failed, index " << ii;
+    TestCase& cur_test_case = test_cases[ii];
+    if (cur_test_case.want_equal) {
+      EXPECT_TRUE(cur_test_case.num1 == cur_test_case.num2)
+          << "Test " << cur_test_case.name << " failed, index " << ii;
+      EXPECT_FALSE(cur_test_case.num1 != cur_test_case.num2)
+          << "Test " << cur_test_case.name << " failed, index " << ii;
     } else {
-      EXPECT_TRUE(test_cases[ii].num1 != test_cases[ii].num2)
-          << "Test " << test_cases[ii].name << " failed, index " << ii;
-      EXPECT_FALSE(test_cases[ii].num1 == test_cases[ii].num2)
-          << "Test " << test_cases[ii].name << " failed, index " << ii;
+      EXPECT_TRUE(cur_test_case.num1 != cur_test_case.num2)
+          << "Test " << cur_test_case.name << " failed, index " << ii;
+      EXPECT_FALSE(cur_test_case.num1 == cur_test_case.num2)
+          << "Test " << cur_test_case.name << " failed, index " << ii;
     }
   }
 }
@@ -399,17 +402,18 @@ TEST(BIG_NUM_TEST, Compare_test) {
       .want_result_le = false});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
-    EXPECT_EQ(test_cases[ii].a > test_cases[ii].b, test_cases[ii].want_result_g)
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
+    TestCase& cur_test_case = test_cases[ii];
+    EXPECT_EQ(cur_test_case.a > cur_test_case.b, cur_test_case.want_result_g)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
 
-    EXPECT_EQ(test_cases[ii].a >= test_cases[ii].b, test_cases[ii].want_result_ge)
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
+    EXPECT_EQ(cur_test_case.a >= cur_test_case.b, cur_test_case.want_result_ge)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
 
-    EXPECT_EQ(test_cases[ii].a < test_cases[ii].b, test_cases[ii].want_result_l)
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
+    EXPECT_EQ(cur_test_case.a < cur_test_case.b, cur_test_case.want_result_l)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
 
-    EXPECT_EQ(test_cases[ii].a <= test_cases[ii].b, test_cases[ii].want_result_le)
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
+    EXPECT_EQ(cur_test_case.a <= cur_test_case.b, cur_test_case.want_result_le)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
   }
 }
 
@@ -485,23 +489,24 @@ TEST(BIG_NUM_TEST, Add_test) {
       .want_result = BigNum("-1514")});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
-    BigNum ret1 = test_cases[ii].a + test_cases[ii].b;
-    EXPECT_EQ(ret1, test_cases[ii].want_result)
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
+    TestCase& cur_test_case = test_cases[ii];
+    BigNum ret1 = cur_test_case.a + cur_test_case.b;
+    EXPECT_EQ(ret1, cur_test_case.want_result)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
 
-    BigNum ret2(test_cases[ii].a);
-    ret2 += test_cases[ii].b;
-    EXPECT_EQ(ret2, test_cases[ii].want_result)
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
+    BigNum ret2(cur_test_case.a);
+    ret2 += cur_test_case.b;
+    EXPECT_EQ(ret2, cur_test_case.want_result)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
 
-    BigNum ret3 = test_cases[ii].a - (-test_cases[ii].b);
-    EXPECT_EQ(ret3, test_cases[ii].want_result)
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
+    BigNum ret3 = cur_test_case.a - (-cur_test_case.b);
+    EXPECT_EQ(ret3, cur_test_case.want_result)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
 
-    BigNum ret4(test_cases[ii].a);
-    ret4 -= (-test_cases[ii].b);
-    EXPECT_EQ(ret4, test_cases[ii].want_result)
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
+    BigNum ret4(cur_test_case.a);
+    ret4 -= (-cur_test_case.b);
+    EXPECT_EQ(ret4, cur_test_case.want_result)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
   }
 }
 
@@ -528,37 +533,38 @@ TEST(BIG_NUM_TEST, DoubleAdd_test) {
       .b = BigNum("10")});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
+    TestCase& cur_test_case = test_cases[ii];
     {
-      BigNum ret1(test_cases[ii].a);
+      BigNum ret1(cur_test_case.a);
       BigNum ret2 = ret1++;
-      EXPECT_EQ(ret1, test_cases[ii].b)
-          << "Test " << test_cases[ii].name << " failed, index " << ii;
-      EXPECT_EQ(ret2, test_cases[ii].a)
-          << "Test " << test_cases[ii].name << " failed, index " << ii;
+      EXPECT_EQ(ret1, cur_test_case.b)
+          << "Test " << cur_test_case.name << " failed, index " << ii;
+      EXPECT_EQ(ret2, cur_test_case.a)
+          << "Test " << cur_test_case.name << " failed, index " << ii;
     }
     {
-      BigNum ret1(test_cases[ii].a);
+      BigNum ret1(cur_test_case.a);
       BigNum ret2 = ++ret1;
-      EXPECT_EQ(ret1, test_cases[ii].b)
-          << "Test " << test_cases[ii].name << " failed, index " << ii;
-      EXPECT_EQ(ret2, test_cases[ii].b)
-          << "Test " << test_cases[ii].name << " failed, index " << ii;
+      EXPECT_EQ(ret1, cur_test_case.b)
+          << "Test " << cur_test_case.name << " failed, index " << ii;
+      EXPECT_EQ(ret2, cur_test_case.b)
+          << "Test " << cur_test_case.name << " failed, index " << ii;
     }
     {
-      BigNum ret1(test_cases[ii].b);
+      BigNum ret1(cur_test_case.b);
       BigNum ret2 = ret1--;
-      EXPECT_EQ(ret1, test_cases[ii].a)
-          << "Test " << test_cases[ii].name << " failed, index " << ii;
-      EXPECT_EQ(ret2, test_cases[ii].b)
-          << "Test " << test_cases[ii].name << " failed, index " << ii;
+      EXPECT_EQ(ret1, cur_test_case.a)
+          << "Test " << cur_test_case.name << " failed, index " << ii;
+      EXPECT_EQ(ret2, cur_test_case.b)
+          << "Test " << cur_test_case.name << " failed, index " << ii;
     }
     {
-      BigNum ret1(test_cases[ii].b);
+      BigNum ret1(cur_test_case.b);
       BigNum ret2 = --ret1;
-      EXPECT_EQ(ret1, test_cases[ii].a)
-          << "Test " << test_cases[ii].name << " failed, index " << ii;
-      EXPECT_EQ(ret2, test_cases[ii].a)
-          << "Test " << test_cases[ii].name << " failed, index " << ii;
+      EXPECT_EQ(ret1, cur_test_case.a)
+          << "Test " << cur_test_case.name << " failed, index " << ii;
+      EXPECT_EQ(ret2, cur_test_case.a)
+          << "Test " << cur_test_case.name << " failed, index " << ii;
     }
   }
 }
@@ -610,13 +616,14 @@ TEST(BIG_NUM_TEST, Multiply_test) {
       .want_result = BigNum((UINT32_MAX - 1) / 2) * BigNum((UINT32_MAX - 1) / 2) * BigNum(4)});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
-    BigNum ret = test_cases[ii].a * test_cases[ii].b;
-    EXPECT_EQ(ret, test_cases[ii].want_result)
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
+    TestCase& cur_test_case = test_cases[ii];
+    BigNum ret = cur_test_case.a * cur_test_case.b;
+    EXPECT_EQ(ret, cur_test_case.want_result)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
 
-    test_cases[ii].a *= test_cases[ii].b;
-    EXPECT_EQ(test_cases[ii].a, test_cases[ii].want_result)
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
+    cur_test_case.a *= cur_test_case.b;
+    EXPECT_EQ(cur_test_case.a, cur_test_case.want_result)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
   }
 }
 
@@ -683,34 +690,35 @@ TEST(BIG_NUM_TEST, Divide_test) {
       .want_exp = false});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
+    TestCase& cur_test_case = test_cases[ii];
     bool get_exp = false;
     try {
-      auto ret = test_cases[ii].dividend.Div(test_cases[ii].divisor);
-      EXPECT_EQ(ret.first, test_cases[ii].want_result_quotient)
-          << "Test " << test_cases[ii].name << " failed, index " << ii;
-      EXPECT_EQ(ret.second, test_cases[ii].want_result_remainder)
-          << "Test " << test_cases[ii].name << " failed, index " << ii;
+      auto ret = cur_test_case.dividend.Div(cur_test_case.divisor);
+      EXPECT_EQ(ret.first, cur_test_case.want_result_quotient)
+          << "Test " << cur_test_case.name << " failed, index " << ii;
+      EXPECT_EQ(ret.second, cur_test_case.want_result_remainder)
+          << "Test " << cur_test_case.name << " failed, index " << ii;
 
-      BigNum num1(test_cases[ii].dividend);
-      EXPECT_EQ(num1 / test_cases[ii].divisor, test_cases[ii].want_result_quotient)
-          << "Test " << test_cases[ii].name << " failed, index " << ii;
+      BigNum num1(cur_test_case.dividend);
+      EXPECT_EQ(num1 / cur_test_case.divisor, cur_test_case.want_result_quotient)
+          << "Test " << cur_test_case.name << " failed, index " << ii;
 
-      num1 /= test_cases[ii].divisor;
-      EXPECT_EQ(num1, test_cases[ii].want_result_quotient)
-          << "Test " << test_cases[ii].name << " failed, index " << ii;
+      num1 /= cur_test_case.divisor;
+      EXPECT_EQ(num1, cur_test_case.want_result_quotient)
+          << "Test " << cur_test_case.name << " failed, index " << ii;
 
-      BigNum num2(test_cases[ii].dividend);
-      EXPECT_EQ(num2 % test_cases[ii].divisor, test_cases[ii].want_result_remainder)
-          << "Test " << test_cases[ii].name << " failed, index " << ii;
+      BigNum num2(cur_test_case.dividend);
+      EXPECT_EQ(num2 % cur_test_case.divisor, cur_test_case.want_result_remainder)
+          << "Test " << cur_test_case.name << " failed, index " << ii;
 
-      num2 %= test_cases[ii].divisor;
-      EXPECT_EQ(num2, test_cases[ii].want_result_remainder)
-          << "Test " << test_cases[ii].name << " failed, index " << ii;
+      num2 %= cur_test_case.divisor;
+      EXPECT_EQ(num2, cur_test_case.want_result_remainder)
+          << "Test " << cur_test_case.name << " failed, index " << ii;
     } catch (const std::exception&) {
       get_exp = true;
     }
-    EXPECT_EQ(get_exp, test_cases[ii].want_exp)
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
+    EXPECT_EQ(get_exp, cur_test_case.want_exp)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
   }
 }
 
@@ -741,13 +749,14 @@ TEST(BIG_NUM_TEST, LeftShift_test) {
       .want_result = BigNum("-123000")});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
-    BigNum ret = test_cases[ii].num << test_cases[ii].n;
-    EXPECT_EQ(ret, test_cases[ii].want_result)
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
+    TestCase& cur_test_case = test_cases[ii];
+    BigNum ret = cur_test_case.num << cur_test_case.n;
+    EXPECT_EQ(ret, cur_test_case.want_result)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
 
-    test_cases[ii].num <<= test_cases[ii].n;
-    EXPECT_EQ(test_cases[ii].num, test_cases[ii].want_result)
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
+    cur_test_case.num <<= cur_test_case.n;
+    EXPECT_EQ(cur_test_case.num, cur_test_case.want_result)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
   }
 }
 
@@ -788,13 +797,14 @@ TEST(BIG_NUM_TEST, RightShift_test) {
       .want_result = BigNum("-12")});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
-    BigNum ret = test_cases[ii].num >> test_cases[ii].n;
-    EXPECT_EQ(ret, test_cases[ii].want_result)
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
+    TestCase& cur_test_case = test_cases[ii];
+    BigNum ret = cur_test_case.num >> cur_test_case.n;
+    EXPECT_EQ(ret, cur_test_case.want_result)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
 
-    test_cases[ii].num >>= test_cases[ii].n;
-    EXPECT_EQ(test_cases[ii].num, test_cases[ii].want_result)
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
+    cur_test_case.num >>= cur_test_case.n;
+    EXPECT_EQ(cur_test_case.num, cur_test_case.want_result)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
   }
 }
 
@@ -835,8 +845,9 @@ TEST(BIG_NUM_TEST, ostream_test) {
       .want_result = "7b"});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
+    TestCase& cur_test_case = test_cases[ii];
     std::stringstream ss;
-    switch (test_cases[ii].type) {
+    switch (cur_test_case.type) {
       case BigNum::BaseType::OCT:
         ss << std::oct;
         break;
@@ -846,9 +857,9 @@ TEST(BIG_NUM_TEST, ostream_test) {
       default:
         break;
     }
-    ss << test_cases[ii].num;
-    EXPECT_STREQ(ss.str().c_str(), test_cases[ii].want_result.c_str())
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
+    ss << cur_test_case.num;
+    EXPECT_STREQ(ss.str().c_str(), cur_test_case.want_result.c_str())
+        << "Test " << cur_test_case.name << " failed, index " << ii;
   }
 }
 
@@ -894,9 +905,10 @@ TEST(BIG_NUM_TEST, Pow_test) {
       .want_result = BigNum("-2048")});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
-    auto ret = BigNum::Pow(test_cases[ii].value, test_cases[ii].n);
-    EXPECT_EQ(ret, test_cases[ii].want_result)
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
+    TestCase& cur_test_case = test_cases[ii];
+    auto ret = BigNum::Pow(cur_test_case.value, cur_test_case.n);
+    EXPECT_EQ(ret, cur_test_case.want_result)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
   }
 }
 

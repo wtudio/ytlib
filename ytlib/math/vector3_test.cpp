@@ -23,8 +23,9 @@ TEST(VECTOR3_TEST, Len_test) {
       .want_result = 9.8303852});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
-    EXPECT_FLOAT_EQ(test_cases[ii].vec.Len(), test_cases[ii].want_result)
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
+    TestCase& cur_test_case = test_cases[ii];
+    EXPECT_FLOAT_EQ(cur_test_case.vec.Len(), cur_test_case.want_result)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
   }
 }
 
@@ -54,10 +55,11 @@ TEST(VECTOR3_TEST, Distance_test) {
       .vec2 = {2.59, -4.8, 3.2},
       .want_result = 10.298825});
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
-    EXPECT_FLOAT_EQ(test_cases[ii].vec1.Distance(test_cases[ii].vec2), test_cases[ii].want_result)
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
-    EXPECT_FLOAT_EQ(Vector3<float>::Distance(test_cases[ii].vec1, test_cases[ii].vec2), test_cases[ii].want_result)
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
+    TestCase& cur_test_case = test_cases[ii];
+    EXPECT_FLOAT_EQ(cur_test_case.vec1.Distance(cur_test_case.vec2), cur_test_case.want_result)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
+    EXPECT_FLOAT_EQ(Vector3<float>::Distance(cur_test_case.vec1, cur_test_case.vec2), cur_test_case.want_result)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
   }
 }
 

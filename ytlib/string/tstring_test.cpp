@@ -5,19 +5,19 @@
 namespace ytlib {
 
 TEST(TSTRING_TEST, BASE_test) {
-  struct TestCaseForTSTRING {
+  struct TestCase {
     std::string name;
 
     std::string s;
     std::wstring ws;
   };
-  std::vector<TestCaseForTSTRING> test_cases;
+  std::vector<TestCase> test_cases;
 
-  test_cases.emplace_back(TestCaseForTSTRING{
+  test_cases.emplace_back(TestCase{
       .name = "case 1",
       .s = "",
       .ws = L""});
-  test_cases.emplace_back(TestCaseForTSTRING{
+  test_cases.emplace_back(TestCase{
       .name = "case 2",
       .s = "test123",
       .ws = L"test123"});

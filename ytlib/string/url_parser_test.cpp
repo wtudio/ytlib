@@ -45,9 +45,10 @@ TEST(URL_PARSER_TEST, JoinUrl) {
       .want_result = "/index.html?key1=val1&key2=val2#all"});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
-    auto ret = JoinUrl(test_cases[ii].url);
-    EXPECT_STREQ(ret.c_str(), test_cases[ii].want_result.c_str())
-        << "Test " << test_cases[ii].name << " failed, index " << ii;
+    TestCase& cur_test_case = test_cases[ii];
+    auto ret = JoinUrl(cur_test_case.url);
+    EXPECT_STREQ(ret.c_str(), cur_test_case.want_result.c_str())
+        << "Test " << cur_test_case.name << " failed, index " << ii;
   }
 }
 
@@ -120,21 +121,22 @@ TEST(URL_PARSER_TEST, ParseUrl) {
       }});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
-    auto ret = ParseUrl(test_cases[ii].url_str);
-    EXPECT_EQ(static_cast<bool>(ret), static_cast<bool>(test_cases[ii].want_result));
-    if (ret && test_cases[ii].want_result) {
-      EXPECT_EQ(ret->protocol, test_cases[ii].want_result->protocol)
-          << "Test " << test_cases[ii].name << " failed, index " << ii;
-      EXPECT_EQ(ret->host, test_cases[ii].want_result->host)
-          << "Test " << test_cases[ii].name << " failed, index " << ii;
-      EXPECT_EQ(ret->service, test_cases[ii].want_result->service)
-          << "Test " << test_cases[ii].name << " failed, index " << ii;
-      EXPECT_EQ(ret->path, test_cases[ii].want_result->path)
-          << "Test " << test_cases[ii].name << " failed, index " << ii;
-      EXPECT_EQ(ret->query, test_cases[ii].want_result->query)
-          << "Test " << test_cases[ii].name << " failed, index " << ii;
-      EXPECT_EQ(ret->fragment, test_cases[ii].want_result->fragment)
-          << "Test " << test_cases[ii].name << " failed, index " << ii;
+    TestCase& cur_test_case = test_cases[ii];
+    auto ret = ParseUrl(cur_test_case.url_str);
+    EXPECT_EQ(static_cast<bool>(ret), static_cast<bool>(cur_test_case.want_result));
+    if (ret && cur_test_case.want_result) {
+      EXPECT_EQ(ret->protocol, cur_test_case.want_result->protocol)
+          << "Test " << cur_test_case.name << " failed, index " << ii;
+      EXPECT_EQ(ret->host, cur_test_case.want_result->host)
+          << "Test " << cur_test_case.name << " failed, index " << ii;
+      EXPECT_EQ(ret->service, cur_test_case.want_result->service)
+          << "Test " << cur_test_case.name << " failed, index " << ii;
+      EXPECT_EQ(ret->path, cur_test_case.want_result->path)
+          << "Test " << cur_test_case.name << " failed, index " << ii;
+      EXPECT_EQ(ret->query, cur_test_case.want_result->query)
+          << "Test " << cur_test_case.name << " failed, index " << ii;
+      EXPECT_EQ(ret->fragment, cur_test_case.want_result->fragment)
+          << "Test " << cur_test_case.name << " failed, index " << ii;
     }
   }
 }
