@@ -3,6 +3,8 @@
 include(GetHiRedis)
 include(GetLibevent)
 
+add_subdirectory(log)
+
 add_subdirectory(custom_bench)
 
 add_subdirectory(testlib)
