@@ -1,4 +1,0 @@
-add_subdirectory(unified_rpc_demo_protos)
-
-add_subdirectory(unified_rpc_demo_server)
-add_subdirectory(unified_rpc_demo_client)

@@ -5,14 +5,20 @@ message(STATUS "get googletest ...")
 FetchContent_Declare(
   googletest
   URL  https://github.com/google/googletest/archive/release-1.12.1.tar.gz
+  DOWNLOAD_EXTRACT_TIMESTAMP TRUE
 )
 
-if(WIN32)
-  set(gtest_force_shared_crt ON CACHE BOOL "")
-endif()
-set(INSTALL_GTEST OFF CACHE BOOL "")
+FetchContent_GetProperties(googletest)
+if(NOT googletest_POPULATED)
+  FetchContent_Populate(googletest)
 
-FetchContent_MakeAvailable(googletest)
+  if(WIN32)
+    set(gtest_force_shared_crt ON CACHE BOOL "")
+  endif()
+  set(INSTALL_GTEST OFF CACHE BOOL "")
+
+  add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR})
+endif()
 
 # import targets：
 # GTest::gtest

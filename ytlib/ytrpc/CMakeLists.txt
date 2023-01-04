@@ -7,5 +7,3 @@ add_subdirectory(protoc-gen-asio_rpc)
 add_subdirectory(unifex_rpc)
 add_subdirectory(protoc-gen-unifex_rpc)
 
-add_subdirectory(unified_rpc)
-add_subdirectory(protoc-gen-unified_rpc_for_asio_rpc)

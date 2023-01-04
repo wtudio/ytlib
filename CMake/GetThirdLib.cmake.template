@@ -6,6 +6,7 @@ message(STATUS "get thirdlib ...")
 FetchContent_Declare(
   thirdlib
   URL  https://github.com/third_party/thirdlib/archive/v1.2.3.tar.gz
+  DOWNLOAD_EXTRACT_TIMESTAMP TRUE
 )
 
 # 基于git获取源码
@@ -21,11 +22,17 @@ FetchContent_Declare(
 #   SOURCE_DIR  ../third_party/thirdlib
 # )
 
-# 配置第三方库选项，一般需要关掉第三方库的测试项目
-set(THIRDLIB_BUILD_TESTS OFF CACHE BOOL "")
-set(THIRDLIB_xxxx OFF CACHE BOOL "")
+# 声明第三方库，防止已经被引用过了
+FetchContent_GetProperties(thirdlib)
+if(NOT thirdlib_POPULATED)
+  FetchContent_Populate(thirdlib)
 
-FetchContent_MakeAvailable(thirdlib)
+  # 配置第三方库选项，一般需要关掉第三方库的测试项目
+  set(THIRDLIB_BUILD_TESTS OFF CACHE BOOL "")
+  set(THIRDLIB_xxxx OFF CACHE BOOL "")
+
+  add_subdirectory(${thirdlib_SOURCE_DIR} ${thirdlib_BINARY_DIR})
+endif()
 
 # import targets：
 # thirdlib::thirdlib

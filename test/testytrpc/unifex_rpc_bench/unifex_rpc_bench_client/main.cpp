@@ -1,6 +1,7 @@
 #include <string>
 #include <tuple>
 
+#include <unifex/inline_scheduler.hpp>
 #include <unifex/sync_wait.hpp>
 #include <unifex/task.hpp>
 #include <unifex/when_all.hpp>
@@ -64,12 +65,13 @@ int32_t main(int32_t argc, char** argv) {
           } else {
             printf("task request error: %s\n", status.ToString().c_str());
           }
-          latch.Count();
+          latch.CountDown();
 
           co_return;
         }));
       }
-      co_await latch.Wait();
+
+      co_await unifex::on(unifex::inline_scheduler{}, latch.AsyncWait());
     }
     uint64_t all_end_time = GetCurTimestampMs();
 
@@ -79,7 +81,7 @@ int32_t main(int32_t argc, char** argv) {
            (all_end_time - all_begin_time) / try_num,
            static_cast<uint64_t>(total_time) / try_num / concurrency_num);
 
-    co_await scope.cleanup();
+    co_await unifex::on(unifex::inline_scheduler{}, scope.cleanup());
 
     co_return;
   };
