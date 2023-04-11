@@ -40,6 +40,10 @@ if(YTLIB_MASTER_PROJECT)
     add_compile_options(/wd4819)
   endif()
 
+  if(WIN32)
+    add_compile_definitions(NOMINMAX)
+  endif()
+
   set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 endif()
 
@@ -58,10 +62,9 @@ endif()
 #设置第三方库。使用 FETCHCONTENT_BASE_DIR 以设置下载目录
 message(STATUS "start get third party libraries, patience ...")
 
-option(YTLIB_BUILD_WITH_BOOST "Build with boost stage lib." OFF)
+option(YTLIB_BUILD_WITH_BOOST "Build with boost." OFF)
 if(YTLIB_BUILD_WITH_BOOST)
-  set(Boost_USE_STATIC_LIBS ON)
-  find_package(Boost REQUIRED COMPONENTS date_time log serialization program_options fiber)
+  include(GetBoost)
 endif()
 
 option(YTLIB_BUILD_WITH_FREEGLUT "Build with freeglut." OFF)

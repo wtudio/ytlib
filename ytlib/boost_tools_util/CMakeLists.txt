@@ -20,7 +20,7 @@ target_include_directories(${CUR_TARGET_NAME} INTERFACE $<BUILD_INTERFACE:${PROJ
 set_property(TARGET ${CUR_TARGET_NAME} PROPERTY PUBLIC_HEADER ${head_files})
 
 # 设置链接库
-target_link_libraries(${CUR_TARGET_NAME} INTERFACE Boost::boost Boost::serialization Boost::program_options)
+target_link_libraries(${CUR_TARGET_NAME} INTERFACE Boost::serialization Boost::program_options Boost::property_tree)
 
 # 设置编译选项
 # target_compile_definitions(${CUR_TARGET_NAME} INTERFACE xxx)

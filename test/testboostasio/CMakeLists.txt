@@ -23,7 +23,7 @@ set_property(TARGET ${CUR_TARGET_NAME} PROPERTY PRIVATE_HEADER ${head_files})
 # 设置链接库
 target_link_libraries(${CUR_TARGET_NAME} PRIVATE
   ytlib::misc
-  ytlib::boost_asio
+  ytlib::boost_tools_asio
 )
 
 # 设置编译选项

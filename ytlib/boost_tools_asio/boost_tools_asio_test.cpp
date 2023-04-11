@@ -8,7 +8,7 @@ namespace ytlib {
 using namespace boost::asio;
 using namespace std;
 
-TEST(BOOST_ASIO_TEST, UTIL) {
+TEST(BOOST_TOOLS_ASIO_TEST, UTIL) {
   uint16_t port = GetUsablePort();
   EXPECT_TRUE(CheckPort(port));
 
@@ -27,7 +27,7 @@ TEST(BOOST_ASIO_TEST, UTIL) {
   }
 }
 
-TEST(BOOST_ASIO_TEST, AsioExecutor) {
+TEST(BOOST_TOOLS_ASIO_TEST, AsioExecutor) {
   auto asio_sys_ptr = std::make_shared<AsioExecutor>(2);
   EXPECT_EQ(asio_sys_ptr->ThreadsNum(), 2);
 

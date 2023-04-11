@@ -14,8 +14,8 @@
 
 #include <boost/asio.hpp>
 
-#include "ytlib/boost_asio/asio_debug_tools.hpp"
-#include "ytlib/boost_asio/net_util.hpp"
+#include "ytlib/boost_tools_asio/asio_debug_tools.hpp"
+#include "ytlib/boost_tools_asio/net_util.hpp"
 #include "ytlib/misc/misc_macro.h"
 
 namespace ytlib {

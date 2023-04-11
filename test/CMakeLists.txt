@@ -11,11 +11,11 @@ add_subdirectory(testlib)
 add_subdirectory(testlib2)
 add_subdirectory(testprj)
 
-add_subdirectory(testytrpc)
+# add_subdirectory(testytrpc)
 
 add_subdirectory(testexecutor)
 add_subdirectory(testboostfiber)
-add_subdirectory(testboostasio)
+# add_subdirectory(testboostasio)
 
 add_subdirectory(testredis)
 

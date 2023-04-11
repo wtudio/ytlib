@@ -12,7 +12,7 @@
 
 #include "gl_game_displayer.hpp"
 #include "world.hpp"
-#include "ytlib/boost_asio/asio_tools.hpp"
+#include "ytlib/boost_tools_asio/asio_tools.hpp"
 #include "ytlib/misc/misc_macro.h"
 
 using namespace std;

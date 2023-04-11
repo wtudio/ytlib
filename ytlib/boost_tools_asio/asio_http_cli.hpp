@@ -16,7 +16,7 @@
 #include <boost/asio.hpp>
 #include <boost/beast.hpp>
 
-#include "ytlib/boost_asio/asio_debug_tools.hpp"
+#include "ytlib/boost_tools_asio/asio_debug_tools.hpp"
 #include "ytlib/misc/misc_macro.h"
 
 namespace ytlib {

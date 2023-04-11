@@ -33,8 +33,8 @@
 #include <boost/log/utility/setup/file.hpp>
 #include <boost/shared_ptr.hpp>
 
-#include "ytlib/boost_asio/asio_net_log_cli.hpp"
-#include "ytlib/boost_asio/net_util.hpp"
+#include "ytlib/boost_tools_asio/asio_net_log_cli.hpp"
+#include "ytlib/boost_tools_asio/net_util.hpp"
 
 namespace ytlib {
 

@@ -10,9 +10,9 @@ add_subdirectory(string)
 add_subdirectory(thread)
 
 if(YTLIB_BUILD_WITH_BOOST)
-  add_subdirectory(boost_asio)
-  add_subdirectory(boost_fiber)
-  add_subdirectory(boost_tools)
+  add_subdirectory(boost_tools_asio)
+  add_subdirectory(boost_tools_fiber)
+  add_subdirectory(boost_tools_util)
 endif()
 
 if(YTLIB_BUILD_WITH_PROTOBUF)

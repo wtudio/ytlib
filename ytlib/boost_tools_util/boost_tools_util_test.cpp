@@ -15,7 +15,7 @@ class CTest {
   double dbl_arr[5];
 };
 
-TEST(BOOST_TOOLS_TEST, SERIALIZE_BASE) {
+TEST(BOOST_TOOLS_UTIL_TEST, SERIALIZE_BASE) {
   CTest obj1;
   obj1.name = "test name";
   obj1.age = 999;
@@ -65,7 +65,7 @@ TEST(BOOST_TOOLS_TEST, SERIALIZE_BASE) {
   ASSERT_EQ(obj4.dbl_arr[0], 1.23456);
 }
 
-TEST(BOOST_TOOLS_TEST, XML_TOOLS_BASE) {
+TEST(BOOST_TOOLS_UTIL_TEST, XML_TOOLS_BASE) {
   std::filesystem::path p("testTmp/testXMLFile.txt");
 
   std::map<std::string, std::string> m{{"k1", "v1"}, {"k2", "v2"}};

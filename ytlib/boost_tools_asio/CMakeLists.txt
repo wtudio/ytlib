@@ -20,7 +20,7 @@ target_include_directories(${CUR_TARGET_NAME} INTERFACE $<BUILD_INTERFACE:${PROJ
 set_property(TARGET ${CUR_TARGET_NAME} PROPERTY PUBLIC_HEADER ${head_files})
 
 # 设置链接库
-target_link_libraries(${CUR_TARGET_NAME} INTERFACE Boost::boost Boost::date_time Boost::log)
+target_link_libraries(${CUR_TARGET_NAME} INTERFACE Boost::asio Boost::beast Boost::date_time Boost::log Boost::log_setup)
 
 # 设置编译选项
 target_compile_definitions(${CUR_TARGET_NAME} INTERFACE BOOST_ASIO_NO_DEPRECATED BOOST_BEAST_USE_STD_STRING_VIEW)
@@ -36,7 +36,7 @@ if (YTLIB_BUILD_TESTS AND test_files)
   add_gtest_target(TEST_TARGET ${CUR_TARGET_NAME} TEST_SRC ${test_files})
   set_property(TARGET ${CUR_TARGET_NAME}_test PROPERTY FOLDER ${CUR_TARGET_NAME})
   target_compile_definitions(${CUR_TARGET_NAME}_test PRIVATE ASIO_ENABLE_DEBUG)
-  target_link_libraries(${CUR_TARGET_NAME}_test PRIVATE ytlib::boost_tools)
+  target_link_libraries(${CUR_TARGET_NAME}_test PRIVATE ytlib::boost_tools_util)
   if(WIN32)
     target_compile_options(${CUR_TARGET_NAME}_test PRIVATE /bigobj)
   endif()

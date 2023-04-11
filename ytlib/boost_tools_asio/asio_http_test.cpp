@@ -11,7 +11,7 @@ namespace asio = boost::asio;
 namespace beast = boost::beast;
 namespace http = boost::beast::http;
 
-TEST(BOOST_ASIO_TEST, HTTP_base) {
+TEST(BOOST_TOOLS_ASIO_TEST, HTTP_base) {
   AsioDebugTool::Ins().Reset();
 
   auto cli_sys_ptr = std::make_shared<AsioExecutor>(2);
@@ -129,7 +129,7 @@ TEST(BOOST_ASIO_TEST, HTTP_base) {
   DBG_PRINT("%s", AsioDebugTool::Ins().GetStatisticalResult().c_str());
 }
 
-TEST(BOOST_ASIO_TEST, HTTP_client_base) {
+TEST(BOOST_TOOLS_ASIO_TEST, HTTP_client_base) {
   AsioDebugTool::Ins().Reset();
 
   auto cli_sys_ptr = std::make_shared<AsioExecutor>(2);
@@ -252,7 +252,7 @@ TEST(BOOST_ASIO_TEST, HTTP_client_base) {
   DBG_PRINT("%s", AsioDebugTool::Ins().GetStatisticalResult().c_str());
 }
 
-TEST(BOOST_ASIO_TEST, HTTP_client_handle) {
+TEST(BOOST_TOOLS_ASIO_TEST, HTTP_client_handle) {
   AsioDebugTool::Ins().Reset();
 
   auto cli_sys_ptr = std::make_shared<AsioExecutor>(2);

@@ -4,13 +4,13 @@
 #include "asio_cs_svr.hpp"
 #include "asio_tools.hpp"
 
-#include "ytlib/boost_tools/serialize.hpp"
+#include "ytlib/boost_tools_util/serialize.hpp"
 
 namespace ytlib {
 
 namespace asio = boost::asio;
 
-TEST(BOOST_ASIO_TEST, CS_base) {
+TEST(BOOST_TOOLS_ASIO_TEST, CS_base) {
   AsioDebugTool::Ins().Reset();
 
   auto cli_sys_ptr = std::make_shared<AsioExecutor>(2);
@@ -83,7 +83,7 @@ class TestMsg {
   std::string data;
 };
 
-TEST(BOOST_ASIO_TEST, CS_TestMsg) {
+TEST(BOOST_TOOLS_ASIO_TEST, CS_TestMsg) {
   AsioDebugTool::Ins().Reset();
 
   auto cli_sys_ptr = std::make_shared<AsioExecutor>(2);

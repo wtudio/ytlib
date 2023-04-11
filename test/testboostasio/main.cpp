@@ -22,8 +22,8 @@
 
 #include <boost/asio/experimental/promise.hpp>
 
-#include "ytlib/boost_asio/asio_debug_tools.hpp"
-#include "ytlib/boost_asio/net_util.hpp"
+#include "ytlib/boost_tools_asio/asio_debug_tools.hpp"
+#include "ytlib/boost_tools_asio/net_util.hpp"
 #include "ytlib/misc/misc_macro.h"
 #include "ytlib/misc/time.hpp"
 #include "ytlib/thread/thread_id.hpp"

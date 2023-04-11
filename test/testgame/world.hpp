@@ -14,7 +14,7 @@
 #include "ship.hpp"
 #include "station.hpp"
 
-#include "ytlib/boost_asio/asio_debug_tools.hpp"
+#include "ytlib/boost_tools_asio/asio_debug_tools.hpp"
 
 namespace ytlib {
 

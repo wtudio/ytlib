@@ -12,7 +12,7 @@ namespace ytlib {
 using namespace boost::asio;
 using namespace std;
 
-TEST(BOOST_ASIO_TEST, NET_LOG) {
+TEST(BOOST_TOOLS_ASIO_TEST, NET_LOG) {
   AsioDebugTool::Ins().Reset();
 
   auto cli_sys_ptr = std::make_shared<AsioExecutor>(2);

@@ -6,7 +6,7 @@ namespace ytlib {
 
 using namespace std;
 
-TEST(BOOST_FIBER_TEST, FiberExecutor) {
+TEST(BOOST_TOOLS_FIBER_TEST, FiberExecutor) {
   auto test_sys_ptr = std::make_shared<FiberExecutor>(2);
 
   std::atomic_uint32_t ct = 0;
