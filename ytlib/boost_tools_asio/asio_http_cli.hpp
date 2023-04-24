@@ -106,7 +106,7 @@ class AsioHttpClient : public std::enable_shared_from_this<AsioHttpClient> {
             session_ptr_list_.emplace_back(session_ptr);
           }
 
-          return session_ptr->HttpSendRecvCo(req, timeout);
+          return session_ptr->HttpSendRecvCo<ReqBodyType, RspBodyType>(req, timeout);
         },
         boost::asio::use_awaitable);
   }
