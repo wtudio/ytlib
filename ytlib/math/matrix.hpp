@@ -59,7 +59,7 @@ class Basic_Matrix {
 
   Basic_Matrix& operator=(Basic_Matrix&& M) {
     if (this != &M) {
-      //先释放自己的资源
+      // 先释放自己的资源
       ReleaseMemory();
       val = M.val;
       max_row = M.max_row;
@@ -447,8 +447,8 @@ class Basic_Matrix {
 
  public:
   T** val = nullptr;
-  uint32_t max_row = 0;  ///<行。每行的数据是连续的，应尽量使行号为索引
-  uint32_t max_col = 0;  ///<列
+  uint32_t max_row = 0;  ///< 行。每行的数据是连续的，应尽量使行号为索引
+  uint32_t max_col = 0;  ///< 列
 };
 
 template <typename T = double>

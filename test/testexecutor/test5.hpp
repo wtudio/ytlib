@@ -83,14 +83,14 @@ struct DetachReceiver {
  * @param sender
  */
 template <typename Sender>
-requires unifex::sender<Sender>
+  requires unifex::sender<Sender>
 auto StartDetached(Sender &&sender) -> std::shared_ptr<unifex::inplace_stop_source> {
   std::shared_ptr<unifex::inplace_stop_source> stsr = std::make_shared<unifex::inplace_stop_source>();
   DetachHolder holder;
   DetachReceiver r(holder, stsr->get_token());
 
-  using OpType = decltype(unifex::connect((Sender &&) sender, std::move(r)));
-  OpType *op = new OpType(unifex::connect((Sender &&) sender, std::move(r)));
+  using OpType = decltype(unifex::connect((Sender &&)sender, std::move(r)));
+  OpType *op = new OpType(unifex::connect((Sender &&)sender, std::move(r)));
   unifex::start(*op);
 
   holder.SetDeferFun([op] {

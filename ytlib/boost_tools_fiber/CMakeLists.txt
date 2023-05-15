@@ -1,43 +1,54 @@
-# 获取当前文件夹
-STRING(REGEX REPLACE ".*/\(.*\)" "\\1" CUR_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+# Get the current folder name
+string(REGEX REPLACE ".*/\(.*\)" "\\1" CUR_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
-# 设置目标名称
-SET(CUR_TARGET_NAME ${CUR_DIR})
+# Set target name
+set(CUR_TARGET_NAME ${CUR_DIR})
 
-# 设置文件集合
-File(GLOB_RECURSE head_files ${CMAKE_CURRENT_SOURCE_DIR}/*.hpp ${CMAKE_CURRENT_SOURCE_DIR}/*.h)
-File(GLOB_RECURSE test_files ${CMAKE_CURRENT_SOURCE_DIR}/*_test.cpp)
-File(GLOB_RECURSE benchmark_files ${CMAKE_CURRENT_SOURCE_DIR}/*_benchmark.cpp)
+# Set file collection
+file(GLOB_RECURSE head_files ${CMAKE_CURRENT_SOURCE_DIR}/*.hpp ${CMAKE_CURRENT_SOURCE_DIR}/*.h)
+file(GLOB_RECURSE test_files ${CMAKE_CURRENT_SOURCE_DIR}/*_test.cpp)
+file(GLOB_RECURSE benchmark_files ${CMAKE_CURRENT_SOURCE_DIR}/*_benchmark.cpp)
 
-# 添加目标
+# Add target
 add_library(${CUR_TARGET_NAME} INTERFACE)
-add_library(ytlib::${CUR_TARGET_NAME} ALIAS ${CUR_TARGET_NAME})
+get_namespace(CUR_SUPERIOR_NAMESPACE)
+add_library(${CUR_SUPERIOR_NAMESPACE}::${CUR_TARGET_NAME} ALIAS ${CUR_TARGET_NAME})
 
-# 设置头文件路径
-target_include_directories(${CUR_TARGET_NAME} INTERFACE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>)
+# Set include path of target
+target_include_directories(
+  ${CUR_TARGET_NAME}
+  INTERFACE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
+            $<INSTALL_INTERFACE:include>)
 
-# 设置头文件
-set_property(TARGET ${CUR_TARGET_NAME} PROPERTY PUBLIC_HEADER ${head_files})
+# Set head files of target
+target_sources(${CUR_TARGET_NAME} INTERFACE FILE_SET HEADERS BASE_DIRS ${PROJECT_SOURCE_DIR} FILES ${head_files})
 
-# 设置链接库
-target_link_libraries(${CUR_TARGET_NAME} INTERFACE Boost::fiber)
+# Set link libraries of target
+target_link_libraries(
+  ${CUR_TARGET_NAME}
+  INTERFACE Boost::fiber)
 
-# 设置编译选项
+# Set compile definitions of target
 # target_compile_definitions(${CUR_TARGET_NAME} INTERFACE xxx)
 
-# 设置其他属性
+# Set misc of target
 set_property(TARGET ${CUR_TARGET_NAME} PROPERTY FOLDER ${CUR_TARGET_NAME})
 
-# 设置安装
-install(TARGETS ${CUR_TARGET_NAME} PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ytlib/${CUR_DIR})
+# Set installation of target
+set_property(TARGET ${CUR_TARGET_NAME} PROPERTY EXPORT_NAME ${CUR_SUPERIOR_NAMESPACE}::${CUR_TARGET_NAME})
+install(
+  TARGETS ${CUR_TARGET_NAME}
+  EXPORT ${INSTALL_CONFIG_NAME}
+  FILE_SET HEADERS
+  DESTINATION include)
 
-# 设置测试
-if (YTLIB_BUILD_TESTS AND test_files)
+# Set test of target
+if(YTLIB_BUILD_TESTS AND test_files)
   add_gtest_target(TEST_TARGET ${CUR_TARGET_NAME} TEST_SRC ${test_files})
   set_property(TARGET ${CUR_TARGET_NAME}_test PROPERTY FOLDER ${CUR_TARGET_NAME})
 endif()
 
-if (YTLIB_BUILD_BENCH_TESTS AND benchmark_files)
+if(YTLIB_BUILD_BENCH_TESTS AND benchmark_files)
   add_benchmark_target(BENCH_TARGET ${CUR_TARGET_NAME} BENCH_SRC ${benchmark_files})
   set_property(TARGET ${CUR_TARGET_NAME}_benchmark PROPERTY FOLDER ${CUR_TARGET_NAME})
 endif()

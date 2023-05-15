@@ -33,16 +33,16 @@
 
 namespace ytlib {
 
-///侵入式序列化类头
+/// 侵入式序列化类头
 #define T_CLASS_SERIALIZE(Members)           \
   friend class boost::serialization::access; \
   template <class Archive>                   \
   void serialize(Archive& ar, const uint32_t version) { ar Members; }
 
-///序列化类型
+/// 序列化类型
 enum class SerializeType : uint8_t {
-  TextType,    ///<文本类型
-  BinaryType,  ///<二进制类型
+  TextType,    ///< 文本类型
+  BinaryType,  ///< 二进制类型
 };
 
 /**

@@ -28,7 +28,7 @@ class LoopTool {
   ///++i
   LoopTool& operator++() {
     size_t len = up_vec.size();
-    //从低位开始加
+    // 从低位开始加
     for (size_t ii = 0; ii < len; ++ii) {
       content_vec[ii] += 1;
       if (content_vec[ii] == up_vec[ii]) {
@@ -43,7 +43,7 @@ class LoopTool {
   ///--i
   LoopTool& operator--() {
     size_t len = up_vec.size();
-    //从低位开始减
+    // 从低位开始减
     for (size_t ii = 0; ii < len; ++ii) {
       if (content_vec[ii] == 0) {
         content_vec[ii] = up_vec[ii] - 1;
@@ -55,7 +55,7 @@ class LoopTool {
     return *this;
   }
 
-  ///是否为0。0为false。up_vec为空则始终为0
+  /// 是否为0。0为false。up_vec为空则始终为0
   operator bool() const {
     size_t len = up_vec.size();
     for (size_t ii = 0; ii < len; ++ii) {
@@ -65,7 +65,7 @@ class LoopTool {
   }
 
  public:
-  std::vector<uint32_t> up_vec;  ///<进制
+  std::vector<uint32_t> up_vec;  ///< 进制
   std::vector<uint32_t> content_vec;
 };
 

@@ -60,7 +60,7 @@ class GlGameDisplayer : public GameDisplayerInf, public std::enable_shared_from_
 
   static void OnGlGameKeyboard(unsigned char key, int x, int y) {
     switch (key) {
-      case 27:  //按ESCAPE时退出窗口
+      case 27:  // 按ESCAPE时退出窗口
         InsPtr()->Stop();
         break;
       default:

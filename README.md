@@ -1,8 +1,8 @@
 # YTLIB
-A head only c++ library for study.
+A lightweight head only c++ library..
 
 ## Github
-[ytlib](https://github.com/wt201501/ytlib)
+[ytlib](https://github.com/wtudio/ytlib)
 
 ## License
 This project is licensed under the MIT License - see the [LICENSE.md](LICENSE) file for details

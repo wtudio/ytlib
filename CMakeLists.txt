@@ -1,38 +1,61 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(ytlib VERSION 0.1.0 LANGUAGES C CXX)
+project(ytlib LANGUAGES C CXX)
 
-#设置cmake工具
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/CMake)
+# Set cmake path
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+install(
+  DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/cmake
+  DESTINATION ./
+  FILES_MATCHING
+  PATTERN "*.cmake")
 
-#设定c++版本
+# Some option
+option(YTLIB_BUILD_DOC "Build ytlib document." OFF)
+option(YTLIB_BUILD_TESTS "Build tests." OFF)
+option(YTLIB_BUILD_BENCH_TESTS "Build benchmark tests." OFF)
+option(YTLIB_BUILD_WITH_BOOST "Build with boost." OFF)
+option(YTLIB_BUILD_WITH_PROTOBUF "Build with protobuf." OFF)
+option(YTLIB_BUILD_WITH_LIBUNIFEX "Build with libunifex." OFF)
+option(YTLIB_BUILD_WITH_FREEGLUT "Build with freeglut." OFF)
+option(YTLIB_BUILD_CUSTOM_TESTS "Build custom tests." OFF)
+
+# Some necessary settings
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-#是否为主项目
-if (NOT DEFINED YTLIB_MASTER_PROJECT)
-  set(YTLIB_MASTER_PROJECT OFF)
-  if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
-    set(YTLIB_MASTER_PROJECT ON)
-    message(STATUS "start cmake ytlib ...")
-  endif ()
-endif ()
+set(INSTALL_CONFIG_NAME ${PROJECT_NAME}-config)
 
-#为主项目时的一些开发配置
+# Master project configuration
+if(NOT DEFINED YTLIB_MASTER_PROJECT)
+  set(YTLIB_MASTER_PROJECT OFF)
+  if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
+    set(YTLIB_MASTER_PROJECT ON)
+  endif()
+endif()
+
 if(YTLIB_MASTER_PROJECT)
-  #设置默认编译类型
+  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+  set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+
   if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build.")
+    set(CMAKE_BUILD_TYPE
+        Release
+        CACHE STRING "Choose the type of build.")
     set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
   endif()
 
   set_directory_properties(PROPERTIES COMPILE_DEFINITIONS $<$<CONFIG:Debug>:_DEBUG>)
 
-  #设置动态库还是静态库
   option(BUILD_SHARED_LIBS "Build with shared libraries." OFF)
 
-  #设置杂项
+  if(UNIX)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
+  endif()
+
   set_property(GLOBAL PROPERTY USE_FOLDERS ON)
   set_property(GLOBAL PROPERTY POSITION_INDEPENDENT_CODE ON)
 
@@ -47,11 +70,10 @@ if(YTLIB_MASTER_PROJECT)
   set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 endif()
 
-#设置文档
-option(YTLIB_BUILD_DOC "Build ytlib doc." OFF)
+# Build document
 if(YTLIB_BUILD_DOC)
-  message(STATUS "gen doc ...")
-  set(YTLIB_DOC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/doc)
+  message(STATUS "gen document ...")
+  set(YTLIB_DOC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/document)
   if(WIN32)
     execute_process(COMMAND ${YTLIB_DOC_DIR}/buildDoc.bat ${YTLIB_DOC_DIR} WORKING_DIRECTORY ${YTLIB_DOC_DIR})
   elseif(UNIX)
@@ -59,47 +81,40 @@ if(YTLIB_BUILD_DOC)
   endif()
 endif()
 
-#设置第三方库。使用 FETCHCONTENT_BASE_DIR 以设置下载目录
-message(STATUS "start get third party libraries, patience ...")
+# include cmake module
+include(NamespaceTool)
 
-option(YTLIB_BUILD_WITH_BOOST "Build with boost." OFF)
-if(YTLIB_BUILD_WITH_BOOST)
-  include(GetBoost)
-endif()
-
-option(YTLIB_BUILD_WITH_FREEGLUT "Build with freeglut." OFF)
-if(YTLIB_BUILD_WITH_FREEGLUT)
-  include(GetFreeglut)
-endif()
-
-option(YTLIB_BUILD_WITH_PROTOBUF "Build with protobuf." OFF)
-if(YTLIB_BUILD_WITH_PROTOBUF)
-  include(GetProtoBuf)
-endif()
-
-option(YTLIB_BUILD_WITH_LIBUNIFEX "Build with libunifex." OFF)
-if(YTLIB_BUILD_WITH_LIBUNIFEX)
-  include(GetLibUnifex)
-endif()
-
-#设置测试
-option(YTLIB_BUILD_TESTS "Build tests." OFF)
 if(YTLIB_BUILD_TESTS)
   include(GetGTest)
   enable_testing()
 endif()
 
-#设置benchmark测试
-option(YTLIB_BUILD_BENCH_TESTS "Build benchmark tests." OFF)
 if(YTLIB_BUILD_BENCH_TESTS)
   include(GetGoogleBenchmark)
 endif()
 
-#设置下一级目录
+if(YTLIB_BUILD_WITH_BOOST)
+  include(GetBoost)
+endif()
+
+if(YTLIB_BUILD_WITH_PROTOBUF)
+  include(GetProtoBuf)
+endif()
+
+if(YTLIB_BUILD_WITH_LIBUNIFEX)
+  include(GetLibUnifex)
+endif()
+
+if(YTLIB_BUILD_WITH_FREEGLUT AND CMAKE_SYSTEM_NAME MATCHES "Windows")
+  include(GetFreeglut)
+endif()
+
+# add subdirectory
 add_subdirectory(ytlib)
 
-#设置个性化测试（ytlib开发测试专用）
-option(YTLIB_BUILD_CUSTOM_TESTS "Build custom tests." OFF)
 if(YTLIB_BUILD_CUSTOM_TESTS)
   add_subdirectory(test)
 endif()
+
+# install
+install(EXPORT ${INSTALL_CONFIG_NAME} DESTINATION lib/cmake/${PROJECT_NAME})

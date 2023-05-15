@@ -61,7 +61,7 @@ std::vector<float> val2rgba(float h) {
 
 // 核心函数，cube绘图。使用opengl。坐标系-10000~10000
 void CubeDisplay() {
-  //画立方体，六个方向进行遍历
+  // 画立方体，六个方向进行遍历
   float curX, curY, curZ, curX_, curY_, curZ_;
 
   for (int32_t xx = 0; xx < cb.x; ++xx) {

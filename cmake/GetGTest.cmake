@@ -2,25 +2,29 @@ include(FetchContent)
 
 message(STATUS "get googletest ...")
 
+# cmake-format: off
 FetchContent_Declare(
   googletest
   URL  https://github.com/google/googletest/archive/release-1.12.1.tar.gz
   DOWNLOAD_EXTRACT_TIMESTAMP TRUE
 )
+# cmake-format: on
 
 FetchContent_GetProperties(googletest)
 if(NOT googletest_POPULATED)
-  FetchContent_Populate(googletest)
-
   if(WIN32)
-    set(gtest_force_shared_crt ON CACHE BOOL "")
+    set(gtest_force_shared_crt
+        ON
+        CACHE BOOL "")
   endif()
-  set(INSTALL_GTEST OFF CACHE BOOL "")
+  set(INSTALL_GTEST
+      OFF
+      CACHE BOOL "")
 
-  add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR})
+  FetchContent_MakeAvailable(googletest)
 endif()
 
-# import targets：
+# import targets:
 # GTest::gtest
 # GTest::gtest_main
 # GTest::gmock
@@ -33,10 +37,7 @@ function(add_gtest_target)
 
   add_executable(${target_test_name} ${ARG_TEST_SRC})
   target_include_directories(${target_test_name} PRIVATE ${ARG_INC_DIR})
-  target_link_libraries(${target_test_name} PRIVATE ${ARG_TEST_TARGET}
-    GTest::gtest GTest::gtest_main GTest::gmock GTest::gmock_main)
-
-  set_property(TARGET ${target_test_name} PROPERTY UNITY_BUILD ON)
+  target_link_libraries(${target_test_name} PRIVATE ${ARG_TEST_TARGET} GTest::gtest GTest::gtest_main GTest::gmock GTest::gmock_main)
 
   add_test(NAME ${target_test_name} COMMAND $<TARGET_FILE:${target_test_name}>)
 endfunction()

@@ -136,7 +136,7 @@ class GlSys {
   static void OnKeyboard(unsigned char key, int x, int y) {
     GlSys& ins = Ins();
     switch (key) {
-      case 27:  //按ESCAPE时退出窗口
+      case 27:  // 按ESCAPE时退出窗口
         ins.Stop();
         break;
       default:
@@ -151,7 +151,7 @@ class GlSys {
     GlSys& ins = Ins();
     if (ins.cfg_.print_fps) {
       static int frame = 0, time, timebase = 0;
-      //计算帧率
+      // 计算帧率
       frame++;
       time = glutGet(GLUT_ELAPSED_TIME);
       if (time - timebase > 1000) {

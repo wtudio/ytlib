@@ -161,13 +161,12 @@ class UnifexRpcClient : public std::enable_shared_from_this<UnifexRpcClient> {
   };
 
   template <typename Receiver>
-  requires unifex::receiver<Receiver>
+    requires unifex::receiver<Receiver>
   struct RecvSigOperationState {
     template <typename Receiver2>
-    requires std::constructible_from<Receiver, Receiver2>
-    RecvSigOperationState(std::function<void()>& recv_callback, Receiver2&& r)
-    noexcept(std::is_nothrow_constructible_v<Receiver, Receiver2>)
-        : recv_callback_(recv_callback), receiver_(new Receiver((Receiver2 &&) r)) {}
+      requires std::constructible_from<Receiver, Receiver2>
+    RecvSigOperationState(std::function<void()>& recv_callback, Receiver2&& r) noexcept(std::is_nothrow_constructible_v<Receiver, Receiver2>)
+        : recv_callback_(recv_callback), receiver_(new Receiver((Receiver2&&)r)) {}
 
     void start() noexcept {
       recv_callback_ = [receiver = receiver_]() {
@@ -198,7 +197,7 @@ class UnifexRpcClient : public std::enable_shared_from_this<UnifexRpcClient> {
 
     template <typename Receiver>
     RecvSigOperationState<unifex::remove_cvref_t<Receiver>> connect(Receiver&& receiver) {
-      return RecvSigOperationState<unifex::remove_cvref_t<Receiver>>(recv_callback_, (Receiver &&) receiver);
+      return RecvSigOperationState<unifex::remove_cvref_t<Receiver>>(recv_callback_, (Receiver&&)receiver);
     }
 
    private:
@@ -507,10 +506,9 @@ template <typename Req, typename Rsp, typename Receiver>
 class UnifexRpcOperationState final {
  public:
   template <typename Receiver2>
-  requires std::constructible_from<Receiver, Receiver2>
-  UnifexRpcOperationState(const std::shared_ptr<UnifexRpcMsgContext<Req, Rsp>>& msg_ctx_ptr, Receiver2&& r)
-  noexcept(std::is_nothrow_constructible_v<Receiver, Receiver2>)
-      : msg_ctx_ptr_(msg_ctx_ptr), receiver_(new Receiver((Receiver2 &&) r)) {}
+    requires std::constructible_from<Receiver, Receiver2>
+  UnifexRpcOperationState(const std::shared_ptr<UnifexRpcMsgContext<Req, Rsp>>& msg_ctx_ptr, Receiver2&& r) noexcept(std::is_nothrow_constructible_v<Receiver, Receiver2>)
+      : msg_ctx_ptr_(msg_ctx_ptr), receiver_(new Receiver((Receiver2&&)r)) {}
 
   void start() noexcept {
     try {
@@ -545,7 +543,7 @@ class UnifexRpcSender {
 
   template <typename Receiver>
   UnifexRpcOperationState<Req, Rsp, unifex::remove_cvref_t<Receiver>> connect(Receiver&& receiver) {
-    return UnifexRpcOperationState<Req, Rsp, unifex::remove_cvref_t<Receiver>>(msg_ctx_ptr_, (Receiver &&) receiver);
+    return UnifexRpcOperationState<Req, Rsp, unifex::remove_cvref_t<Receiver>>(msg_ctx_ptr_, (Receiver&&)receiver);
   }
 
  private:

@@ -46,7 +46,7 @@ TEST(GRAPH_TEST, BASE_test) {
   clearFlag(myGraphVec);
   BFS(*myGraphVec[0], vec);
 
-  //邻接矩阵
+  // 邻接矩阵
   g_sideMatrix M = createAdjMatrix<uint32_t>(myGraphVec);
 
   std::cout << M << std::endl;

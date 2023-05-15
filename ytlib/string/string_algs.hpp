@@ -58,7 +58,7 @@ inline size_t KMP(std::string_view ss, std::string_view ps) {
  * @return size_t 字符串1和字符串2的差异度
  */
 inline size_t StrDif(std::string_view s1, std::string_view s2) {
-  //默认s1.length()>=s2.length()
+  // 默认s1.length()>=s2.length()
   if (s2.length() > s1.length())
     return StrDif(s2, s1);
 
@@ -100,10 +100,10 @@ inline size_t StrDif(std::string_view s1, std::string_view s2) {
  */
 inline std::pair<size_t, size_t> LongestSubStrWithoutDup(std::string_view s) {
   size_t len = s.length();
-  size_t positions[256];                                    //每种字符上一次出现的位置
-  for (size_t ii = 0; ii < len; ++ii) positions[ii] = len;  //初始化为len，表示没出现
-  size_t maxLen = 0, maxPos = 0;                            //最长的字串长度和位置
-  size_t curLen = 0, curPos = 0;                            //当前不重复字串的长度和位置
+  size_t positions[256];                                    // 每种字符上一次出现的位置
+  for (size_t ii = 0; ii < len; ++ii) positions[ii] = len;  // 初始化为len，表示没出现
+  size_t maxLen = 0, maxPos = 0;                            // 最长的字串长度和位置
+  size_t curLen = 0, curPos = 0;                            // 当前不重复字串的长度和位置
   for (size_t ii = 0; ii < len; ++ii) {
     size_t& prePos = positions[s[ii]];
     if (prePos == len || (ii - prePos) > curLen) {

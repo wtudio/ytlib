@@ -31,10 +31,10 @@ class BinTreeNode : public std::enable_shared_from_this<BinTreeNode<T> > {
   explicit BinTreeNode(T&& input_obj) : obj(std::move(input_obj)) {}
 
  public:
-  T obj;           ///<实际节点值
-  NodeWeakPtr pf;  ///<父节点
-  NodePtr pl;      ///<左子节点
-  NodePtr pr;      ///<右子节点
+  T obj;           ///< 实际节点值
+  NodeWeakPtr pf;  ///< 父节点
+  NodePtr pl;      ///< 左子节点
+  NodePtr pr;      ///< 右子节点
 };
 
 /**
@@ -53,7 +53,7 @@ class BinSearchTreeNode : public std::enable_shared_from_this<BinSearchTreeNode<
   explicit BinSearchTreeNode(const T& input_obj) : obj(input_obj) {}
   explicit BinSearchTreeNode(T&& input_obj) : obj(std::move(input_obj)) {}
 
-  ///向当前节点为根节点的二叉查找树中插入一个节点
+  /// 向当前节点为根节点的二叉查找树中插入一个节点
   void Insert(NodePtr node) {
     if (!node) return;
 
@@ -72,17 +72,17 @@ class BinSearchTreeNode : public std::enable_shared_from_this<BinSearchTreeNode<
     }
   }
 
-  ///删除当前节点，并返回替代的节点
+  /// 删除当前节点，并返回替代的节点
   NodePtr Erase() {
     NodePtr self = this->shared_from_this();
     if (!pl && !pr) {
-      //左右都为空，为叶子节点
+      // 左右都为空，为叶子节点
       BreakFather(self);
       return NodePtr();
     }
     auto real_pf = pf.lock();
     if (pl && !pr) {
-      //只有左子树
+      // 只有左子树
       NodePtr re = pl;
       if (!real_pf) {
         BreakLChild(this->shared_from_this());
@@ -95,7 +95,7 @@ class BinSearchTreeNode : public std::enable_shared_from_this<BinSearchTreeNode<
       return re;
     }
     if (!pl && pr) {
-      //只有右子树
+      // 只有右子树
       NodePtr re = pr;
       if (!real_pf) {
         BreakRChild(self);
@@ -107,10 +107,10 @@ class BinSearchTreeNode : public std::enable_shared_from_this<BinSearchTreeNode<
       }
       return re;
     }
-    //换左子树的前驱
+    // 换左子树的前驱
     NodePtr re = pl;
     if (re->pr) {
-      //左子节点有右子树，找到其前驱
+      // 左子节点有右子树，找到其前驱
       while (re->pr) re = re->pr;
       auto re_pf = re->pf.lock();
       re_pf->pr = re->pl;
@@ -135,10 +135,10 @@ class BinSearchTreeNode : public std::enable_shared_from_this<BinSearchTreeNode<
   }
 
  public:
-  T obj;           ///<实际节点值
-  NodeWeakPtr pf;  ///<父节点
-  NodePtr pl;      ///<左子节点
-  NodePtr pr;      ///<右子节点
+  T obj;           ///< 实际节点值
+  NodeWeakPtr pf;  ///< 父节点
+  NodePtr pl;      ///< 左子节点
+  NodePtr pr;      ///< 右子节点
 };
 
 /**
@@ -157,17 +157,17 @@ class AVLTreeNode : public std::enable_shared_from_this<AVLTreeNode<T> > {
   explicit AVLTreeNode(const T& input_obj) : obj(input_obj) {}
   explicit AVLTreeNode(T&& input_obj) : obj(std::move(input_obj)) {}
 
-  ///获取节点hgt值
+  /// 获取节点hgt值
   static size_t GetHgt(const NodePtr& p) {
     return (p ? (p->hgt) : 0);
   }
 
-  ///刷新节点hgt值
+  /// 刷新节点hgt值
   void RefreshHgt() {
     hgt = std::max(GetHgt(pl), GetHgt(pr)) + 1;
   }
 
-  ///插入，必须是根节点才能进行此操作。因为根节点可能会变，所以返回插入后的新根节点
+  /// 插入，必须是根节点才能进行此操作。因为根节点可能会变，所以返回插入后的新根节点
   NodePtr Insert(NodePtr node) {
     if (!pf.expired())
       throw std::logic_error("Must insert to a root node.");
@@ -175,7 +175,7 @@ class AVLTreeNode : public std::enable_shared_from_this<AVLTreeNode<T> > {
     if (!node)
       return this->shared_from_this();
 
-    //找到最终要插入的地方的父节点
+    // 找到最终要插入的地方的父节点
     NodePtr pos;
     NodePtr tmppos = this->shared_from_this();
     do {
@@ -193,7 +193,7 @@ class AVLTreeNode : public std::enable_shared_from_this<AVLTreeNode<T> > {
     }
     node->hgt = 1;
 
-    //更新高度，进行旋转
+    // 更新高度，进行旋转
     NodePtr re;
     NodePtr end = pf.lock();
     while (pos != end) {
@@ -201,7 +201,7 @@ class AVLTreeNode : public std::enable_shared_from_this<AVLTreeNode<T> > {
       size_t curhgt = pos->hgt;
       size_t lh = GetHgt(pos->pl), lr = GetHgt(pos->pr);
       if (lh >= lr + 2) {
-        //左边比右边高了2
+        // 左边比右边高了2
         if (GetHgt(pos->pl->pl) >= GetHgt(pos->pl->pr)) {
           re = pos->RotateL();
         } else {
@@ -209,7 +209,7 @@ class AVLTreeNode : public std::enable_shared_from_this<AVLTreeNode<T> > {
           re = pos->RotateL();
         }
       } else if (lr >= lh + 2) {
-        //右边比左边高了2
+        // 右边比左边高了2
         if (GetHgt(pos->pr->pr) >= GetHgt(pos->pr->pl)) {
           re = pos->RotateR();
         } else {
@@ -217,7 +217,7 @@ class AVLTreeNode : public std::enable_shared_from_this<AVLTreeNode<T> > {
           re = pos->RotateR();
         }
       }
-      //如果发生旋转了，说明之前左右高度相差2，说明该节点高度一定发生改变
+      // 如果发生旋转了，说明之前左右高度相差2，说明该节点高度一定发生改变
       size_t cghgt;
       if (re) {
         cghgt = re->hgt;
@@ -232,20 +232,20 @@ class AVLTreeNode : public std::enable_shared_from_this<AVLTreeNode<T> > {
     return this->shared_from_this();
   }
 
-  ///在当前节点为根节点的树中删除一个节点，并返回删除后的根节点
+  /// 在当前节点为根节点的树中删除一个节点，并返回删除后的根节点
   NodePtr Erase(NodePtr node) {
     if (!pf.expired())
       throw std::logic_error("Must erase from a root node.");
 
     if (!node) return this->shared_from_this();
 
-    //先确定要删除的节点是自己的子节点
+    // 先确定要删除的节点是自己的子节点
     if (GetRootNode(node) != this->shared_from_this())
       throw std::logic_error("Node must belong to root node.");
 
     return EraseImp(node);
   }
-  ///在当前节点中删除节点值为val的节点。会先搜索再删除
+  /// 在当前节点中删除节点值为val的节点。会先搜索再删除
   NodePtr Erase(const T& val) {
     if (!pf.expired())
       throw std::logic_error("Must erase from a root node.");
@@ -257,22 +257,22 @@ class AVLTreeNode : public std::enable_shared_from_this<AVLTreeNode<T> > {
   }
 
  private:
-  ///假如有重复的，删除第一个找到的
+  /// 假如有重复的，删除第一个找到的
   NodePtr EraseImp(NodePtr node) {
-    //调用者保证自身是根节点，node不为空且属于自身节点所在树
-    NodePtr root_node = this->shared_from_this();  //如果要删除的是自身，则需要一个指针来保存root节点
+    // 调用者保证自身是根节点，node不为空且属于自身节点所在树
+    NodePtr root_node = this->shared_from_this();  // 如果要删除的是自身，则需要一个指针来保存root节点
     NodePtr node_pf = node->pf.lock();
     NodePtr pos = node_pf;
     if (!(node->pl) && !(node->pr)) {
-      //左右都为空，为叶子节点
+      // 左右都为空，为叶子节点
       if (node_pf) {
         BreakFather(node);
       } else {
-        //整个树就一个要删除的根节点
+        // 整个树就一个要删除的根节点
         return NodePtr();
       }
     } else if (node->pl && !(node->pr)) {
-      //只有左子树
+      // 只有左子树
       if (!node_pf) {
         root_node = node->pl;
         BreakLChild(node);
@@ -283,7 +283,7 @@ class AVLTreeNode : public std::enable_shared_from_this<AVLTreeNode<T> > {
         node->pl.reset();
       }
     } else if (!(node->pl) && node->pr) {
-      //只有右子树
+      // 只有右子树
       if (!node_pf) {
         root_node = node->pr;
         BreakRChild(node);
@@ -294,10 +294,10 @@ class AVLTreeNode : public std::enable_shared_from_this<AVLTreeNode<T> > {
         node->pr.reset();
       }
     } else {
-      //换左子树的前驱
+      // 换左子树的前驱
       NodePtr tmp = node->pl;
       if (tmp->pr) {
-        //左子节点有右子树，找到其前驱
+        // 左子节点有右子树，找到其前驱
         while (tmp->pr) tmp = tmp->pr;
         NodePtr tmp_pf = tmp->pf.lock();
         tmp_pf->pr = tmp->pl;
@@ -324,14 +324,14 @@ class AVLTreeNode : public std::enable_shared_from_this<AVLTreeNode<T> > {
       node->pr.reset();
       tmp->hgt = node->hgt;
     }
-    //更新高度，进行旋转
+    // 更新高度，进行旋转
     NodePtr re;
     while (pos != NULL) {
       re.reset();
       size_t curhgt = pos->hgt;
       size_t lh = GetHgt(pos->pl), lr = GetHgt(pos->pr);
       if (lh >= lr + 2) {
-        //左边比右边高了2
+        // 左边比右边高了2
         if (GetHgt(pos->pl->pl) >= GetHgt(pos->pl->pr))
           re = pos->RotateL();
         else {
@@ -339,7 +339,7 @@ class AVLTreeNode : public std::enable_shared_from_this<AVLTreeNode<T> > {
           re = pos->RotateL();
         }
       } else if (lr >= lh + 2) {
-        //右边比左边高了2
+        // 右边比左边高了2
         if (GetHgt(pos->pr->pr) >= GetHgt(pos->pr->pl))
           re = pos->RotateR();
         else {
@@ -347,7 +347,7 @@ class AVLTreeNode : public std::enable_shared_from_this<AVLTreeNode<T> > {
           re = pos->RotateR();
         }
       }
-      //如果发生旋转了，说明之前左右高度相差2，说明该节点高度一定发生改变
+      // 如果发生旋转了，说明之前左右高度相差2，说明该节点高度一定发生改变
       size_t cghgt;
       if (re) {
         cghgt = re->hgt;
@@ -362,7 +362,7 @@ class AVLTreeNode : public std::enable_shared_from_this<AVLTreeNode<T> > {
     return root_node;
   }
 
-  ///左旋转，顺时针
+  /// 左旋转，顺时针
   NodePtr RotateL() {
     NodePtr re = pl;
     if (re->pr) re->pr->pf = this->shared_from_this();
@@ -386,7 +386,7 @@ class AVLTreeNode : public std::enable_shared_from_this<AVLTreeNode<T> > {
     re->RefreshHgt();
     return re;
   }
-  ///右旋转，逆时针
+  /// 右旋转，逆时针
   NodePtr RotateR() {
     NodePtr re = pr;
     if (re->pl) re->pl->pf = this->shared_from_this();
@@ -412,12 +412,12 @@ class AVLTreeNode : public std::enable_shared_from_this<AVLTreeNode<T> > {
   }
 
  public:
-  T obj;           ///<实际节点值
-  NodeWeakPtr pf;  ///<父节点
-  NodePtr pl;      ///<左子节点
-  NodePtr pr;      ///<右子节点
+  T obj;           ///< 实际节点值
+  NodeWeakPtr pf;  ///< 父节点
+  NodePtr pl;      ///< 左子节点
+  NodePtr pr;      ///< 右子节点
 
-  size_t hgt = 1;  ///<节点高度
+  size_t hgt = 1;  ///< 节点高度
 };
 
 /**
@@ -436,7 +436,7 @@ class BRTreeNode : public std::enable_shared_from_this<BRTreeNode<T> > {
   explicit BRTreeNode(const T& input_obj) : obj(input_obj) {}
   explicit BRTreeNode(T&& input_obj) : obj(std::move(input_obj)) {}
 
-  ///插入，必须是根节点才能进行此操作。因为根节点可能会变，所以返回插入后的新根节点
+  /// 插入，必须是根节点才能进行此操作。因为根节点可能会变，所以返回插入后的新根节点
   NodePtr Insert(NodePtr node) {
     if (!pf.expired())
       throw std::logic_error("Must insert to a root node.");
@@ -444,19 +444,19 @@ class BRTreeNode : public std::enable_shared_from_this<BRTreeNode<T> > {
     if (!node)
       return this->shared_from_this();
 
-    //找到最终要插入的地方的父节点
+    // 找到最终要插入的地方的父节点
     BRTreeNode<T>*pos = this, *tmppos = (node->obj < obj) ? pl.get() : pr.get();
     while (tmppos != NULL) {
       pos = tmppos;
       tmppos = (node->obj < pos->obj) ? pos->pl.get() : pos->pr.get();
     }
-    if (node->obj == pos->obj) return this->shared_from_this();  //不允许重复
+    if (node->obj == pos->obj) return this->shared_from_this();  // 不允许重复
     if (node->obj < pos->obj)
       SetLChild(pos, node);
     else
       SetRChild(pos, node);
 
-    //插入节点的颜色总是红色
+    // 插入节点的颜色总是红色
     node->color = true;
 
     NodePtr re;
@@ -464,42 +464,42 @@ class BRTreeNode : public std::enable_shared_from_this<BRTreeNode<T> > {
     tmppos = node.get();
     while (pos != end) {
       re.reset();
-      //父节点是黑色
+      // 父节点是黑色
       if (!(pos->color)) {
         return this->shared_from_this();
       }
       BRTreeNode<T>* uncle = (GetLR(pos) ? pos->pf->pr.get() : pos->pf->pl.get());
       if (uncle != NULL && uncle->color) {
-        //插入节点的父节点和其叔叔节点均为红色的
+        // 插入节点的父节点和其叔叔节点均为红色的
         pos->color = uncle->color = false;
         pos->pf->color = true;
         tmppos = pos->pf;
         pos = tmppos->pf;
       } else {
-        //插入节点的父节点是红色，叔叔节点是黑色
+        // 插入节点的父节点是红色，叔叔节点是黑色
         if (GetLR(pos)) {
-          //父节点是祖父节点的左支
+          // 父节点是祖父节点的左支
           if (GetLR(tmppos)) {
-            //插入节点是其父节点的左子节点
+            // 插入节点是其父节点的左子节点
             pos->color = false;
             pos->pf->color = true;
             re = pos->pf->RotateL();
             break;
           } else {
-            //插入节点是其父节点的右子节点
+            // 插入节点是其父节点的右子节点
             pos->RotateR();
             tmppos = pos;
             pos = tmppos->pf;
           }
         } else {
-          //父节点是祖父节点的右支
+          // 父节点是祖父节点的右支
           if (GetLR(tmppos)) {
-            //插入节点是其父节点的左子节点
+            // 插入节点是其父节点的左子节点
             pos->RotateL();
             tmppos = pos;
             pos = tmppos->pf;
           } else {
-            //插入节点是其父节点的右子节点
+            // 插入节点是其父节点的右子节点
             pos->color = false;
             pos->pf->color = true;
             re = pos->pf->RotateR();
@@ -513,20 +513,20 @@ class BRTreeNode : public std::enable_shared_from_this<BRTreeNode<T> > {
     return this->shared_from_this();
   }
 
-  ///在当前节点为根节点的树中删除一个节点，并返回删除后的根节点
+  /// 在当前节点为根节点的树中删除一个节点，并返回删除后的根节点
   NodePtr Erase(NodePtr node) {
     if (!pf.expired())
       throw std::logic_error("Must erase from a root node.");
 
     if (!node) return this->shared_from_this();
 
-    //先确定要删除的节点是自己的子节点
+    // 先确定要删除的节点是自己的子节点
     if (GetRootNode(node) != this->shared_from_this())
       throw std::logic_error("Node must belong to root node.");
 
     return EraseImp(node);
   }
-  ///在当前节点中删除节点值为val的节点。会先搜索再删除
+  /// 在当前节点中删除节点值为val的节点。会先搜索再删除
   NodePtr Erase(const T& val) {
     if (!pf.expired())
       throw std::logic_error("Must erase from a root node.");
@@ -539,23 +539,23 @@ class BRTreeNode : public std::enable_shared_from_this<BRTreeNode<T> > {
 
  private:
   NodePtr EraseImp(NodePtr node) {
-    //调用者保证自身是根节点，node不为空且属于自身节点所在树
+    // 调用者保证自身是根节点，node不为空且属于自身节点所在树
     if (!node) return this->shared_from_this();
-    NodePtr root_node = this->shared_from_this();  //如果要删除的是自身，则需要一个指针来保存root节点
+    NodePtr root_node = this->shared_from_this();  // 如果要删除的是自身，则需要一个指针来保存root节点
     BRTreeNode<T>* pos = node->pf;
     if (!(node->pl) && !(node->pr)) {
-      //左右都为空，为叶子节点
+      // 左右都为空，为叶子节点
       if (node->pf != NULL) {
         if (GetLR(node.get()))
           BreakLChild(node->pf);
         else
           BreakRChild(node->pf);
       } else {
-        //整个树就一个要删除的根节点
+        // 整个树就一个要删除的根节点
         return NodePtr();
       }
     } else if (node->pl && !(node->pr)) {
-      //只有左子树
+      // 只有左子树
       if (node->pf == NULL) {
         root_node = node->pl;
         BreakLChild(node.get());
@@ -566,7 +566,7 @@ class BRTreeNode : public std::enable_shared_from_this<BRTreeNode<T> > {
         node->pl.reset();
       }
     } else if (!(node->pl) && node->pr) {
-      //只有右子树
+      // 只有右子树
       if (node->pf == NULL) {
         root_node = node->pr;
         BreakRChild(node.get());
@@ -577,10 +577,10 @@ class BRTreeNode : public std::enable_shared_from_this<BRTreeNode<T> > {
         node->pr.reset();
       }
     } else {
-      //换左子树的前驱
+      // 换左子树的前驱
       NodePtr tmp = node->pl;
       if (tmp->pr) {
-        //左子节点有右子树，找到其前驱
+        // 左子节点有右子树，找到其前驱
         while (tmp->pr) tmp = tmp->pr;
         tmp->pf->pr = tmp->pl;
         if (tmp->pl) tmp->pl->pf = tmp->pf;
@@ -605,7 +605,7 @@ class BRTreeNode : public std::enable_shared_from_this<BRTreeNode<T> > {
       tmp->hgt = node->hgt;
     }
   }
-  ///<左旋转，顺时针
+  ///< 左旋转，顺时针
   NodePtr RotateL() {
     NodePtr re = pl;
     if (re->pr) re->pr->pf = this;
@@ -625,7 +625,7 @@ class BRTreeNode : public std::enable_shared_from_this<BRTreeNode<T> > {
     pf = re.get();
     return re;
   }
-  ///<右旋转，逆时针
+  ///< 右旋转，逆时针
   NodePtr RotateR() {
     NodePtr re = pr;
     if (re->pl) re->pl->pf = this;
@@ -647,12 +647,12 @@ class BRTreeNode : public std::enable_shared_from_this<BRTreeNode<T> > {
   }
 
  public:
-  T obj;           ///<实际节点值
-  NodeWeakPtr pf;  ///<父节点
-  NodePtr pl;      ///<左子节点
-  NodePtr pr;      ///<右子节点
+  T obj;           ///< 实际节点值
+  NodeWeakPtr pf;  ///< 父节点
+  NodePtr pl;      ///< 左子节点
+  NodePtr pr;      ///< 右子节点
 
-  bool color = false;  ///<颜色，true为红，false为黑
+  bool color = false;  ///< 颜色，true为红，false为黑
 };
 
 /**
@@ -1177,7 +1177,7 @@ bool CheckAVLTree(const std::shared_ptr<T>& root_node) {
 template <typename T>
 bool CheckBRTree(const std::shared_ptr<T>& root_node) {
   if (!CheckBinSearchTree(root_node)) return false;
-  if (root_node->color != false) return false;  //根节点要为黑
+  if (root_node->color != false) return false;  // 根节点要为黑
 
   return true;
 }

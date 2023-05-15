@@ -53,7 +53,7 @@ class NetLogBackend : public boost::log::sinks::basic_sink_backend<boost::log::s
       throw std::invalid_argument("net_log_cli_ptr can not be nullptr.");
   }
 
-  ///析构函数
+  /// 析构函数
   ~NetLogBackend() {
     net_log_cli_ptr_->Stop();
   }
@@ -145,8 +145,8 @@ class YTBLCtr {
 
  private:
   YTBLCtr() : con_log_flag(false), file_log_flag(false), net_log_flag(false) {
-    //要添加什么属性在这里添加
-    // boost::log::add_common_attributes();
+    // 要添加什么属性在这里添加
+    //  boost::log::add_common_attributes();
     auto core_ptr = boost::log::core::get();
     core_ptr->add_global_attribute(
         boost::log::aux::default_attribute_names::timestamp(), boost::log::attributes::local_clock());
@@ -161,7 +161,7 @@ class YTBLCtr {
   std::atomic_bool net_log_flag;
 };
 
-///设置日志级别：trace | debug | info | warning | error | fatal
+/// 设置日志级别：trace | debug | info | warning | error | fatal
 #define YTBL_SET_LEVEL(lvl) (boost::log::core::get())->set_filter(boost::log::trivial::severity >= boost::log::trivial::lvl);
 
 #define _YTBL_FMT_STRING(x) #x

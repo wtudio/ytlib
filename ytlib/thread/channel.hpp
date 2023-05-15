@@ -41,7 +41,7 @@ class Channel : public BlockQueue<T> {
     th_size_ = th_size;
   }
 
-  ///开启线程
+  /// 开启线程
   void StartProcess() {
     if (!f_) throw std::logic_error("Invalid HandleFun.");
 
@@ -63,7 +63,7 @@ class Channel : public BlockQueue<T> {
     }
   }
 
-  ///清空队列并停止线程
+  /// 清空队列并停止线程
   void StopProcess() {
     BlockQueue<T>::Stop();
     for (auto itr = threads_.begin(); itr != threads_.end();) {
@@ -74,9 +74,9 @@ class Channel : public BlockQueue<T> {
   }
 
  protected:
-  std::function<void(T &&)> f_;     ///<处理函数
-  uint32_t th_size_ = 1;            ///<线程数
-  std::list<std::thread> threads_;  ///<运行线程
+  std::function<void(T &&)> f_;     ///< 处理函数
+  uint32_t th_size_ = 1;            ///< 线程数
+  std::list<std::thread> threads_;  ///< 运行线程
 };
 
 }  // namespace ytlib

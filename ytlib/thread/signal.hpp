@@ -21,18 +21,18 @@ class LightSignalAtomic {
   LightSignalAtomic() : flag_(false) {}
   ~LightSignalAtomic() {}
 
-  ///唤醒所有wait
+  /// 唤醒所有wait
   void notify() {
     flag_ = true;
     flag_.notify_all();
   }
 
-  ///无限等待唤醒
+  /// 无限等待唤醒
   void wait() {
     flag_.wait(false);
   }
 
-  ///重置信号量
+  /// 重置信号量
   void reset() {
     flag_ = false;
   }
@@ -50,21 +50,21 @@ class LightSignal {
   LightSignal() {}
   ~LightSignal() {}
 
-  ///唤醒所有wait
+  /// 唤醒所有wait
   void notify() {
     std::lock_guard<std::mutex> lck(mutex_);
     flag_ = true;
     cond_.notify_all();
   }
 
-  ///无限等待唤醒
+  /// 无限等待唤醒
   void wait() {
     std::unique_lock<std::mutex> lck(mutex_);
     if (flag_) return;
     cond_.wait(lck);
   }
 
-  ///带超时的等待唤醒
+  /// 带超时的等待唤醒
   bool wait_for(uint32_t timeout_ms) {
     std::unique_lock<std::mutex> lck(mutex_);
     if (flag_) return true;
@@ -72,7 +72,7 @@ class LightSignal {
     return true;
   }
 
-  ///重置信号量
+  /// 重置信号量
   void reset() {
     std::lock_guard<std::mutex> lck(mutex_);
     flag_ = false;

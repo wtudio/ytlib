@@ -2,24 +2,30 @@ include(FetchContent)
 
 message(STATUS "get googlebenchmark ...")
 
+# cmake-format: off
 FetchContent_Declare(
   googlebenchmark
   URL https://github.com/google/benchmark/archive/v1.6.1.tar.gz
   DOWNLOAD_EXTRACT_TIMESTAMP TRUE
 )
+# cmake-format: on
 
 FetchContent_GetProperties(googlebenchmark)
 if(NOT googlebenchmark_POPULATED)
-  FetchContent_Populate(googlebenchmark)
+  set(BENCHMARK_ENABLE_TESTING
+      OFF
+      CACHE BOOL "")
+  set(BENCHMARK_ENABLE_GTEST_TESTS
+      OFF
+      CACHE BOOL "")
+  set(BENCHMARK_ENABLE_INSTALL
+      OFF
+      CACHE BOOL "")
 
-  set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "")
-  set(BENCHMARK_ENABLE_GTEST_TESTS OFF CACHE BOOL "")
-  set(BENCHMARK_ENABLE_INSTALL OFF CACHE BOOL "")
-
-  add_subdirectory(${googlebenchmark_SOURCE_DIR} ${googlebenchmark_BINARY_DIR})
+  FetchContent_MakeAvailable(googlebenchmark)
 endif()
 
-# import targets：
+# import targets:
 # benchmark::benchmark
 # benchmark::benchmark_main
 
@@ -29,8 +35,5 @@ function(add_benchmark_target)
   set(target_bench_name ${ARG_BENCH_TARGET}_benchmark)
 
   add_executable(${target_bench_name} ${ARG_BENCH_SRC})
-  target_link_libraries(${target_bench_name} PRIVATE ${ARG_BENCH_TARGET}
-    benchmark::benchmark benchmark::benchmark_main)
-
-  set_property(TARGET ${target_bench_name} PROPERTY UNITY_BUILD ON)
+  target_link_libraries(${target_bench_name} PRIVATE ${ARG_BENCH_TARGET} benchmark::benchmark benchmark::benchmark_main)
 endfunction()

@@ -20,10 +20,10 @@ namespace ytlib {
 template <class T>
 class FileObj {
  public:
-  ///构造函数
+  /// 构造函数
   FileObj() : obj_ptr_(std::make_shared<T>()) {}
 
-  ///析构函数
+  /// 析构函数
   virtual ~FileObj() {}
 
   /**
@@ -170,7 +170,7 @@ class FileObj {
   virtual bool SaveFileObj() = 0;
 
  protected:
-  std::shared_ptr<T> obj_ptr_;      ///<文件内容解析后的结构体
-  std::filesystem::path filepath_;  ///<文件绝对路径
+  std::shared_ptr<T> obj_ptr_;      ///< 文件内容解析后的结构体
+  std::filesystem::path filepath_;  ///< 文件绝对路径
 };
 }  // namespace ytlib

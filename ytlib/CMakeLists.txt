@@ -1,3 +1,4 @@
+set_root_namespace("ytlib")
 
 add_subdirectory(cache)
 add_subdirectory(container)
@@ -27,6 +28,8 @@ if(YTLIB_BUILD_WITH_LIBUNIFEX AND YTLIB_BUILD_WITH_BOOST)
   add_subdirectory(execution)
 endif()
 
-if(YTLIB_BUILD_WITH_LIBUNIFEX AND YTLIB_BUILD_WITH_BOOST AND YTLIB_BUILD_WITH_PROTOBUF)
-  add_subdirectory(ytrpc)
+if(YTLIB_BUILD_WITH_LIBUNIFEX
+   AND YTLIB_BUILD_WITH_BOOST
+   AND YTLIB_BUILD_WITH_PROTOBUF)
+  # add_subdirectory(ytrpc)
 endif()

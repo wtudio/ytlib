@@ -17,9 +17,9 @@ class FilterMgr {
   using FilterHandle = std::function<unifex::task<StatusType>(const CtxType&, const ReqType&, RspType&, const RpcHandle&)>;
 
   template <typename T>
-  requires std::constructible_from<FilterHandle, T>
+    requires std::constructible_from<FilterHandle, T>
   void RegisterFilter(T&& filter) {
-    filter_list_.emplace_back((T &&) filter);
+    filter_list_.emplace_back((T&&)filter);
   }
 
   unifex::task<StatusType> InvokeRpc(const RpcHandle& rpc, const CtxType& ctx, const ReqType& req, RspType& rsp) {

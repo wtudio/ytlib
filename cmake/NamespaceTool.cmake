@@ -1,0 +1,24 @@
+macro(set_root_namespace arg1)
+  set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY AGIROS_CURRENT_NAMESPACE ${arg1})
+endmacro()
+
+macro(set_namespace)
+  string(REGEX REPLACE ".*/\(.*\)" "\\1" AGIROS_CUR_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+  get_directory_property(AGIROS_CUR_DIRECTORY_PARENT PARENT_DIRECTORY)
+  get_property(
+    AGIROS_SUPERIOR_NAMESPACE
+    DIRECTORY ${AGIROS_CUR_DIRECTORY_PARENT}
+    PROPERTY AGIROS_CURRENT_NAMESPACE)
+  set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY AGIROS_CURRENT_NAMESPACE ${AGIROS_SUPERIOR_NAMESPACE}::${AGIROS_CUR_DIR})
+endmacro()
+
+macro(get_namespace arg1)
+  get_directory_property(AGIROS_CUR_DIRECTORY_PARENT PARENT_DIRECTORY)
+  get_property(
+    ${arg1}
+    DIRECTORY ${AGIROS_CUR_DIRECTORY_PARENT}
+    PROPERTY AGIROS_CURRENT_NAMESPACE)
+  if(${arg1} STREQUAL "")
+    message(FATAL_ERROR "Can not get namespace for ${CMAKE_CURRENT_SOURCE_DIR}")
+  endif()
+endmacro()

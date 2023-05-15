@@ -9,7 +9,7 @@ namespace ytlib {
 using TestQueue = BlockQueue<uint32_t>;
 using TestChannel = Channel<uint32_t>;
 
-//测试Enqueue耗时
+// 测试Enqueue耗时
 static void BM_BlockQueue_Enqueue(benchmark::State& state) {
   uint32_t obj_num = 1000;
 
@@ -21,7 +21,7 @@ static void BM_BlockQueue_Enqueue(benchmark::State& state) {
 }
 BENCHMARK(BM_BlockQueue_Enqueue);
 
-//测试bool BlockDequeue(T &item)在单线程下耗时
+// 测试bool BlockDequeue(T &item)在单线程下耗时
 static void BM_BlockQueue_BlockDequeue(benchmark::State& state) {
   uint32_t obj_num = 1000;
 
@@ -42,7 +42,7 @@ static void BM_BlockQueue_BlockDequeue(benchmark::State& state) {
 }
 BENCHMARK(BM_BlockQueue_BlockDequeue);
 
-//测试bool BlockDequeue(std::function<void(T &&)> f)在单线程下耗时
+// 测试bool BlockDequeue(std::function<void(T &&)> f)在单线程下耗时
 static void BM_BlockQueue_BlockDequeue_f(benchmark::State& state) {
   uint32_t obj_num = 1000;
 
@@ -66,7 +66,7 @@ static void BM_BlockQueue_BlockDequeue_f(benchmark::State& state) {
 }
 BENCHMARK(BM_BlockQueue_BlockDequeue_f);
 
-//测试Channel性能
+// 测试Channel性能
 static void BM_Channel(benchmark::State& state) {
   auto ch_size = state.range(0);
 

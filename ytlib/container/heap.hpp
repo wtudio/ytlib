@@ -31,7 +31,7 @@ class Heap {
   }
   ~Heap() {}
 
-  ///使用数组初始化
+  /// 使用数组初始化
   void Assign(const T* a, size_t sz) {
     container_.clear();
     container_.reserve(sz);
@@ -39,13 +39,13 @@ class Heap {
     Adjust();
   }
 
-  ///压入
+  /// 压入
   void Push(const T& val) {
     container_.emplace_back(val);
     AdjustUp(container_.size() - 1);
   }
 
-  ///弹出堆顶
+  /// 弹出堆顶
   void Pop() {
     if (container_.empty()) [[unlikely]]
       throw std::runtime_error("Heap is empty.");
@@ -56,7 +56,7 @@ class Heap {
     AdjustDown(0);
   }
 
-  ///调整为堆
+  /// 调整为堆
   void Adjust() {
     if (container_.empty()) return;
     for (size_t ii = ((container_.size() - 2) >> 1); ii > 0; --ii) {
@@ -71,11 +71,11 @@ class Heap {
     size_t child = LeftChildIndex(parent);
     if (len == 0) len = container_.size();
     while (child < len) {
-      //选取左右子节点中大/小的
+      // 选取左右子节点中大/小的
       if (((child + 1) < len) && ((container_[child + 1] > container_[child]) ^ is_min_heap_)) {
         ++child;
       }
-      //如果子节点大/小于父节点
+      // 如果子节点大/小于父节点
       if ((container_[child] > container_[parent]) ^ is_min_heap_) {
         swap(container_[child], container_[parent]);
         parent = child;
@@ -90,7 +90,7 @@ class Heap {
     size_t& child = index;
     size_t parent = ParentIndex(child);
     while (child > 0) {
-      //如果子节点大/小于父节点
+      // 如果子节点大/小于父节点
       if ((container_[child] > container_[parent]) ^ is_min_heap_) {
         swap(container_[child], container_[parent]);
         child = parent;
@@ -100,14 +100,14 @@ class Heap {
     }
   }
 
-  ///堆排序。最小堆倒序排，最大堆正序排，排完序之后堆类型反转
+  /// 堆排序。最小堆倒序排，最大堆正序排，排完序之后堆类型反转
   void Sort() {
     using std::swap;
     for (size_t ii = container_.size() - 1; ii > 0; --ii) {
       swap(container_[0], container_[ii]);
       AdjustDown(0, ii);
     }
-    is_min_heap_ = !is_min_heap_;  //类型反转
+    is_min_heap_ = !is_min_heap_;  // 类型反转
   }
 
  private:
@@ -125,7 +125,7 @@ class Heap {
 
  public:
   bool is_min_heap_;
-  std::vector<T> container_;  //可以直接公开访问
+  std::vector<T> container_;  // 可以直接公开访问
 };
 
 }  // namespace ytlib

@@ -52,18 +52,18 @@ class CoroSched {
     CoroSched* p_coro_sched;
   };
 
-  ///等待协程下一次调用co_yield或co_return
+  /// 等待协程下一次调用co_yield或co_return
   void Wait() {
     flag_.wait(static_cast<uint8_t>(CoroState::RUN));
   }
 
-  ///等待协程下一次调用co_yield或co_return，并获取其返回的值
+  /// 等待协程下一次调用co_yield或co_return，并获取其返回的值
   const T& Get() {
     flag_.wait(static_cast<uint8_t>(CoroState::RUN));
     return ret_;
   }
 
-  ///继续运行co_yield挂起的协程
+  /// 继续运行co_yield挂起的协程
   void Resume() {
     if (flag_.load() != static_cast<uint8_t>(CoroState::END)) {
       if (std::atomic_exchange(&flag_, static_cast<uint8_t>(CoroState::RUN)) == static_cast<uint8_t>(CoroState::YIELD)) {

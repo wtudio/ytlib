@@ -27,7 +27,7 @@ class SortObj {
   explicit SortObj(uint32_t k_) : key(k_) {}
   virtual ~SortObj() {}
 
-  //关系运算符重载
+  // 关系运算符重载
   bool operator<(const SortObj& val) const { return key < val.key; }
   bool operator>(const SortObj& val) const { return key > val.key; }
   bool operator<=(const SortObj& val) const { return key <= val.key; }
@@ -188,7 +188,7 @@ size_t BinarySearch(T* arr, size_t len, const T& key) {
       high = mid;
   }
   if (arr[low] == key) return low;
-  return len;  //没找到，返回len
+  return len;  // 没找到，返回len
 }
 
 /**
@@ -212,7 +212,7 @@ size_t BinarySearchLast(T* arr, size_t len, const T& key) {
       high = mid - 1;
   }
   if (arr[high] == key) return high;
-  return len;  //没找到，返回len
+  return len;  // 没找到，返回len
 }
 
 }  // namespace ytlib

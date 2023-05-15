@@ -17,19 +17,19 @@ inline std::string TcpEp2Str(const boost::asio::ip::tcp::endpoint& ep) {
   return ss.str();
 }
 
-///检查端口是否可用。true说明可用
+/// 检查端口是否可用。true说明可用
 inline bool CheckPort(uint16_t port_) {
   boost::asio::io_context io;
   boost::asio::ip::tcp::socket sk(io);
   sk.open(boost::asio::ip::tcp::v4());
   boost::system::error_code err;
   sk.connect(boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port_), err);
-  if (err) return true;  //连接不上，说明没有程序在监听
-  sk.close();            //否则说明已经被占用了
+  if (err) return true;  // 连接不上，说明没有程序在监听
+  sk.close();            // 否则说明已经被占用了
   return false;
 }
 
-///获取一个未被占用的端口号，如果没有找到则返回0
+/// 获取一个未被占用的端口号，如果没有找到则返回0
 inline uint16_t GetUsablePort(uint16_t start = 60000, uint16_t end = 65535) {
   for (uint16_t ii = start; ii < end; ++ii) {
     if (CheckPort(ii)) return ii;
@@ -37,7 +37,7 @@ inline uint16_t GetUsablePort(uint16_t start = 60000, uint16_t end = 65535) {
   return 0;
 }
 
-///大小端转换，将ps中的数据转换到pd中。默认小端
+/// 大小端转换，将ps中的数据转换到pd中。默认小端
 inline void TransEndian(char* pd, const char* ps, uint32_t len) {
   static_assert(std::endian::native == std::endian::big || std::endian::native == std::endian::little, "unknown endian");
   if constexpr (std::endian::native == std::endian::big) {

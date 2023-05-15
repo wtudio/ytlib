@@ -29,9 +29,9 @@ class Graph {
   ~Graph() {}
   Graph(const T& _obj) : obj(_obj), visited(false) {}
 
-  T obj;                                  ///<实际节点值
-  std::map<Graph<T>*, g_sideType> sides;  ///<边以及其权重。权重默认为double
-  mutable bool visited;                   ///<用于遍历
+  T obj;                                  ///< 实际节点值
+  std::map<Graph<T>*, g_sideType> sides;  ///< 边以及其权重。权重默认为double
+  mutable bool visited;                   ///< 用于遍历
 };
 /**
  * @brief 有向图的节点插入
@@ -76,7 +76,7 @@ bool isUndirGraph(const std::vector<Graph<T>*>& vec) {
   return true;
 }
 
-///辅助函数，获取节点在vector中的下标，上层需保证节点在p在vec中
+/// 辅助函数，获取节点在vector中的下标，上层需保证节点在p在vec中
 template <typename T>
 inline size_t getPos(const Graph<T>* p, const std::vector<Graph<T>*>& vec) {
   size_t pos = find(vec.begin(), vec.end(), p) - vec.begin();
@@ -84,12 +84,12 @@ inline size_t getPos(const Graph<T>* p, const std::vector<Graph<T>*>& vec) {
   return pos;
 }
 
-///辅助函数，清除标志位
+/// 辅助函数，清除标志位
 template <typename T>
 inline void clearFlag(const std::vector<Graph<T>*>& vec) {
   for (uint32_t ii = 0; ii < vec.size(); ++ii) vec[ii]->visited = false;
 }
-///辅助函数，释放内存
+/// 辅助函数，释放内存
 template <typename T>
 inline void releaseGraphVec(std::vector<Graph<T>*>& vec) {
   for (uint32_t ii = 0; ii < vec.size(); ++ii) delete vec[ii];
@@ -147,7 +147,7 @@ std::vector<Graph<T>*> copyGraph(const std::vector<Graph<T>*>& vec) {
  */
 template <typename T>
 void DFS(Graph<T>& val, std::vector<Graph<T>*>& vec) {
-  vec.push_back(&val);  //由上层保证此节点没有遍历过
+  vec.push_back(&val);  // 由上层保证此节点没有遍历过
   val.visited = true;
   for (auto itr = val.sides.begin(); itr != val.sides.end(); ++itr) {
     if (!(itr->first->visited)) DFS(*itr->first, vec);
@@ -164,7 +164,7 @@ void DFS(Graph<T>& val, std::vector<Graph<T>*>& vec) {
 template <typename T>
 void BFS(Graph<T>& val, std::vector<Graph<T>*>& vec) {
   if (!val.visited) {
-    //初始节点
+    // 初始节点
     vec.push_back(&val);
     val.visited = true;
   }
@@ -294,7 +294,7 @@ inline std::vector<int32_t> floydPath(int32_t srcIdx, int32_t dstIdx, const Matr
   return re;
 }
 
-//最大流。边权值作为流量值
+// 最大流。边权值作为流量值
 template <typename T>
 g_sideType maxFlow(Graph<T>& beginNode, Graph<T>& endNode) {
   g_sideType re = 0;

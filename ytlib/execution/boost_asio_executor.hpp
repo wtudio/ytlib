@@ -7,12 +7,12 @@
 namespace ytlib {
 
 template <typename Receiver, typename AsioExecutorType>
-requires unifex::receiver<Receiver>
+  requires unifex::receiver<Receiver>
 struct AsioOperationState {
   template <typename Receiver2>
-  requires std::constructible_from<Receiver, Receiver2>
+    requires std::constructible_from<Receiver, Receiver2>
   explicit AsioOperationState(AsioExecutorType* asio_executor_ptr, Receiver2&& r) noexcept(std::is_nothrow_constructible_v<Receiver, Receiver2>)
-      : asio_executor_ptr_(asio_executor_ptr), receiver_((Receiver2 &&) r) {}
+      : asio_executor_ptr_(asio_executor_ptr), receiver_((Receiver2&&)r) {}
 
   void start() noexcept {
     try {
@@ -51,19 +51,19 @@ struct AsioTask {
 
   template <typename Receiver>
   AsioOperationState<unifex::remove_cvref_t<Receiver>, AsioExecutorType> connect(Receiver&& receiver) {
-    return AsioOperationState<unifex::remove_cvref_t<Receiver>, AsioExecutorType>(asio_executor_ptr_, (Receiver &&) receiver);
+    return AsioOperationState<unifex::remove_cvref_t<Receiver>, AsioExecutorType>(asio_executor_ptr_, (Receiver&&)receiver);
   }
 
   AsioExecutorType* asio_executor_ptr_;
 };
 
 template <typename Receiver, typename AsioExecutorType>
-requires unifex::receiver<Receiver>
+  requires unifex::receiver<Receiver>
 struct AsioSchedulerAfterOperationState {
   template <typename Receiver2>
-  requires std::constructible_from<Receiver, Receiver2>
+    requires std::constructible_from<Receiver, Receiver2>
   explicit AsioSchedulerAfterOperationState(AsioExecutorType* asio_executor_ptr, const std::chrono::steady_clock::duration& dt, Receiver2&& r) noexcept(std::is_nothrow_constructible_v<Receiver, Receiver2>)
-      : asio_executor_ptr_(asio_executor_ptr), dt_(dt), receiver_((Receiver2 &&) r) {}
+      : asio_executor_ptr_(asio_executor_ptr), dt_(dt), receiver_((Receiver2&&)r) {}
 
   void start() noexcept {
     try {
@@ -110,7 +110,7 @@ struct AsioSchedulerAfterTask {
 
   template <typename Receiver>
   AsioSchedulerAfterOperationState<unifex::remove_cvref_t<Receiver>, AsioExecutorType> connect(Receiver&& receiver) {
-    return AsioSchedulerAfterOperationState<unifex::remove_cvref_t<Receiver>, AsioExecutorType>(asio_executor_ptr_, dt_, (Receiver &&) receiver);
+    return AsioSchedulerAfterOperationState<unifex::remove_cvref_t<Receiver>, AsioExecutorType>(asio_executor_ptr_, dt_, (Receiver&&)receiver);
   }
 
   AsioExecutorType* asio_executor_ptr_;
@@ -118,12 +118,12 @@ struct AsioSchedulerAfterTask {
 };
 
 template <typename Receiver, typename AsioExecutorType>
-requires unifex::receiver<Receiver>
+  requires unifex::receiver<Receiver>
 struct AsioSchedulerAtOperationState {
   template <typename Receiver2>
-  requires std::constructible_from<Receiver, Receiver2>
+    requires std::constructible_from<Receiver, Receiver2>
   explicit AsioSchedulerAtOperationState(AsioExecutorType* asio_executor_ptr, const std::chrono::steady_clock::time_point& tp, Receiver2&& r) noexcept(std::is_nothrow_constructible_v<Receiver, Receiver2>)
-      : asio_executor_ptr_(asio_executor_ptr), tp_(tp), receiver_((Receiver2 &&) r) {}
+      : asio_executor_ptr_(asio_executor_ptr), tp_(tp), receiver_((Receiver2&&)r) {}
 
   void start() noexcept {
     try {
@@ -170,7 +170,7 @@ struct AsioSchedulerAtTask {
 
   template <typename Receiver>
   AsioSchedulerAtOperationState<unifex::remove_cvref_t<Receiver>, AsioExecutorType> connect(Receiver&& receiver) {
-    return AsioSchedulerAtOperationState<unifex::remove_cvref_t<Receiver>, AsioExecutorType>(asio_executor_ptr_, tp_, (Receiver &&) receiver);
+    return AsioSchedulerAtOperationState<unifex::remove_cvref_t<Receiver>, AsioExecutorType>(asio_executor_ptr_, tp_, (Receiver&&)receiver);
   }
 
   AsioExecutorType* asio_executor_ptr_;

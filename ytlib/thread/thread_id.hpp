@@ -11,7 +11,7 @@
 
 namespace ytlib {
 
-///获取线程id工具
+/// 获取线程id工具
 class ThreadIdTool {
  public:
   static ThreadIdTool& Ins() {

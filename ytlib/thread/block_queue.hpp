@@ -23,29 +23,29 @@ class BlockQueue {
   BlockQueue(size_t n = ULONG_MAX) : maxcount_(n) {}
   virtual ~BlockQueue() { Stop(); }
 
-  ///获取最大容量
+  /// 获取最大容量
   size_t GetMaxCount() const { return maxcount_; }
 
-  ///获取当前容量
+  /// 获取当前容量
   size_t Count() const {
     std::lock_guard<std::mutex> lck(mutex_);
     return queue_.size();
   }
 
-  ///清除所有元素
+  /// 清除所有元素
   void Clear() {
     std::lock_guard<std::mutex> lck(mutex_);
     while (!queue_.empty())
       queue_.pop();
   }
-  ///停止队列
+  /// 停止队列
   void Stop() {
     std::unique_lock<std::mutex> lck(mutex_);
     running_flag_ = false;
     cond_.notify_all();
   }
 
-  ///添加元素
+  /// 添加元素
   bool Enqueue(const T &item) {
     std::lock_guard<std::mutex> lck(mutex_);
     if (queue_.size() < maxcount_) {
@@ -56,7 +56,7 @@ class BlockQueue {
     return false;
   }
 
-  ///添加元素
+  /// 添加元素
   bool Enqueue(T &&item) {
     std::lock_guard<std::mutex> lck(mutex_);
     if (queue_.size() < maxcount_) {
@@ -67,7 +67,7 @@ class BlockQueue {
     return false;
   }
 
-  ///非阻塞式取出元素
+  /// 非阻塞式取出元素
   bool Dequeue(T &item) {
     std::lock_guard<std::mutex> lck(mutex_);
     if (!queue_.empty()) {
@@ -78,7 +78,7 @@ class BlockQueue {
     return false;
   }
 
-  ///阻塞式取出元素
+  /// 阻塞式取出元素
   bool BlockDequeue(T &item) {
     std::unique_lock<std::mutex> lck(mutex_);
     if (queue_.empty()) {
@@ -92,7 +92,7 @@ class BlockQueue {
     return true;
   }
 
-  ///阻塞式取出元素
+  /// 阻塞式取出元素
   bool BlockDequeue(const std::function<void(T &&)> &f) {
     std::unique_lock<std::mutex> lck(mutex_);
     if (queue_.empty()) {
@@ -109,11 +109,11 @@ class BlockQueue {
   }
 
  protected:
-  const size_t maxcount_;  ///<队列可支持最大个数
+  const size_t maxcount_;  ///< 队列可支持最大个数
 
-  mutable std::mutex mutex_;      ///<同步锁
-  std::condition_variable cond_;  ///<条件锁
-  std::queue<T> queue_;           ///<队列
-  bool running_flag_ = true;      ///<运行标志，为false时，当队列为空阻塞式取出将失败
+  mutable std::mutex mutex_;      ///< 同步锁
+  std::condition_variable cond_;  ///< 条件锁
+  std::queue<T> queue_;           ///< 队列
+  bool running_flag_ = true;      ///< 运行标志，为false时，当队列为空阻塞式取出将失败
 };
 }  // namespace ytlib

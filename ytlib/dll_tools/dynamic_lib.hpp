@@ -41,10 +41,10 @@ class DynamicLib {
 
   operator bool() { return (NULL != hnd_); }
 
-  ///获取动态链接库名称
+  /// 获取动态链接库名称
   const std::string& GetLibName() const { return libname_; }
 
-  ///根据名称加载动态链接库
+  /// 根据名称加载动态链接库
   bool Load(const std::string& libname) {
     Free();
 
@@ -69,7 +69,7 @@ class DynamicLib {
     return (NULL != hnd_);
   }
 
-  ///释放动态链接库
+  /// 释放动态链接库
   bool Free() {
     if (NULL == hnd_) return true;
 

@@ -230,9 +230,9 @@ class BigNum {
     size_t len1 = num1_ptr->content_.size(), len2 = num2_ptr->content_.size();
     BigNum re(0, base_);
     if (symbol_ ^ real_val.symbol_) {
-      //异符号相加，用绝对值大的减小的，符号与大的相同。默认num1的绝对值大于等于num2绝对值
+      // 异符号相加，用绝对值大的减小的，符号与大的相同。默认num1的绝对值大于等于num2绝对值
       if (len1 == len2) {
-        //从高位开始判断
+        // 从高位开始判断
         for (size_t ii = len1 - 1; ii < len1; --ii) {
           if (num1_ptr->content_[ii] > num2_ptr->content_[ii])
             break;
@@ -248,9 +248,9 @@ class BigNum {
       }
       re.symbol_ = num1_ptr->symbol_;
       re.content_.resize(len1);
-      uint32_t flag = 0;  //借位标志
+      uint32_t flag = 0;  // 借位标志
       for (size_t ii = 0; ii < len2; ++ii) {
-        //需要借位的情况
+        // 需要借位的情况
         if (flag && num1_ptr->content_[ii] == 0) {
           re.content_[ii] = base_ - 1 - num2_ptr->content_[ii];
           flag = 1;
@@ -272,14 +272,14 @@ class BigNum {
         }
       }
     } else {
-      //同符号相加，被加数num1的位数大于等于num2的。实际大小不要求num1>=num2
+      // 同符号相加，被加数num1的位数大于等于num2的。实际大小不要求num1>=num2
       if (len1 < len2) {
         std::swap(len1, len2);
         std::swap(num1_ptr, num2_ptr);
       }
       re.symbol_ = symbol_;
       re.content_.resize(len1 + 1);
-      //从低位开始加
+      // 从低位开始加
       for (size_t ii = 0; ii < len2; ++ii) {
         re.content_[ii] += (num1_ptr->content_[ii] + num2_ptr->content_[ii]);
         if (re.content_[ii] >= base_ || re.content_[ii] < num1_ptr->content_[ii]) {
@@ -295,7 +295,7 @@ class BigNum {
         }
       }
     }
-    //去除最后端的0
+    // 去除最后端的0
     while (re.content_.size() > 1 && re.content_.back() == 0) re.content_.pop_back();
     return re;
   }
@@ -483,7 +483,7 @@ class BigNum {
    * @return std::ostream&
    */
   friend std::ostream& operator<<(std::ostream& out, const BigNum& val) {
-    //符号位
+    // 符号位
     if (!val.symbol_ && !val.Empty()) out << '-';
 
     const BigNum* real_val_ptr = &val;
@@ -532,7 +532,7 @@ class BigNum {
     if (val_l.content_.size() != real_val_r.content_.size())
       return ((val_l.symbol_ ^ (val_l.content_.size() > real_val_r.content_.size())) ? -1 : 1);
 
-    //从高位开始判断
+    // 从高位开始判断
     const size_t& len = val_l.content_.size();
     for (size_t ii = len - 1; ii < len; --ii) {
       if (val_l.content_[ii] == real_val_r.content_[ii]) continue;
@@ -566,9 +566,9 @@ class BigNum {
   }
 
  private:
-  bool symbol_ = true;             ///<正负
-  std::vector<uint32_t> content_;  ///<采用大端存储，越高位在越后面，方便增加位数
-  uint32_t base_ = UINT32_MAX;     ///<进制，不能小于2
+  bool symbol_ = true;             ///< 正负
+  std::vector<uint32_t> content_;  ///< 采用大端存储，越高位在越后面，方便增加位数
+  uint32_t base_ = UINT32_MAX;     ///< 进制，不能小于2
 };
 
 inline BigNum abs(const BigNum& value) { return BigNum::Abs(value); }

@@ -6,5 +6,5 @@ debug/
 release/
 gen/
 
-doc/html
-doc/doxygen.log
+document/html
+document/doxygen.log

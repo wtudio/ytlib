@@ -20,10 +20,10 @@ namespace ytlib {
  */
 class KeyValueFile : public FileObj<std::map<std::string, std::string> > {
  public:
-  ///构造函数
+  /// 构造函数
   KeyValueFile() : FileObj() {}
 
-  ///析构函数
+  /// 析构函数
   virtual ~KeyValueFile() {}
 
  protected:
