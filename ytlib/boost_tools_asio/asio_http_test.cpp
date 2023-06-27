@@ -270,8 +270,8 @@ TEST(BOOST_TOOLS_ASIO_TEST, HTTP_client_handle) {
       req.set(http::field::host, "127.0.0.1");
       req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
       req.body() = msg;
-      req.prepare_payload();
       req.keep_alive(false);
+      req.prepare_payload();
 
       DBG_PRINT("%s", PrintCtr::Ins().PrintStruct("req", req).c_str());
 
@@ -327,7 +327,7 @@ TEST(BOOST_TOOLS_ASIO_TEST, HTTP_client_handle) {
 
     co_return AsioHttpServer::Status::OK;
   };
-  http_svr_ptr->RegisterHttpHandleFunc<http::string_body>("/test/.*", HttpHandle);
+  http_svr_ptr->RegisterHttpHandleFunc<http::string_body>("/test/.*", std::move(HttpHandle));
 
   std::thread t_svr([svr_sys_ptr] {
     DBG_PRINT("svr_sys_ptr start");

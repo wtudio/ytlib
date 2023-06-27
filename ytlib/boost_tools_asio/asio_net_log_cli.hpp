@@ -71,7 +71,8 @@ class AsioNetLogClient : public std::enable_shared_from_this<AsioNetLogClient> {
     if (!run_flag_) [[unlikely]]
       return;
 
-    std::shared_ptr<AsioNetLogClient::Session> cur_session_ptr = session_ptr_;
+    std::shared_ptr<AsioNetLogClient::Session> cur_session_ptr;
+    std::atomic_store(&cur_session_ptr, session_ptr_);
     if (cur_session_ptr && cur_session_ptr->IsRunning()) {
       cur_session_ptr->LogToSvr(log_buf_ptr);
       return;
@@ -87,11 +88,15 @@ class AsioNetLogClient : public std::enable_shared_from_this<AsioNetLogClient> {
           if (!run_flag_) [[unlikely]]
             return;
 
-          if (!session_ptr_ || !session_ptr_->IsRunning()) {
-            session_ptr_ = std::make_shared<AsioNetLogClient::Session>(io_ptr_, session_cfg_ptr_);
-            session_ptr_->Start();
+          std::shared_ptr<AsioNetLogClient::Session> cur_session_ptr;
+          std::atomic_store(&cur_session_ptr, session_ptr_);
+
+          if (!cur_session_ptr || !cur_session_ptr->IsRunning()) {
+            cur_session_ptr = std::make_shared<AsioNetLogClient::Session>(io_ptr_, session_cfg_ptr_);
+            cur_session_ptr->Start();
+            std::atomic_store(&session_ptr_, cur_session_ptr);
           }
-          session_ptr_->LogToSvr(log_buf_ptr);
+          cur_session_ptr->LogToSvr(log_buf_ptr);
         });
   }
 
@@ -107,12 +112,23 @@ class AsioNetLogClient : public std::enable_shared_from_this<AsioNetLogClient> {
         mgr_strand_,
         [this, self]() {
           ASIO_DEBUG_HANDLE(net_log_cli_stop_co);
-          if (session_ptr_) {
-            session_ptr_->Stop();
-            session_ptr_.reset();
+
+          std::shared_ptr<AsioNetLogClient::Session> cur_session_ptr;
+          std::atomic_store(&cur_session_ptr, session_ptr_);
+
+          if (cur_session_ptr) {
+            cur_session_ptr->Stop();
+            cur_session_ptr.reset();
           }
         });
   }
+
+  /**
+   * @brief 是否在运行
+   *
+   * @return const std::atomic_bool&
+   */
+  const std::atomic_bool& IsRunning() { return run_flag_; }
 
   /**
    * @brief 获取配置

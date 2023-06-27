@@ -84,7 +84,8 @@ class UnifexRpcClient : public std::enable_shared_from_this<UnifexRpcClient> {
 
           msg_ctx.req_buf_vec.CommitLastBuf(os.LastBufSize());
 
-          std::shared_ptr<UnifexRpcClient::Session> cur_session_ptr = session_ptr_;
+          std::shared_ptr<UnifexRpcClient::Session> cur_session_ptr;
+          std::atomic_store(&cur_session_ptr, session_ptr_);
           while (!cur_session_ptr || !cur_session_ptr->IsRunning()) {
             if (!run_flag_) [[unlikely]] {
               co_return UnifexRpcStatus(UnifexRpcStatus::Code::CLI_IS_NOT_RUNNING);
@@ -92,14 +93,17 @@ class UnifexRpcClient : public std::enable_shared_from_this<UnifexRpcClient> {
 
             co_await mgr_mutex_.async_lock();
             if (run_flag_) {
-              if (!session_ptr_ || !session_ptr_->IsRunning()) {
-                session_ptr_ = std::make_shared<UnifexRpcClient::Session>(io_ptr_, session_cfg_ptr_);
-                session_ptr_->Start();
+              std::shared_ptr<UnifexRpcClient::Session> tmp_session_ptr;
+              std::atomic_store(&tmp_session_ptr, session_ptr_);
+              if (!tmp_session_ptr || !tmp_session_ptr->IsRunning()) {
+                tmp_session_ptr = std::make_shared<UnifexRpcClient::Session>(io_ptr_, session_cfg_ptr_);
+                tmp_session_ptr->Start();
+                std::atomic_store(&session_ptr_, tmp_session_ptr);
               }
             }
             mgr_mutex_.unlock();
 
-            cur_session_ptr = session_ptr_;
+            std::atomic_store(&cur_session_ptr, session_ptr_);
           }
 
           co_await cur_session_ptr->Invoke(msg_ctx);
@@ -123,9 +127,13 @@ class UnifexRpcClient : public std::enable_shared_from_this<UnifexRpcClient> {
     auto self = shared_from_this();
     StartDetached(unifex::co_invoke([this, self]() -> unifex::task<void> {
       co_await mgr_mutex_.async_lock();
-      if (session_ptr_) {
-        session_ptr_->Stop();
-        session_ptr_.reset();
+
+      std::shared_ptr<AsioRpcClient::Session> cur_session_ptr;
+      std::atomic_store(&cur_session_ptr, session_ptr_);
+
+      if (cur_session_ptr) {
+        cur_session_ptr->Stop();
+        cur_session_ptr.reset();
       }
       mgr_mutex_.unlock();
     }));
@@ -134,10 +142,10 @@ class UnifexRpcClient : public std::enable_shared_from_this<UnifexRpcClient> {
   const UnifexRpcClient::Cfg& GetCfg() const { return cfg_; }
 
  private:
-  // 包头结构：| 2byte magicnum | 2byte headlen | 4byte msglen |
-  static const uint32_t HEAD_SIZE = 8;
-  static const char HEAD_BYTE_1 = 'Y';
-  static const char HEAD_BYTE_2 = 'T';
+  // 包头结构：| 2byte magic num | 2byte head len | 4byte msg len |
+  static constexpr uint32_t HEAD_SIZE = 8;
+  static constexpr char HEAD_BYTE_1 = 'Y';
+  static constexpr char HEAD_BYTE_2 = 'T';
 
   uint32_t GetNewReqID() { return ++req_id_; }
 

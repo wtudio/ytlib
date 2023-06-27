@@ -250,10 +250,10 @@ class AsioRpcServer : public std::enable_shared_from_this<AsioRpcServer> {
   const AsioRpcServer::Cfg& GetCfg() const { return cfg_; }
 
  private:
-  // 包头结构：| 2byte magicnum | 2byte headlen | 4byte msglen |
-  static const uint32_t HEAD_SIZE = 8;
-  static const char HEAD_BYTE_1 = 'Y';
-  static const char HEAD_BYTE_2 = 'T';
+  // 包头结构：| 2byte magic num | 2byte head len | 4byte msg len |
+  static constexpr uint32_t HEAD_SIZE = 8;
+  static constexpr char HEAD_BYTE_1 = 'Y';
+  static constexpr char HEAD_BYTE_2 = 'T';
 
   struct SessionCfg {
     SessionCfg(const Cfg& cfg)

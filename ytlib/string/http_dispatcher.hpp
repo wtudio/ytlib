@@ -29,12 +29,10 @@ class HttpDispatcher {
   HttpDispatcher() {}
   ~HttpDispatcher() {}
 
-  void RegisterHttpHandle(std::string_view pattern, HttpHandle&& handle) {
-    http_handle_list_.emplace_back(std::regex(std::string(pattern), std::regex::ECMAScript | std::regex::icase), std::move(handle));
-  }
-
-  void RegisterHttpHandle(std::string_view pattern, const HttpHandle& handle) {
-    http_handle_list_.emplace_back(std::regex(std::string(pattern), std::regex::ECMAScript | std::regex::icase), handle);
+  template <typename... Args>
+    requires std::constructible_from<HttpHandle, Args...>
+  void RegisterHttpHandle(std::string_view pattern, Args&&... args) {
+    http_handle_list_.emplace_back(std::regex(std::string(pattern), std::regex::ECMAScript | std::regex::icase), std::forward<Args>(args)...);
   }
 
   const HttpHandle& GetHttpHandle(std::string_view path) const {

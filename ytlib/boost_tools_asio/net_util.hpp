@@ -17,6 +17,12 @@ inline std::string TcpEp2Str(const boost::asio::ip::tcp::endpoint& ep) {
   return ss.str();
 }
 
+inline std::string UdpEp2Str(const boost::asio::ip::udp::endpoint& ep) {
+  std::stringstream ss;
+  ss << ep;
+  return ss.str();
+}
+
 /// 检查端口是否可用。true说明可用
 inline bool CheckPort(uint16_t port_) {
   boost::asio::io_context io;

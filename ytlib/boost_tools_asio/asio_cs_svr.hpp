@@ -95,12 +95,10 @@ class AsioCsServer : public std::enable_shared_from_this<AsioCsServer> {
         });
   }
 
-  void RegisterMsgHandleFunc(MsgHandleFunc&& handle) {
-    msg_handle_ptr_ = std::make_shared<MsgHandleFunc>(std::move(handle));
-  }
-
-  void RegisterMsgHandleFunc(const MsgHandleFunc& handle) {
-    msg_handle_ptr_ = std::make_shared<MsgHandleFunc>(handle);
+  template <typename... Args>
+    requires std::constructible_from<MsgHandleFunc, Args...>
+  void RegisterMsgHandleFunc(Args&&... args) {
+    msg_handle_ptr_ = std::make_shared<MsgHandleFunc>(std::forward<Args>(args)...);
   }
 
   /**
@@ -227,10 +225,10 @@ class AsioCsServer : public std::enable_shared_from_this<AsioCsServer> {
   const AsioCsServer::Cfg& GetCfg() const { return cfg_; }
 
  private:
-  // 包头结构：| 2byte magicnum | 4byte msglen |
-  static const size_t HEAD_SIZE = 6;
-  static const char HEAD_BYTE_1 = 'Y';
-  static const char HEAD_BYTE_2 = 'T';
+  // 包头结构：| 2byte magic num | 4byte msg len |
+  static constexpr size_t HEAD_SIZE = 6;
+  static constexpr char HEAD_BYTE_1 = 'Y';
+  static constexpr char HEAD_BYTE_2 = 'T';
 
   struct SessionCfg {
     SessionCfg(const Cfg& cfg)

@@ -74,7 +74,8 @@ class AsioCsClient : public std::enable_shared_from_this<AsioCsClient> {
     if (!run_flag_) [[unlikely]]
       return;
 
-    std::shared_ptr<AsioCsClient::Session> cur_session_ptr = session_ptr_;
+    std::shared_ptr<AsioCsClient::Session> cur_session_ptr;
+    std::atomic_store(&cur_session_ptr, session_ptr_);
     if (cur_session_ptr && cur_session_ptr->IsRunning()) {
       cur_session_ptr->SendMsg(msg_buf_ptr);
       return;
@@ -90,21 +91,23 @@ class AsioCsClient : public std::enable_shared_from_this<AsioCsClient> {
           if (!run_flag_) [[unlikely]]
             return;
 
-          if (!session_ptr_ || !session_ptr_->IsRunning()) {
-            session_ptr_ = std::make_shared<AsioCsClient::Session>(io_ptr_, session_cfg_ptr_, msg_handle_ptr_);
-            session_ptr_->Start();
+          std::shared_ptr<AsioCsClient::Session> cur_session_ptr;
+          std::atomic_store(&cur_session_ptr, session_ptr_);
+
+          if (!cur_session_ptr || !cur_session_ptr->IsRunning()) {
+            cur_session_ptr = std::make_shared<AsioCsClient::Session>(io_ptr_, session_cfg_ptr_, msg_handle_ptr_);
+            cur_session_ptr->Start();
+            std::atomic_store(&session_ptr_, cur_session_ptr);
           }
 
-          session_ptr_->SendMsg(msg_buf_ptr);
+          cur_session_ptr->SendMsg(msg_buf_ptr);
         });
   }
 
-  void RegisterMsgHandleFunc(MsgHandleFunc&& handle) {
-    msg_handle_ptr_ = std::make_shared<MsgHandleFunc>(std::move(handle));
-  }
-
-  void RegisterMsgHandleFunc(const MsgHandleFunc& handle) {
-    msg_handle_ptr_ = std::make_shared<MsgHandleFunc>(handle);
+  template <typename... Args>
+    requires std::constructible_from<MsgHandleFunc, Args...>
+  void RegisterMsgHandleFunc(Args&&... args) {
+    msg_handle_ptr_ = std::make_shared<MsgHandleFunc>(std::forward<Args>(args)...);
   }
 
   /**
@@ -119,12 +122,23 @@ class AsioCsClient : public std::enable_shared_from_this<AsioCsClient> {
         mgr_strand_,
         [this, self]() {
           ASIO_DEBUG_HANDLE(cs_cli_stop_co);
-          if (session_ptr_) {
-            session_ptr_->Stop();
-            session_ptr_.reset();
+
+          std::shared_ptr<AsioCsClient::Session> cur_session_ptr;
+          std::atomic_store(&cur_session_ptr, session_ptr_);
+
+          if (cur_session_ptr) {
+            cur_session_ptr->Stop();
+            cur_session_ptr.reset();
           }
         });
   }
+
+  /**
+   * @brief 是否在运行
+   *
+   * @return const std::atomic_bool&
+   */
+  const std::atomic_bool& IsRunning() { return run_flag_; }
 
   /**
    * @brief 获取配置
@@ -134,10 +148,10 @@ class AsioCsClient : public std::enable_shared_from_this<AsioCsClient> {
   const AsioCsClient::Cfg& GetCfg() const { return cfg_; }
 
  private:
-  // 包头结构：| 2byte magicnum | 4byte msglen |
-  static const size_t HEAD_SIZE = 6;
-  static const char HEAD_BYTE_1 = 'Y';
-  static const char HEAD_BYTE_2 = 'T';
+  // 包头结构：| 2byte magic num | 4byte msg len |
+  static constexpr size_t HEAD_SIZE = 6;
+  static constexpr char HEAD_BYTE_1 = 'Y';
+  static constexpr char HEAD_BYTE_2 = 'T';
 
   struct SessionCfg {
     SessionCfg(const Cfg& cfg)
@@ -200,7 +214,7 @@ class AsioCsClient : public std::enable_shared_from_this<AsioCsClient> {
                     try {
                       while (run_flag_) {
                         while (!data_list.empty()) {
-                          std::list<std::shared_ptr<boost::asio::streambuf> > tmp_data_list;
+                          std::list<std::shared_ptr<boost::asio::streambuf>> tmp_data_list;
                           tmp_data_list.swap(data_list);
 
                           std::vector<char> head_buf(tmp_data_list.size() * HEAD_SIZE);
@@ -348,7 +362,7 @@ class AsioCsClient : public std::enable_shared_from_this<AsioCsClient> {
     boost::asio::strand<boost::asio::io_context::executor_type> session_socket_strand_;
     boost::asio::ip::tcp::socket sock_;
     boost::asio::steady_timer send_sig_timer_;
-    std::list<std::shared_ptr<boost::asio::streambuf> > data_list;
+    std::list<std::shared_ptr<boost::asio::streambuf>> data_list;
 
     std::shared_ptr<boost::asio::io_context> io_ptr_;
     std::shared_ptr<MsgHandleFunc> msg_handle_ptr_;
@@ -364,6 +378,115 @@ class AsioCsClient : public std::enable_shared_from_this<AsioCsClient> {
   std::shared_ptr<AsioCsClient::Session> session_ptr_;
 
   std::shared_ptr<MsgHandleFunc> msg_handle_ptr_;
+};
+
+class AsioCsClientPool : public std::enable_shared_from_this<AsioCsClientPool> {
+ public:
+  /**
+   * @brief 配置
+   *
+   */
+  struct Cfg {
+    size_t max_client_num = 1000;  // 最大client数
+
+    /// 校验配置
+    static Cfg Verify(const Cfg& verify_cfg) {
+      Cfg cfg(verify_cfg);
+
+      if (cfg.max_client_num < 10) cfg.max_client_num = 10;
+
+      return cfg;
+    }
+  };
+
+  /**
+   * @brief net client pool构造函数
+   *
+   * @param io_ptr io_context
+   * @param cfg 配置
+   */
+  AsioCsClientPool(const std::shared_ptr<boost::asio::io_context>& io_ptr, const AsioCsClientPool::Cfg& cfg)
+      : cfg_(AsioCsClientPool::Cfg::Verify(cfg)),
+        io_ptr_(io_ptr),
+        mgr_strand_(boost::asio::make_strand(*io_ptr_)) {}
+
+  ~AsioCsClientPool() {}
+
+  AsioCsClientPool(const AsioCsClientPool&) = delete;             ///< no copy
+  AsioCsClientPool& operator=(const AsioCsClientPool&) = delete;  ///< no copy
+
+  /**
+   * @brief 获取net client
+   * @note 如果net client目的地址相同，则会复用已有的net client
+   * @param cfg net client的配置
+   * @return asio::awaitable<std::shared_ptr<AsioCsClient> > net client
+   */
+  boost::asio::awaitable<std::shared_ptr<AsioCsClient>> GetClient(const AsioCsClient::Cfg& cfg) {
+    return boost::asio::co_spawn(
+        mgr_strand_,
+        [this, &cfg]() -> boost::asio::awaitable<std::shared_ptr<AsioCsClient>> {
+          if (!run_flag_) [[unlikely]]
+            throw std::runtime_error("Net client is closed.");
+
+          const size_t client_hash = std::hash<boost::asio::ip::tcp::endpoint>{}(cfg.svr_ep);
+
+          auto itr = client_map_.find(client_hash);
+          if (itr != client_map_.end()) {
+            if (itr->second->IsRunning()) co_return itr->second;
+            client_map_.erase(itr);
+          }
+
+          if (client_map_.size() >= cfg_.max_client_num) [[unlikely]] {
+            for (auto itr = client_map_.begin(); itr != client_map_.end();) {
+              if (itr->second->IsRunning())
+                ++itr;
+              else
+                client_map_.erase(itr++);
+            }
+
+            if (client_map_.size() >= cfg_.max_client_num) [[unlikely]]
+              throw std::runtime_error("Net client num reach the upper limit.");
+          }
+
+          std::shared_ptr<AsioCsClient> client_ptr = std::make_shared<AsioCsClient>(io_ptr_, cfg);
+          client_map_.emplace(client_hash, client_ptr);
+          co_return client_ptr;
+        },
+        boost::asio::use_awaitable);
+  }
+
+  /**
+   * @brief 停止
+   *
+   */
+  void Stop() {
+    if (!std::atomic_exchange(&run_flag_, false)) return;
+
+    auto self = shared_from_this();
+    boost::asio::dispatch(
+        mgr_strand_,
+        [this, self]() {
+          for (auto& itr : client_map_)
+            itr.second->Stop();
+
+          client_map_.clear();
+        });
+  }
+
+  /**
+   * @brief 是否在运行
+   *
+   * @return const std::atomic_bool&
+   */
+  const std::atomic_bool& IsRunning() { return run_flag_; }
+
+ private:
+  const AsioCsClientPool::Cfg cfg_;
+  std::atomic_bool run_flag_ = true;
+  std::shared_ptr<boost::asio::io_context> io_ptr_;
+
+  boost::asio::strand<boost::asio::io_context::executor_type> mgr_strand_;
+  std::map<size_t, std::shared_ptr<AsioCsClient>> client_map_;
 };
 
 }  // namespace ytlib

@@ -225,19 +225,6 @@ class AsioHttpServer : public std::enable_shared_from_this<AsioHttpServer> {
   }
 
   /**
-   * @brief 注册自定义http处理接口
-   *
-   * @tparam RspBodyType 返回包body类型
-   * @param pattern http uri
-   * @param handle http处理接口
-   */
-  template <typename RspBodyType = boost::beast::http::string_body>
-  void RegisterHttpHandleFunc(std::string_view pattern, const HttpHandle<RspBodyType>& handle) {
-    auto h = handle;
-    http_dispatcher_ptr_->RegisterHttpHandle(pattern, Session::GenHttpHandle(std::move(h)));
-  }
-
-  /**
    * @brief 获取配置
    *
    * @return const AsioHttpServer::Cfg&
