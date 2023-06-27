@@ -90,7 +90,7 @@ class AsioExecutor {
     if (std::atomic_exchange(&start_flag_, true)) return;
 
     for (size_t ii = 0; ii < start_func_vec_.size(); ++ii) {
-      start_func_vec_[ii]();
+      if (start_func_vec_[ii]) start_func_vec_[ii]();
     }
     start_func_vec_.clear();
 
@@ -135,7 +135,7 @@ class AsioExecutor {
 
     // 并不需要调用io_.stop()。当io_上所有任务都运行完毕后，会自动停止
     for (size_t ii = stop_func_vec_.size() - 1; ii < stop_func_vec_.size(); --ii) {
-      stop_func_vec_[ii]();
+      if (stop_func_vec_[ii]) stop_func_vec_[ii]();
     }
     stop_func_vec_.clear();
 

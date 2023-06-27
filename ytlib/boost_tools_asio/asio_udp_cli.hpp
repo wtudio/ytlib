@@ -26,10 +26,13 @@ class AsioUdpClient : public std::enable_shared_from_this<AsioUdpClient> {
   struct Cfg {
     boost::asio::ip::udp::endpoint svr_ep;                                                // 服务端地址
     std::chrono::steady_clock::duration max_no_data_duration = std::chrono::seconds(60);  // 最长无数据时间
+    size_t max_package_size = 1024;                                                       // 每包最大长度。不可大于65507
 
     /// 校验配置
     static Cfg Verify(const Cfg& verify_cfg) {
       Cfg cfg(verify_cfg);
+
+      if (cfg.max_package_size > 65507) cfg.max_package_size = 65507;
 
       return cfg;
     }
@@ -54,6 +57,9 @@ class AsioUdpClient : public std::enable_shared_from_this<AsioUdpClient> {
   void SendMsg(const std::shared_ptr<boost::asio::streambuf>& msg_buf_ptr) {
     if (!run_flag_) [[unlikely]]
       return;
+
+    if (msg_buf_ptr->size() > cfg_.max_package_size) [[unlikely]]
+      throw std::runtime_error("Msg too large for udp package.");
 
     std::shared_ptr<AsioUdpClient::Session> cur_session_ptr;
     std::atomic_store(&cur_session_ptr, session_ptr_);
@@ -151,7 +157,7 @@ class AsioUdpClient : public std::enable_shared_from_this<AsioUdpClient> {
 
     void SendMsg(const std::shared_ptr<boost::asio::streambuf>& msg_buf_ptr) {
       auto self = shared_from_this();
-      boost::asio::dispatch(
+      boost::asio::co_spawn(
           session_socket_strand_,
           [this, self, msg_buf_ptr]() -> boost::asio::awaitable<void> {
             ASIO_DEBUG_HANDLE(udp_cli_session_send_msg_co);
@@ -161,10 +167,14 @@ class AsioUdpClient : public std::enable_shared_from_this<AsioUdpClient> {
               if (send_data_size != data_size) {
                 DBG_PRINT("warning: udp send msg incomplete, expected send data size %llu, actual send data size %llu", data_size, send_data_size);
               }
+
+              tick_has_data_ = true;
             } catch (const std::exception& e) {
               DBG_PRINT("udp send msg get exception, exception info: %s", e.what());
             }
-          });
+            co_return;
+          },
+          boost::asio::detached);
     }
 
     void Start() {

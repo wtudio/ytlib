@@ -29,10 +29,11 @@ class AsioUdpServer : public std::enable_shared_from_this<AsioUdpServer> {
    *
    */
   struct Cfg {
-    boost::asio::ip::udp::endpoint ep = boost::asio::ip::udp::endpoint{boost::asio::ip::address_v4(), 57900};  // 监听的地址
+    boost::asio::ip::udp::endpoint ep = boost::asio::ip::udp::endpoint{boost::asio::ip::address_v4(), 53927};  // 监听的地址
     size_t max_session_num = 1000000;                                                                          // 最大连接数
     std::chrono::steady_clock::duration mgr_timer_dt = std::chrono::seconds(10);                               // 管理协程定时器间隔
     std::chrono::steady_clock::duration max_no_data_duration = std::chrono::seconds(300);                      // 最长无数据时间
+    size_t max_package_size = 1024;                                                                            // 每包最大长度。不可大于65507
 
     /// 校验配置
     static Cfg Verify(const Cfg& verify_cfg) {
@@ -41,6 +42,7 @@ class AsioUdpServer : public std::enable_shared_from_this<AsioUdpServer> {
       if (cfg.max_session_num < 1) cfg.max_session_num = 1;
       if (cfg.mgr_timer_dt < std::chrono::milliseconds(100)) cfg.mgr_timer_dt = std::chrono::milliseconds(100);
       if (cfg.max_no_data_duration < std::chrono::seconds(10)) cfg.max_no_data_duration = std::chrono::seconds(10);
+      if (cfg.max_package_size > 65507) cfg.max_package_size = 65507;
 
       return cfg;
     }
@@ -49,6 +51,8 @@ class AsioUdpServer : public std::enable_shared_from_this<AsioUdpServer> {
   AsioUdpServer(const std::shared_ptr<boost::asio::io_context>& io_ptr, const AsioUdpServer::Cfg& cfg)
       : cfg_(AsioUdpServer::Cfg::Verify(cfg)),
         io_ptr_(io_ptr),
+        socket_strand_(boost::asio::make_strand(*io_ptr_)),
+        sock_(socket_strand_, cfg_.ep),
         session_cfg_ptr_(std::make_shared<const AsioUdpServer::SessionCfg>(cfg_)),
         mgr_strand_(boost::asio::make_strand(*io_ptr_)),
         acceptor_timer_(mgr_strand_),
@@ -77,7 +81,7 @@ class AsioUdpServer : public std::enable_shared_from_this<AsioUdpServer> {
     boost::asio::co_spawn(
         mgr_strand_,
         [this, self]() -> boost::asio::awaitable<void> {
-          ASIO_DEBUG_HANDLE(udp_svr_acceptor_co);
+          ASIO_DEBUG_HANDLE(udp_svr_recv_co);
 
           while (run_flag_) {
             try {
@@ -88,15 +92,23 @@ class AsioUdpServer : public std::enable_shared_from_this<AsioUdpServer> {
                 continue;
               }
 
-              auto session_ptr = std::make_shared<AsioUdpServer::Session>(io_ptr_, session_cfg_ptr_, msg_handle_ptr_);
               std::shared_ptr<boost::asio::streambuf> msg_buf = std::make_shared<boost::asio::streambuf>();
-              size_t read_data_size = co_await session_ptr->Socket().async_receive(msg_buf->prepare(65507), boost::asio::use_awaitable);
+              boost::asio::ip::udp::endpoint remote_ep;
+              size_t read_data_size = co_await sock_.async_receive_from(msg_buf->prepare(cfg_.max_package_size), remote_ep, boost::asio::use_awaitable);
               msg_buf->commit(read_data_size);
-              boost::asio::post(*io_ptr_, std::bind(*msg_handle_ptr_, session_ptr->Socket().remote_endpoint(), msg_buf));
 
-              // session_ptr->Start();
+              std::shared_ptr<AsioUdpServer::Session> session_ptr;
 
-              session_ptr_map_.emplace(session_ptr->Socket().remote_endpoint(), session_ptr);
+              auto finditr = session_ptr_map_.find(remote_ep);
+              if (finditr != session_ptr_map_.end()) {
+                session_ptr = finditr->second;
+              } else {
+                session_ptr = std::make_shared<AsioUdpServer::Session>(io_ptr_, session_cfg_ptr_, remote_ep, msg_handle_ptr_);
+                session_ptr->Start();
+                session_ptr_map_.emplace(remote_ep, session_ptr);
+              }
+
+              session_ptr->HandleMsg(std::move(msg_buf));
 
             } catch (const std::exception& e) {
               DBG_PRINT("udp svr accept connection get exception and exit, exception info: %s", e.what());
@@ -155,9 +167,21 @@ class AsioUdpServer : public std::enable_shared_from_this<AsioUdpServer> {
             try {
               switch (stop_step) {
                 case 1:
-                  acceptor_timer_.cancel();
+                  sock_.shutdown(boost::asio::ip::udp::socket::shutdown_both);
                   ++stop_step;
                 case 2:
+                  sock_.cancel();
+                  ++stop_step;
+                case 3:
+                  sock_.close();
+                  ++stop_step;
+                case 4:
+                  sock_.release();
+                  ++stop_step;
+                case 5:
+                  acceptor_timer_.cancel();
+                  ++stop_step;
+                case 6:
                   mgr_timer_.cancel();
                   ++stop_step;
                 default:
@@ -196,11 +220,11 @@ class AsioUdpServer : public std::enable_shared_from_this<AsioUdpServer> {
    public:
     Session(const std::shared_ptr<boost::asio::io_context>& io_ptr,
             const std::shared_ptr<const AsioUdpServer::SessionCfg>& session_cfg_ptr,
+            const boost::asio::ip::udp::endpoint& remote_ep,
             const std::shared_ptr<MsgHandleFunc>& msg_handle_ptr)
         : session_cfg_ptr_(session_cfg_ptr),
           io_ptr_(io_ptr),
-          session_socket_strand_(boost::asio::make_strand(*io_ptr)),
-          sock_(session_socket_strand_),
+          remote_ep_(remote_ep),
           session_mgr_strand_(boost::asio::make_strand(*io_ptr)),
           timer_(session_mgr_strand_),
           msg_handle_ptr_(msg_handle_ptr) {}
@@ -210,35 +234,21 @@ class AsioUdpServer : public std::enable_shared_from_this<AsioUdpServer> {
     Session(const Session&) = delete;             ///< no copy
     Session& operator=(const Session&) = delete;  ///< no copy
 
+    void HandleMsg(std::shared_ptr<boost::asio::streambuf>&& msg_buf_ptr) {
+      auto self = shared_from_this();
+      boost::asio::dispatch(
+          *io_ptr_,
+          [this, self, msg_buf_ptr{std::move(msg_buf_ptr)}]() {
+            ASIO_DEBUG_HANDLE(udp_svr_session_handle_co);
+
+            tick_has_data_ = true;
+
+            (*msg_handle_ptr_)(remote_ep_, msg_buf_ptr);
+          });
+    }
+
     void Start() {
       auto self = shared_from_this();
-
-      // 接收协程
-      boost::asio::co_spawn(
-          session_socket_strand_,
-          [this, self]() -> boost::asio::awaitable<void> {
-            ASIO_DEBUG_HANDLE(udp_svr_session_recv_co);
-
-            try {
-              while (run_flag_) {
-                std::shared_ptr<boost::asio::streambuf> msg_buf = std::make_shared<boost::asio::streambuf>();
-
-                size_t read_data_size = co_await sock_.async_receive(msg_buf->prepare(65507), boost::asio::use_awaitable);
-                DBG_PRINT("udp svr session async read %llu bytes", read_data_size);
-                tick_has_data_ = true;
-
-                msg_buf->commit(read_data_size);
-                boost::asio::post(*io_ptr_, std::bind(*msg_handle_ptr_, sock_.remote_endpoint(), msg_buf));
-              }
-            } catch (const std::exception& e) {
-              DBG_PRINT("udp svr session recv co get exception and exit, exception info: %s", e.what());
-            }
-
-            Stop();
-
-            co_return;
-          },
-          boost::asio::detached);
 
       // 定时器协程
       boost::asio::co_spawn(
@@ -256,12 +266,12 @@ class AsioUdpServer : public std::enable_shared_from_this<AsioUdpServer> {
                 } else {
                   DBG_PRINT("udp svr session exit due to timeout(%llums), addr %s.",
                             std::chrono::duration_cast<std::chrono::milliseconds>(session_cfg_ptr_->max_no_data_duration).count(),
-                            UdpEp2Str(sock_.remote_endpoint()).c_str());
+                            UdpEp2Str(remote_ep_).c_str());
                   break;
                 }
               }
             } catch (const std::exception& e) {
-              DBG_PRINT("udp svr session timer get exception and exit, addr %s, exception %s", UdpEp2Str(sock_.remote_endpoint()).c_str(), e.what());
+              DBG_PRINT("udp svr session timer get exception and exit, addr %s, exception %s", UdpEp2Str(remote_ep_).c_str(), e.what());
             }
 
             Stop();
@@ -275,38 +285,6 @@ class AsioUdpServer : public std::enable_shared_from_this<AsioUdpServer> {
       if (!std::atomic_exchange(&run_flag_, false)) return;
 
       auto self = shared_from_this();
-      boost::asio::dispatch(
-          session_socket_strand_,
-          [this, self]() {
-            ASIO_DEBUG_HANDLE(udp_svr_session_sock_stop_co);
-
-            uint32_t stop_step = 1;
-            while (stop_step) {
-              try {
-                switch (stop_step) {
-                  case 1:
-                    sock_.shutdown(boost::asio::ip::udp::socket::shutdown_both);
-                    ++stop_step;
-                  case 2:
-                    sock_.cancel();
-                    ++stop_step;
-                  case 3:
-                    sock_.close();
-                    ++stop_step;
-                  case 4:
-                    sock_.release();
-                    ++stop_step;
-                  default:
-                    stop_step = 0;
-                    break;
-                }
-              } catch (const std::exception& e) {
-                DBG_PRINT("udp svr session stop get exception at step %u, exception info: %s", stop_step, e.what());
-                ++stop_step;
-              }
-            }
-          });
-
       boost::asio::dispatch(
           session_mgr_strand_,
           [this, self]() {
@@ -331,8 +309,6 @@ class AsioUdpServer : public std::enable_shared_from_this<AsioUdpServer> {
           });
     }
 
-    boost::asio::ip::udp::socket& Socket() { return sock_; }
-
     const std::atomic_bool& IsRunning() { return run_flag_; }
 
    private:
@@ -340,8 +316,7 @@ class AsioUdpServer : public std::enable_shared_from_this<AsioUdpServer> {
     std::atomic_bool run_flag_ = true;
     std::shared_ptr<boost::asio::io_context> io_ptr_;
 
-    boost::asio::strand<boost::asio::io_context::executor_type> session_socket_strand_;
-    boost::asio::ip::udp::socket sock_;
+    const boost::asio::ip::udp::endpoint remote_ep_;
 
     boost::asio::strand<boost::asio::io_context::executor_type> session_mgr_strand_;
     boost::asio::steady_timer timer_;
@@ -356,6 +331,9 @@ class AsioUdpServer : public std::enable_shared_from_this<AsioUdpServer> {
   std::atomic_bool start_flag_ = false;
   std::atomic_bool run_flag_ = true;
   std::shared_ptr<boost::asio::io_context> io_ptr_;
+
+  boost::asio::strand<boost::asio::io_context::executor_type> socket_strand_;
+  boost::asio::ip::udp::socket sock_;
 
   std::shared_ptr<const AsioUdpServer::SessionCfg> session_cfg_ptr_;
   boost::asio::strand<boost::asio::io_context::executor_type> mgr_strand_;                              // session池操作strand
