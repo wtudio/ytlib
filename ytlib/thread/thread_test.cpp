@@ -82,7 +82,7 @@ class TestObj {
 uint32_t TestObj::gid = 0;
 
 // 测试Channel
-TEST(THREAD_TOOLS_TEST, Channel_BASE) {
+TEST(THREAD_TEST, Channel_BASE) {
   using TestChannel = Channel<TestObj>;
 
   std::atomic<uint32_t> ct = 0;
@@ -105,7 +105,7 @@ TEST(THREAD_TOOLS_TEST, Channel_BASE) {
 }
 
 // 测试BlockQueue基础同步操作
-TEST(THREAD_TOOLS_TEST, BlockQueue_BASE) {
+TEST(THREAD_TEST, BlockQueue_BASE) {
   using BckQueue = BlockQueue<TestObj>;
   TestObj::gid = 0;
   uint32_t n = 5;
@@ -144,7 +144,7 @@ TEST(THREAD_TOOLS_TEST, BlockQueue_BASE) {
 }
 
 // 测试BlockQueue异步操作
-TEST(THREAD_TOOLS_TEST, BlockQueue_ANYSC) {
+TEST(THREAD_TEST, BlockQueue_ANYSC) {
   using BckQueue = BlockQueue<TestObj>;
   TestObj::gid = 0;
   BckQueue qu(100);
@@ -180,7 +180,7 @@ TEST(THREAD_TOOLS_TEST, BlockQueue_ANYSC) {
 }
 
 // 测试LightSignal
-TEST(THREAD_TOOLS_TEST, LightSignal_BASE) {
+TEST(THREAD_TEST, LightSignal_BASE) {
   LightSignal s;
   uint32_t i = 0;
 
@@ -202,7 +202,7 @@ TEST(THREAD_TOOLS_TEST, LightSignal_BASE) {
 }
 
 // 测试LightSignalAtomic
-TEST(THREAD_TOOLS_TEST, LightSignalAtomic_BASE) {
+TEST(THREAD_TEST, LightSignalAtomic_BASE) {
   LightSignalAtomic s;
   uint32_t i = 0;
 
@@ -224,7 +224,7 @@ TEST(THREAD_TOOLS_TEST, LightSignalAtomic_BASE) {
 }
 
 // 测试ThreadIdTool
-TEST(THREAD_TOOLS_TEST, ThreadIdTool_BASE) {
+TEST(THREAD_TEST, ThreadIdTool_BASE) {
   uint64_t tid = GetThreadId();
   for (uint32_t ii = 0; ii < 100; ++ii) {
     ASSERT_EQ(GetThreadId(), tid);
@@ -271,7 +271,7 @@ void AsyncSendRecv(const TestObj &in_buf, std::function<void(TestObj &&)> &&call
   t.detach();
 }
 
-TEST(THREAD_TOOLS_TEST, coroutine_BASE) {
+TEST(THREAD_TEST, coroutine_BASE) {
   TestObj::gid = 0;
 
   TestObj buf;
