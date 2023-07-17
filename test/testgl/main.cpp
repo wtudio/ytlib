@@ -2,7 +2,7 @@
 #include <vector>
 
 #include "cube.h"
-#include "ytlib/gl/gl_sys.hpp"
+#include "gl_sys.hpp"
 #include "ytlib/misc/misc_macro.h"
 
 using namespace std;

@@ -109,7 +109,7 @@ class BigNum {
     ReBase(base);
   }
 
-  ~BigNum() {}
+  ~BigNum() = default;
 
   /**
    * @brief 从一个uint64_t赋值

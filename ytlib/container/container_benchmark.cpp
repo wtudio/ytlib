@@ -6,7 +6,7 @@ namespace ytlib {
 
 class TestClass {
  public:
-  TestClass() {}
+  TestClass() = default;
   TestClass(uint32_t id) : id_(id) {}
 
   uint32_t id_ = 0;

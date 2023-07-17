@@ -31,8 +31,8 @@ class BoolExpCalculator {
   using MidResultClass = std::vector<std::string>;                // 中间结果类型
 
  public:
-  BoolExpCalculator() {}
-  ~BoolExpCalculator() {}
+  BoolExpCalculator() = default;
+  ~BoolExpCalculator() = default;
 
   void SetKeyCheckFun(const KeyCheckFun& check_fun) {
     key_check_fun_ = check_fun;

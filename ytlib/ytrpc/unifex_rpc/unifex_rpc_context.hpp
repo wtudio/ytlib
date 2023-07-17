@@ -20,8 +20,8 @@ namespace ytrpc {
  */
 class UnifexRpcContext {
  public:
-  UnifexRpcContext() {}
-  ~UnifexRpcContext() {}
+  UnifexRpcContext() = default;
+  ~UnifexRpcContext() = default;
 
   // done 相关功能，线程安全
   void Done(const std::string& info = "") const {

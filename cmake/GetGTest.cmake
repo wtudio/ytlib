@@ -2,13 +2,10 @@ include(FetchContent)
 
 message(STATUS "get googletest ...")
 
-# cmake-format: off
 FetchContent_Declare(
   googletest
-  URL  https://github.com/google/googletest/archive/release-1.12.1.tar.gz
-  DOWNLOAD_EXTRACT_TIMESTAMP TRUE
-)
-# cmake-format: on
+  URL https://github.com/google/googletest/archive/release-1.12.1.tar.gz
+  DOWNLOAD_EXTRACT_TIMESTAMP TRUE)
 
 FetchContent_GetProperties(googletest)
 if(NOT googletest_POPULATED)

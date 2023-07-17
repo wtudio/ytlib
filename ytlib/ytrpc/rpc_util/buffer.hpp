@@ -11,7 +11,7 @@ namespace ytrpc {
 
 class BufferVec {
  public:
-  BufferVec() {}
+  BufferVec() = default;
 
   ~BufferVec() {
     for (auto& buffer : buffer_vec_) {
@@ -68,7 +68,7 @@ class BufferVecZeroCopyOutputStream : public ::google::protobuf::io::ZeroCopyOut
   explicit BufferVecZeroCopyOutputStream(BufferVec& buffer_vec)
       : buffer_vec_(buffer_vec) {}
 
-  virtual ~BufferVecZeroCopyOutputStream() {}
+  virtual ~BufferVecZeroCopyOutputStream() = default;
 
   bool Next(void** data, int* size) override {
     if (cur_buf_used_size_ == cur_block_size) {
@@ -123,7 +123,7 @@ class BufferVecZeroCopyInputStream : public ::google::protobuf::io::ZeroCopyInpu
   explicit BufferVecZeroCopyInputStream(const std::vector<std::pair<void*, size_t>>& buffer_vec)
       : buffer_vec_(buffer_vec) {}
 
-  virtual ~BufferVecZeroCopyInputStream() {}
+  virtual ~BufferVecZeroCopyInputStream() = default;
 
   bool Next(const void** data, int* size) override {
     if (cur_buf_index_ >= buffer_vec_.size())

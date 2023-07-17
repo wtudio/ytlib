@@ -57,7 +57,7 @@ class AsioNetLogClient : public std::enable_shared_from_this<AsioNetLogClient> {
         session_cfg_ptr_(std::make_shared<const AsioNetLogClient::SessionCfg>(cfg_)),
         mgr_strand_(boost::asio::make_strand(*io_ptr_)) {}
 
-  ~AsioNetLogClient() {}
+  ~AsioNetLogClient() = default;
 
   AsioNetLogClient(const AsioNetLogClient&) = delete;             ///< no copy
   AsioNetLogClient& operator=(const AsioNetLogClient&) = delete;  ///< no copy
@@ -158,7 +158,7 @@ class AsioNetLogClient : public std::enable_shared_from_this<AsioNetLogClient> {
           sock_(session_strand_),
           timer_(session_strand_) {}
 
-    ~Session() {}
+    ~Session() = default;
 
     Session(const Session&) = delete;             ///< no copy
     Session& operator=(const Session&) = delete;  ///< no copy

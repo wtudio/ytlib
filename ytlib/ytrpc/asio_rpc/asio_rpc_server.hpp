@@ -42,8 +42,8 @@ class AsioRpcService {
   }
 
  protected:
-  AsioRpcService() {}
-  virtual ~AsioRpcService() {}
+  AsioRpcService() = default;
+  virtual ~AsioRpcService() = default;
 
   template <typename ReqType, typename RspType>
   void RegisterRpcServiceFunc(
@@ -111,7 +111,7 @@ class AsioRpcServer : public std::enable_shared_from_this<AsioRpcServer> {
         mgr_timer_(mgr_strand_),
         func_map_ptr_(std::make_shared<std::unordered_map<std::string, AsioRpcService::FuncAdapter>>()) {}
 
-  ~AsioRpcServer() {}
+  ~AsioRpcServer() = default;
 
   AsioRpcServer(const AsioRpcServer&) = delete;             ///< no copy
   AsioRpcServer& operator=(const AsioRpcServer&) = delete;  ///< no copy
@@ -278,7 +278,7 @@ class AsioRpcServer : public std::enable_shared_from_this<AsioRpcServer> {
           timer_(session_mgr_strand_),
           func_map_ptr_(func_map_ptr) {}
 
-    ~Session() {}
+    ~Session() = default;
 
     Session(const Session&) = delete;             ///< no copy
     Session& operator=(const Session&) = delete;  ///< no copy

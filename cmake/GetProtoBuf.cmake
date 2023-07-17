@@ -2,13 +2,10 @@ include(FetchContent)
 
 message(STATUS "get protobuf ...")
 
-# cmake-format: off
 FetchContent_Declare(
   protobuf
-  URL   https://github.com/protocolbuffers/protobuf/archive/v3.21.12.tar.gz
-  DOWNLOAD_EXTRACT_TIMESTAMP TRUE
-)
-# cmake-format: on
+  URL https://github.com/protocolbuffers/protobuf/archive/v3.21.12.tar.gz
+  DOWNLOAD_EXTRACT_TIMESTAMP TRUE)
 
 FetchContent_GetProperties(protobuf)
 if(NOT protobuf_POPULATED)

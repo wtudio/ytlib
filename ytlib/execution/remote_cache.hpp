@@ -43,7 +43,7 @@ class RemoteCache {
     update_data_fun_ = [](auto) -> unifex::task<std::optional<ValType>> { co_return std::nullopt; };
   }
 
-  ~RemoteCache() {}
+  ~RemoteCache() = default;
 
   void SetUpdateDataFunc(const UpdateDataFunc& update_data_fun) {
     update_data_fun_ = update_data_fun;

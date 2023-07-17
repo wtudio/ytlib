@@ -30,9 +30,3 @@ target_link_libraries(
 
 # Set compile definitions of target
 target_compile_definitions(${CUR_TARGET_NAME} PRIVATE ASIO_ENABLE_DEBUG)
-
-# Set misc of target
-set_property(
-  TARGET ${CUR_TARGET_NAME}
-  PROPERTY FOLDER
-  test)

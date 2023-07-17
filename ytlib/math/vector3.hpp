@@ -9,10 +9,10 @@ namespace ytlib {
 template <std::floating_point TFloat = double>
 class Vector3 {
  public:
-  Vector3() {}
+  Vector3() = default;
   Vector3(TFloat input_x, TFloat input_y, TFloat input_z) : x(input_x), y(input_y), z(input_z) {}
   Vector3(const Vector3& value) : x(value.x), y(value.y), z(value.z) {}
-  ~Vector3() {}
+  ~Vector3() = default;
 
   const TFloat Len() const { return std::hypot(x, y, z); }
   const TFloat Distance(const Vector3& rhs) const { return std::hypot(x - rhs.x, y - rhs.y, z - rhs.z); }

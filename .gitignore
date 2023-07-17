@@ -4,7 +4,9 @@
 build/
 debug/
 release/
-gen/
 
 document/html
 document/doxygen.log
+
+.idea/
+cmake-build*/

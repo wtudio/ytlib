@@ -2,13 +2,10 @@ include(FetchContent)
 
 message(STATUS "get googlebenchmark ...")
 
-# cmake-format: off
 FetchContent_Declare(
   googlebenchmark
   URL https://github.com/google/benchmark/archive/v1.6.1.tar.gz
-  DOWNLOAD_EXTRACT_TIMESTAMP TRUE
-)
-# cmake-format: on
+  DOWNLOAD_EXTRACT_TIMESTAMP TRUE)
 
 FetchContent_GetProperties(googlebenchmark)
 if(NOT googlebenchmark_POPULATED)

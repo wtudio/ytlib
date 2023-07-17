@@ -20,6 +20,8 @@ add_subdirectory(testboostfiber)
 add_subdirectory(testredis)
 
 if(WIN32)
+  include(GetFreeglut)
+
   add_subdirectory(testgame)
   add_subdirectory(testgl)
 endif()

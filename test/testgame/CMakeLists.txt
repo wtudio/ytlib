@@ -28,13 +28,7 @@ target_link_libraries(
   PRIVATE ytlib::misc
           ytlib::math
           ytlib::boost_tools_asio
-          ytlib::gl)
+          freeglut::freeglut)
 
 # Set compile definitions of target
 target_compile_definitions(${CUR_TARGET_NAME} PRIVATE ASIO_ENABLE_DEBUG)
-
-# Set misc of target
-set_property(
-  TARGET ${CUR_TARGET_NAME}
-  PROPERTY FOLDER
-  test)

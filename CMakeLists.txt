@@ -1,14 +1,9 @@
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.26)
 
 project(ytlib LANGUAGES C CXX)
 
 # Set cmake path
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
-install(
-  DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/cmake
-  DESTINATION ./
-  FILES_MATCHING
-  PATTERN "*.cmake")
 
 # Some option
 option(YTLIB_BUILD_DOC "Build ytlib document." OFF)
@@ -17,7 +12,6 @@ option(YTLIB_BUILD_BENCH_TESTS "Build benchmark tests." OFF)
 option(YTLIB_BUILD_WITH_BOOST "Build with boost." OFF)
 option(YTLIB_BUILD_WITH_PROTOBUF "Build with protobuf." OFF)
 option(YTLIB_BUILD_WITH_LIBUNIFEX "Build with libunifex." OFF)
-option(YTLIB_BUILD_WITH_FREEGLUT "Build with freeglut." OFF)
 option(YTLIB_BUILD_CUSTOM_TESTS "Build custom tests." OFF)
 
 # Some necessary settings
@@ -56,7 +50,6 @@ if(YTLIB_MASTER_PROJECT)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
   endif()
 
-  set_property(GLOBAL PROPERTY USE_FOLDERS ON)
   set_property(GLOBAL PROPERTY POSITION_INDEPENDENT_CODE ON)
 
   if(MSVC)
@@ -99,14 +92,11 @@ endif()
 
 if(YTLIB_BUILD_WITH_PROTOBUF)
   include(GetProtoBuf)
+  include(ProtobufGenCode)
 endif()
 
 if(YTLIB_BUILD_WITH_LIBUNIFEX)
   include(GetLibUnifex)
-endif()
-
-if(YTLIB_BUILD_WITH_FREEGLUT AND CMAKE_SYSTEM_NAME MATCHES "Windows")
-  include(GetFreeglut)
 endif()
 
 # add subdirectory
@@ -117,4 +107,10 @@ if(YTLIB_BUILD_CUSTOM_TESTS)
 endif()
 
 # install
+install(
+  DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/cmake
+  DESTINATION ./
+  FILES_MATCHING
+  PATTERN "*.cmake")
+
 install(EXPORT ${INSTALL_CONFIG_NAME} DESTINATION lib/cmake/${PROJECT_NAME})

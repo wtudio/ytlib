@@ -12,8 +12,8 @@ namespace ytrpc {
 
 class UnifexRpcCodeGenerator final : public google::protobuf::compiler::CodeGenerator {
  public:
-  UnifexRpcCodeGenerator() {}
-  virtual ~UnifexRpcCodeGenerator() {}
+  UnifexRpcCodeGenerator() = default;
+  virtual ~UnifexRpcCodeGenerator() = default;
 
   const std::string t_ccfile = R"str(/**
  * @file {{file_name}}.unifex_rpc.pb.cc
@@ -36,7 +36,7 @@ class {{service_name}} : public ytlib::ytrpc::UnifexRpcService {
 {{service_register_func}}
   }
 
-  virtual ~{{service_name}}() {}
+  virtual ~{{service_name}}() = default;
 {{service_func}}
 };)str";
 
@@ -52,7 +52,7 @@ class {{service_name}}Proxy final : private ytlib::ytrpc::UnifexRpcServiceProxy 
  public:
   explicit {{service_name}}Proxy(const std::shared_ptr<ytlib::ytrpc::UnifexRpcClient>& client_ptr) : ytlib::ytrpc::UnifexRpcServiceProxy(client_ptr) {}
 
-  virtual ~{{service_name}}Proxy() {}
+  virtual ~{{service_name}}Proxy() = default;
 {{service_proxy_func}}
 };)str";
 

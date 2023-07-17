@@ -24,7 +24,7 @@ class FileObj {
   FileObj() : obj_ptr_(std::make_shared<T>()) {}
 
   /// 析构函数
-  virtual ~FileObj() {}
+  virtual ~FileObj() = default;
 
   /**
    * @brief 打开并解析文件内容

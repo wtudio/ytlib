@@ -20,7 +20,7 @@ namespace ytlib {
 template <typename T = double>
 class Basic_Matrix {
  public:
-  Basic_Matrix() {}
+  Basic_Matrix() = default;
   Basic_Matrix(const uint32_t input_max_row, const uint32_t input_max_col) {
     AllocateMemory(input_max_row, input_max_col, true);
   }

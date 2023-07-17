@@ -35,7 +35,7 @@ class AsioDebugTool {
     return instance;
   }
 
-  ~AsioDebugTool() {}
+  ~AsioDebugTool() = default;
 
   void AddLog(uint64_t co_id, AsioDebugState state, const std::string& co_name = "") {
     thread_local uint64_t thread_id = thread_count_++;

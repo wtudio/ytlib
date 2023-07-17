@@ -16,8 +16,8 @@ namespace ytlib {
 template <class T, uint32_t BUF_SIZE>
 class RingBuf {
  public:
-  RingBuf() {}
-  ~RingBuf() {}
+  RingBuf() = default;
+  ~RingBuf() = default;
 
   bool Empty() const { return wpos_ == rpos_; }
   bool Full() const { return (wpos_ >= rpos_) ? (wpos_ - rpos_ == BUF_SIZE - 1) : (rpos_ - wpos_ == 1); }

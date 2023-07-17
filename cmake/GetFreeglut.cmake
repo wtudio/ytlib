@@ -2,13 +2,10 @@ include(FetchContent)
 
 message(STATUS "get freeglut ...")
 
-# cmake-format: off
 FetchContent_Declare(
   freeglut
-  URL  https://github.com/FreeGLUTProject/freeglut/releases/download/v3.2.2/freeglut-3.2.2.tar.gz
-  DOWNLOAD_EXTRACT_TIMESTAMP TRUE
-)
-# cmake-format: on
+  URL https://github.com/FreeGLUTProject/freeglut/releases/download/v3.2.2/freeglut-3.2.2.tar.gz
+  DOWNLOAD_EXTRACT_TIMESTAMP TRUE)
 
 FetchContent_GetProperties(freeglut)
 if(NOT freeglut_POPULATED)

@@ -48,7 +48,7 @@ class UnifexRpcClient : public std::enable_shared_from_this<UnifexRpcClient> {
         io_ptr_(io_ptr),
         session_cfg_ptr_(std::make_shared<const UnifexRpcClient::SessionCfg>(cfg_)) {}
 
-  ~UnifexRpcClient() {}
+  ~UnifexRpcClient() = default;
 
   UnifexRpcClient(const UnifexRpcClient&) = delete;             ///< no copy
   UnifexRpcClient& operator=(const UnifexRpcClient&) = delete;  ///< no copy
@@ -154,7 +154,7 @@ class UnifexRpcClient : public std::enable_shared_from_this<UnifexRpcClient> {
         : req_id(input_req_id),
           ctx(input_ctx) {}
 
-    ~MsgContext() {}
+    ~MsgContext() = default;
 
     const uint32_t req_id;
     const UnifexRpcContext& ctx;
@@ -230,7 +230,7 @@ class UnifexRpcClient : public std::enable_shared_from_this<UnifexRpcClient> {
         : session_cfg_ptr_(session_cfg_ptr),
           sock_(*io_ptr) {}
 
-    ~Session() {}
+    ~Session() = default;
 
     Session(const Session&) = delete;             ///< no copy
     Session& operator=(const Session&) = delete;  ///< no copy
@@ -563,7 +563,7 @@ class UnifexRpcServiceProxy {
   explicit UnifexRpcServiceProxy(const std::shared_ptr<UnifexRpcClient>& client_ptr)
       : client_ptr_(client_ptr) {}
 
-  virtual ~UnifexRpcServiceProxy() {}
+  virtual ~UnifexRpcServiceProxy() = default;
 
   template <typename Req, typename Rsp>
   auto Invoke(const std::string& func_name, const std::shared_ptr<const UnifexRpcContext>& ctx_ptr, const Req& req)

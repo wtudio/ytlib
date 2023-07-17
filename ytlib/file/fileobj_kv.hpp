@@ -24,7 +24,7 @@ class KeyValueFile : public FileObj<std::map<std::string, std::string> > {
   KeyValueFile() : FileObj() {}
 
   /// 析构函数
-  virtual ~KeyValueFile() {}
+  virtual ~KeyValueFile() = default;
 
  protected:
   /**

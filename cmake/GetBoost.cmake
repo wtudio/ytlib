@@ -2,13 +2,10 @@ include(FetchContent)
 
 message(STATUS "get boost ...")
 
-# cmake-format: off
 FetchContent_Declare(
   boost
   URL https://github.com/boostorg/boost/releases/download/boost-1.82.0/boost-1.82.0.tar.xz
-  DOWNLOAD_EXTRACT_TIMESTAMP ON
-)
-# cmake-format: on
+  DOWNLOAD_EXTRACT_TIMESTAMP ON)
 
 FetchContent_GetProperties(boost)
 if(NOT boost_POPULATED)

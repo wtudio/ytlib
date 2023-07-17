@@ -4,7 +4,7 @@
 #include <memory>
 
 #include "game_displayer_inf.hpp"
-#include "ytlib/gl/gl_sys.hpp"
+#include "gl_sys.hpp"
 
 namespace ytlib {
 

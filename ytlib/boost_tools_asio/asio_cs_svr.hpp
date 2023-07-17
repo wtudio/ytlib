@@ -67,7 +67,7 @@ class AsioCsServer : public std::enable_shared_from_this<AsioCsServer> {
         mgr_timer_(mgr_strand_),
         msg_handle_ptr_(std::make_shared<MsgHandleFunc>([](const boost::asio::ip::tcp::endpoint&, const std::shared_ptr<boost::asio::streambuf>&) {})) {}
 
-  ~AsioCsServer() {}
+  ~AsioCsServer() = default;
 
   AsioCsServer(const AsioCsServer&) = delete;             ///< no copy
   AsioCsServer& operator=(const AsioCsServer&) = delete;  ///< no copy
@@ -253,7 +253,7 @@ class AsioCsServer : public std::enable_shared_from_this<AsioCsServer> {
           timer_(session_mgr_strand_),
           msg_handle_ptr_(msg_handle_ptr) {}
 
-    ~Session() {}
+    ~Session() = default;
 
     Session(const Session&) = delete;             ///< no copy
     Session& operator=(const Session&) = delete;  ///< no copy

@@ -12,8 +12,8 @@ namespace ytrpc {
 
 class AsioRpcCodeGenerator final : public google::protobuf::compiler::CodeGenerator {
  public:
-  AsioRpcCodeGenerator() {}
-  virtual ~AsioRpcCodeGenerator() {}
+  AsioRpcCodeGenerator() = default;
+  virtual ~AsioRpcCodeGenerator() = default;
 
   const std::string t_ccfile = R"str(/**
  * @file {{file_name}}.asio_rpc.pb.cc
@@ -35,7 +35,7 @@ class {{service_name}} : public ytlib::ytrpc::AsioRpcService {
 {{service_register_func}}
   }
 
-  virtual ~{{service_name}}() {}
+  virtual ~{{service_name}}() = default;
 {{service_func}}
 };)str";
 
@@ -50,7 +50,7 @@ class {{service_name}}Proxy final : private ytlib::ytrpc::AsioRpcServiceProxy {
  public:
   explicit {{service_name}}Proxy(const std::shared_ptr<ytlib::ytrpc::AsioRpcClient>& client_ptr) : ytlib::ytrpc::AsioRpcServiceProxy(client_ptr) {}
 
-  virtual ~{{service_name}}Proxy() {}
+  virtual ~{{service_name}}Proxy() = default;
 {{service_proxy_func}}
 };)str";
 

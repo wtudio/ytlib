@@ -26,7 +26,7 @@ class BinTreeNode : public std::enable_shared_from_this<BinTreeNode<T> > {
   typedef std::weak_ptr<BinTreeNode<T> > NodeWeakPtr;
 
  public:
-  BinTreeNode() {}
+  BinTreeNode() = default;
   explicit BinTreeNode(const T& input_obj) : obj(input_obj) {}
   explicit BinTreeNode(T&& input_obj) : obj(std::move(input_obj)) {}
 
@@ -49,7 +49,7 @@ class BinSearchTreeNode : public std::enable_shared_from_this<BinSearchTreeNode<
   typedef std::weak_ptr<BinSearchTreeNode<T> > NodeWeakPtr;
 
  public:
-  BinSearchTreeNode() {}
+  BinSearchTreeNode() = default;
   explicit BinSearchTreeNode(const T& input_obj) : obj(input_obj) {}
   explicit BinSearchTreeNode(T&& input_obj) : obj(std::move(input_obj)) {}
 
@@ -153,7 +153,7 @@ class AVLTreeNode : public std::enable_shared_from_this<AVLTreeNode<T> > {
   typedef std::weak_ptr<AVLTreeNode<T> > NodeWeakPtr;
 
  public:
-  AVLTreeNode() {}
+  AVLTreeNode() = default;
   explicit AVLTreeNode(const T& input_obj) : obj(input_obj) {}
   explicit AVLTreeNode(T&& input_obj) : obj(std::move(input_obj)) {}
 
@@ -432,7 +432,7 @@ class BRTreeNode : public std::enable_shared_from_this<BRTreeNode<T> > {
   typedef std::weak_ptr<BRTreeNode<T> > NodeWeakPtr;
 
  public:
-  BRTreeNode() {}
+  BRTreeNode() = default;
   explicit BRTreeNode(const T& input_obj) : obj(input_obj) {}
   explicit BRTreeNode(T&& input_obj) : obj(std::move(input_obj)) {}
 

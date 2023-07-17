@@ -81,7 +81,7 @@ class AsioNetLogServer : public std::enable_shared_from_this<AsioNetLogServer> {
         acceptor_timer_(mgr_strand_),
         mgr_timer_(mgr_strand_) {}
 
-  ~AsioNetLogServer() {}
+  ~AsioNetLogServer() = default;
 
   AsioNetLogServer(const AsioNetLogServer&) = delete;             ///< no copy
   AsioNetLogServer& operator=(const AsioNetLogServer&) = delete;  ///< no copy
@@ -237,7 +237,7 @@ class AsioNetLogServer : public std::enable_shared_from_this<AsioNetLogServer> {
           sock_(session_strand_),
           timer_(session_strand_) {}
 
-    ~Session() {}
+    ~Session() = default;
 
     Session(const Session&) = delete;             ///< no copy
     Session& operator=(const Session&) = delete;  ///< no copy

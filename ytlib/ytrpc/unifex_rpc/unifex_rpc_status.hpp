@@ -27,7 +27,7 @@ class UnifexRpcStatus {
   };
 
  public:
-  UnifexRpcStatus() {}
+  UnifexRpcStatus() = default;
 
   UnifexRpcStatus(int func_ret, const std::string& func_ret_msg)
       : ret_(UnifexRpcStatus::Code::OK),
@@ -39,7 +39,7 @@ class UnifexRpcStatus {
         func_ret_(func_ret),
         func_ret_msg_(func_ret_msg) {}
 
-  ~UnifexRpcStatus() {}
+  ~UnifexRpcStatus() = default;
 
   operator bool() const {
     return ret_ == UnifexRpcStatus::Code::OK && func_ret_ == 0;

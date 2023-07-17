@@ -2,13 +2,10 @@ include(FetchContent)
 
 message(STATUS "get libevent ...")
 
-# cmake-format: off
 FetchContent_Declare(
   libevent
-  URL  https://github.com/libevent/libevent/archive/release-2.1.12-stable.tar.gz
-  DOWNLOAD_EXTRACT_TIMESTAMP TRUE
-)
-# cmake-format: on
+  URL https://github.com/libevent/libevent/archive/release-2.1.12-stable.tar.gz
+  DOWNLOAD_EXTRACT_TIMESTAMP TRUE)
 
 FetchContent_GetProperties(libevent)
 if(NOT libevent_POPULATED)

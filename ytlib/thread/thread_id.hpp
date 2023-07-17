@@ -25,7 +25,7 @@ class ThreadIdTool {
   }
 
  private:
-  ThreadIdTool() {}
+  ThreadIdTool() = default;
 
   std::atomic<uint64_t> thread_count_ = 0;
 };

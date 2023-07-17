@@ -19,7 +19,7 @@ namespace ytlib {
 class LightSignalAtomic {
  public:
   LightSignalAtomic() : flag_(false) {}
-  ~LightSignalAtomic() {}
+  ~LightSignalAtomic() = default;
 
   /// 唤醒所有wait
   void notify() {
@@ -47,8 +47,8 @@ class LightSignalAtomic {
  */
 class LightSignal {
  public:
-  LightSignal() {}
-  ~LightSignal() {}
+  LightSignal() = default;
+  ~LightSignal() = default;
 
   /// 唤醒所有wait
   void notify() {

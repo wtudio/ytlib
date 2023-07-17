@@ -41,9 +41,3 @@ endif()
 if(MSVC)
   target_compile_options(${CUR_TARGET_NAME} PRIVATE /Zc:externConstexpr)
 endif()
-
-# Set misc of target
-set_property(
-  TARGET ${CUR_TARGET_NAME}
-  PROPERTY FOLDER
-  test)

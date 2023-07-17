@@ -59,7 +59,7 @@ class AsioUdpServer : public std::enable_shared_from_this<AsioUdpServer> {
         mgr_timer_(mgr_strand_),
         msg_handle_ptr_(std::make_shared<MsgHandleFunc>([](const boost::asio::ip::udp::endpoint&, const std::shared_ptr<boost::asio::streambuf>&) {})) {}
 
-  ~AsioUdpServer() {}
+  ~AsioUdpServer() = default;
 
   AsioUdpServer(const AsioUdpServer&) = delete;             ///< no copy
   AsioUdpServer& operator=(const AsioUdpServer&) = delete;  ///< no copy
@@ -229,7 +229,7 @@ class AsioUdpServer : public std::enable_shared_from_this<AsioUdpServer> {
           timer_(session_mgr_strand_),
           msg_handle_ptr_(msg_handle_ptr) {}
 
-    ~Session() {}
+    ~Session() = default;
 
     Session(const Session&) = delete;             ///< no copy
     Session& operator=(const Session&) = delete;  ///< no copy

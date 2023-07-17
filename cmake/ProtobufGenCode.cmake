@@ -1,5 +1,5 @@
-# add target for protobuf gen code for path
-function(add_protobuf_gencode_for_path_target)
+# add target for protobuf gen code target for proto path
+function(add_protobuf_gencode_target_for_proto_path)
   cmake_parse_arguments(ARG "" "TARGET_NAME" "PROTO_PATH;GENCODE_PATH;DEP_PROTO_TARGETS;OPTIONS" ${ARGN})
 
   if(NOT EXISTS ${ARG_GENCODE_PATH})
@@ -34,9 +34,9 @@ function(add_protobuf_gencode_for_path_target)
 
     add_custom_command(
       OUTPUT ${GEN_SRC} ${GEN_HDR}
-      COMMAND agiros::protoc ARGS ${ARG_OPTIONS} --proto_path=${ARG_PROTO_PATH} ${PROTOC_EXTERNAL_PROTO_PATH_ARGS} --cpp_out=${ARG_GENCODE_PATH}
+      COMMAND protobuf::protoc ARGS ${ARG_OPTIONS} --proto_path=${ARG_PROTO_PATH} ${PROTOC_EXTERNAL_PROTO_PATH_ARGS} --cpp_out=${ARG_GENCODE_PATH}
               ${PROTO_FILE}
-      DEPENDS ${PROTO_FILE} agiros::protoc
+      DEPENDS ${PROTO_FILE} protobuf::protoc
       COMMENT
         "Running protoc, args: ${ARG_OPTIONS} --proto_path=${ARG_PROTO_PATH} ${PROTOC_EXTERNAL_PROTO_PATH_ARGS} --cpp_out=${ARG_GENCODE_PATH} ${PROTO_FILE}"
       VERBATIM)
@@ -55,8 +55,8 @@ function(add_protobuf_gencode_for_path_target)
 
 endfunction()
 
-# add target for protobuf gen code for one file
-function(add_protobuf_gencode_for_one_file_target)
+# add target for protobuf gen code target for one file
+function(add_protobuf_gencode_target_for_one_proto_file)
   cmake_parse_arguments(ARG "" "TARGET_NAME" "PROTO_FILE;GENCODE_PATH;DEP_PROTO_TARGETS;OPTIONS" ${ARGN})
 
   if(NOT EXISTS ${ARG_GENCODE_PATH})
@@ -84,9 +84,9 @@ function(add_protobuf_gencode_for_one_file_target)
 
   add_custom_command(
     OUTPUT ${GEN_SRC} ${GEN_HDR}
-    COMMAND agiros::protoc ARGS ${ARG_OPTIONS} --proto_path=${PROTO_PATH} ${PROTOC_EXTERNAL_PROTO_PATH_ARGS} --cpp_out=${ARG_GENCODE_PATH}
+    COMMAND protobuf::protoc ARGS ${ARG_OPTIONS} --proto_path=${PROTO_PATH} ${PROTOC_EXTERNAL_PROTO_PATH_ARGS} --cpp_out=${ARG_GENCODE_PATH}
             ${ARG_PROTO_FILE}
-    DEPENDS ${ARG_PROTO_FILE} agiros::protoc
+    DEPENDS ${ARG_PROTO_FILE} protobuf::protoc
     COMMENT
       "Running protoc, args: ${ARG_OPTIONS} --proto_path=${PROTO_PATH} ${PROTOC_EXTERNAL_PROTO_PATH_ARGS} --cpp_out=${ARG_GENCODE_PATH} ${ARG_PROTO_FILE}"
     VERBATIM)

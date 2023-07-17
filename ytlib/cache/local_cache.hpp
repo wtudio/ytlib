@@ -50,7 +50,7 @@ class LocalCache {
         data_map_(cfg_.capacity) {
   }
 
-  ~LocalCache() {}
+  ~LocalCache() = default;
 
   LocalCache(const LocalCache&) = delete;             ///< no copy
   LocalCache& operator=(const LocalCache&) = delete;  ///< no copy
@@ -196,7 +196,7 @@ class LocalCache {
     template <typename... Args>
     explicit ValContent(Args&&... args) : val(std::forward<Args>(args)...) {}
 
-    ~ValContent() {}
+    ~ValContent() = default;
 
     ValContent(const ValContent&) = delete;             ///< no copy
     ValContent& operator=(const ValContent&) = delete;  ///< no copy

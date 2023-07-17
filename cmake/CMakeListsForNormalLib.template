@@ -26,19 +26,15 @@ target_include_directories(
          $<INSTALL_INTERFACE:include>)
 
 # Set head files of target
-target_sources(${CUR_TARGET_NAME} INTERFACE FILE_SET HEADERS BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR} FILES ${head_files})
+target_sources(${CUR_TARGET_NAME} INTERFACE FILE_SET HEADERS BASE_DIRS ${PROJECT_SOURCE_DIR} FILES ${head_files})
 
 # Set link libraries of target
 # target_link_libraries(${CUR_TARGET_NAME} PRIVATE xxx)
 
 # Set compile definitions of target
 # target_compile_definitions(${CUR_TARGET_NAME} PRIVATE xxx)
-if(BUILD_SHARED_LIBS)
-  target_compile_definitions(${CUR_TARGET_NAME} PRIVATE BUILD_SHARED_LIBS)
-endif()
 
 # Set misc of target
-set_property(TARGET ${CUR_TARGET_NAME} PROPERTY FOLDER ${CUR_TARGET_NAME})
 set_property(TARGET ${CUR_TARGET_NAME} PROPERTY DEBUG_POSTFIX "d")
 
 # Set installation of target
@@ -54,10 +50,8 @@ install(
 # Set test of target
 if(YTLIB_BUILD_TESTS AND test_files)
   add_gtest_target(TEST_TARGET ${CUR_TARGET_NAME} TEST_SRC ${test_files})
-  set_property(TARGET ${CUR_TARGET_NAME}_test PROPERTY FOLDER ${CUR_TARGET_NAME})
 endif()
 
 if(YTLIB_BUILD_BENCH_TESTS AND benchmark_files)
   add_benchmark_target(BENCH_TARGET ${CUR_TARGET_NAME} BENCH_SRC ${benchmark_files})
-  set_property(TARGET ${CUR_TARGET_NAME}_benchmark PROPERTY FOLDER ${CUR_TARGET_NAME})
 endif()

@@ -29,7 +29,7 @@ class Heap {
     container_.assign(a, a + sz);
     Adjust();
   }
-  ~Heap() {}
+  ~Heap() = default;
 
   /// 使用数组初始化
   void Assign(const T* a, size_t sz) {

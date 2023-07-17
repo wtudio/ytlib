@@ -176,7 +176,7 @@ class PrintCtr {
   }
 
  private:
-  PrintCtr() {}
+  PrintCtr() = default;
 
   bool if_print_ = true;
 };

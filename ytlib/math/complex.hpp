@@ -23,10 +23,10 @@ namespace ytlib {
 template <std::floating_point CFloat = double>
 class Complex {
  public:
-  Complex() {}
+  Complex() = default;
   Complex(const CFloat &a, const CFloat &b) : real(a), imag(b) {}
   Complex(const Complex &value) : real(value.real), imag(value.imag) {}
-  ~Complex() {}
+  ~Complex() = default;
 
   bool operator==(const Complex &value) const {
     return (std::abs(this->real - value.real) < 1e-6 && std::abs(this->imag - value.imag) < 1e-6);

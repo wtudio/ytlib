@@ -36,7 +36,7 @@ typedef void* DYNLIB_HANDLE;
  */
 class DynamicLib {
  public:
-  DynamicLib() {}
+  DynamicLib() = default;
   ~DynamicLib() { Free(); }
 
   operator bool() { return (NULL != hnd_); }
@@ -136,7 +136,7 @@ class DynamicLibContainer {
     return instance;
   }
 
-  ~DynamicLibContainer() {}
+  ~DynamicLibContainer() = default;
 
   std::shared_ptr<DynamicLib> LoadLib(const std::string& libname) {
     auto itr = lib_map_.find(libname);
@@ -166,7 +166,7 @@ class DynamicLibContainer {
   }
 
  private:
-  DynamicLibContainer() {}
+  DynamicLibContainer() = default;
 
   std::map<std::string, std::shared_ptr<DynamicLib> > lib_map_;
 };

@@ -59,7 +59,7 @@ class AsioHttpClient : public std::enable_shared_from_this<AsioHttpClient> {
         session_cfg_ptr_(std::make_shared<const AsioHttpClient::SessionCfg>(cfg_)),
         mgr_strand_(boost::asio::make_strand(*io_ptr_)) {}
 
-  ~AsioHttpClient() {}
+  ~AsioHttpClient() = default;
 
   AsioHttpClient(const AsioHttpClient&) = delete;             ///< no copy
   AsioHttpClient& operator=(const AsioHttpClient&) = delete;  ///< no copy
@@ -167,7 +167,7 @@ class AsioHttpClient : public std::enable_shared_from_this<AsioHttpClient> {
           session_mgr_strand_(boost::asio::make_strand(*io_ptr)),
           timer_(session_mgr_strand_) {}
 
-    ~Session() {}
+    ~Session() = default;
 
     Session(const Session&) = delete;             ///< no copy
     Session& operator=(const Session&) = delete;  ///< no copy
@@ -410,7 +410,7 @@ class AsioHttpClientPool : public std::enable_shared_from_this<AsioHttpClientPoo
         io_ptr_(io_ptr),
         mgr_strand_(boost::asio::make_strand(*io_ptr_)) {}
 
-  ~AsioHttpClientPool() {}
+  ~AsioHttpClientPool() = default;
 
   AsioHttpClientPool(const AsioHttpClientPool&) = delete;             ///< no copy
   AsioHttpClientPool& operator=(const AsioHttpClientPool&) = delete;  ///< no copy

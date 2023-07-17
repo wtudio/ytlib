@@ -26,7 +26,7 @@ template <typename T>
 class Graph {
  public:
   Graph() : visited(false) {}
-  ~Graph() {}
+  ~Graph() = default;
   Graph(const T& _obj) : obj(_obj), visited(false) {}
 
   T obj;                                  ///< 实际节点值

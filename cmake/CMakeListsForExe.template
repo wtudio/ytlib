@@ -26,9 +26,6 @@ target_include_directories(
 # Set compile definitions of target
 # target_compile_definitions(${CUR_TARGET_NAME} PRIVATE xxx)
 
-# Set misc of target
-set_property(TARGET ${CUR_TARGET_NAME} PROPERTY FOLDER ${CUR_TARGET_NAME})
-
 # Set installation of target
 set_property(TARGET ${CUR_TARGET_NAME} PROPERTY EXPORT_NAME ${CUR_SUPERIOR_NAMESPACE}::${CUR_TARGET_NAME})
 install(

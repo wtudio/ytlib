@@ -23,9 +23,9 @@ namespace ytlib {
  */
 class SortObj {
  public:
-  SortObj() {}
+  SortObj() = default;
   explicit SortObj(uint32_t k_) : key(k_) {}
-  virtual ~SortObj() {}
+  virtual ~SortObj() = default;
 
   // 关系运算符重载
   bool operator<(const SortObj& val) const { return key < val.key; }

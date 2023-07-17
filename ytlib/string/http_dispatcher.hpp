@@ -26,8 +26,8 @@ class HttpDispatcher {
   using HttpHandle = std::function<HttpHandleFuncType>;
 
  public:
-  HttpDispatcher() {}
-  ~HttpDispatcher() {}
+  HttpDispatcher() = default;
+  ~HttpDispatcher() = default;
 
   template <typename... Args>
     requires std::constructible_from<HttpHandle, Args...>

@@ -18,8 +18,8 @@ namespace ytrpc {
 
 class UnifexRpcService {
  protected:
-  UnifexRpcService() {}
-  virtual ~UnifexRpcService() {}
+  UnifexRpcService() = default;
+  virtual ~UnifexRpcService() = default;
 
  private:
 };
@@ -51,7 +51,7 @@ class UnifexRpcServer : public std::enable_shared_from_this<UnifexRpcServer> {
   UnifexRpcServer(const UnifexRpcServer::Cfg& cfg)
       : cfg_(UnifexRpcServer::Cfg::Verify(cfg)) {}
 
-  ~UnifexRpcServer() {}
+  ~UnifexRpcServer() = default;
 
   UnifexRpcServer(const UnifexRpcServer&) = delete;             ///< no copy
   UnifexRpcServer& operator=(const UnifexRpcServer&) = delete;  ///< no copy

@@ -91,7 +91,7 @@ class AsioHttpServer : public std::enable_shared_from_this<AsioHttpServer> {
         mgr_timer_(mgr_strand_),
         http_dispatcher_ptr_(std::make_shared<HttpDispatcher<boost::asio::awaitable<void>(const std::shared_ptr<AsioHttpServer::Session>&, const HttpReq&)>>()) {}
 
-  ~AsioHttpServer() {}
+  ~AsioHttpServer() = default;
 
   AsioHttpServer(const AsioHttpServer&) = delete;             ///< no copy
   AsioHttpServer& operator=(const AsioHttpServer&) = delete;  ///< no copy
@@ -254,7 +254,7 @@ class AsioHttpServer : public std::enable_shared_from_this<AsioHttpServer> {
           timer_(session_socket_strand_),
           http_dispatcher_ptr_(http_dispatcher_ptr) {}
 
-    ~Session() {}
+    ~Session() = default;
 
     Session(const Session&) = delete;             ///< no copy
     Session& operator=(const Session&) = delete;  ///< no copy

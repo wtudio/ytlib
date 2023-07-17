@@ -9,7 +9,7 @@ class RefCounter {
  private:
   struct InnerCounter {
     InnerCounter(T* ptr) : n_(1), ptr_(ptr) {}
-    ~InnerCounter() {}
+    ~InnerCounter() = default;
 
     InnerCounter(const InnerCounter&) = delete;             ///< no copy
     InnerCounter& operator=(const InnerCounter&) = delete;  ///< no copy

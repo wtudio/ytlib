@@ -35,9 +35,6 @@ target_link_libraries(
 # Set compile definitions of target
 target_compile_definitions(${CUR_TARGET_NAME} INTERFACE BOOST_ASIO_NO_DEPRECATED)
 
-# Set misc of target
-set_property(TARGET ${CUR_TARGET_NAME} PROPERTY FOLDER ${CUR_TARGET_NAME})
-
 # Set installation of target
 set_property(TARGET ${CUR_TARGET_NAME} PROPERTY EXPORT_NAME ${CUR_SUPERIOR_NAMESPACE}::${CUR_TARGET_NAME})
 install(
@@ -49,7 +46,7 @@ install(
 # Set test of target
 if(YTLIB_BUILD_TESTS AND test_files)
   add_gtest_target(TEST_TARGET ${CUR_TARGET_NAME} TEST_SRC ${test_files})
-  set_property(TARGET ${CUR_TARGET_NAME}_test PROPERTY FOLDER ${CUR_TARGET_NAME})
+
   target_compile_definitions(${CUR_TARGET_NAME}_test PRIVATE ASIO_ENABLE_DEBUG)
   target_link_libraries(${CUR_TARGET_NAME}_test PRIVATE ytlib::boost_tools_util)
   if(WIN32)
@@ -59,5 +56,4 @@ endif()
 
 if(YTLIB_BUILD_BENCH_TESTS AND benchmark_files)
   add_benchmark_target(BENCH_TARGET ${CUR_TARGET_NAME} BENCH_SRC ${benchmark_files})
-  set_property(TARGET ${CUR_TARGET_NAME}_benchmark PROPERTY FOLDER ${CUR_TARGET_NAME})
 endif()

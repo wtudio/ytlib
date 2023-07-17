@@ -98,8 +98,8 @@ class GuidGener {
 // 对应一个mac+obj，生成guid，应用于单线程场景下
 class ObjGuidGener {
  public:
-  ObjGuidGener() {}
-  ~ObjGuidGener() {}
+  ObjGuidGener() = default;
+  ~ObjGuidGener() = default;
 
   void Init(const uint32_t& obj_id) {
     if (obj_id >= GUID_OBJ_NUM)

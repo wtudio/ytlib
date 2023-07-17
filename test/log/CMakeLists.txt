@@ -27,19 +27,14 @@ set_property(TARGET ${CUR_TARGET_NAME} PROPERTY PUBLIC_HEADER ${head_files})
 # Set compile definitions of target
 # target_compile_definitions(${CUR_TARGET_NAME} INTERFACE xxx)
 
-# Set misc of target
-set_property(TARGET ${CUR_TARGET_NAME} PROPERTY FOLDER test/${CUR_TARGET_NAME})
-
 # Set installation of target
 install(TARGETS ${CUR_TARGET_NAME} PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ytlib/${CUR_DIR})
 
 # Set test of target
 if(YTLIB_BUILD_TESTS AND test_files)
   add_gtest_target(TEST_TARGET ${CUR_TARGET_NAME} TEST_SRC ${test_files})
-  set_property(TARGET ${CUR_TARGET_NAME}_test PROPERTY FOLDER test/${CUR_TARGET_NAME})
 endif()
 
 if(YTLIB_BUILD_BENCH_TESTS AND benchmark_files)
   add_benchmark_target(BENCH_TARGET ${CUR_TARGET_NAME} BENCH_SRC ${benchmark_files})
-  set_property(TARGET ${CUR_TARGET_NAME}_benchmark PROPERTY FOLDER test/${CUR_TARGET_NAME})
 endif()

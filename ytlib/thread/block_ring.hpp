@@ -16,8 +16,8 @@ namespace ytlib {
 template <class T, uint32_t BUF_SIZE>
 class BlockRing {
  public:
-  BlockRing() {}
-  virtual ~BlockRing() {}
+  BlockRing() = default;
+  virtual ~BlockRing() = default;
 
  protected:
 };

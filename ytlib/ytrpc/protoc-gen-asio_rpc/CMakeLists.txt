@@ -10,7 +10,8 @@ file(GLOB_RECURSE src ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 
 # Add target
 add_executable(${CUR_TARGET_NAME})
-add_executable(ytlib::ytrpc::${CUR_TARGET_NAME} ALIAS ${CUR_TARGET_NAME})
+get_namespace(CUR_SUPERIOR_NAMESPACE)
+add_executable(${CUR_SUPERIOR_NAMESPACE}::${CUR_TARGET_NAME} ALIAS ${CUR_TARGET_NAME})
 
 # Set source file of target
 target_sources(${CUR_TARGET_NAME} PRIVATE ${src})
@@ -18,10 +19,7 @@ target_sources(${CUR_TARGET_NAME} PRIVATE ${src})
 # Set include path of target
 target_include_directories(
   ${CUR_TARGET_NAME}
-  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-
-# Set head files of target
-set_property(TARGET ${CUR_TARGET_NAME} PROPERTY PRIVATE_HEADER ${head_files})
+  PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
 
 # Set link libraries of target
 target_link_libraries(
@@ -33,7 +31,13 @@ target_link_libraries(
 # Set compile definitions of target
 # target_compile_definitions(${CUR_TARGET_NAME} PRIVATE xxx)
 
-# Set misc of target
-set_property(TARGET ${CUR_TARGET_NAME} PROPERTY FOLDER ytrpc/${CUR_TARGET_NAME})
+# Set installation of target
+set_property(TARGET ${CUR_TARGET_NAME} PROPERTY EXPORT_NAME ${CUR_SUPERIOR_NAMESPACE}::${CUR_TARGET_NAME})
+install(
+  TARGETS ${CUR_TARGET_NAME}
+  EXPORT ${INSTALL_CONFIG_NAME}
+  RUNTIME DESTINATION bin)
 
+# misc
 include(${CMAKE_CURRENT_SOURCE_DIR}/AsioRpcGenCode.cmake)
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/AsioRpcGenCode.cmake DESTINATION cmake)

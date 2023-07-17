@@ -2,13 +2,10 @@ include(FetchContent)
 
 message(STATUS "get hiredis ...")
 
-# cmake-format: off
 FetchContent_Declare(
   hiredis
-  URL  https://github.com/redis/hiredis/archive/v1.1.0.tar.gz
-  DOWNLOAD_EXTRACT_TIMESTAMP TRUE
-)
-# cmake-format: on
+  URL https://github.com/redis/hiredis/archive/v1.1.0.tar.gz
+  DOWNLOAD_EXTRACT_TIMESTAMP TRUE)
 
 FetchContent_GetProperties(hiredis)
 if(NOT hiredis_POPULATED)

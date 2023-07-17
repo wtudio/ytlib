@@ -60,7 +60,7 @@ class AsioRpcClient : public std::enable_shared_from_this<AsioRpcClient> {
         session_cfg_ptr_(std::make_shared<const AsioRpcClient::SessionCfg>(cfg_)),
         mgr_strand_(boost::asio::make_strand(*io_ptr_)) {}
 
-  ~AsioRpcClient() {}
+  ~AsioRpcClient() = default;
 
   AsioRpcClient(const AsioRpcClient&) = delete;             ///< no copy
   AsioRpcClient& operator=(const AsioRpcClient&) = delete;  ///< no copy
@@ -177,7 +177,7 @@ class AsioRpcClient : public std::enable_shared_from_this<AsioRpcClient> {
         : req_id(input_req_id),
           ctx(input_ctx) {}
 
-    ~MsgContext() {}
+    ~MsgContext() = default;
 
     const uint32_t req_id;
     const AsioRpcContext& ctx;
@@ -212,7 +212,7 @@ class AsioRpcClient : public std::enable_shared_from_this<AsioRpcClient> {
           send_sig_timer_(session_socket_strand_),
           session_handle_strand_(boost::asio::make_strand(*io_ptr)) {}
 
-    ~Session() {}
+    ~Session() = default;
 
     Session(const Session&) = delete;             ///< no copy
     Session& operator=(const Session&) = delete;  ///< no copy
@@ -491,7 +491,7 @@ class AsioRpcClient : public std::enable_shared_from_this<AsioRpcClient> {
                   const std::chrono::system_clock::time_point& ddl)
           : msg_ctx(input_msg_ctx),
             recv_sig_timer(session_strand, ddl) {}
-      ~MsgRecorder() {}
+      ~MsgRecorder() = default;
 
       MsgContext& msg_ctx;
       boost::asio::system_timer recv_sig_timer;
@@ -524,7 +524,7 @@ class AsioRpcClient : public std::enable_shared_from_this<AsioRpcClient> {
 class AsioRpcServiceProxy {
  protected:
   explicit AsioRpcServiceProxy(const std::shared_ptr<AsioRpcClient>& client_ptr) : client_ptr_(client_ptr) {}
-  virtual ~AsioRpcServiceProxy() {}
+  virtual ~AsioRpcServiceProxy() = default;
 
   boost::asio::awaitable<AsioRpcStatus> Invoke(const std::string& func_name, const std::shared_ptr<const AsioRpcContext>& ctx_ptr, const google::protobuf::Message& req, google::protobuf::Message& rsp) {
     return client_ptr_->Invoke(func_name, ctx_ptr, req, rsp);

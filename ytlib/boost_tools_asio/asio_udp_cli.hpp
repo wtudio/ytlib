@@ -44,7 +44,7 @@ class AsioUdpClient : public std::enable_shared_from_this<AsioUdpClient> {
         session_cfg_ptr_(std::make_shared<const AsioUdpClient::SessionCfg>(cfg_)),
         mgr_strand_(boost::asio::make_strand(*io_ptr_)) {}
 
-  ~AsioUdpClient() {}
+  ~AsioUdpClient() = default;
 
   AsioUdpClient(const AsioUdpClient&) = delete;             ///< no copy
   AsioUdpClient& operator=(const AsioUdpClient&) = delete;  ///< no copy
@@ -150,7 +150,7 @@ class AsioUdpClient : public std::enable_shared_from_this<AsioUdpClient> {
       sock_.open(boost::asio::ip::udp::v4());
     }
 
-    ~Session() {}
+    ~Session() = default;
 
     Session(const Session&) = delete;             ///< no copy
     Session& operator=(const Session&) = delete;  ///< no copy
@@ -325,7 +325,7 @@ class AsioUdpClientPool : public std::enable_shared_from_this<AsioUdpClientPool>
         io_ptr_(io_ptr),
         mgr_strand_(boost::asio::make_strand(*io_ptr_)) {}
 
-  ~AsioUdpClientPool() {}
+  ~AsioUdpClientPool() = default;
 
   AsioUdpClientPool(const AsioUdpClientPool&) = delete;             ///< no copy
   AsioUdpClientPool& operator=(const AsioUdpClientPool&) = delete;  ///< no copy

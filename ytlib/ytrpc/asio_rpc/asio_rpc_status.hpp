@@ -27,7 +27,7 @@ class AsioRpcStatus {
   };
 
  public:
-  AsioRpcStatus() {}
+  AsioRpcStatus() = default;
 
   AsioRpcStatus(int func_ret, const std::string& func_ret_msg)
       : ret_(AsioRpcStatus::Code::OK),
@@ -39,7 +39,7 @@ class AsioRpcStatus {
         func_ret_(func_ret),
         func_ret_msg_(func_ret_msg) {}
 
-  ~AsioRpcStatus() {}
+  ~AsioRpcStatus() = default;
 
   operator bool() const {
     return ret_ == AsioRpcStatus::Code::OK && func_ret_ == 0;

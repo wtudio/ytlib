@@ -60,7 +60,7 @@ class AsioCsClient : public std::enable_shared_from_this<AsioCsClient> {
         mgr_strand_(boost::asio::make_strand(*io_ptr_)),
         msg_handle_ptr_(std::make_shared<MsgHandleFunc>([](const std::shared_ptr<boost::asio::streambuf>&) {})) {}
 
-  ~AsioCsClient() {}
+  ~AsioCsClient() = default;
 
   AsioCsClient(const AsioCsClient&) = delete;             ///< no copy
   AsioCsClient& operator=(const AsioCsClient&) = delete;  ///< no copy
@@ -176,7 +176,7 @@ class AsioCsClient : public std::enable_shared_from_this<AsioCsClient> {
           io_ptr_(io_ptr),
           msg_handle_ptr_(msg_handle_ptr) {}
 
-    ~Session() {}
+    ~Session() = default;
 
     Session(const Session&) = delete;             ///< no copy
     Session& operator=(const Session&) = delete;  ///< no copy
@@ -410,7 +410,7 @@ class AsioCsClientPool : public std::enable_shared_from_this<AsioCsClientPool> {
         io_ptr_(io_ptr),
         mgr_strand_(boost::asio::make_strand(*io_ptr_)) {}
 
-  ~AsioCsClientPool() {}
+  ~AsioCsClientPool() = default;
 
   AsioCsClientPool(const AsioCsClientPool&) = delete;             ///< no copy
   AsioCsClientPool& operator=(const AsioCsClientPool&) = delete;  ///< no copy

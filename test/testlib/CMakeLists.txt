@@ -36,9 +36,4 @@ target_link_libraries(
 # target_compile_definitions(${CUR_TARGET_NAME} PRIVATE xxx)
 target_compile_definitions(${CUR_TARGET_NAME} PRIVATE ${CUR_TARGET_NAME}_EXPORTS BUILD_SHARED_LIBS)
 
-# Set misc of target
-set_property(
-  TARGET ${CUR_TARGET_NAME}
-  PROPERTY FOLDER
-  test)
 set_property(TARGET ${CUR_TARGET_NAME} PROPERTY DEBUG_POSTFIX "d")
