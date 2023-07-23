@@ -47,7 +47,7 @@ class BufferVec {
   }
 
   /**
-   * @brief 调小最后当前最后一个buf的大小
+   * @brief 调小当前最后一个buf的大小
    * @note 必须保证当前已经申请过buf，必须保证buf_size小于当前最后一个buf的size
    * @param buf_size
    */
