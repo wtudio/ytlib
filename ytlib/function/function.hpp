@@ -13,6 +13,15 @@ namespace ytlib {
 template <typename>
 class Function;
 
+/**
+ * @brief Function
+ * @note 由callable类型构造，适用性广
+ * @todo
+ * 1. noexcept类型
+ * 2. 增加内存池/alloctor等参数，减少内存开销
+ * @tparam R
+ * @tparam Args
+ */
 template <class R, class... Args>
 class Function<R(Args...)> {
  public:
@@ -25,19 +34,24 @@ class Function<R(Args...)> {
   };
 
  public:
-  Function() noexcept { base_.ops = nullptr; }
-  Function(std::nullptr_t) noexcept { base_.ops = nullptr; }
+  Function() { base_.ops = nullptr; }
+  Function(std::nullptr_t) { base_.ops = nullptr; }
 
-  ~Function() noexcept {
+  ~Function() {
     if (base_.ops) static_cast<const OpsType*>(base_.ops)->destroyer(&(base_.object_buf));
   }
 
-  Function(Function&& function) noexcept {
+  Function(Function&& function) {
     base_.ops = std::exchange(function.base_.ops, nullptr);
     if (base_.ops) static_cast<const OpsType*>(base_.ops)->relocator(&(function.base_.object_buf), &(base_.object_buf));
   }
 
-  Function& operator=(Function&& function) noexcept {
+  Function(ytlib_function_base_t* function_base) {
+    base_.ops = std::exchange(function_base->ops, nullptr);
+    if (base_.ops) static_cast<const OpsType*>(base_.ops)->relocator(&(function_base->object_buf), &(base_.object_buf));
+  }
+
+  Function& operator=(Function&& function) {
     if (&function != this) {
       this->~Function();
       new (this) Function(std::move(function));
@@ -50,7 +64,7 @@ class Function<R(Args...)> {
       std::is_invocable_r_v<R, T, Args...> && !std::is_same_v<std::decay_t<T>, Function>;
 
   template <class T, class = std::enable_if_t<implicitly_convertible_v<T>>>
-  Function(T&& action) noexcept {
+  Function(T&& action) {
     if constexpr (std::is_assignable<T, std::nullptr_t>::value) {
       if (action == nullptr) {
         base_.ops = nullptr;
@@ -61,7 +75,6 @@ class Function<R(Args...)> {
     using Decayed = std::decay_t<T>;
 
     if constexpr (sizeof(Decayed) <= sizeof(base_.object_buf)) {
-      // action较小时直接存储在object_buf_中
       static constexpr OpsType ops = {
           .invoker = [](void* object, Args&&... args) -> R {
             if constexpr (std::is_void_v<R>) {
@@ -72,13 +85,13 @@ class Function<R(Args...)> {
           },
           .relocator = [](void* from, void* to) {
             new (to) Decayed(std::move(*static_cast<Decayed*>(from)));
-            static_cast<Decayed*>(from)->~Decayed(); },
+            static_cast<Decayed*>(from)->~Decayed();  //
+          },
           .destroyer = [](void* object) { static_cast<Decayed*>(object)->~Decayed(); }};
 
       base_.ops = &ops;
       new (&(base_.object_buf)) Decayed(std::forward<T>(action));
     } else {
-      // action较大时存储在堆上，指针存在object_buf_中。todo：可以考虑内存池/alloctor等减少开销
       using Stored = Decayed*;
 
       static constexpr OpsType ops = {
@@ -98,26 +111,27 @@ class Function<R(Args...)> {
   }
 
   template <class T, class = std::enable_if_t<implicitly_convertible_v<T>>>
-  Function& operator=(T&& action) noexcept {
+  Function& operator=(T&& action) {
     this->~Function();
     new (this) Function(std::forward<T>(action));
     return *this;
   }
 
-  Function& operator=(std::nullptr_t) noexcept {
+  Function& operator=(std::nullptr_t) {
     if (auto ops = std::exchange(base_.ops, nullptr)) {
       static_cast<const OpsType*>(ops)->destroyer(&(base_.object_buf));
     }
     return *this;
   }
 
-  R operator()(Args&&... args) const {
+  R operator()(Args... args) const {
     return static_cast<const OpsType*>(base_.ops)->invoker(&(base_.object_buf), std::forward<Args>(args)...);
   }
 
-  constexpr explicit operator bool() const noexcept { return (base_.ops != nullptr); }
+  explicit operator bool() const { return (base_.ops != nullptr); }
 
   ytlib_function_base_t* NativeHandle() { return &base_; }
+  const ytlib_function_base_t* NativeHandle() const { return &base_; }
 
  private:
   mutable ytlib_function_base_t base_;
@@ -136,13 +150,22 @@ struct InvokerTraitsHelper<R (*)(void*, Args...)> {
 template <typename T>
 concept DecayedType = std::is_same_v<std::decay_t<T>, T>;
 
-// TODO: 参数类型也要是退化的（纯C Style）
+// TODO: 参数类型也要是退化的（纯C Style，不可有引用、stl容器等）
 template <typename T>
 concept FunctionCStyleOps =
     std::is_same_v<void (*)(void*, void*), decltype(T::relocator)> &&
     std::is_same_v<void (*)(void*), decltype(T::destroyer)> &&
     DecayedType<typename InvokerTraitsHelper<decltype(T::invoker)>::ReturnType>;
 
+/**
+ * @brief Function
+ * @note 由定义好的C Style类型ops构造，可以直接使用NativeHandle与C互调
+ * @todo
+ * 1. noexcept类型
+ * 2. 增加内存池/alloctor等参数，减少内存开销
+ * 3. operator()方法在加上Args的类型限制
+ * @tparam Ops
+ */
 template <FunctionCStyleOps Ops>
 class Function<Ops> {
  public:
@@ -156,19 +179,24 @@ class Function<Ops> {
   using Indices = std::make_index_sequence<InvokerTypeHelper::ArgCount>;
 
  public:
-  Function() noexcept { base_.ops = nullptr; }
-  Function(std::nullptr_t) noexcept { base_.ops = nullptr; }
+  Function() { base_.ops = nullptr; }
+  Function(std::nullptr_t) { base_.ops = nullptr; }
 
-  ~Function() noexcept {
+  ~Function() {
     if (base_.ops) static_cast<const OpsType*>(base_.ops)->destroyer(&(base_.object_buf));
   }
 
-  Function(Function&& function) noexcept {
+  Function(Function&& function) {
     base_.ops = std::exchange(function.base_.ops, nullptr);
     if (base_.ops) static_cast<const OpsType*>(base_.ops)->relocator(&(function.base_.object_buf), &(base_.object_buf));
   }
 
-  Function& operator=(Function&& function) noexcept {
+  Function(ytlib_function_base_t* function_base) {
+    base_.ops = std::exchange(function_base->ops, nullptr);
+    if (base_.ops) static_cast<const OpsType*>(base_.ops)->relocator(&(function_base->object_buf), &(base_.object_buf));
+  }
+
+  Function& operator=(Function&& function) {
     if (&function != this) {
       this->~Function();
       new (this) Function(std::move(function));
@@ -183,7 +211,7 @@ class Function<Ops> {
   }
 
   template <class T, class = std::enable_if_t<CheckImplicitlyConvertible<T>(Indices{})>>
-  Function(T&& action) noexcept {
+  Function(T&& action) {
     if constexpr (std::is_assignable<T, std::nullptr_t>::value) {
       if (action == nullptr) {
         base_.ops = nullptr;
@@ -195,28 +223,28 @@ class Function<Ops> {
   }
 
   template <class T, class = std::enable_if_t<CheckImplicitlyConvertible<T>(Indices{})>>
-  Function& operator=(T&& action) noexcept {
+  Function& operator=(T&& action) {
     this->~Function();
     new (this) Function(std::forward<T>(action));
     return *this;
   }
 
-  Function& operator=(std::nullptr_t) noexcept {
+  Function& operator=(std::nullptr_t) {
     if (auto ops = std::exchange(base_.ops, nullptr)) {
       static_cast<const OpsType*>(ops)->destroyer(&(base_.object_buf));
     }
     return *this;
   }
 
-  // TODO: 加上Args的类型限制
   template <typename... Args>
   R operator()(Args... args) const {
     return static_cast<const OpsType*>(base_.ops)->invoker(&(base_.object_buf), args...);
   }
 
-  constexpr explicit operator bool() const noexcept { return (base_.ops != nullptr); }
+  explicit operator bool() const { return (base_.ops != nullptr); }
 
   ytlib_function_base_t* NativeHandle() { return &base_; }
+  const ytlib_function_base_t* NativeHandle() const { return &base_; }
 
  private:
   template <class T, size_t... Idx>
@@ -224,7 +252,6 @@ class Function<Ops> {
     using Decayed = std::decay_t<T>;
 
     if constexpr (sizeof(Decayed) <= sizeof(base_.object_buf)) {
-      // action较小时直接存储在object_buf_中
       static constexpr OpsType ops = {
           .invoker = [](void* object, std::tuple_element_t<Idx, ArgsTuple>... args) -> R {
             if constexpr (std::is_void_v<R>) {
@@ -241,7 +268,6 @@ class Function<Ops> {
       base_.ops = &ops;
       new (&(base_.object_buf)) Decayed(std::forward<T>(action));
     } else {
-      // action较大时存储在堆上，指针存在object_buf_中。todo：可以考虑内存池/alloctor等减少开销
       using Stored = Decayed*;
 
       static constexpr OpsType ops = {

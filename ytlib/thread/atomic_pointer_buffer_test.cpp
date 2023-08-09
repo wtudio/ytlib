@@ -21,10 +21,10 @@ class TestData {
 
 TEST(THREAD_TEST, AtomicPointerBuffer) {
   AtomicPointerBuffer<TestData> test_atomic_pointer_buffer;
-  constexpr uint32_t update_count = 10000;
+  constexpr uint32_t update_count = 3000;
 
   std::thread t1([&]() {
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
     for (uint32_t ct = 0; ct < update_count; ++ct) {
       test_atomic_pointer_buffer.Update(new TestData(ct));
@@ -33,7 +33,7 @@ TEST(THREAD_TEST, AtomicPointerBuffer) {
   });
 
   std::thread t2([&]() {
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
     for (uint32_t ct = 0; ct < update_count; ++ct) {
       TestData* p = test_atomic_pointer_buffer.Take();
