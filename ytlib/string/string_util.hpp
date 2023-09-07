@@ -11,6 +11,7 @@
 #include <cstring>
 #include <map>
 #include <set>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -29,6 +30,15 @@ inline std::string& Trim(std::string& s) {
   return s;
 }
 
+inline std::string_view& Trim(std::string_view& s) {
+  if (s.empty()) return s;
+  auto p = s.find_last_not_of(" ");
+  s = s.substr(0, (p != std::string_view::npos) ? (p + 1) : 0);
+  p = s.find_first_not_of(" ");
+  s = s.substr((p != std::string_view::npos) ? p : s.size());
+  return s;
+}
+
 /**
  * @brief 将类似于a=1&b=2&c=3这样的字符串解析到map中
  * @note 分割原则：在两个vsep之间的子字符串，如果包含msep，则以msep为界分为key、val
@@ -39,34 +49,36 @@ inline std::string& Trim(std::string& s) {
  * @param[in] clear 是否去除key为空的情况
  * @return std::map<std::string, std::string> 解析后的map
  */
-inline std::map<std::string, std::string> SplitToMap(const std::string& source,
-                                                     const std::string& vsep = "&",
-                                                     const std::string& msep = "=",
-                                                     bool trim = true,
-                                                     bool clear = true) {
-  std::map<std::string, std::string> result;
+template <class StringType = std::string_view>
+  requires(
+      std::is_same_v<StringType, std::string_view> ||
+      std::is_same_v<StringType, std::string>)
+std::map<StringType, StringType> SplitToMap(std::string_view source,
+                                            std::string_view vsep = "&",
+                                            std::string_view msep = "=",
+                                            bool trim = true,
+                                            bool clear = true) {
+  std::map<StringType, StringType> result;
 
   if (source.empty() || vsep.empty() || msep.empty() || vsep == msep) return result;
   size_t v_pos_end, v_pos_start = 0;
   do {
     v_pos_end = source.find(vsep, v_pos_start);
-    if (v_pos_end == std::string::npos) v_pos_end = source.length();
+    if (v_pos_end == std::string_view::npos) v_pos_end = source.length();
     if (v_pos_end > v_pos_start) {
-      const std::string& kv_str = source.substr(v_pos_start, v_pos_end - v_pos_start);
+      std::string_view kv_str = source.substr(v_pos_start, v_pos_end - v_pos_start);
       size_t msep_pos = kv_str.find(msep);
-      if (msep_pos != std::string::npos) {
+      if (msep_pos != std::string_view::npos) {
+        std::string_view first = kv_str.substr(0, msep_pos);
+        std::string_view second = kv_str.substr(msep_pos + msep.size());
         if (trim) {
-          std::string first = kv_str.substr(0, msep_pos);
-          std::string second = kv_str.substr(msep_pos + msep.size());
           Trim(first);
           if (!(clear && first.empty())) {
-            result[first] = Trim(second);
+            result[StringType(first)] = StringType(Trim(second));
           }
         } else {
-          const std::string& first = kv_str.substr(0, msep_pos);
-          const std::string& second = kv_str.substr(msep_pos + msep.size());
           if (!(clear && first.empty())) {
-            result[first] = second;
+            result[StringType(first)] = StringType(second);
           }
         }
       }
@@ -85,15 +97,19 @@ inline std::map<std::string, std::string> SplitToMap(const std::string& source,
  * @param[in] msep 单个kv内部的分隔符
  * @return std::string 拼接后的字符串
  */
-inline std::string JoinMap(const std::map<std::string, std::string>& kvmap,
-                           const std::string& vsep = "&",
-                           const std::string& msep = "=") {
-  std::string result;
+template <class StringType = std::string_view>
+  requires(
+      std::is_same_v<StringType, std::string_view> ||
+      std::is_same_v<StringType, std::string>)
+std::string JoinMap(const std::map<StringType, StringType>& kvmap,
+                    std::string_view vsep = "&",
+                    std::string_view msep = "=") {
+  std::stringstream result;
   for (auto itr = kvmap.begin(); itr != kvmap.end(); ++itr) {
-    if (itr != kvmap.begin()) result += vsep;
-    result += (itr->first + msep + itr->second);
+    if (itr != kvmap.begin()) result << vsep;
+    result << itr->first << msep << itr->second;
   }
-  return result;
+  return result.str();
 }
 
 /**
@@ -104,8 +120,12 @@ inline std::string JoinMap(const std::map<std::string, std::string>& kvmap,
  * @param[in] defval 默认字符串，当m中没有对应的key时，返回defval
  * @return std::string 结果
  */
-inline std::string GetMapItemWithDef(const std::map<std::string, std::string>& m,
-                                     const std::string& key, const std::string& defval = "") {
+template <class StringType = std::string_view>
+  requires(
+      std::is_same_v<StringType, std::string_view> ||
+      std::is_same_v<StringType, std::string>)
+const StringType& GetMapItemWithDef(const std::map<StringType, StringType>& m,
+                                    const StringType& key, const StringType& defval = "") {
   auto finditr = m.find(key);
   return (finditr != m.end()) ? (finditr->second) : defval;
 }
@@ -120,10 +140,12 @@ inline std::string GetMapItemWithDef(const std::map<std::string, std::string>& m
  * @param[in] msep 单个kv内部的分隔符
  * @return std::string& 拼接后的字符串s的引用
  */
-inline std::string& AddKV(std::string& s, const std::string& key, const std::string& val,
-                          const std::string& vsep = "&", const std::string& msep = "=") {
+inline std::string& AddKV(std::string& s, std::string_view key, std::string_view val,
+                          std::string_view vsep = "&", std::string_view msep = "=") {
   if (!s.empty()) s += vsep;
-  s += (key + msep + val);
+  s += key;
+  s += msep;
+  s += val;
   return s;
 }
 
@@ -137,27 +159,27 @@ inline std::string& AddKV(std::string& s, const std::string& key, const std::str
  * @param[in] trim 是否不计空格
  * @return std::string key对应的val
  */
-inline std::string GetValueFromStrKV(const std::string& str, const std::string& key,
-                                     const std::string& vsep = "&", const std::string& msep = "=",
-                                     bool trim = true) {
+inline std::string_view GetValueFromStrKV(std::string_view str, std::string_view key,
+                                          std::string_view vsep = "&", std::string_view msep = "=",
+                                          bool trim = true) {
   if (key.empty() || vsep.empty() || msep.empty() || vsep == msep) return "";
-  if (key.find(vsep) != std::string::npos || key.find(msep) != std::string::npos)
+  if (key.find(vsep) != std::string_view::npos || key.find(msep) != std::string_view::npos)
     return "";
 
   size_t key_pos = str.find(key);
-  while (key_pos != std::string::npos) {
+  while (key_pos != std::string_view::npos) {
     size_t msep_pos = str.find(msep, key_pos + key.size());
-    if (msep_pos == std::string::npos) return "";
+    if (msep_pos == std::string_view::npos) return "";
 
     size_t key_start_pos = str.rfind(vsep, key_pos);
-    if (key_start_pos == std::string::npos)
+    if (key_start_pos == std::string_view::npos)
       key_start_pos = 0;
     else
       key_start_pos += vsep.length();
 
     bool right_key_flag = false;
     if (trim) {
-      std::string real_key = str.substr(key_start_pos, msep_pos - key_start_pos);
+      std::string_view real_key = str.substr(key_start_pos, msep_pos - key_start_pos);
       Trim(real_key);
       if (real_key == key)
         right_key_flag = true;
@@ -169,10 +191,10 @@ inline std::string GetValueFromStrKV(const std::string& str, const std::string& 
     if (right_key_flag) {
       size_t val_start_pos = msep_pos + msep.size();
       size_t val_end_pos = str.find(vsep, val_start_pos);
-      if (val_end_pos == std::string::npos) val_end_pos = str.length();
+      if (val_end_pos == std::string_view::npos) val_end_pos = str.length();
 
       if (trim) {
-        std::string re = str.substr(val_start_pos, val_end_pos - val_start_pos);
+        std::string_view re = str.substr(val_start_pos, val_end_pos - val_start_pos);
         return Trim(re);
       } else {
         return str.substr(val_start_pos, val_end_pos - val_start_pos);
@@ -193,28 +215,27 @@ inline std::string GetValueFromStrKV(const std::string& str, const std::string& 
  * @param[in] clear 是否去除空项
  * @return std::vector<std::string> 分割结果
  */
-inline std::vector<std::string> SplitToVec(const std::string& source, const std::string& sep,
-                                           bool trim = true, bool clear = true) {
-  std::vector<std::string> result;
+template <class StringType = std::string_view>
+  requires(
+      std::is_same_v<StringType, std::string_view> ||
+      std::is_same_v<StringType, std::string>)
+std::vector<StringType> SplitToVec(std::string_view source, std::string_view sep,
+                                   bool trim = true, bool clear = true) {
+  std::vector<StringType> result;
   if (source.empty() || sep.empty()) return result;
 
   size_t pos_end, pos_start = 0;
   do {
     pos_end = source.find(sep, pos_start);
-    if (pos_end == std::string::npos) pos_end = source.length();
+    if (pos_end == std::string_view::npos) pos_end = source.length();
 
-    if (trim) {
-      std::string sub_str = source.substr(pos_start, pos_end - pos_start);
-      Trim(sub_str);
-      if (!(clear && sub_str.empty())) {
-        result.emplace_back(sub_str);
-      }
-    } else {
-      const std::string& sub_str = source.substr(pos_start, pos_end - pos_start);
-      if (!(clear && sub_str.empty())) {
-        result.emplace_back(sub_str);
-      }
-    }
+    std::string_view sub_str = source.substr(pos_start, pos_end - pos_start);
+
+    if (trim) Trim(sub_str);
+
+    if (!(clear && sub_str.empty()))
+      result.emplace_back(sub_str);
+
     pos_start = pos_end + sep.size();
   } while (pos_end < source.length());
 
@@ -228,7 +249,11 @@ inline std::vector<std::string> SplitToVec(const std::string& source, const std:
  * @param[in] sep 分隔符
  * @return std::string 拼接后的字符串
  */
-inline std::string JoinVec(const std::vector<std::string>& vec, const std::string& sep) {
+template <class StringType = std::string_view>
+  requires(
+      std::is_same_v<StringType, std::string_view> ||
+      std::is_same_v<StringType, std::string>)
+std::string JoinVec(const std::vector<StringType>& vec, std::string_view sep) {
   std::string result;
   for (auto itr = vec.begin(); itr != vec.end(); ++itr) {
     if (itr != vec.begin()) result += sep;
@@ -246,28 +271,27 @@ inline std::string JoinVec(const std::vector<std::string>& vec, const std::strin
  * @param[in] clear 是否去除空项
  * @return std::set<std::string> 分割结果
  */
-inline std::set<std::string> SplitToSet(const std::string& source, const std::string& sep,
-                                        bool trim = true, bool clear = true) {
-  std::set<std::string> result;
+template <class StringType = std::string_view>
+  requires(
+      std::is_same_v<StringType, std::string_view> ||
+      std::is_same_v<StringType, std::string>)
+std::set<StringType> SplitToSet(std::string_view source, std::string_view sep,
+                                bool trim = true, bool clear = true) {
+  std::set<StringType> result;
   if (source.empty() || sep.empty()) return result;
 
   size_t pos_end, pos_start = 0;
   do {
     pos_end = source.find(sep, pos_start);
-    if (pos_end == std::string::npos) pos_end = source.length();
+    if (pos_end == std::string_view::npos) pos_end = source.length();
 
-    if (trim) {
-      std::string sub_str = source.substr(pos_start, pos_end - pos_start);
-      Trim(sub_str);
-      if (!(clear && sub_str.empty())) {
-        result.emplace(sub_str);
-      }
-    } else {
-      const std::string& sub_str = source.substr(pos_start, pos_end - pos_start);
-      if (!(clear && sub_str.empty())) {
-        result.emplace(sub_str);
-      }
-    }
+    std::string_view sub_str = source.substr(pos_start, pos_end - pos_start);
+
+    if (trim) Trim(sub_str);
+
+    if (!(clear && sub_str.empty()))
+      result.emplace(sub_str);
+
     pos_start = pos_end + sep.size();
   } while (pos_end < source.length());
 
@@ -281,7 +305,11 @@ inline std::set<std::string> SplitToSet(const std::string& source, const std::st
  * @param[in] sep 分隔符
  * @return std::string 拼接后的字符串
  */
-inline std::string JoinSet(const std::set<std::string>& st, const std::string& sep) {
+template <class StringType = std::string_view>
+  requires(
+      std::is_same_v<StringType, std::string_view> ||
+      std::is_same_v<StringType, std::string>)
+std::string JoinSet(const std::set<StringType>& st, std::string_view sep) {
   std::string result;
   for (auto itr = st.begin(); itr != st.end(); ++itr) {
     if (itr != st.begin()) result += sep;
@@ -300,24 +328,24 @@ inline std::string JoinSet(const std::set<std::string>& st, const std::string& s
  * @return true key在list中
  * @return false key不在list中
  */
-inline bool CheckIfInList(const std::string& str, const std::string& key,
-                          const std::string& sep = ",", bool trim = true) {
+inline bool CheckIfInList(std::string_view str, std::string_view key,
+                          std::string_view sep = ",", bool trim = true) {
   if (key.empty() || sep.empty()) return false;
-  if (key.find(sep) != std::string::npos) return false;
+  if (key.find(sep) != std::string_view::npos) return false;
 
   size_t key_pos = str.find(key);
-  while (key_pos != std::string::npos) {
+  while (key_pos != std::string_view::npos) {
     size_t key_start_pos = str.rfind(sep, key_pos);
-    if (key_start_pos == std::string::npos)
+    if (key_start_pos == std::string_view::npos)
       key_start_pos = 0;
     else
       key_start_pos += sep.length();
 
     size_t key_end_pos = str.find(sep, key_pos + key.length());
-    if (key_end_pos == std::string::npos) key_end_pos = str.length();
+    if (key_end_pos == std::string_view::npos) key_end_pos = str.length();
 
     if (trim) {
-      std::string real_key = str.substr(key_start_pos, key_end_pos - key_start_pos);
+      std::string_view real_key = str.substr(key_start_pos, key_end_pos - key_start_pos);
       Trim(real_key);
       if (real_key == key)
         return true;
@@ -339,14 +367,14 @@ inline bool CheckIfInList(const std::string& str, const std::string& key,
  * @param[in] ver2 版本2
  * @return int 返回1是大于，返回0是相等，返回-1是小于
  */
-inline int CmpVersion(const std::string& ver1, const std::string& ver2) {
-  const std::vector<std::string>& version1_detail = SplitToVec(ver1, ".", true, true);
-  const std::vector<std::string>& version2_detail = SplitToVec(ver2, ".", true, true);
+inline int CmpVersion(std::string_view ver1, std::string_view ver2) {
+  const auto& version1_detail = SplitToVec<std::string_view>(ver1, ".", true, true);
+  const auto& version2_detail = SplitToVec<std::string_view>(ver2, ".", true, true);
 
   size_t idx = 0;
   for (idx = 0; idx < version1_detail.size() && idx < version2_detail.size(); ++idx) {
-    int ver1 = atoi(version1_detail[idx].c_str());
-    int ver2 = atoi(version2_detail[idx].c_str());
+    int ver1 = atoi(version1_detail[idx].data());
+    int ver2 = atoi(version2_detail[idx].data());
     if (ver1 < ver2)
       return -1;
     else if (ver1 > ver2)
@@ -367,8 +395,8 @@ inline int CmpVersion(const std::string& ver1, const std::string& ver2) {
  * @return true 在传入的版本之间
  * @return false 不在传入的版本之间
  */
-inline bool CheckVersionInside(const std::string& ver, const std::string& start_ver,
-                               const std::string& end_ver) {
+inline bool CheckVersionInside(std::string_view ver, std::string_view start_ver,
+                               std::string_view end_ver) {
   return (CmpVersion(ver, start_ver.empty() ? "0.0.0.0" : start_ver) >= 0 &&
           CmpVersion(ver, end_ver.empty() ? "999.9.9.9" : end_ver) <= 0);
 }
@@ -381,11 +409,11 @@ inline bool CheckVersionInside(const std::string& ver, const std::string& start_
  * @param[in] nv 要替换成的子字符串
  * @return std::string& 替换后的字符串str的引用
  */
-inline std::string& ReplaceString(std::string& str, const std::string& ov, const std::string& nv) {
+inline std::string& ReplaceString(std::string& str, std::string_view ov, std::string_view nv) {
   if (str.empty() || ov.empty()) return str;
   std::vector<size_t> vec_pos;
   size_t pos = 0, old_len = ov.size(), new_len = nv.size();
-  while (std::string::npos != (pos = str.find(ov, pos))) {
+  while ((pos = str.find(ov, pos)) != std::string::npos) {
     vec_pos.emplace_back(pos);
     pos += old_len;
   }
@@ -393,12 +421,12 @@ inline std::string& ReplaceString(std::string& str, const std::string& ov, const
   if (vec_len) {
     if (old_len == new_len) {
       for (size_t ii = 0; ii < vec_len; ++ii)
-        memcpy(const_cast<char*>(str.c_str() + vec_pos[ii]), nv.c_str(), new_len);
+        memcpy(const_cast<char*>(str.c_str() + vec_pos[ii]), nv.data(), new_len);
     } else if (old_len > new_len) {
       char* p = const_cast<char*>(str.c_str()) + vec_pos[0];
       vec_pos.emplace_back(str.size());
       for (size_t ii = 0; ii < vec_len; ++ii) {
-        memcpy(p, nv.c_str(), new_len);
+        memcpy(p, nv.data(), new_len);
         p += new_len;
         size_t cplen = vec_pos[ii + 1] - vec_pos[ii] - old_len;
         memmove(p, str.c_str() + vec_pos[ii] + old_len, cplen);
@@ -415,7 +443,7 @@ inline std::string& ReplaceString(std::string& str, const std::string& ov, const
         p -= cplen;
         memmove(p, str.c_str() + vec_pos[ii] + old_len, cplen);
         p -= new_len;
-        memcpy(p, nv.c_str(), new_len);
+        memcpy(p, nv.data(), new_len);
       }
     }
   }
@@ -429,7 +457,7 @@ inline std::string& ReplaceString(std::string& str, const std::string& ov, const
  * @return true 全部为数字和字母组成
  * @return false 不全为数字和字母组成
  */
-inline bool IsAlnumStr(const std::string& str) {
+inline bool IsAlnumStr(std::string_view str) {
   if (str.length() == 0) return false;
   for (auto& c : str) {
     if (!isalnum(c)) return false;
@@ -444,7 +472,7 @@ inline bool IsAlnumStr(const std::string& str) {
  * @return true 全部为数字组成
  * @return false 不全为数字组成
  */
-inline bool IsDigitStr(const std::string& str) {
+inline bool IsDigitStr(std::string_view str) {
   if (str.length() == 0) return false;
   for (auto& c : str) {
     if (c > '9' || c < '0') return false;
@@ -544,9 +572,9 @@ inline std::string& StandardisePath(std::string& path) {
  * @return true
  * @return false
  */
-inline bool StartsWith(const std::string& str, const std::string& pattern, bool ignore_case = false) {
-  const size_t& str_len = str.length();
-  const size_t& pattern_len = pattern.length();
+inline bool StartsWith(std::string_view str, std::string_view pattern, bool ignore_case = false) {
+  const size_t str_len = str.length();
+  const size_t pattern_len = pattern.length();
   if (str_len < pattern_len || pattern_len == 0) return false;
 
   if (ignore_case) {
@@ -571,9 +599,9 @@ inline bool StartsWith(const std::string& str, const std::string& pattern, bool 
  * @return true
  * @return false
  */
-inline bool EndsWith(const std::string& str, const std::string& pattern, bool ignore_case = false) {
-  const size_t& str_len = str.length();
-  const size_t& pattern_len = pattern.length();
+inline bool EndsWith(std::string_view str, std::string_view pattern, bool ignore_case = false) {
+  const size_t str_len = str.length();
+  const size_t pattern_len = pattern.length();
   if (str_len < pattern_len || pattern_len == 0) return false;
 
   const size_t& begin_pos = str_len - pattern_len;
@@ -597,10 +625,10 @@ inline bool EndsWith(const std::string& str, const std::string& pattern, bool ig
  * @param len
  * @return const uint64_t hash值
  */
-inline const uint64_t Hash64Fnv1a(const char* data, const uint64_t len) {
+inline const uint64_t Hash64Fnv1a(const char* data, size_t len) {
   const uint64_t prime = 0x100000001b3;
   uint64_t hash = 0xcbf29ce484222325;
-  for (int i = 0; i < len; ++i) {
+  for (size_t i = 0; i < len; ++i) {
     hash = (hash ^ static_cast<uint8_t>(data[i])) * prime;
   }
   return hash;
@@ -613,10 +641,10 @@ inline const uint64_t Hash64Fnv1a(const char* data, const uint64_t len) {
  * @param len
  * @return const uint32_t hash值
  */
-inline const uint32_t Hash32Fnv1a(const char* data, const uint64_t len) {
+inline const uint32_t Hash32Fnv1a(const char* data, size_t len) {
   const uint32_t prime = 0x1000193;
   uint32_t hash = 0x811c9dc5;
-  for (int i = 0; i < len; ++i) {
+  for (size_t i = 0; i < len; ++i) {
     hash = (hash ^ static_cast<uint8_t>(data[i])) * prime;
   }
   return hash;

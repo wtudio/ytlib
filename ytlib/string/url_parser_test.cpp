@@ -4,28 +4,29 @@
 
 namespace ytlib {
 
-TEST(URL_PARSER_TEST, JoinUrl) {
+template <class StringType>
+void TestJoinUrl() {
   struct TestCase {
     std::string name;
 
-    Url url;
+    Url<StringType> url;
 
     std::string want_result;
   };
   std::vector<TestCase> test_cases;
   test_cases.emplace_back(TestCase{
       .name = "case 1",
-      .url = Url{},
+      .url = Url<StringType>{},
       .want_result = ""});
   test_cases.emplace_back(TestCase{
       .name = "case 2",
-      .url = Url{
+      .url = Url<StringType>{
           .protocol = "http",
       },
       .want_result = "http://"});
   test_cases.emplace_back(TestCase{
       .name = "case 3",
-      .url = Url{
+      .url = Url<StringType>{
           .protocol = "http",
           .host = "127.0.0.1",
           .service = "80",
@@ -37,7 +38,7 @@ TEST(URL_PARSER_TEST, JoinUrl) {
 
   test_cases.emplace_back(TestCase{
       .name = "case 4",
-      .url = Url{
+      .url = Url<StringType>{
           .path = "index.html",
           .query = "key1=val1&key2=val2",
           .fragment = "all",
@@ -52,25 +53,26 @@ TEST(URL_PARSER_TEST, JoinUrl) {
   }
 }
 
-TEST(URL_PARSER_TEST, ParseUrl) {
+template <class StringType>
+void TestParseUrl() {
   struct TestCase {
     std::string name;
 
     std::string url_str;
 
-    std::optional<UrlView> want_result;
+    std::optional<Url<StringType>> want_result;
   };
   std::vector<TestCase> test_cases;
   test_cases.emplace_back(TestCase{
       .name = "case 1",
       .url_str = "",
-      .want_result = UrlView{
+      .want_result = Url<StringType>{
           .path = "",
       }});
   test_cases.emplace_back(TestCase{
       .name = "case 2",
       .url_str = "http://127.0.0.1:80/index.html?key1=val1&key2=val2#all",
-      .want_result = UrlView{
+      .want_result = Url<StringType>{
           .protocol = "http",
           .host = "127.0.0.1",
           .service = "80",
@@ -81,7 +83,7 @@ TEST(URL_PARSER_TEST, ParseUrl) {
   test_cases.emplace_back(TestCase{
       .name = "case 3",
       .url_str = "www.abc.com:8080/index.html?key1=val1",
-      .want_result = UrlView{
+      .want_result = Url<StringType>{
           .host = "www.abc.com",
           .service = "8080",
           .path = "/index.html",
@@ -90,7 +92,7 @@ TEST(URL_PARSER_TEST, ParseUrl) {
   test_cases.emplace_back(TestCase{
       .name = "case 4",
       .url_str = "www.abc.com:/index.html?key1=val1",
-      .want_result = UrlView{
+      .want_result = Url<StringType>{
           .host = "www.abc.com",
           .service = "",
           .path = "/index.html",
@@ -99,7 +101,7 @@ TEST(URL_PARSER_TEST, ParseUrl) {
   test_cases.emplace_back(TestCase{
       .name = "case 5",
       .url_str = "www.abc.com/index.html?key1=val1",
-      .want_result = UrlView{
+      .want_result = Url<StringType>{
           .host = "www.abc.com",
           .path = "/index.html",
           .query = "key1=val1",
@@ -107,7 +109,7 @@ TEST(URL_PARSER_TEST, ParseUrl) {
   test_cases.emplace_back(TestCase{
       .name = "case 6",
       .url_str = "www.abc.com?key1=val1",
-      .want_result = UrlView{
+      .want_result = Url<StringType>{
           .host = "www.abc.com",
           .path = "",
           .query = "key1=val1",
@@ -115,7 +117,7 @@ TEST(URL_PARSER_TEST, ParseUrl) {
   test_cases.emplace_back(TestCase{
       .name = "case 7",
       .url_str = "xxxxx",
-      .want_result = UrlView{
+      .want_result = Url<StringType>{
           .host = "xxxxx",
           .path = "",
       }});
@@ -139,6 +141,16 @@ TEST(URL_PARSER_TEST, ParseUrl) {
           << "Test " << cur_test_case.name << " failed, index " << ii;
     }
   }
+}
+
+TEST(URL_PARSER_TEST, JoinUrl) {
+  TestJoinUrl<std::string>();
+  TestJoinUrl<std::string_view>();
+}
+
+TEST(URL_PARSER_TEST, ParseUrl) {
+  TestParseUrl<std::string>();
+  TestParseUrl<std::string_view>();
 }
 
 }  // namespace ytlib

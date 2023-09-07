@@ -6,13 +6,14 @@
 
 namespace ytlib {
 
-TEST(STRING_UTIL_TEST, Trim_test) {
+template <class StringType>
+void TestTrim() {
   struct TestCase {
     std::string name;
 
-    std::string s;
+    StringType s;
 
-    std::string want_result;
+    StringType want_result;
   };
   std::vector<TestCase> test_cases;
 
@@ -40,13 +41,18 @@ TEST(STRING_UTIL_TEST, Trim_test) {
   }
 }
 
+TEST(STRING_UTIL_TEST, Trim_test) {
+  TestTrim<std::string>();
+  TestTrim<std::string_view>();
+}
+
 TEST(STRING_UTIL_TEST, ReplaceString_test) {
   struct TestCase {
     std::string name;
 
     std::string str;
-    std::string ov;
-    std::string nv;
+    std::string_view ov;
+    std::string_view nv;
 
     std::string want_result;
   };
@@ -106,7 +112,7 @@ TEST(STRING_UTIL_TEST, IsAlnumStr_test) {
   struct TestCase {
     std::string name;
 
-    std::string str;
+    std::string_view str;
 
     bool want_result;
   };
@@ -131,24 +137,59 @@ TEST(STRING_UTIL_TEST, IsAlnumStr_test) {
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
     TestCase& cur_test_case = test_cases[ii];
-    auto ret = IsAlnumStr(
-        cur_test_case.str);
+    auto ret = IsAlnumStr(cur_test_case.str);
     EXPECT_EQ(ret, cur_test_case.want_result)
         << "Test " << cur_test_case.name << " failed, index " << ii;
   }
 }
 
-TEST(STRING_UTIL_TEST, SplitToMap_test) {
+TEST(STRING_UTIL_TEST, IsIsDigitStr_test) {
   struct TestCase {
     std::string name;
 
-    std::string source;
-    std::string vsep;
-    std::string msep;
+    std::string_view str;
+
+    bool want_result;
+  };
+  std::vector<TestCase> test_cases;
+
+  test_cases.emplace_back(TestCase{
+      .name = "case 1",
+      .str = "123456789",
+      .want_result = true});
+  test_cases.emplace_back(TestCase{
+      .name = "case 2",
+      .str = "123456789abcd",
+      .want_result = false});
+  test_cases.emplace_back(TestCase{
+      .name = "case 3",
+      .str = "123456789..",
+      .want_result = false});
+  test_cases.emplace_back(TestCase{
+      .name = "case 4",
+      .str = "",
+      .want_result = false});
+
+  for (size_t ii = 0; ii < test_cases.size(); ++ii) {
+    TestCase& cur_test_case = test_cases[ii];
+    auto ret = IsDigitStr(cur_test_case.str);
+    EXPECT_EQ(ret, cur_test_case.want_result)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
+  }
+}
+
+template <class StringType>
+void TestSplitToMap() {
+  struct TestCase {
+    std::string name;
+
+    std::string_view source;
+    std::string_view vsep;
+    std::string_view msep;
     bool trim;
     bool clear;
 
-    std::map<std::string, std::string> want_result;
+    std::map<StringType, StringType> want_result;
   };
   std::vector<TestCase> test_cases;
 
@@ -274,7 +315,7 @@ TEST(STRING_UTIL_TEST, SplitToMap_test) {
       .want_result = {}});
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
     TestCase& cur_test_case = test_cases[ii];
-    auto ret = SplitToMap(
+    auto ret = SplitToMap<StringType>(
         cur_test_case.source,
         cur_test_case.vsep,
         cur_test_case.msep,
@@ -285,13 +326,19 @@ TEST(STRING_UTIL_TEST, SplitToMap_test) {
   }
 }
 
-TEST(STRING_UTIL_TEST, JoinMap_test) {
+TEST(STRING_UTIL_TEST, SplitToMap_test) {
+  TestSplitToMap<std::string>();
+  TestSplitToMap<std::string_view>();
+}
+
+template <class StringType>
+void TestJoinMap() {
   struct TestCase {
     std::string name;
 
-    std::map<std::string, std::string> m;
-    std::string vsep;
-    std::string msep;
+    std::map<StringType, StringType> m;
+    std::string_view vsep;
+    std::string_view msep;
 
     std::string want_result;
   };
@@ -350,17 +397,22 @@ TEST(STRING_UTIL_TEST, JoinMap_test) {
   }
 }
 
+TEST(STRING_UTIL_TEST, JoinMap_test) {
+  TestJoinMap<std::string>();
+  TestJoinMap<std::string_view>();
+}
+
 TEST(STRING_UTIL_TEST, GetValueFromStrKV_test) {
   struct TestCase {
     std::string name;
 
-    std::string str;
-    std::string key;
-    std::string vsep;
-    std::string msep;
+    std::string_view str;
+    std::string_view key;
+    std::string_view vsep;
+    std::string_view msep;
     bool trim;
 
-    std::string want_result;
+    std::string_view want_result;
   };
   std::vector<TestCase> test_cases;
 
@@ -476,7 +528,7 @@ TEST(STRING_UTIL_TEST, GetValueFromStrKV_test) {
         cur_test_case.vsep,
         cur_test_case.msep,
         cur_test_case.trim);
-    EXPECT_STREQ(ret.c_str(), cur_test_case.want_result.c_str())
+    EXPECT_EQ(ret, cur_test_case.want_result)
         << "Test " << cur_test_case.name << " failed, index " << ii;
   }
 }
@@ -513,16 +565,17 @@ TEST(STRING_UTIL_TEST, GetMapKeys_test) {
   }
 }
 
-TEST(STRING_UTIL_TEST, SplitToVec_test) {
+template <class StringType>
+void SplitToVec() {
   struct TestCase {
     std::string name;
 
-    std::string source;
-    std::string sep;
+    std::string_view source;
+    std::string_view sep;
     bool trim;
     bool clear;
 
-    std::vector<std::string> want_result;
+    std::vector<StringType> want_result;
   };
   std::vector<TestCase> test_cases;
 
@@ -614,7 +667,7 @@ TEST(STRING_UTIL_TEST, SplitToVec_test) {
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
     TestCase& cur_test_case = test_cases[ii];
-    auto ret = SplitToVec(
+    auto ret = SplitToVec<StringType>(
         cur_test_case.source,
         cur_test_case.sep,
         cur_test_case.trim,
@@ -624,12 +677,18 @@ TEST(STRING_UTIL_TEST, SplitToVec_test) {
   }
 }
 
-TEST(STRING_UTIL_TEST, JoinVec_test) {
+TEST(STRING_UTIL_TEST, SplitToVec_test) {
+  SplitToVec<std::string>();
+  SplitToVec<std::string_view>();
+}
+
+template <class StringType>
+void JoinVec() {
   struct TestCase {
     std::string name;
 
-    std::vector<std::string> vec;
-    std::string sep;
+    std::vector<StringType> vec;
+    std::string_view sep;
 
     std::string want_result;
   };
@@ -676,13 +735,18 @@ TEST(STRING_UTIL_TEST, JoinVec_test) {
   }
 }
 
+TEST(STRING_UTIL_TEST, JoinVec_test) {
+  JoinVec<std::string>();
+  JoinVec<std::string_view>();
+}
+
 TEST(STRING_UTIL_TEST, CheckIfInList_test) {
   struct TestCase {
     std::string name;
 
-    std::string str;
-    std::string key;
-    std::string sep;
+    std::string_view str;
+    std::string_view key;
+    std::string_view sep;
     bool trim;
 
     bool want_result;
@@ -801,16 +865,17 @@ TEST(STRING_UTIL_TEST, CheckIfInList_test) {
   }
 }
 
-TEST(STRING_UTIL_TEST, SplitToSet_test) {
+template <class StringType>
+void SplitToSet() {
   struct TestCase {
     std::string name;
 
-    std::string source;
-    std::string sep;
+    std::string_view source;
+    std::string_view sep;
     bool trim;
     bool clear;
 
-    std::set<std::string> want_result;
+    std::set<StringType> want_result;
   };
   std::vector<TestCase> test_cases;
 
@@ -902,7 +967,7 @@ TEST(STRING_UTIL_TEST, SplitToSet_test) {
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
     TestCase& cur_test_case = test_cases[ii];
-    auto ret = SplitToSet(
+    auto ret = SplitToSet<StringType>(
         cur_test_case.source,
         cur_test_case.sep,
         cur_test_case.trim,
@@ -912,12 +977,18 @@ TEST(STRING_UTIL_TEST, SplitToSet_test) {
   }
 }
 
-TEST(STRING_UTIL_TEST, JoinSet_test) {
+TEST(STRING_UTIL_TEST, SplitToSet_test) {
+  SplitToSet<std::string>();
+  SplitToSet<std::string_view>();
+}
+
+template <class StringType>
+void JoinSet() {
   struct TestCase {
     std::string name;
 
-    std::set<std::string> st;
-    std::string sep;
+    std::set<StringType> st;
+    std::string_view sep;
 
     std::string want_result;
   };
@@ -964,12 +1035,17 @@ TEST(STRING_UTIL_TEST, JoinSet_test) {
   }
 }
 
+TEST(STRING_UTIL_TEST, JoinSet_test) {
+  JoinSet<std::string>();
+  JoinSet<std::string_view>();
+}
+
 TEST(STRING_UTIL_TEST, CmpVersion_test) {
   struct TestCase {
     std::string name;
 
-    std::string ver1;
-    std::string ver2;
+    std::string_view ver1;
+    std::string_view ver2;
 
     int want_result;
   };
@@ -1009,19 +1085,15 @@ TEST(STRING_UTIL_TEST, CmpVersion_test) {
     EXPECT_EQ(ret, cur_test_case.want_result)
         << "Test " << cur_test_case.name << " failed, index " << ii;
   }
-
-  EXPECT_EQ(CheckVersionInside("7.6.8", "7.6.7", "7.6.9"), true);
-  EXPECT_EQ(CheckVersionInside("7.6.8", "7.6.8", "7.6.8"), true);
-  EXPECT_EQ(CheckVersionInside("7.6.6", "7.6.7", "7.6.9"), false);
 }
 
 TEST(STRING_UTIL_TEST, CheckVersionInside_test) {
   struct TestCase {
     std::string name;
 
-    std::string ver;
-    std::string start_ver;
-    std::string end_ver;
+    std::string_view ver;
+    std::string_view start_ver;
+    std::string_view end_ver;
 
     bool want_result;
   };
@@ -1075,15 +1147,16 @@ TEST(STRING_UTIL_TEST, CheckVersionInside_test) {
   }
 }
 
-TEST(STRING_UTIL_TEST, GetMapItemWithDef_test) {
+template <class StringType>
+void TestGetMapItemWithDef() {
   struct TestCase {
     std::string name;
 
-    std::map<std::string, std::string> m;
-    std::string key;
-    std::string defval;
+    std::map<StringType, StringType> m;
+    StringType key;
+    StringType defval;
 
-    std::string want_result;
+    StringType want_result;
   };
   std::vector<TestCase> test_cases;
 
@@ -1112,9 +1185,14 @@ TEST(STRING_UTIL_TEST, GetMapItemWithDef_test) {
         cur_test_case.m,
         cur_test_case.key,
         cur_test_case.defval);
-    EXPECT_STREQ(ret.c_str(), cur_test_case.want_result.c_str())
+    EXPECT_EQ(ret, cur_test_case.want_result)
         << "Test " << cur_test_case.name << " failed, index " << ii;
   }
+}
+
+TEST(STRING_UTIL_TEST, GetMapItemWithDef_test) {
+  TestGetMapItemWithDef<std::string>();
+  TestGetMapItemWithDef<std::string_view>();
 }
 
 TEST(STRING_UTIL_TEST, AddKV_test) {
@@ -1122,10 +1200,10 @@ TEST(STRING_UTIL_TEST, AddKV_test) {
     std::string name;
 
     std::string s;
-    std::string key;
-    std::string val;
-    std::string vsep;
-    std::string msep;
+    std::string_view key;
+    std::string_view val;
+    std::string_view vsep;
+    std::string_view msep;
 
     std::string want_result;
   };
@@ -1276,8 +1354,8 @@ TEST(STRING_UTIL_TEST, StartsWith_test) {
   struct TestCase {
     std::string name;
 
-    std::string str;
-    std::string pattern;
+    std::string_view str;
+    std::string_view pattern;
     bool ignore_case;
 
     bool want_result;
@@ -1320,8 +1398,8 @@ TEST(STRING_UTIL_TEST, EndsWith_test) {
   struct TestCase {
     std::string name;
 
-    std::string str;
-    std::string pattern;
+    std::string_view str;
+    std::string_view pattern;
     bool ignore_case;
 
     bool want_result;
@@ -1364,7 +1442,7 @@ TEST(STRING_UTIL_TEST, Hash64Fnv1a_test) {
   struct TestCase {
     std::string name;
 
-    std::string data;
+    std::string_view data;
 
     uint64_t want_result;
   };
@@ -1380,7 +1458,7 @@ TEST(STRING_UTIL_TEST, Hash64Fnv1a_test) {
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
     TestCase& cur_test_case = test_cases[ii];
-    auto ret = Hash64Fnv1a(cur_test_case.data.c_str(), cur_test_case.data.size());
+    auto ret = Hash64Fnv1a(cur_test_case.data.data(), cur_test_case.data.size());
     EXPECT_EQ(ret, cur_test_case.want_result)
         << "Test " << cur_test_case.name << " failed, index " << ii;
   }
@@ -1390,7 +1468,7 @@ TEST(STRING_UTIL_TEST, Hash32Fnv1a_test) {
   struct TestCase {
     std::string name;
 
-    std::string data;
+    std::string_view data;
 
     uint32_t want_result;
   };
@@ -1406,7 +1484,7 @@ TEST(STRING_UTIL_TEST, Hash32Fnv1a_test) {
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
     TestCase& cur_test_case = test_cases[ii];
-    auto ret = Hash32Fnv1a(cur_test_case.data.c_str(), cur_test_case.data.size());
+    auto ret = Hash32Fnv1a(cur_test_case.data.data(), cur_test_case.data.size());
     EXPECT_EQ(ret, cur_test_case.want_result)
         << "Test " << cur_test_case.name << " failed, index " << ii;
   }

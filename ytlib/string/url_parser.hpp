@@ -18,37 +18,19 @@ namespace ytlib {
 /**
  * @brief url元素
  *
+ * @tparam StringType
  */
-struct UrlView {
-  std::string_view protocol;  // 协议
-  std::string_view host;      // host
-  std::string_view service;   // 端口
-  std::string_view path;      // 路径
-  std::string_view query;     // 参数
-  std::string_view fragment;  // 额外信息
-};
-
-/**
- * @brief url元素
- *
- */
+template <class StringType = std::string_view>
+  requires(
+      std::is_same_v<StringType, std::string_view> ||
+      std::is_same_v<StringType, std::string>)
 struct Url {
-  std::string protocol;  // 协议
-  std::string host;      // host
-  std::string service;   // 端口
-  std::string path;      // 路径
-  std::string query;     // 参数
-  std::string fragment;  // 额外信息
-
-  static Url FromUrlView(const UrlView& url_view) {
-    return Url{
-        .protocol = std::string(url_view.protocol),
-        .host = std::string(url_view.host),
-        .service = std::string(url_view.service),
-        .path = std::string(url_view.path),
-        .query = std::string(url_view.query),
-        .fragment = std::string(url_view.fragment)};
-  }
+  StringType protocol;  // 协议
+  StringType host;      // host
+  StringType service;   // 端口
+  StringType path;      // 路径
+  StringType query;     // 参数
+  StringType fragment;  // 额外信息
 };
 
 /**
@@ -57,31 +39,33 @@ struct Url {
  * @param url_str url字符串
  * @return std::optional<UrlView> url结构，nullopt则代表解析失败
  */
-inline std::optional<UrlView> ParseUrl(std::string_view url_str) {
+template <class StringType = std::string_view>
+std::optional<Url<StringType> > ParseUrl(std::string_view url_str) {
   std::regex url_regex(
       R"(^(([^:\/?#]+)://)?(([^\/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?)",
       std::regex::ECMAScript);
   std::match_results<std::string_view::const_iterator> url_match_result;
 
-  if (!std::regex_match(url_str.begin(), url_str.end(), url_match_result, url_regex)) return std::nullopt;
+  if (!std::regex_match(url_str.begin(), url_str.end(), url_match_result, url_regex))
+    return std::nullopt;
 
-  UrlView url;
-  if (url_match_result[2].matched) url.protocol = std::string_view(url_match_result[2].first, url_match_result[2].second);
+  Url<StringType> url;
+  if (url_match_result[2].matched) url.protocol = StringType(url_match_result[2].first, url_match_result[2].second);
   if (url_match_result[4].matched) {
-    std::string_view auth(url_match_result[4].first, url_match_result[4].second);
+    StringType auth(url_match_result[4].first, url_match_result[4].second);
     size_t pos = auth.find_first_of(':');
-    if (pos != std::string_view::npos) {
+    if (pos != StringType::npos) {
       url.host = auth.substr(0, pos);
       url.service = auth.substr(pos + 1);
     } else {
       url.host = auth;
     }
   }
-  if (url_match_result[5].matched) url.path = std::string_view(url_match_result[5].first, url_match_result[5].second);
-  if (url_match_result[7].matched) url.query = std::string_view(url_match_result[7].first, url_match_result[7].second);
-  if (url_match_result[9].matched) url.fragment = std::string_view(url_match_result[9].first, url_match_result[9].second);
+  if (url_match_result[5].matched) url.path = StringType(url_match_result[5].first, url_match_result[5].second);
+  if (url_match_result[7].matched) url.query = StringType(url_match_result[7].first, url_match_result[7].second);
+  if (url_match_result[9].matched) url.fragment = StringType(url_match_result[9].first, url_match_result[9].second);
 
-  return std::optional<UrlView>{url};
+  return std::optional<Url<StringType> >{url};
 }
 
 /**
@@ -90,7 +74,8 @@ inline std::optional<UrlView> ParseUrl(std::string_view url_str) {
  * @param url url结构
  * @return std::string url字符串
  */
-inline std::string JoinUrl(const UrlView& url) {
+template <class StringType = std::string_view>
+std::string JoinUrl(const Url<StringType>& url) {
   std::stringstream ss;
 
   if (!url.protocol.empty()) ss << url.protocol << "://";
@@ -104,22 +89,6 @@ inline std::string JoinUrl(const UrlView& url) {
   if (!url.fragment.empty()) ss << '#' << url.fragment;
 
   return ss.str();
-}
-
-/**
- * @brief url拼接
- * @note url结构：[protocol://][host][:service][path][?query][#fragment]
- * @param url url结构
- * @return std::string url字符串
- */
-inline std::string JoinUrl(const Url& url) {
-  return JoinUrl(UrlView{
-      url.protocol,
-      url.host,
-      url.service,
-      url.path,
-      url.query,
-      url.fragment});
 }
 
 }  // namespace ytlib
