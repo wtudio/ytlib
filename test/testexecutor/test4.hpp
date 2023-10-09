@@ -23,7 +23,7 @@ struct RpcOperationState final {
   template <typename Receiver2>
     requires std::constructible_from<Receiver, Receiver2>
   explicit RpcOperationState(TestCtx ctx, const Req& req, Receiver2&& r) noexcept(std::is_nothrow_constructible_v<Receiver, Receiver2>)
-      : ctx_(ctx), req_(req), receiver_((Receiver2&&)r) {}
+      : ctx_(ctx), req_(req), receiver_((Receiver2 &&) r) {}
 
   void start() noexcept {
     try {
@@ -67,7 +67,7 @@ struct RpcSender {
 
   template <typename Receiver>
   RpcOperationState<Rsp, Req, unifex::remove_cvref_t<Receiver>> connect(Receiver&& receiver) {
-    return RpcOperationState<Rsp, Req, unifex::remove_cvref_t<Receiver>>(ctx_, req_, (Receiver&&)receiver);
+    return RpcOperationState<Rsp, Req, unifex::remove_cvref_t<Receiver>>(ctx_, req_, (Receiver &&) receiver);
   }
 
   TestCtx ctx_;

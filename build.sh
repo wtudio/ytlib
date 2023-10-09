@@ -10,7 +10,8 @@ cmake -B build \
     -DYTLIB_BUILD_WITH_BOOST=ON \
     -DYTLIB_BUILD_WITH_PROTOBUF=ON \
     -DYTLIB_BUILD_WITH_LIBUNIFEX=ON \
-    -DYTLIB_BUILD_CUSTOM_TESTS=OFF
+    -DYTLIB_BUILD_CUSTOM_TESTS=OFF \
+    $@
 
 if [ $? -ne 0 ]; then
     echo "cmake failed"

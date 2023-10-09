@@ -113,8 +113,8 @@ class AsioRpcServer : public std::enable_shared_from_this<AsioRpcServer> {
 
   ~AsioRpcServer() = default;
 
-  AsioRpcServer(const AsioRpcServer&) = delete;             ///< no copy
-  AsioRpcServer& operator=(const AsioRpcServer&) = delete;  ///< no copy
+  AsioRpcServer(const AsioRpcServer&) = delete;
+  AsioRpcServer& operator=(const AsioRpcServer&) = delete;
 
   template <std::derived_from<AsioRpcService> ServiceType>
   void RegisterService(const std::shared_ptr<ServiceType>& service_ptr) {
@@ -280,8 +280,8 @@ class AsioRpcServer : public std::enable_shared_from_this<AsioRpcServer> {
 
     ~Session() = default;
 
-    Session(const Session&) = delete;             ///< no copy
-    Session& operator=(const Session&) = delete;  ///< no copy
+    Session(const Session&) = delete;
+    Session& operator=(const Session&) = delete;
 
     void Start() {
       auto self = shared_from_this();

@@ -5,19 +5,16 @@ message(STATUS "get thirdlib ...")
 FetchContent_Declare(
   thirdlib
   URL  https://github.com/third_party/thirdlib/archive/v1.2.3.tar.gz
-  DOWNLOAD_EXTRACT_TIMESTAMP TRUE
-)
+  DOWNLOAD_EXTRACT_TIMESTAMP TRUE)
 
 # FetchContent_Declare(
 #   thirdlib
 #   GIT_REPOSITORY  https://github.com/third_party/thirdlib.git
-#   GIT_TAG         v1.2.3
-# )
+#   GIT_TAG         v1.2.3)
 
 # FetchContent_Declare(
 #   thirdlib
-#   SOURCE_DIR  ../third_party/thirdlib
-# )
+#   SOURCE_DIR  ../third_party/thirdlib)
 
 FetchContent_GetProperties(thirdlib)
 if(NOT thirdlib_POPULATED)
@@ -28,5 +25,5 @@ if(NOT thirdlib_POPULATED)
   FetchContent_MakeAvailable(thirdlib)
 endif()
 
-# import targets：
+# import targets:
 # thirdlib::thirdlib

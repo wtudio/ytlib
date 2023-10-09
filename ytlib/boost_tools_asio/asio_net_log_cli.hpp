@@ -59,8 +59,8 @@ class AsioNetLogClient : public std::enable_shared_from_this<AsioNetLogClient> {
 
   ~AsioNetLogClient() = default;
 
-  AsioNetLogClient(const AsioNetLogClient&) = delete;             ///< no copy
-  AsioNetLogClient& operator=(const AsioNetLogClient&) = delete;  ///< no copy
+  AsioNetLogClient(const AsioNetLogClient&) = delete;
+  AsioNetLogClient& operator=(const AsioNetLogClient&) = delete;
 
   /**
    * @brief 打日志到远程日志服务器
@@ -160,8 +160,8 @@ class AsioNetLogClient : public std::enable_shared_from_this<AsioNetLogClient> {
 
     ~Session() = default;
 
-    Session(const Session&) = delete;             ///< no copy
-    Session& operator=(const Session&) = delete;  ///< no copy
+    Session(const Session&) = delete;
+    Session& operator=(const Session&) = delete;
 
     void LogToSvr(const std::shared_ptr<boost::asio::streambuf>& log_buf_ptr) {
       auto self = shared_from_this();

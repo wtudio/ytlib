@@ -50,8 +50,8 @@ class UnifexRpcClient : public std::enable_shared_from_this<UnifexRpcClient> {
 
   ~UnifexRpcClient() = default;
 
-  UnifexRpcClient(const UnifexRpcClient&) = delete;             ///< no copy
-  UnifexRpcClient& operator=(const UnifexRpcClient&) = delete;  ///< no copy
+  UnifexRpcClient(const UnifexRpcClient&) = delete;
+  UnifexRpcClient& operator=(const UnifexRpcClient&) = delete;
 
   void Invoke(const std::string& func_name, const std::shared_ptr<const UnifexRpcContext>& ctx_ptr,
               const google::protobuf::Message& req, google::protobuf::Message& rsp, std::function<void(UnifexRpcStatus&&)>&& callback) {
@@ -174,7 +174,7 @@ class UnifexRpcClient : public std::enable_shared_from_this<UnifexRpcClient> {
     template <typename Receiver2>
       requires std::constructible_from<Receiver, Receiver2>
     RecvSigOperationState(std::function<void()>& recv_callback, Receiver2&& r) noexcept(std::is_nothrow_constructible_v<Receiver, Receiver2>)
-        : recv_callback_(recv_callback), receiver_(new Receiver((Receiver2&&)r)) {}
+        : recv_callback_(recv_callback), receiver_(new Receiver((Receiver2 &&) r)) {}
 
     void start() noexcept {
       recv_callback_ = [receiver = receiver_]() {
@@ -205,7 +205,7 @@ class UnifexRpcClient : public std::enable_shared_from_this<UnifexRpcClient> {
 
     template <typename Receiver>
     RecvSigOperationState<unifex::remove_cvref_t<Receiver>> connect(Receiver&& receiver) {
-      return RecvSigOperationState<unifex::remove_cvref_t<Receiver>>(recv_callback_, (Receiver&&)receiver);
+      return RecvSigOperationState<unifex::remove_cvref_t<Receiver>>(recv_callback_, (Receiver &&) receiver);
     }
 
    private:
@@ -232,8 +232,8 @@ class UnifexRpcClient : public std::enable_shared_from_this<UnifexRpcClient> {
 
     ~Session() = default;
 
-    Session(const Session&) = delete;             ///< no copy
-    Session& operator=(const Session&) = delete;  ///< no copy
+    Session(const Session&) = delete;
+    Session& operator=(const Session&) = delete;
 
     unifex::task<void> Invoke(MsgContext& msg_ctx) {
       MsgRecorder msg_recorder(msg_ctx);
@@ -498,8 +498,8 @@ struct UnifexRpcMsgContext {
                       const std::shared_ptr<const UnifexRpcContext>& input_ctx_ptr, const Req& input_req)
       : client(*client_ptr), func_name(input_func_name), ctx_ptr(input_ctx_ptr), req(input_req) {}
 
-  UnifexRpcMsgContext(const UnifexRpcMsgContext&) = delete;             ///< no copy
-  UnifexRpcMsgContext& operator=(const UnifexRpcMsgContext&) = delete;  ///< no copy
+  UnifexRpcMsgContext(const UnifexRpcMsgContext&) = delete;
+  UnifexRpcMsgContext& operator=(const UnifexRpcMsgContext&) = delete;
 
   UnifexRpcClient& client;
 
@@ -516,7 +516,7 @@ class UnifexRpcOperationState final {
   template <typename Receiver2>
     requires std::constructible_from<Receiver, Receiver2>
   UnifexRpcOperationState(const std::shared_ptr<UnifexRpcMsgContext<Req, Rsp>>& msg_ctx_ptr, Receiver2&& r) noexcept(std::is_nothrow_constructible_v<Receiver, Receiver2>)
-      : msg_ctx_ptr_(msg_ctx_ptr), receiver_(new Receiver((Receiver2&&)r)) {}
+      : msg_ctx_ptr_(msg_ctx_ptr), receiver_(new Receiver((Receiver2 &&) r)) {}
 
   void start() noexcept {
     try {
@@ -551,7 +551,7 @@ class UnifexRpcSender {
 
   template <typename Receiver>
   UnifexRpcOperationState<Req, Rsp, unifex::remove_cvref_t<Receiver>> connect(Receiver&& receiver) {
-    return UnifexRpcOperationState<Req, Rsp, unifex::remove_cvref_t<Receiver>>(msg_ctx_ptr_, (Receiver&&)receiver);
+    return UnifexRpcOperationState<Req, Rsp, unifex::remove_cvref_t<Receiver>>(msg_ctx_ptr_, (Receiver &&) receiver);
   }
 
  private:

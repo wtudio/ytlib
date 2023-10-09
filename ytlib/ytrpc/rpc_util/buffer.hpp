@@ -24,8 +24,8 @@ class BufferVec {
     v.buffer_vec_.clear();
   }
 
-  BufferVec(const BufferVec&) = delete;             ///< no copy
-  BufferVec& operator=(const BufferVec&) = delete;  ///< no copy
+  BufferVec(const BufferVec&) = delete;
+  BufferVec& operator=(const BufferVec&) = delete;
 
   BufferVec& Swap(BufferVec& v) {
     buffer_vec_.swap(v.buffer_vec_);

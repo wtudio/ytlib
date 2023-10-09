@@ -69,8 +69,8 @@ class AsioCsServer : public std::enable_shared_from_this<AsioCsServer> {
 
   ~AsioCsServer() = default;
 
-  AsioCsServer(const AsioCsServer&) = delete;             ///< no copy
-  AsioCsServer& operator=(const AsioCsServer&) = delete;  ///< no copy
+  AsioCsServer(const AsioCsServer&) = delete;
+  AsioCsServer& operator=(const AsioCsServer&) = delete;
 
   void SendMsg(const boost::asio::ip::tcp::endpoint& ep, const std::shared_ptr<boost::asio::streambuf>& msg_buf_ptr) {
     auto self = shared_from_this();
@@ -255,8 +255,8 @@ class AsioCsServer : public std::enable_shared_from_this<AsioCsServer> {
 
     ~Session() = default;
 
-    Session(const Session&) = delete;             ///< no copy
-    Session& operator=(const Session&) = delete;  ///< no copy
+    Session(const Session&) = delete;
+    Session& operator=(const Session&) = delete;
 
     void SendMsg(const std::shared_ptr<boost::asio::streambuf>& msg_buf_ptr) {
       auto self = shared_from_this();

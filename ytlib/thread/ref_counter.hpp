@@ -11,8 +11,8 @@ class RefCounter {
     InnerCounter(T* ptr) : n_(1), ptr_(ptr) {}
     ~InnerCounter() = default;
 
-    InnerCounter(const InnerCounter&) = delete;             ///< no copy
-    InnerCounter& operator=(const InnerCounter&) = delete;  ///< no copy
+    InnerCounter(const InnerCounter&) = delete;
+    InnerCounter& operator=(const InnerCounter&) = delete;
 
     std::atomic_uint32_t n_;
     T* ptr_;
@@ -33,7 +33,7 @@ class RefCounter {
 
  public:
   // 构造函数，计数器为1
-  RefCounter(T* ptr) : counter_ptr_(new InnerCounter(ptr)) {}
+  explicit RefCounter(T* ptr) : counter_ptr_(new InnerCounter(ptr)) {}
 
   // 拷贝构造函数
   RefCounter(const RefCounter& rhs) : counter_ptr_(rhs.counter_ptr_) {

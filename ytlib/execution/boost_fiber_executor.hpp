@@ -13,7 +13,7 @@ struct FiberOperationState {
   template <typename Receiver2>
     requires std::constructible_from<Receiver, Receiver2>
   explicit FiberOperationState(FiberExecutor* fiber_executor_ptr, Receiver2&& r) noexcept(std::is_nothrow_constructible_v<Receiver, Receiver2>)
-      : fiber_executor_ptr_(fiber_executor_ptr), receiver_(new Receiver((Receiver2&&)r)) {}
+      : fiber_executor_ptr_(fiber_executor_ptr), receiver_(new Receiver((Receiver2 &&) r)) {}
 
   void start() noexcept {
     try {
@@ -51,7 +51,7 @@ struct FiberTask {
 
   template <typename Receiver>
   FiberOperationState<unifex::remove_cvref_t<Receiver>> connect(Receiver&& receiver) {
-    return FiberOperationState<unifex::remove_cvref_t<Receiver>>(fiber_executor_ptr_, (Receiver&&)receiver);
+    return FiberOperationState<unifex::remove_cvref_t<Receiver>>(fiber_executor_ptr_, (Receiver &&) receiver);
   }
 
   FiberExecutor* fiber_executor_ptr_;
@@ -63,7 +63,7 @@ struct FiberSchedulerAfterOperationState {
   template <typename Receiver2>
     requires std::constructible_from<Receiver, Receiver2>
   explicit FiberSchedulerAfterOperationState(FiberExecutor* fiber_executor_ptr, const std::chrono::steady_clock::duration& dt, Receiver2&& r) noexcept(std::is_nothrow_constructible_v<Receiver, Receiver2>)
-      : fiber_executor_ptr_(fiber_executor_ptr), dt_(dt), receiver_(new Receiver((Receiver2&&)r)) {}
+      : fiber_executor_ptr_(fiber_executor_ptr), dt_(dt), receiver_(new Receiver((Receiver2 &&) r)) {}
 
   void start() noexcept {
     try {
@@ -103,7 +103,7 @@ struct FiberSchedulerAfterTask {
 
   template <typename Receiver>
   FiberSchedulerAfterOperationState<unifex::remove_cvref_t<Receiver>> connect(Receiver&& receiver) {
-    return FiberSchedulerAfterOperationState<unifex::remove_cvref_t<Receiver>>(fiber_executor_ptr_, dt_, (Receiver&&)receiver);
+    return FiberSchedulerAfterOperationState<unifex::remove_cvref_t<Receiver>>(fiber_executor_ptr_, dt_, (Receiver &&) receiver);
   }
 
   FiberExecutor* fiber_executor_ptr_;
@@ -116,7 +116,7 @@ struct FiberSchedulerAtOperationState {
   template <typename Receiver2>
     requires std::constructible_from<Receiver, Receiver2>
   explicit FiberSchedulerAtOperationState(FiberExecutor* fiber_executor_ptr, const std::chrono::steady_clock::time_point& tp, Receiver2&& r) noexcept(std::is_nothrow_constructible_v<Receiver, Receiver2>)
-      : fiber_executor_ptr_(fiber_executor_ptr), tp_(tp), receiver_(new Receiver((Receiver2&&)r)) {}
+      : fiber_executor_ptr_(fiber_executor_ptr), tp_(tp), receiver_(new Receiver((Receiver2 &&) r)) {}
 
   void start() noexcept {
     try {
@@ -156,7 +156,7 @@ struct FiberSchedulerAtTask {
 
   template <typename Receiver>
   FiberSchedulerAtOperationState<unifex::remove_cvref_t<Receiver>> connect(Receiver&& receiver) {
-    return FiberSchedulerAtOperationState<unifex::remove_cvref_t<Receiver>>(fiber_executor_ptr_, tp_, (Receiver&&)receiver);
+    return FiberSchedulerAtOperationState<unifex::remove_cvref_t<Receiver>>(fiber_executor_ptr_, tp_, (Receiver &&) receiver);
   }
 
   FiberExecutor* fiber_executor_ptr_;
@@ -244,7 +244,7 @@ struct FiberWaitReceiver {
   template <typename... Values>
   void set_value(Values&&... values) && noexcept {
     try {
-      unifex::activate_union_member(promise_.value_, (Values&&)values...);
+      unifex::activate_union_member(promise_.value_, (Values &&) values...);
       promise_.state_ = FiberWaitPromise<Result>::state::value;
     } catch (...) {
       unifex::activate_union_member(promise_.exception_, std::current_exception());
@@ -266,7 +266,7 @@ struct FiberWaitReceiver {
 
   template <typename Error>
   void set_error(Error&& e) && noexcept {
-    std::move(*this).set_error(make_exception_ptr((Error&&)e));
+    std::move(*this).set_error(make_exception_ptr((Error &&) e));
   }
 
   void set_done() && noexcept {
@@ -285,7 +285,7 @@ auto FiberWait(Sender&& sender)
   boost::fibers::promise<void> fiber_promise;
   boost::fibers::future<void> fiber_future(fiber_promise.get_future());
 
-  auto operation = unifex::connect((Sender&&)sender, FiberWaitReceiver<Result>{promise, fiber_promise});
+  auto operation = unifex::connect((Sender &&) sender, FiberWaitReceiver<Result>{promise, fiber_promise});
   unifex::start(operation);
 
   fiber_future.wait();

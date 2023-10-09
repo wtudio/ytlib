@@ -83,8 +83,8 @@ class AsioNetLogServer : public std::enable_shared_from_this<AsioNetLogServer> {
 
   ~AsioNetLogServer() = default;
 
-  AsioNetLogServer(const AsioNetLogServer&) = delete;             ///< no copy
-  AsioNetLogServer& operator=(const AsioNetLogServer&) = delete;  ///< no copy
+  AsioNetLogServer(const AsioNetLogServer&) = delete;
+  AsioNetLogServer& operator=(const AsioNetLogServer&) = delete;
 
   /**
    * @brief 启动日志服务器
@@ -239,8 +239,8 @@ class AsioNetLogServer : public std::enable_shared_from_this<AsioNetLogServer> {
 
     ~Session() = default;
 
-    Session(const Session&) = delete;             ///< no copy
-    Session& operator=(const Session&) = delete;  ///< no copy
+    Session(const Session&) = delete;
+    Session& operator=(const Session&) = delete;
 
     void Start() {
       const boost::asio::ip::tcp::endpoint& ep = sock_.remote_endpoint();

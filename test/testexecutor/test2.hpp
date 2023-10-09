@@ -26,7 +26,7 @@ struct MyOperationState final {
   template <typename Receiver2>
     requires std::constructible_from<Receiver, Receiver2>
   explicit MyOperationState(MyContext* ctx, Receiver2&& r) noexcept(std::is_nothrow_constructible_v<Receiver, Receiver2>)
-      : ctx_(ctx), receiver_((Receiver2&&)r) {}
+      : ctx_(ctx), receiver_((Receiver2 &&) r) {}
 
   // 必选实现：void start() noexcept
   void start() noexcept;
@@ -59,7 +59,7 @@ struct MySchedulerTask {
   // 必选实现：OperationState connect(Receiver&&)
   template <typename Receiver>
   MyOperationState<unifex::remove_cvref_t<Receiver>> connect(Receiver&& receiver) {
-    return MyOperationState<unifex::remove_cvref_t<Receiver>>{ctx_, (Receiver&&)receiver};
+    return MyOperationState<unifex::remove_cvref_t<Receiver>>{ctx_, (Receiver &&) receiver};
   }
 
   MyContext* ctx_;

@@ -61,8 +61,8 @@ class AsioHttpClient : public std::enable_shared_from_this<AsioHttpClient> {
 
   ~AsioHttpClient() = default;
 
-  AsioHttpClient(const AsioHttpClient&) = delete;             ///< no copy
-  AsioHttpClient& operator=(const AsioHttpClient&) = delete;  ///< no copy
+  AsioHttpClient(const AsioHttpClient&) = delete;
+  AsioHttpClient& operator=(const AsioHttpClient&) = delete;
 
   /**
    * @brief http请求协程接口
@@ -169,8 +169,8 @@ class AsioHttpClient : public std::enable_shared_from_this<AsioHttpClient> {
 
     ~Session() = default;
 
-    Session(const Session&) = delete;             ///< no copy
-    Session& operator=(const Session&) = delete;  ///< no copy
+    Session(const Session&) = delete;
+    Session& operator=(const Session&) = delete;
 
     template <typename ReqBodyType = boost::beast::http::string_body, typename RspBodyType = boost::beast::http::string_body>
     auto HttpSendRecvCo(const boost::beast::http::request<ReqBodyType>& req, const std::chrono::steady_clock::duration& timeout)
@@ -412,8 +412,8 @@ class AsioHttpClientPool : public std::enable_shared_from_this<AsioHttpClientPoo
 
   ~AsioHttpClientPool() = default;
 
-  AsioHttpClientPool(const AsioHttpClientPool&) = delete;             ///< no copy
-  AsioHttpClientPool& operator=(const AsioHttpClientPool&) = delete;  ///< no copy
+  AsioHttpClientPool(const AsioHttpClientPool&) = delete;
+  AsioHttpClientPool& operator=(const AsioHttpClientPool&) = delete;
 
   /**
    * @brief 获取http client

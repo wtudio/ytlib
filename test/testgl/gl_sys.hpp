@@ -37,8 +37,8 @@ class GlSys {
     return instance;
   }
 
-  GlSys(const GlSys&) = delete;             ///< no copy
-  GlSys& operator=(const GlSys&) = delete;  ///< no copy
+  GlSys(const GlSys&) = delete;
+  GlSys& operator=(const GlSys&) = delete;
 
   ~GlSys() { Stop(); }
 

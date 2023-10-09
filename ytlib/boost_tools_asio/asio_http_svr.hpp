@@ -93,8 +93,8 @@ class AsioHttpServer : public std::enable_shared_from_this<AsioHttpServer> {
 
   ~AsioHttpServer() = default;
 
-  AsioHttpServer(const AsioHttpServer&) = delete;             ///< no copy
-  AsioHttpServer& operator=(const AsioHttpServer&) = delete;  ///< no copy
+  AsioHttpServer(const AsioHttpServer&) = delete;
+  AsioHttpServer& operator=(const AsioHttpServer&) = delete;
 
   /**
    * @brief 启动http服务器
@@ -256,8 +256,8 @@ class AsioHttpServer : public std::enable_shared_from_this<AsioHttpServer> {
 
     ~Session() = default;
 
-    Session(const Session&) = delete;             ///< no copy
-    Session& operator=(const Session&) = delete;  ///< no copy
+    Session(const Session&) = delete;
+    Session& operator=(const Session&) = delete;
 
     void Start() {
       auto self = this->shared_from_this();

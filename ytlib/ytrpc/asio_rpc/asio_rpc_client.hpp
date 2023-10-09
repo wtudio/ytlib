@@ -62,8 +62,8 @@ class AsioRpcClient : public std::enable_shared_from_this<AsioRpcClient> {
 
   ~AsioRpcClient() = default;
 
-  AsioRpcClient(const AsioRpcClient&) = delete;             ///< no copy
-  AsioRpcClient& operator=(const AsioRpcClient&) = delete;  ///< no copy
+  AsioRpcClient(const AsioRpcClient&) = delete;
+  AsioRpcClient& operator=(const AsioRpcClient&) = delete;
 
   boost::asio::awaitable<AsioRpcStatus> Invoke(const std::string& func_name, const std::shared_ptr<const AsioRpcContext>& ctx_ptr, const google::protobuf::Message& req, google::protobuf::Message& rsp) {
     AsioRpcClient::MsgContext msg_ctx(GetNewReqID(), *ctx_ptr);
@@ -214,8 +214,8 @@ class AsioRpcClient : public std::enable_shared_from_this<AsioRpcClient> {
 
     ~Session() = default;
 
-    Session(const Session&) = delete;             ///< no copy
-    Session& operator=(const Session&) = delete;  ///< no copy
+    Session(const Session&) = delete;
+    Session& operator=(const Session&) = delete;
 
     boost::asio::awaitable<void> Invoke(MsgContext& msg_ctx) {
       return boost::asio::co_spawn(

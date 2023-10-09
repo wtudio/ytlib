@@ -7,7 +7,9 @@ SortIncludes: true
 IncludeBlocks: Preserve
 
 IndentPPDirectives: BeforeHash
+BreakStringLiterals: false
 ---
 Language: Proto
 BasedOnStyle: Google
+ColumnLimit: 0
 ...

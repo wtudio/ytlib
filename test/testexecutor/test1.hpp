@@ -23,22 +23,22 @@ struct MyOperationState final {
   template <typename Receiver2>
     requires std::constructible_from<Receiver, Receiver2>
   explicit MyOperationState(Receiver2 &&r) noexcept(std::is_nothrow_constructible_v<Receiver, Receiver2>)
-      : receiver_((Receiver2 &&)r) {}
+      : receiver_((Receiver2 &&) r) {}
 
   // 必选实现：void start() noexcept
   void start() noexcept {
     try {
       if constexpr (unifex::is_stop_never_possible_v<unifex::stop_token_type_t<Receiver &>>) {
-        unifex::set_value((Receiver &&)receiver_);
+        unifex::set_value((Receiver &&) receiver_);
       } else {
         if (unifex::get_stop_token(receiver_).stop_requested()) {
-          unifex::set_done((Receiver &&)receiver_);
+          unifex::set_done((Receiver &&) receiver_);
         } else {
-          unifex::set_value((Receiver &&)receiver_);
+          unifex::set_value((Receiver &&) receiver_);
         }
       }
     } catch (...) {
-      unifex::set_error((Receiver &&)receiver_, std::current_exception());
+      unifex::set_error((Receiver &&) receiver_, std::current_exception());
     }
   }
 
@@ -66,7 +66,7 @@ struct MySchedulerTask {
   // 必选实现：OperationState connect(Receiver&&)
   template <typename Receiver>
   MyOperationState<unifex::remove_cvref_t<Receiver>> connect(Receiver &&receiver) {
-    return MyOperationState<unifex::remove_cvref_t<Receiver>>{(Receiver &&)receiver};
+    return MyOperationState<unifex::remove_cvref_t<Receiver>>{(Receiver &&) receiver};
   }
 };
 

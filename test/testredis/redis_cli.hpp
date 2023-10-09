@@ -26,8 +26,8 @@ class RedisClient : public std::enable_shared_from_this<RedisClient> {
 
   ~RedisClient() {}
 
-  RedisClient(const RedisClient &) = delete;             ///< no copy
-  RedisClient &operator=(const RedisClient &) = delete;  ///< no copy
+  RedisClient(const RedisClient &) = delete;
+  RedisClient &operator=(const RedisClient &) = delete;
 
   struct Ret {
   };

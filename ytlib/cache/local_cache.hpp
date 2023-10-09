@@ -52,8 +52,8 @@ class LocalCache {
 
   ~LocalCache() = default;
 
-  LocalCache(const LocalCache&) = delete;             ///< no copy
-  LocalCache& operator=(const LocalCache&) = delete;  ///< no copy
+  LocalCache(const LocalCache&) = delete;
+  LocalCache& operator=(const LocalCache&) = delete;
 
   /**
    * @brief 获取缓存数据
@@ -198,8 +198,8 @@ class LocalCache {
 
     ~ValContent() = default;
 
-    ValContent(const ValContent&) = delete;             ///< no copy
-    ValContent& operator=(const ValContent&) = delete;  ///< no copy
+    ValContent(const ValContent&) = delete;
+    ValContent& operator=(const ValContent&) = delete;
 
    public:
     ValType val;  // 数据

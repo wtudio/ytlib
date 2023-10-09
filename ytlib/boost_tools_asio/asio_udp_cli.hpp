@@ -46,8 +46,8 @@ class AsioUdpClient : public std::enable_shared_from_this<AsioUdpClient> {
 
   ~AsioUdpClient() = default;
 
-  AsioUdpClient(const AsioUdpClient&) = delete;             ///< no copy
-  AsioUdpClient& operator=(const AsioUdpClient&) = delete;  ///< no copy
+  AsioUdpClient(const AsioUdpClient&) = delete;
+  AsioUdpClient& operator=(const AsioUdpClient&) = delete;
 
   /**
    * @brief 发送消息到服务端
@@ -152,8 +152,8 @@ class AsioUdpClient : public std::enable_shared_from_this<AsioUdpClient> {
 
     ~Session() = default;
 
-    Session(const Session&) = delete;             ///< no copy
-    Session& operator=(const Session&) = delete;  ///< no copy
+    Session(const Session&) = delete;
+    Session& operator=(const Session&) = delete;
 
     void SendMsg(const std::shared_ptr<boost::asio::streambuf>& msg_buf_ptr) {
       auto self = shared_from_this();
@@ -327,8 +327,8 @@ class AsioUdpClientPool : public std::enable_shared_from_this<AsioUdpClientPool>
 
   ~AsioUdpClientPool() = default;
 
-  AsioUdpClientPool(const AsioUdpClientPool&) = delete;             ///< no copy
-  AsioUdpClientPool& operator=(const AsioUdpClientPool&) = delete;  ///< no copy
+  AsioUdpClientPool(const AsioUdpClientPool&) = delete;
+  AsioUdpClientPool& operator=(const AsioUdpClientPool&) = delete;
 
   /**
    * @brief 获取net client

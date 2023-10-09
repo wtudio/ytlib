@@ -17,8 +17,8 @@ class AtomicPointerBuffer {
   AtomicPointerBuffer() = default;
   ~AtomicPointerBuffer() { Update(nullptr); }
 
-  AtomicPointerBuffer(const AtomicPointerBuffer&) = delete;             ///< no copy
-  AtomicPointerBuffer& operator=(const AtomicPointerBuffer&) = delete;  ///< no copy
+  AtomicPointerBuffer(const AtomicPointerBuffer&) = delete;
+  AtomicPointerBuffer& operator=(const AtomicPointerBuffer&) = delete;
 
   void Update(T* ptr) {
     T* cur_ptr = std::atomic_exchange(&ptr_, ptr);

@@ -35,8 +35,8 @@ class FiberExecutor {
     }
   }
 
-  FiberExecutor(const FiberExecutor&) = delete;             ///< no copy
-  FiberExecutor& operator=(const FiberExecutor&) = delete;  ///< no copy
+  FiberExecutor(const FiberExecutor&) = delete;
+  FiberExecutor& operator=(const FiberExecutor&) = delete;
 
   /**
    * @brief 注册svr的start、stop方法

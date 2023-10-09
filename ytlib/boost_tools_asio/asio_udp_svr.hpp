@@ -61,8 +61,8 @@ class AsioUdpServer : public std::enable_shared_from_this<AsioUdpServer> {
 
   ~AsioUdpServer() = default;
 
-  AsioUdpServer(const AsioUdpServer&) = delete;             ///< no copy
-  AsioUdpServer& operator=(const AsioUdpServer&) = delete;  ///< no copy
+  AsioUdpServer(const AsioUdpServer&) = delete;
+  AsioUdpServer& operator=(const AsioUdpServer&) = delete;
 
   template <typename... Args>
     requires std::constructible_from<MsgHandleFunc, Args...>
@@ -231,8 +231,8 @@ class AsioUdpServer : public std::enable_shared_from_this<AsioUdpServer> {
 
     ~Session() = default;
 
-    Session(const Session&) = delete;             ///< no copy
-    Session& operator=(const Session&) = delete;  ///< no copy
+    Session(const Session&) = delete;
+    Session& operator=(const Session&) = delete;
 
     void HandleMsg(std::shared_ptr<boost::asio::streambuf>&& msg_buf_ptr) {
       auto self = shared_from_this();

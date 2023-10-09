@@ -14,8 +14,8 @@ class DetachHolder {
     InnerCounter() : n_(1) {}
     ~InnerCounter() {}
 
-    InnerCounter(const InnerCounter &) = delete;             ///< no copy
-    InnerCounter &operator=(const InnerCounter &) = delete;  ///< no copy
+    InnerCounter(const InnerCounter &) = delete;
+    InnerCounter &operator=(const InnerCounter &) = delete;
 
     std::atomic_uint32_t n_;
     std::function<void()> f_;
@@ -89,8 +89,8 @@ auto StartDetached(Sender &&sender) -> std::shared_ptr<unifex::inplace_stop_sour
   DetachHolder holder;
   DetachReceiver r(holder, stsr->get_token());
 
-  using OpType = decltype(unifex::connect((Sender &&)sender, std::move(r)));
-  OpType *op = new OpType(unifex::connect((Sender &&)sender, std::move(r)));
+  using OpType = decltype(unifex::connect((Sender &&) sender, std::move(r)));
+  OpType *op = new OpType(unifex::connect((Sender &&) sender, std::move(r)));
   unifex::start(*op);
 
   holder.SetDeferFun([op] {

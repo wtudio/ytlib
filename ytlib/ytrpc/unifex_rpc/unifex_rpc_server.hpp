@@ -53,8 +53,8 @@ class UnifexRpcServer : public std::enable_shared_from_this<UnifexRpcServer> {
 
   ~UnifexRpcServer() = default;
 
-  UnifexRpcServer(const UnifexRpcServer&) = delete;             ///< no copy
-  UnifexRpcServer& operator=(const UnifexRpcServer&) = delete;  ///< no copy
+  UnifexRpcServer(const UnifexRpcServer&) = delete;
+  UnifexRpcServer& operator=(const UnifexRpcServer&) = delete;
 
   template <std::derived_from<UnifexRpcService> ServiceType>
   void RegisterService(const std::shared_ptr<ServiceType>& service_ptr) {

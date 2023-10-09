@@ -44,8 +44,8 @@ class AsioExecutor {
     }
   }
 
-  AsioExecutor(const AsioExecutor&) = delete;             ///< no copy
-  AsioExecutor& operator=(const AsioExecutor&) = delete;  ///< no copy
+  AsioExecutor(const AsioExecutor&) = delete;
+  AsioExecutor& operator=(const AsioExecutor&) = delete;
 
   /**
    * @brief 注册svr的start方法
