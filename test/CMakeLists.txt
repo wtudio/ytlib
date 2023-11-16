@@ -2,6 +2,7 @@
 
 include(GetHiRedis)
 include(GetLibevent)
+include(GetTBB)
 
 add_subdirectory(log)
 
@@ -18,6 +19,8 @@ add_subdirectory(testboostfiber)
 # add_subdirectory(testboostasio)
 
 add_subdirectory(testredis)
+
+add_subdirectory(testthreadpool)
 
 if(WIN32)
   include(GetFreeglut)

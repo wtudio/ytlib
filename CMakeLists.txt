@@ -12,6 +12,7 @@ option(YTLIB_BUILD_BENCH_TESTS "Build benchmark tests." OFF)
 option(YTLIB_BUILD_WITH_BOOST "Build with boost." OFF)
 option(YTLIB_BUILD_WITH_PROTOBUF "Build with protobuf." OFF)
 option(YTLIB_BUILD_WITH_LIBUNIFEX "Build with libunifex." OFF)
+option(YTLIB_BUILD_WITH_STDEXEC "Build with stdexec." OFF)
 option(YTLIB_BUILD_CUSTOM_TESTS "Build custom tests." OFF)
 
 # Some necessary settings
@@ -53,7 +54,8 @@ if(YTLIB_MASTER_PROJECT)
   set_property(GLOBAL PROPERTY POSITION_INDEPENDENT_CODE ON)
 
   if(MSVC)
-    add_compile_options(/wd4819)
+    add_compile_options(/utf-8 /wd4819)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zc:__cplusplus")
   endif()
 
   if(WIN32)
@@ -74,7 +76,7 @@ if(YTLIB_BUILD_DOC)
   endif()
 endif()
 
-# include cmake module
+# Include cmake module
 include(NamespaceTool)
 
 if(YTLIB_BUILD_TESTS)
@@ -99,14 +101,18 @@ if(YTLIB_BUILD_WITH_LIBUNIFEX)
   include(GetLibUnifex)
 endif()
 
-# add subdirectory
+if(YTLIB_BUILD_WITH_STDEXEC)
+  include(GetStdexec)
+endif()
+
+# Add subdirectory
 add_subdirectory(ytlib)
 
 if(YTLIB_BUILD_CUSTOM_TESTS)
   add_subdirectory(test)
 endif()
 
-# install
+# Install
 install(
   DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/cmake
   DESTINATION ./

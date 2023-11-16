@@ -34,8 +34,8 @@ function(add_protobuf_asio_rpc_gencode_target_for_proto_files)
 
     add_custom_command(
       OUTPUT ${GEN_SRC} ${GEN_HDR}
-      COMMAND protobuf::protoc ARGS ${ARG_OPTIONS} --proto_path ${PROTO_FILE_PATH} ${PROTOC_EXTERNAL_PROTO_PATH_ARGS} --asio_rpc_out
-              ${ARG_GENCODE_PATH} --plugin=protoc-gen-asio_rpc=$<TARGET_FILE:ytlib::ytrpc::protoc-gen-asio_rpc> ${PROTO_FILE}
+      COMMAND protobuf::protoc ARGS ${ARG_OPTIONS} --proto_path ${PROTO_FILE_PATH} ${PROTOC_EXTERNAL_PROTO_PATH_ARGS} --asio_rpc_out ${ARG_GENCODE_PATH}
+              --plugin=protoc-gen-asio_rpc=$<TARGET_FILE:ytlib::ytrpc::protoc-gen-asio_rpc> ${PROTO_FILE}
       DEPENDS ${PROTO_FILE} protobuf::protoc ytlib::ytrpc::protoc-gen-asio_rpc
       COMMENT
         "Running protoc, args: ${ARG_OPTIONS} --proto_path ${PROTO_FILE_PATH} ${PROTOC_EXTERNAL_PROTO_PATH_ARGS} --asio_rpc_out ${ARG_GENCODE_PATH} --plugin=protoc-gen-asio_rpc=$<TARGET_FILE:ytlib::ytrpc::protoc-gen-asio_rpc> ${PROTO_FILE}"

@@ -4,7 +4,7 @@ message(STATUS "get googlebenchmark ...")
 
 FetchContent_Declare(
   googlebenchmark
-  URL https://github.com/google/benchmark/archive/v1.6.1.tar.gz
+  URL https://github.com/google/benchmark/archive/v1.8.3.tar.gz
   DOWNLOAD_EXTRACT_TIMESTAMP TRUE)
 
 FetchContent_GetProperties(googlebenchmark)

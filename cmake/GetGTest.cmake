@@ -4,7 +4,7 @@ message(STATUS "get googletest ...")
 
 FetchContent_Declare(
   googletest
-  URL https://github.com/google/googletest/archive/v1.13.0.tar.gz
+  URL https://github.com/google/googletest/archive/v1.14.0.tar.gz
   DOWNLOAD_EXTRACT_TIMESTAMP TRUE
   OVERRIDE_FIND_PACKAGE)
 

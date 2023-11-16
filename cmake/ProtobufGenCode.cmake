@@ -34,11 +34,9 @@ function(add_protobuf_gencode_target_for_proto_path)
 
     add_custom_command(
       OUTPUT ${GEN_SRC} ${GEN_HDR}
-      COMMAND protobuf::protoc ARGS ${ARG_OPTIONS} --proto_path=${ARG_PROTO_PATH} ${PROTOC_EXTERNAL_PROTO_PATH_ARGS} --cpp_out=${ARG_GENCODE_PATH}
-              ${PROTO_FILE}
+      COMMAND protobuf::protoc ARGS ${ARG_OPTIONS} --proto_path=${ARG_PROTO_PATH} ${PROTOC_EXTERNAL_PROTO_PATH_ARGS} --cpp_out=${ARG_GENCODE_PATH} ${PROTO_FILE}
       DEPENDS ${PROTO_FILE} protobuf::protoc
-      COMMENT
-        "Running protoc, args: ${ARG_OPTIONS} --proto_path=${ARG_PROTO_PATH} ${PROTOC_EXTERNAL_PROTO_PATH_ARGS} --cpp_out=${ARG_GENCODE_PATH} ${PROTO_FILE}"
+      COMMENT "Running protoc, args: ${ARG_OPTIONS} --proto_path=${ARG_PROTO_PATH} ${PROTOC_EXTERNAL_PROTO_PATH_ARGS} --cpp_out=${ARG_GENCODE_PATH} ${PROTO_FILE}"
       VERBATIM)
   endforeach()
 
@@ -84,11 +82,9 @@ function(add_protobuf_gencode_target_for_one_proto_file)
 
   add_custom_command(
     OUTPUT ${GEN_SRC} ${GEN_HDR}
-    COMMAND protobuf::protoc ARGS ${ARG_OPTIONS} --proto_path=${PROTO_PATH} ${PROTOC_EXTERNAL_PROTO_PATH_ARGS} --cpp_out=${ARG_GENCODE_PATH}
-            ${ARG_PROTO_FILE}
+    COMMAND protobuf::protoc ARGS ${ARG_OPTIONS} --proto_path=${PROTO_PATH} ${PROTOC_EXTERNAL_PROTO_PATH_ARGS} --cpp_out=${ARG_GENCODE_PATH} ${ARG_PROTO_FILE}
     DEPENDS ${ARG_PROTO_FILE} protobuf::protoc
-    COMMENT
-      "Running protoc, args: ${ARG_OPTIONS} --proto_path=${PROTO_PATH} ${PROTOC_EXTERNAL_PROTO_PATH_ARGS} --cpp_out=${ARG_GENCODE_PATH} ${ARG_PROTO_FILE}"
+    COMMENT "Running protoc, args: ${ARG_OPTIONS} --proto_path=${PROTO_PATH} ${PROTOC_EXTERNAL_PROTO_PATH_ARGS} --cpp_out=${ARG_GENCODE_PATH} ${ARG_PROTO_FILE}"
     VERBATIM)
 
   add_library(${ARG_TARGET_NAME} STATIC)

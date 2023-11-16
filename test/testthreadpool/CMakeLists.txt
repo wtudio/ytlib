@@ -26,13 +26,10 @@ set_property(TARGET ${CUR_TARGET_NAME} PROPERTY PRIVATE_HEADER ${head_files})
 target_link_libraries(
   ${CUR_TARGET_NAME}
   PRIVATE ytlib::misc
+          ytlib::thread
+          ytlib::execution
           libunifex::unifex
-          hiredis::hiredis
-          libevent::event)
-
-if(UNIX)
-  target_link_libraries(${CUR_TARGET_NAME} PRIVATE pthread)
-endif()
+          STDEXEC::stdexec)
 
 # Set compile definitions of target
 # target_compile_definitions(${CUR_TARGET_NAME} PRIVATE xxx)

@@ -1,8 +1,13 @@
 # Get the current folder name
 string(REGEX REPLACE ".*/\(.*\)" "\\1" CUR_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
+# Get namespace
+get_namespace(CUR_SUPERIOR_NAMESPACE)
+string(REPLACE "::" "_" CUR_SUPERIOR_NAMESPACE_UNDERLINE ${CUR_SUPERIOR_NAMESPACE})
+
 # Set target name
-set(CUR_TARGET_NAME ${CUR_DIR})
+set(CUR_TARGET_NAME ${CUR_SUPERIOR_NAMESPACE_UNDERLINE}_${CUR_DIR})
+set(CUR_TARGET_ALIAS_NAME ${CUR_SUPERIOR_NAMESPACE}::${CUR_DIR})
 
 # Set file collection
 file(GLOB_RECURSE head_files ${CMAKE_CURRENT_SOURCE_DIR}/*.hpp ${CMAKE_CURRENT_SOURCE_DIR}/*.h)
@@ -11,8 +16,7 @@ file(GLOB_RECURSE benchmark_files ${CMAKE_CURRENT_SOURCE_DIR}/*_benchmark.cpp)
 
 # Add target
 add_library(${CUR_TARGET_NAME} INTERFACE)
-get_namespace(CUR_SUPERIOR_NAMESPACE)
-add_library(${CUR_SUPERIOR_NAMESPACE}::${CUR_TARGET_NAME} ALIAS ${CUR_TARGET_NAME})
+add_library(${CUR_TARGET_ALIAS_NAME} ALIAS ${CUR_TARGET_NAME})
 
 # Set include path of target
 target_include_directories(
@@ -32,7 +36,7 @@ target_link_libraries(
 # target_compile_definitions(${CUR_TARGET_NAME} INTERFACE xxx)
 
 # Set installation of target
-set_property(TARGET ${CUR_TARGET_NAME} PROPERTY EXPORT_NAME ${CUR_SUPERIOR_NAMESPACE}::${CUR_TARGET_NAME})
+set_property(TARGET ${CUR_TARGET_NAME} PROPERTY EXPORT_NAME ${CUR_TARGET_ALIAS_NAME})
 install(
   TARGETS ${CUR_TARGET_NAME}
   EXPORT ${INSTALL_CONFIG_NAME}
