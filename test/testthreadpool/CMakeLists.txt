@@ -29,7 +29,8 @@ target_link_libraries(
           ytlib::thread
           ytlib::execution
           libunifex::unifex
-          STDEXEC::stdexec)
+          STDEXEC::stdexec
+          TBB::tbb)
 
 # Set compile definitions of target
 # target_compile_definitions(${CUR_TARGET_NAME} PRIVATE xxx)

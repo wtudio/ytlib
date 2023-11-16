@@ -38,6 +38,7 @@ class BlockQueue {
     while (!queue_.empty())
       queue_.pop();
   }
+
   /// 停止队列
   void Stop() {
     std::unique_lock<std::mutex> lck(mutex_);
