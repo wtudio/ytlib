@@ -16,7 +16,7 @@ add_subdirectory(testprj)
 
 add_subdirectory(testexecutor)
 add_subdirectory(testboostfiber)
-# add_subdirectory(testboostasio)
+add_subdirectory(testboostasio)
 
 add_subdirectory(testredis)
 

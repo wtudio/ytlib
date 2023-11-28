@@ -1,4 +1,5 @@
 #include <chrono>
+#include <csignal>
 #include <string>
 #include <thread>
 
@@ -236,7 +237,36 @@ void TestTbb() {
          g_val.load(), std::chrono::duration_cast<std::chrono::milliseconds>(t).count());
 }
 
+void signalHandler(int signum) {
+  std::cout << "Interrupt signal (" << signum << ") received.\n";
+  std::cout << "bbb " << std::this_thread::get_id() << std::endl;
+  exit(signum);
+}
+
 int32_t main(int32_t argc, char **argv) {
+  std::cout << "aaa " << std::this_thread::get_id() << std::endl;
+
+  signal(SIGINT, signalHandler);
+  signal(SIGTERM, signalHandler);
+
+  double a = 0;
+
+  for (uint64_t ii = 0; ii < 100000000000; ++ii) {
+    for (uint64_t jj = 0; jj < 100000000000; ++jj) {
+      for (uint64_t kk = 0; kk < 100000000000; ++kk) {
+        a += ii;
+        a *= 1.23695;
+        a -= jj;
+        a /= 0.69864;
+        a *= kk;
+      }
+    }
+  }
+  std::cout << a << std::endl;
+  std::cout << "ccc " << std::this_thread::get_id() << std::endl;
+
+  std::this_thread::sleep_for(std::chrono::seconds(10));
+
   for (uint32_t ii = 0; ii < 5; ++ii) {
     printf("loop %u-----------------------------\n", ii);
 

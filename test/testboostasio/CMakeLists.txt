@@ -26,7 +26,8 @@ set_property(TARGET ${CUR_TARGET_NAME} PROPERTY PRIVATE_HEADER ${head_files})
 target_link_libraries(
   ${CUR_TARGET_NAME}
   PRIVATE ytlib::misc
-          ytlib::boost_tools_asio)
+          ytlib::boost_tools_asio
+          ytlib::function)
 
 # Set compile definitions of target
 target_compile_definitions(${CUR_TARGET_NAME} PRIVATE ASIO_ENABLE_DEBUG)

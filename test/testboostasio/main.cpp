@@ -9,7 +9,6 @@
 #include <coroutine>
 #include <cstdarg>
 #include <functional>
-#include <future>
 #include <iostream>
 #include <list>
 #include <map>
@@ -20,10 +19,12 @@
 #include <boost/asio.hpp>
 #include <boost/beast.hpp>
 
-#include <boost/asio/experimental/promise.hpp>
+// #include <boost/asio/experimental/promise.hpp>
+// #include <boost/asio/experimental/use_promise.hpp>
 
 #include "ytlib/boost_tools_asio/asio_debug_tools.hpp"
 #include "ytlib/boost_tools_asio/net_util.hpp"
+#include "ytlib/function/function.hpp"
 #include "ytlib/misc/misc_macro.h"
 #include "ytlib/misc/time.hpp"
 #include "ytlib/thread/thread_id.hpp"
@@ -73,7 +74,7 @@ void Test1() {
   std::list<std::thread> threads_list;
 
   for (uint32_t ii = 0; ii < n; ++ii) {
-    threads_list.emplace(threads_list.end(), [&io] {
+    threads_list.emplace_back([&io] {
       std::cerr << "thread " << std::this_thread::get_id() << " start.\n";
       io.run();
       std::cerr << "thread " << std::this_thread::get_id() << " exit.\n";
@@ -147,7 +148,7 @@ void Test2() {
   std::list<std::thread> threads_list;
 
   for (uint32_t ii = 0; ii < n; ++ii) {
-    threads_list.emplace(threads_list.end(), [&io] {
+    threads_list.emplace_back([&io] {
       std::cerr << "thread " << std::this_thread::get_id() << " start.\n";
       io.run();
       std::cerr << "thread " << std::this_thread::get_id() << " exit.\n";
@@ -194,19 +195,19 @@ boost::asio::awaitable<void> Test3Co3(boost::asio::io_context& io) {
   ASIO_DEBUG_HANDLE(Test3Co3);
 
   try {
-    std::cerr << "thread " << std::this_thread::get_id() << " run Test3Co3-a.\n";
+    // std::cerr << "thread " << std::this_thread::get_id() << " run Test3Co3-a.\n";
 
-    auto Test3Co1_promise = boost::asio::co_spawn(io, Test3Co1(io), boost::asio::experimental::use_promise);
-    std::cerr << "thread " << std::this_thread::get_id() << " run Test3Co3-b.\n";
+    // auto Test3Co1_promise = boost::asio::co_spawn(io, Test3Co1(io), boost::asio::experimental::use_promise);
+    // std::cerr << "thread " << std::this_thread::get_id() << " run Test3Co3-b.\n";
 
-    auto Test3Co2_promise = boost::asio::co_spawn(io, Test3Co2(io), boost::asio::experimental::use_promise);
-    std::cerr << "thread " << std::this_thread::get_id() << " run Test3Co3-c.\n";
+    // auto Test3Co2_promise = boost::asio::co_spawn(io, Test3Co2(io), boost::asio::experimental::use_promise);
+    // std::cerr << "thread " << std::this_thread::get_id() << " run Test3Co3-c.\n";
 
-    co_await Test3Co1_promise.async_wait(boost::asio::use_awaitable);
-    std::cerr << "thread " << std::this_thread::get_id() << " run Test3Co3-d.\n";
+    // co_await Test3Co1_promise.async_wait(boost::asio::use_awaitable);
+    // std::cerr << "thread " << std::this_thread::get_id() << " run Test3Co3-d.\n";
 
-    co_await Test3Co2_promise.async_wait(boost::asio::use_awaitable);
-    std::cerr << "thread " << std::this_thread::get_id() << " run Test3Co3-e.\n";
+    // co_await Test3Co2_promise.async_wait(boost::asio::use_awaitable);
+    // std::cerr << "thread " << std::this_thread::get_id() << " run Test3Co3-e.\n";
 
   } catch (const std::exception& e) {
     std::cerr << "Test3Co3 get exception:" << e.what() << '\n';
@@ -227,7 +228,7 @@ void Test3() {
   std::list<std::thread> threads_list;
 
   for (uint32_t ii = 0; ii < n; ++ii) {
-    threads_list.emplace(threads_list.end(), [&io] {
+    threads_list.emplace_back([&io] {
       std::cerr << "thread " << std::this_thread::get_id() << " start.\n";
       io.run();
       std::cerr << "thread " << std::this_thread::get_id() << " exit.\n";
@@ -254,15 +255,38 @@ MyAsyncFunc(boost::asio::io_context& io, const std::string& instr, CompletionTok
       instr);
 }
 
+void AsyncSendRecv(uint32_t in, ytlib::Function<void(uint32_t)>&& callback) {
+  std::thread t([in, callback{std::move(callback)}]() {
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    callback(in + 1);
+  });
+  t.detach();
+}
+
+template <class ResultType, class CompletionToken>
+BOOST_ASIO_INITFN_RESULT_TYPE(CompletionToken, void(ResultType))
+MyAsyncFuncWrap(ytlib::Function<void(ytlib::Function<void(ResultType&&)>&&)>&& func, CompletionToken&& token) {
+  return boost::asio::async_initiate<CompletionToken, void(ResultType)>(
+      [func{std::move(func)}](auto completion_handler) {
+        func([completion_handler{std::move(completion_handler)}](ResultType&& ret) mutable {
+          completion_handler(std::forward<ResultType>(ret));
+        });
+      },
+      token);
+}
+
 boost::asio::awaitable<void> Test4Co1(boost::asio::io_context& io) {
   ASIO_DEBUG_HANDLE(Test4Co1);
 
   try {
     std::cerr << "thread " << std::this_thread::get_id() << " run Test4Co1-a.\n";
 
-    std::string instr = "aaa";
-    auto retstr = co_await MyAsyncFunc(io, instr, boost::asio::use_awaitable);
-    std::cerr << "retstr: " << retstr << "\n";
+    auto ret = co_await MyAsyncFuncWrap<uint32_t>(
+        [](ytlib::Function<void(uint32_t)>&& callback) {
+          AsyncSendRecv(42, std::move(callback));
+        },
+        boost::asio::use_awaitable);
+    std::cerr << "ret: " << ret << "\n";
 
     std::cerr << "thread " << std::this_thread::get_id() << " run Test3Co3-d.\n";
 
@@ -285,7 +309,7 @@ void Test4() {
   std::list<std::thread> threads_list;
 
   for (uint32_t ii = 0; ii < n; ++ii) {
-    threads_list.emplace(threads_list.end(), [&io] {
+    threads_list.emplace_back([&io] {
       std::cerr << "thread " << std::this_thread::get_id() << " start.\n";
       io.run();
       std::cerr << "thread " << std::this_thread::get_id() << " exit.\n";
@@ -323,14 +347,14 @@ void Test5() {
 
   std::list<std::thread> threads_list;
 
-  threads_list.emplace(threads_list.end(), [&io] {
+  threads_list.emplace_back([&io] {
     std::cerr << "thread " << std::this_thread::get_id() << " start.\n";
     io.run();
     std::cerr << "thread " << std::this_thread::get_id() << " exit.\n";
   });
 
   for (uint32_t ii = 0; ii < n; ++ii) {
-    threads_list.emplace(threads_list.end(), [&ct, &io, ii] {
+    threads_list.emplace_back([&ct, &io, ii] {
       DBG_PRINT("run in thread %llu, tag %u, step 1, time ms %llu", ytlib::GetThreadId(), ii, GetCurTimestampMs());
       boost::asio::dispatch(io, [&ct, ii]() {
         DBG_PRINT("run in thread %llu, tag %u, step 2, time ms %llu", ytlib::GetThreadId(), ii, GetCurTimestampMs());
@@ -386,7 +410,7 @@ void Test6() {
 
   std::list<std::thread> threads_list;
 
-  threads_list.emplace(threads_list.end(), [&io] {
+  threads_list.emplace_back([&io] {
     std::cerr << "thread " << std::this_thread::get_id() << " start.\n";
     io.run();
     std::cerr << "thread " << std::this_thread::get_id() << " exit.\n";
@@ -416,7 +440,7 @@ void Test6_1() {
 
   std::list<std::thread> threads_list;
 
-  threads_list.emplace(threads_list.end(), [&io] {
+  threads_list.emplace_back([&io] {
     std::cerr << "thread " << std::this_thread::get_id() << " start.\n";
 
     std::chrono::steady_clock::time_point tp_start = std::chrono::steady_clock::now();
@@ -446,13 +470,13 @@ int32_t main(int32_t argc, char** argv) {
 
   // Test3();
 
-  // Test4();
+  Test4();
 
   // Test5();
 
   // Test6();
 
-  Test6_1();
+  // Test6_1();
 
   DBG_PRINT("%s", AsioDebugTool::Ins().GetStatisticalResult().c_str());
 

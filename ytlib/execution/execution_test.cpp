@@ -202,7 +202,7 @@ TEST(EXECUTION_TEST, FiberContext) {
       n = *ret;
     });
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
     EXPECT_EQ(n, 42);
   }
 
@@ -212,20 +212,23 @@ TEST(EXECUTION_TEST, FiberContext) {
     auto work = [&]() -> unifex::task<void> {
       co_await unifex::schedule(fiber_ctx.GetScheduler());
       ++n;
-      co_await unifex::schedule_after(fiber_ctx.GetScheduler(), std::chrono::milliseconds(100));
+      co_await unifex::schedule_after(
+          fiber_ctx.GetScheduler(), std::chrono::milliseconds(400));
       ++n;
-      co_await unifex::schedule_at(fiber_ctx.GetScheduler(), std::chrono::steady_clock::now() + std::chrono::milliseconds(100));
+      co_await unifex::schedule_at(
+          fiber_ctx.GetScheduler(),
+          std::chrono::steady_clock::now() + std::chrono::milliseconds(400));
       ++n;
     };
 
     unifex::async_scope scope;
     scope.spawn(work());
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
     EXPECT_EQ(n, 1);
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(400));
     EXPECT_EQ(n, 2);
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(400));
     EXPECT_EQ(n, 3);
 
     unifex::sync_wait(scope.cleanup());

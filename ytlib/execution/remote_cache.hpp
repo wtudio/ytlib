@@ -53,6 +53,7 @@ class RemoteCache {
     update_data_fun_ = std::move(update_data_fun);
   }
 
+  // todo: 此处处理不太好，容易在短时间内造成大量不必要的请求，最好是按key加锁
   unifex::task<std::optional<ValType>> Get(const KeyType& key) {
     co_await local_cache_mutex_.async_lock();
     auto local_ret = local_cache_.Get(key);
