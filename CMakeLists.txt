@@ -13,6 +13,7 @@ option(YTLIB_BUILD_WITH_BOOST "Build with boost." OFF)
 option(YTLIB_BUILD_WITH_PROTOBUF "Build with protobuf." OFF)
 option(YTLIB_BUILD_WITH_LIBUNIFEX "Build with libunifex." OFF)
 option(YTLIB_BUILD_WITH_STDEXEC "Build with stdexec." OFF)
+option(YTLIB_BUILD_WITH_TBB "Build with tbb." OFF)
 option(YTLIB_BUILD_CUSTOM_TESTS "Build custom tests." OFF)
 
 # Some necessary settings
@@ -103,6 +104,10 @@ endif()
 
 if(YTLIB_BUILD_WITH_STDEXEC)
   include(GetStdexec)
+endif()
+
+if(YTLIB_BUILD_WITH_TBB)
+  include(GetTBB)
 endif()
 
 # Add subdirectory

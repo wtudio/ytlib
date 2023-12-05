@@ -2,7 +2,6 @@
 
 include(GetHiRedis)
 include(GetLibevent)
-include(GetTBB)
 
 add_subdirectory(log)
 

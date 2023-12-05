@@ -10,6 +10,7 @@ add_subdirectory(math)
 add_subdirectory(misc)
 add_subdirectory(string)
 add_subdirectory(thread)
+add_subdirectory(timer)
 
 if(YTLIB_BUILD_WITH_BOOST)
   add_subdirectory(boost_tools_asio)
