@@ -258,14 +258,28 @@ inline time_t GetDayStartTime(time_t t) {
 }
 
 /**
- * @brief 获取星期几，1~7
+ * @brief 获取星期几，0~6
  *
  * @param t
- * @return uint32_t 1~7
+ * @return uint32_t 0~6
  */
 inline uint32_t GetWeekDay(time_t t) {
   struct tm st = TimeT2TmLocal(t);
-  return (st.tm_wday) ? (st.tm_wday) : 7;
+  return st.tm_wday;
+}
+
+/**
+ * @brief 获取星期几，0~6
+ *
+ * @param y
+ * @param m
+ * @param d
+ * @return uint32_t 0~6
+ */
+inline uint32_t GetWeekDay(uint32_t y, uint32_t m, uint32_t d) {
+  static constexpr uint32_t t[] = {0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4};
+  y -= m < 3;
+  return (y + y / 4 - y / 4 - y / 100 + y / 400 + t[m - 1] + d) % 7;
 }
 
 /**
