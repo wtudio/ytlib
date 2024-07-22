@@ -5,7 +5,8 @@ message(STATUS "get protobuf ...")
 FetchContent_Declare(
   protobuf
   URL https://github.com/protocolbuffers/protobuf/archive/v3.21.12.tar.gz
-  DOWNLOAD_EXTRACT_TIMESTAMP TRUE)
+  DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+  OVERRIDE_FIND_PACKAGE)
 
 FetchContent_GetProperties(protobuf)
 if(NOT protobuf_POPULATED)

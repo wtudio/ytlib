@@ -27,3 +27,10 @@ if(WIN32)
   add_subdirectory(testgame)
   add_subdirectory(testgl)
 endif()
+
+include(GetNlohmannJson)
+include(GetProtoBuf)
+include(GetOpenTelemetryProto)
+include(GetOpenTelemetryCpp)
+
+add_subdirectory(testot)
