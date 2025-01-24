@@ -461,6 +461,101 @@ void Test6_1() {
   }
 }
 
+boost::asio::awaitable<void> Test7Co1(boost::asio::io_context& io, uint32_t index) {
+  DBG_PRINT("[%llu]Test7Co1 %lu begin.", ytlib::GetThreadId(), index);
+  boost::asio::steady_timer t1(io);
+  t1.expires_after(std::chrono::milliseconds(100));
+  co_await t1.async_wait(boost::asio::use_awaitable);
+  DBG_PRINT("[%llu]Test7Co1 %lu end.", ytlib::GetThreadId(), index);
+
+  co_return;
+}
+
+void Test7() {
+  uint32_t n = 1;
+  boost::asio::io_context io1(n);
+  boost::asio::io_context io2(n);
+
+  boost::asio::executor_work_guard<boost::asio::io_context::executor_type> work_guard_1(io1.get_executor());
+  boost::asio::executor_work_guard<boost::asio::io_context::executor_type> work_guard_2(io2.get_executor());
+
+  std::list<std::thread> threads_list;
+
+  for (uint32_t ii = 0; ii < n; ++ii) {
+    threads_list.emplace_back([&io1] {
+      DBG_PRINT("[%llu]start for io 1", ytlib::GetThreadId());
+      io1.run();
+      DBG_PRINT("[%llu]exit for io 1", ytlib::GetThreadId());
+    });
+  }
+
+  std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+  for (uint32_t ii = 0; ii < n; ++ii) {
+    threads_list.emplace_back([&io2] {
+      DBG_PRINT("[%llu]start for io 2", ytlib::GetThreadId());
+      io2.run();
+      DBG_PRINT("[%llu]exit for io 2", ytlib::GetThreadId());
+    });
+  }
+
+  std::this_thread::sleep_for(std::chrono::seconds(1));
+
+  boost::asio::co_spawn(
+      io1,
+      [&]() -> boost::asio::awaitable<void> {
+        DBG_PRINT("[%llu]main begin.", ytlib::GetThreadId());
+
+        // 包裹住的部分在指定执行器中执行
+        co_await boost::asio::co_spawn(
+            io2,
+            [&]() -> boost::asio::awaitable<void> {
+              return Test7Co1(io2, 1);  // in io2
+            },
+            boost::asio::use_awaitable);
+
+        co_await Test7Co1(io2, 2);  // in io1
+
+        // 切换到指定执行器，直到下次co_await再返回默认执行器（子协程中遇到的第一个co_await）
+        co_await boost::asio::post(boost::asio::bind_executor(io2.get_executor(), boost::asio::use_awaitable));
+        co_await Test7Co1(io2, 3);  // half in io2 half in io1
+
+        co_await Test7Co1(io2, 4);  // in io1
+
+        // 好像没什么意义
+        co_await boost::asio::post(io2.get_executor(), boost::asio::use_awaitable);
+
+        co_await Test7Co1(io2, 5);  // in io1
+
+        // 切换到指定执行器
+        co_await boost::asio::post(boost::asio::bind_executor(io2.get_executor(), boost::asio::use_awaitable));
+        DBG_PRINT("[%llu]point 1", ytlib::GetThreadId());  // in io2
+
+        // 获取当前默认执行器，但不会切换过去
+        assert(io1.get_executor() == co_await boost::asio::this_coro::executor);
+        DBG_PRINT("[%llu]point 2", ytlib::GetThreadId());  // in io2
+
+        // 这样才能切换到当前默认执行器
+        co_await boost::asio::post(boost::asio::bind_executor(co_await boost::asio::this_coro::executor, boost::asio::use_awaitable));
+        DBG_PRINT("[%llu]point 3", ytlib::GetThreadId());  // in io1
+
+        DBG_PRINT("[%llu]main end.", ytlib::GetThreadId());
+
+        co_return;
+      },
+      boost::asio::detached);
+
+  std::this_thread::sleep_for(std::chrono::seconds(3));
+
+  work_guard_1.reset();
+  work_guard_2.reset();
+
+  for (auto itr = threads_list.begin(); itr != threads_list.end();) {
+    itr->join();
+    threads_list.erase(itr++);
+  }
+}
+
 int32_t main(int32_t argc, char** argv) {
   DBG_PRINT("-------------------start test-------------------");
 
@@ -470,13 +565,15 @@ int32_t main(int32_t argc, char** argv) {
 
   // Test3();
 
-  Test4();
+  // Test4();
 
   // Test5();
 
   // Test6();
 
   // Test6_1();
+
+  Test7();
 
   DBG_PRINT("%s", AsioDebugTool::Ins().GetStatisticalResult().c_str());
 
