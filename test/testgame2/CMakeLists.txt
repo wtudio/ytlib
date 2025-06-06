@@ -26,13 +26,8 @@ set_property(TARGET ${CUR_TARGET_NAME} PROPERTY PRIVATE_HEADER ${head_files})
 target_link_libraries(
   ${CUR_TARGET_NAME}
   PRIVATE ytlib::misc
-          ytlib::math
-          ytlib::boost_tools_asio
-          freeglut::freeglut)
-
-if(UNIX)
-  target_link_libraries(${CUR_TARGET_NAME} PRIVATE GLU GL)
-endif()
+          EnTT::EnTT
+          raylib::raylib)
 
 # Set compile definitions of target
-target_compile_definitions(${CUR_TARGET_NAME} PRIVATE ASIO_ENABLE_DEBUG)
+# target_compile_definitions(${CUR_TARGET_NAME} PRIVATE xxx)

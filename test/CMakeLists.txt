@@ -1,11 +1,6 @@
 # ytlib开发测试专用
 
-include(GetHiRedis)
-include(GetLibevent)
-
 add_subdirectory(log)
-
-add_subdirectory(custom_bench)
 
 add_subdirectory(testlib)
 add_subdirectory(testlib2)
@@ -17,16 +12,34 @@ add_subdirectory(testexecutor)
 add_subdirectory(testboostfiber)
 add_subdirectory(testboostasio)
 
-add_subdirectory(testredis)
-
 add_subdirectory(testthreadpool)
 
-if(WIN32)
-  include(GetFreeglut)
+# ---------------------------------
 
-  add_subdirectory(testgame)
-  add_subdirectory(testgl)
-endif()
+include(GetHiRedis)
+include(GetLibevent)
+
+add_subdirectory(testredis)
+
+# ---------------------------------
+
+include(GetGoogleBenchmark)
+
+add_subdirectory(custom_bench)
+
+# ---------------------------------
+
+include(GetFreeglut)
+
+add_subdirectory(testgame)
+add_subdirectory(testgl)
+
+include(GetEntt)
+include(GetRaylib)
+
+add_subdirectory(testgame2)
+
+# ---------------------------------
 
 include(GetNlohmannJson)
 include(GetProtoBuf)

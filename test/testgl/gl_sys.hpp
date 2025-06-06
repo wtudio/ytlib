@@ -8,6 +8,7 @@
 #pragma once
 
 #include <freeglut.h>
+#include <cmath>
 #include <string>
 
 namespace ytlib {

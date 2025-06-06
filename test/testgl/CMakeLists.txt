@@ -25,7 +25,12 @@ set_property(TARGET ${CUR_TARGET_NAME} PROPERTY PRIVATE_HEADER ${head_files})
 # Set link libraries of target
 target_link_libraries(
   ${CUR_TARGET_NAME}
-  PRIVATE freeglut::freeglut)
+  PRIVATE ytlib::misc
+          freeglut::freeglut)
+
+if(UNIX)
+  target_link_libraries(${CUR_TARGET_NAME} PRIVATE GLU GL)
+endif()
 
 # Set compile definitions of target
 # target_compile_definitions(${CUR_TARGET_NAME} PRIVATE xxx)
