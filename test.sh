@@ -4,7 +4,6 @@
 cmake -B build \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_PREFIX=./build/install \
-    -DYTLIB_BUILD_DOC=ON \
     -DYTLIB_BUILD_TESTS=ON \
     -DYTLIB_BUILD_BENCH_TESTS=ON \
     -DYTLIB_BUILD_WITH_BOOST=ON \

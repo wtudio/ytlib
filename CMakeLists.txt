@@ -6,7 +6,6 @@ project(ytlib LANGUAGES C CXX)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 # Some option
-option(YTLIB_BUILD_DOC "Build ytlib document." OFF)
 option(YTLIB_BUILD_TESTS "Build tests." OFF)
 option(YTLIB_BUILD_BENCH_TESTS "Build benchmark tests." OFF)
 option(YTLIB_BUILD_WITH_BOOST "Build with boost." OFF)
@@ -64,17 +63,6 @@ if(YTLIB_MASTER_PROJECT)
   endif()
 
   set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-endif()
-
-# Build document
-if(YTLIB_BUILD_DOC)
-  message(STATUS "gen document ...")
-  set(YTLIB_DOC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/document)
-  if(WIN32)
-    execute_process(COMMAND ${YTLIB_DOC_DIR}/buildDoc.bat ${YTLIB_DOC_DIR} WORKING_DIRECTORY ${YTLIB_DOC_DIR})
-  elseif(UNIX)
-    execute_process(COMMAND ${YTLIB_DOC_DIR}/buildDoc.sh ${YTLIB_DOC_DIR} WORKING_DIRECTORY ${YTLIB_DOC_DIR})
-  endif()
 endif()
 
 # Include cmake module
