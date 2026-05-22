@@ -6,7 +6,7 @@
 namespace ytlib {
 
 class CTest {
-  T_CLASS_SERIALIZE(&name &age &m &v &dbl_arr)
+  T_CLASS_SERIALIZE(&name & age & m & v & dbl_arr)
  public:
   std::string name;
   uint32_t age;

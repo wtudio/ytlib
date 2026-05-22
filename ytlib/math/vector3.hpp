@@ -1,8 +1,8 @@
 #pragma once
 
 #include <cmath>
+#include <concepts>
 #include <iostream>
-#include <type_traits>
 
 namespace ytlib {
 

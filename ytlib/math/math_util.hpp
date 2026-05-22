@@ -81,7 +81,7 @@ inline bool IsPrime(uint64_t num) {
  */
 inline uint64_t Gcd(uint64_t num1, uint64_t num2) {
   if (num1 < num2) std::swap(num1, num2);
-  if (num1 == 0) return 1;
+  if (num1 == 0) return num2;
   if (num2 == 0) return num1;
   if (num1 & 1) {
     if (num2 & 1) return Gcd(num2, num1 - num2);
@@ -100,6 +100,7 @@ inline uint64_t Gcd(uint64_t num1, uint64_t num2) {
  * @return uint64_t 最小公倍数
  */
 inline uint64_t Lcm(uint64_t num1, uint64_t num2) {
+  if (num1 == 0 || num2 == 0) return 0;
   return num1 / Gcd(num1, num2) * num2;
 }
 

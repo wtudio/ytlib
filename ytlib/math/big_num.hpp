@@ -8,8 +8,8 @@
 #pragma once
 
 #include <algorithm>
-#include <concepts>
 #include <iostream>
+#include <stdexcept>
 #include <vector>
 
 namespace ytlib {
@@ -43,18 +43,20 @@ class BigNum {
   explicit BigNum(int64_t num, uint32_t base = UINT32_MAX, size_t order = 0) {
     base_ = (base < 2) ? UINT32_MAX : base;
 
+    uint64_t unum;
     if (num < 0) {
       symbol_ = false;
-      num = -num;
+      unum = static_cast<uint64_t>(-(num + 1)) + 1;  // 避免 INT64_MIN 取反溢出
+    } else {
+      unum = static_cast<uint64_t>(num);
     }
 
-    if (num != 0) content_.resize(order);
+    if (unum != 0) content_.resize(order);
 
     do {
-      lldiv_t tmp = lldiv(num, base_);
-      content_.emplace_back(static_cast<uint32_t>(tmp.rem));
-      num = tmp.quot;
-    } while (num);
+      content_.emplace_back(static_cast<uint32_t>(unum % base_));
+      unum /= base_;
+    } while (unum);
   }
 
   /**
@@ -125,6 +127,7 @@ class BigNum {
     ret.base_ = (base < 2) ? UINT32_MAX : base;
     ret.symbol_ = symbol;
 
+    ret.content_.clear();
     if (num != 0) ret.content_.resize(order);
 
     do {
@@ -345,17 +348,27 @@ class BigNum {
   BigNum operator*(const BigNum& value) const {
     const BigNum& real_val = (base_ == value.base_) ? value : ChangeBase(value, base_);
 
-    BigNum re(0, base_);
-    const size_t& len1 = content_.size();
-    const size_t& len2 = real_val.content_.size();
+    const size_t len1 = content_.size();
+    const size_t len2 = real_val.content_.size();
+    std::vector<uint32_t> buf(len1 + len2, 0);
+
     for (size_t ii = 0; ii < len1; ++ii) {
       if (content_[ii] == 0) continue;
       for (size_t jj = 0; jj < len2; ++jj) {
         if (real_val.content_[jj] == 0) continue;
-        re += BigNum::AssignU64(static_cast<uint64_t>(content_[ii]) * real_val.content_[jj], true, base_, ii + jj);
+        uint64_t cur = static_cast<uint64_t>(content_[ii]) * real_val.content_[jj] + buf[ii + jj];
+        buf[ii + jj] = static_cast<uint32_t>(cur % base_);
+        for (size_t kk = ii + jj + 1, carry = cur / base_; carry; ++kk) {
+          uint64_t s = buf[kk] + carry;
+          buf[kk] = static_cast<uint32_t>(s % base_);
+          carry = s / base_;
+        }
       }
     }
+
+    BigNum re(0, base_);
     re.symbol_ = !(symbol_ ^ real_val.symbol_);
+    re.content_ = std::move(buf);
     while (re.content_.size() > 1 && re.content_.back() == 0) re.content_.pop_back();
     return re;
   }
@@ -390,7 +403,8 @@ class BigNum {
       uint64_t cur_num = 0;  // 被除数当前最高位/最高两位
       size_t cur_remainder_ii = ii + divisor.content_.size() - 1;
       if (cur_remainder_ii + 1 < remainder.content_.size()) {
-        cur_num = remainder.content_[cur_remainder_ii] + (remainder.content_[cur_remainder_ii + 1] * base_);
+        cur_num = remainder.content_[cur_remainder_ii] +
+                  static_cast<uint64_t>(remainder.content_[cur_remainder_ii + 1]) * base_;
       } else if (cur_remainder_ii < remainder.content_.size()) {
         cur_num = remainder.content_[cur_remainder_ii];
       }
@@ -398,15 +412,14 @@ class BigNum {
       // 确定k上下界[a1/(b1+1)+1, (a1+1)/b1]
       uint32_t min_k = static_cast<uint32_t>(cur_num / (divisor_head + 1));
       uint32_t max_k = static_cast<uint32_t>((cur_num + 1) / divisor_head);
-
-      const BigNum& cur_divisor = (divisor << ii);
+      if (max_k >= base_) max_k = base_ - 1;
 
       while (min_k <= max_k) {
         uint32_t cur_k = min_k + (max_k - min_k) / 2;
         BigNum cur_remainder = remainder - BigNum(static_cast<int64_t>(cur_k), base_, ii) * divisor;
         if (cur_remainder.symbol_ == false) {
           max_k = cur_k - 1;
-        } else if (cur_remainder >= cur_divisor) {
+        } else if (CompareShifted(cur_remainder, divisor, ii) >= 0) {
           min_k = cur_k + 1;
         } else {
           quotient_vec[ii] = cur_k;
@@ -511,7 +524,7 @@ class BigNum {
     return out;
   }
 
-  bool Symbol() const { return symbol_; }
+  bool Symbol() const { return symbol_ || Empty(); }
   const std::vector<uint32_t>& Content() const { return content_; }
   uint32_t Base() const { return base_; }
 
@@ -539,6 +552,31 @@ class BigNum {
       return ((val_l.symbol_ ^ (val_l.content_[ii] > real_val_r.content_[ii])) ? -1 : 1);
     }
 
+    return 0;
+  }
+
+  /**
+   * @brief 比较 val_l 与 val_r << shift 的大小，不构造移位临时对象
+   *
+   * @return int32_t 1:val_l>val_r<<shift; 0:相等; -1:val_l<val_r<<shift
+   */
+  static int32_t CompareShifted(const BigNum& val_l, const BigNum& val_r, size_t shift) {
+    if (val_l.Empty() && val_r.Empty()) return 0;
+    if (val_l.symbol_ && !val_r.symbol_) return 1;
+    if (!val_l.symbol_ && val_r.symbol_) return -1;
+
+    const BigNum& real_val_r = (val_l.base_ == val_r.base_) ? val_r : ChangeBase(val_r, val_l.base_);
+
+    const size_t l_size = val_l.content_.size();
+    const size_t r_shifted_size = real_val_r.Empty() ? 1 : (real_val_r.content_.size() + shift);
+    if (l_size != r_shifted_size)
+      return ((val_l.symbol_ ^ (l_size > r_shifted_size)) ? -1 : 1);
+
+    for (size_t ii = l_size - 1; ii < l_size; --ii) {
+      uint32_t r_digit = (ii < shift) ? 0 : real_val_r.content_[ii - shift];
+      if (val_l.content_[ii] == r_digit) continue;
+      return ((val_l.symbol_ ^ (val_l.content_[ii] > r_digit)) ? -1 : 1);
+    }
     return 0;
   }
 

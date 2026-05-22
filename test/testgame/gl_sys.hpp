@@ -57,7 +57,7 @@ class GlSys {
   void Start() {
     int argc = 1;
     char argv0[] = "demo";
-    char** argv = new char* [] { argv0, nullptr };
+    char** argv = new char*[]{argv0, nullptr};
 
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);

@@ -5,7 +5,7 @@
 namespace ytlib {
 
 class CBenchTest {
-  T_CLASS_SERIALIZE(&name &age &m &v &dbl_arr)
+  T_CLASS_SERIALIZE(&name & age & m & v & dbl_arr)
  public:
   std::string name;
   uint32_t age;
@@ -14,7 +14,7 @@ class CBenchTest {
   double dbl_arr[5];
 };
 
-static void BM_SERIALIZE_STRING(benchmark::State &state) {
+static void BM_SERIALIZE_STRING(benchmark::State& state) {
   static CBenchTest test_obj{
       .name = "test name",
       .age = 999,
@@ -31,7 +31,7 @@ static void BM_SERIALIZE_STRING(benchmark::State &state) {
 }
 BENCHMARK(BM_SERIALIZE_STRING);
 
-static void BM_SERIALIZE_CHAR_ARR(benchmark::State &state) {
+static void BM_SERIALIZE_CHAR_ARR(benchmark::State& state) {
   static CBenchTest test_obj{
       .name = "test name",
       .age = 999,

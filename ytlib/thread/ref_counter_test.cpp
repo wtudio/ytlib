@@ -12,10 +12,10 @@ class RefCounterObj {
     DBG_PRINT("create obj");
   }
 
-  RefCounterObj(const RefCounterObj &obj) = delete;
-  RefCounterObj &operator=(const RefCounterObj &obj) = delete;
-  RefCounterObj(RefCounterObj &&obj) = delete;
-  RefCounterObj &operator=(RefCounterObj &&obj) = delete;
+  RefCounterObj(const RefCounterObj& obj) = delete;
+  RefCounterObj& operator=(const RefCounterObj& obj) = delete;
+  RefCounterObj(RefCounterObj&& obj) = delete;
+  RefCounterObj& operator=(RefCounterObj&& obj) = delete;
 
   ~RefCounterObj() {
     DBG_PRINT("del obj");

@@ -20,8 +20,8 @@ TEST(BOOST_TOOLS_ASIO_TEST, CS_base) {
   cs_cli_cfg.svr_ep = asio::ip::tcp::endpoint{asio::ip::address_v4({127, 0, 0, 1}), 57634};
   auto cs_cli_ptr = std::make_shared<AsioCsClient>(cli_sys_ptr->IO(), cs_cli_cfg);
   cs_cli_ptr->RegisterMsgHandleFunc(
-      [cs_cli_ptr](const std::shared_ptr<boost::asio::streambuf> &msg_buf_ptr) {
-        std::string tmp_str(static_cast<const char *>(msg_buf_ptr->data().data()), msg_buf_ptr->size());
+      [cs_cli_ptr](const std::shared_ptr<boost::asio::streambuf>& msg_buf_ptr) {
+        std::string tmp_str(static_cast<const char*>(msg_buf_ptr->data().data()), msg_buf_ptr->size());
         DBG_PRINT("cli get a msg, size: %llu, data: %s", tmp_str.size(), tmp_str.c_str());
       });
 
@@ -38,8 +38,8 @@ TEST(BOOST_TOOLS_ASIO_TEST, CS_base) {
     DBG_PRINT("svr_sys_ptr start");
     auto cs_svr_ptr = std::make_shared<AsioCsServer>(svr_sys_ptr->IO(), AsioCsServer::Cfg());
     cs_svr_ptr->RegisterMsgHandleFunc(
-        [cs_svr_ptr](const boost::asio::ip::tcp::endpoint &ep, const std::shared_ptr<boost::asio::streambuf> &msg_buf_ptr) {
-          std::string tmp_str(static_cast<const char *>(msg_buf_ptr->data().data()), msg_buf_ptr->size());
+        [cs_svr_ptr](const boost::asio::ip::tcp::endpoint& ep, const std::shared_ptr<boost::asio::streambuf>& msg_buf_ptr) {
+          std::string tmp_str(static_cast<const char*>(msg_buf_ptr->data().data()), msg_buf_ptr->size());
           DBG_PRINT("svr get a msg from %s, size: %llu, data: %s", TcpEp2Str(ep).c_str(), tmp_str.size(), tmp_str.c_str());
           cs_svr_ptr->SendMsg(ep, msg_buf_ptr);
         });
@@ -56,11 +56,11 @@ TEST(BOOST_TOOLS_ASIO_TEST, CS_base) {
   {
     std::shared_ptr<boost::asio::streambuf> msg_buf_ptr = std::make_shared<boost::asio::streambuf>();
     auto buf = msg_buf_ptr->prepare(20);
-    sprintf(static_cast<char *>(buf.data()), "1234567890123456789");
+    sprintf(static_cast<char*>(buf.data()), "1234567890123456789");
     msg_buf_ptr->commit(8);
 
     auto buf2 = msg_buf_ptr->prepare(20);
-    sprintf(static_cast<char *>(buf2.data()), "abcdefghijklmn");
+    sprintf(static_cast<char*>(buf2.data()), "abcdefghijklmn");
     msg_buf_ptr->commit(8);
     cs_cli_ptr->SendMsg(msg_buf_ptr);
   }
@@ -77,7 +77,7 @@ TEST(BOOST_TOOLS_ASIO_TEST, CS_base) {
 }
 
 class TestMsg {
-  T_CLASS_SERIALIZE(&code &data)
+  T_CLASS_SERIALIZE(&code& data)
  public:
   uint32_t code;
   std::string data;
@@ -94,7 +94,7 @@ TEST(BOOST_TOOLS_ASIO_TEST, CS_TestMsg) {
   cs_cli_cfg.svr_ep = asio::ip::tcp::endpoint{asio::ip::address_v4({127, 0, 0, 1}), 57634};
   auto cs_cli_ptr = std::make_shared<AsioCsClient>(cli_sys_ptr->IO(), cs_cli_cfg);
   cs_cli_ptr->RegisterMsgHandleFunc(
-      [cs_cli_ptr](const std::shared_ptr<boost::asio::streambuf> &msg_buf_ptr) {
+      [cs_cli_ptr](const std::shared_ptr<boost::asio::streambuf>& msg_buf_ptr) {
         TestMsg msg;
         boost::archive::binary_iarchive iar(*msg_buf_ptr);
         iar >> msg;
@@ -115,7 +115,7 @@ TEST(BOOST_TOOLS_ASIO_TEST, CS_TestMsg) {
     DBG_PRINT("svr1_sys_ptr start");
     auto cs_svr_ptr = std::make_shared<AsioCsServer>(svr1_sys_ptr->IO(), AsioCsServer::Cfg());
     cs_svr_ptr->RegisterMsgHandleFunc(
-        [cs_svr_ptr](const boost::asio::ip::tcp::endpoint &ep, const std::shared_ptr<boost::asio::streambuf> &msg_buf_ptr) {
+        [cs_svr_ptr](const boost::asio::ip::tcp::endpoint& ep, const std::shared_ptr<boost::asio::streambuf>& msg_buf_ptr) {
           TestMsg msg;
           boost::archive::binary_iarchive iar(*msg_buf_ptr);
           iar >> msg;
@@ -155,7 +155,7 @@ TEST(BOOST_TOOLS_ASIO_TEST, CS_TestMsg) {
     DBG_PRINT("svr2_sys_ptr start");
     auto cs_svr_ptr = std::make_shared<AsioCsServer>(svr2_sys_ptr->IO(), AsioCsServer::Cfg());
     cs_svr_ptr->RegisterMsgHandleFunc(
-        [cs_svr_ptr](const boost::asio::ip::tcp::endpoint &ep, const std::shared_ptr<boost::asio::streambuf> &msg_buf_ptr) {
+        [cs_svr_ptr](const boost::asio::ip::tcp::endpoint& ep, const std::shared_ptr<boost::asio::streambuf>& msg_buf_ptr) {
           TestMsg msg;
           boost::archive::binary_iarchive iar(*msg_buf_ptr);
           iar >> msg;

@@ -29,8 +29,8 @@ inline size_t KMP(std::string_view ss, std::string_view ps) {
   std::vector<int32_t> next(pslen);
   next[0] = -1;
   int32_t ii = 0, jj = -1;
-  --pslen;
-  while (ii < pslen) {
+  int32_t ipslen = static_cast<int32_t>(pslen);
+  while (ii < ipslen - 1) {
     if (jj == -1 || ps[ii] == ps[jj]) {
       ++ii;
       ++jj;
@@ -38,16 +38,16 @@ inline size_t KMP(std::string_view ss, std::string_view ps) {
     } else
       jj = next[jj];
   }
-  ++pslen;
   ii = jj = 0;
-  while (ii < sslen && jj < int32_t(pslen)) {
+  int32_t isslen = static_cast<int32_t>(sslen);
+  while (ii < isslen && jj < ipslen) {
     if (jj == -1 || ss[ii] == ps[jj]) {
       ++ii;
       ++jj;
     } else
       jj = next[jj];
   }
-  return (jj == pslen) ? (ii - jj) : sslen;
+  return (jj == ipslen) ? (ii - jj) : sslen;
 }
 
 /**
@@ -100,12 +100,12 @@ inline size_t StrDif(std::string_view s1, std::string_view s2) {
  */
 inline std::pair<size_t, size_t> LongestSubStrWithoutDup(std::string_view s) {
   size_t len = s.length();
-  size_t positions[256];                                    // 每种字符上一次出现的位置
-  for (size_t ii = 0; ii < len; ++ii) positions[ii] = len;  // 初始化为len，表示没出现
-  size_t maxLen = 0, maxPos = 0;                            // 最长的字串长度和位置
-  size_t curLen = 0, curPos = 0;                            // 当前不重复字串的长度和位置
+  size_t positions[256];
+  for (size_t ii = 0; ii < 256; ++ii) positions[ii] = len;
+  size_t maxLen = 0, maxPos = 0;
+  size_t curLen = 0, curPos = 0;
   for (size_t ii = 0; ii < len; ++ii) {
-    size_t& prePos = positions[s[ii]];
+    size_t& prePos = positions[static_cast<unsigned char>(s[ii])];
     if (prePos == len || (ii - prePos) > curLen) {
       ++curLen;
     } else {

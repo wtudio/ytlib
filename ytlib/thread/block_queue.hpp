@@ -47,7 +47,7 @@ class BlockQueue {
   }
 
   /// 添加元素
-  bool Enqueue(const T &item) {
+  bool Enqueue(const T& item) {
     std::lock_guard<std::mutex> lck(mutex_);
     if (queue_.size() < maxcount_) {
       queue_.emplace(item);
@@ -58,7 +58,7 @@ class BlockQueue {
   }
 
   /// 添加元素
-  bool Enqueue(T &&item) {
+  bool Enqueue(T&& item) {
     std::lock_guard<std::mutex> lck(mutex_);
     if (queue_.size() < maxcount_) {
       queue_.emplace(std::move(item));
@@ -69,7 +69,7 @@ class BlockQueue {
   }
 
   /// 非阻塞式取出元素
-  bool Dequeue(T &item) {
+  bool Dequeue(T& item) {
     std::lock_guard<std::mutex> lck(mutex_);
     if (!queue_.empty()) {
       item = std::move(queue_.front());
@@ -80,7 +80,7 @@ class BlockQueue {
   }
 
   /// 阻塞式取出元素
-  bool BlockDequeue(T &item) {
+  bool BlockDequeue(T& item) {
     std::unique_lock<std::mutex> lck(mutex_);
     if (queue_.empty()) {
       if (!running_flag_) return false;
@@ -94,7 +94,7 @@ class BlockQueue {
   }
 
   /// 阻塞式取出元素
-  bool BlockDequeue(const std::function<void(T &&)> &f) {
+  bool BlockDequeue(const std::function<void(T&&)>& f) {
     std::unique_lock<std::mutex> lck(mutex_);
     if (queue_.empty()) {
       if (!running_flag_) return false;

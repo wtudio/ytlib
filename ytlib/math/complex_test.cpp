@@ -607,4 +607,37 @@ TEST(COMPLEX_TEST, FFTShift_test) {
   }
 }
 
+TEST(COMPLEX_TEST, DivideNum_test) {
+  struct TestCase {
+    std::string name;
+
+    Complex<> a;
+    double b;
+
+    Complex<> want_result;
+  };
+  std::vector<TestCase> test_cases;
+  test_cases.emplace_back(TestCase{
+      .name = "case 1",
+      .a = {2.0, 4.0},
+      .b = 2.0,
+      .want_result = {1.0, 2.0}});
+  test_cases.emplace_back(TestCase{
+      .name = "case 2",
+      .a = {6.0, -3.0},
+      .b = 3.0,
+      .want_result = {2.0, -1.0}});
+
+  for (size_t ii = 0; ii < test_cases.size(); ++ii) {
+    TestCase& cur_test_case = test_cases[ii];
+    auto ret = cur_test_case.a / cur_test_case.b;
+    EXPECT_EQ(ret, cur_test_case.want_result)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
+
+    cur_test_case.a /= cur_test_case.b;
+    EXPECT_EQ(cur_test_case.a, cur_test_case.want_result)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
+  }
+}
+
 }  // namespace ytlib

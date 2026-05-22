@@ -16,7 +16,7 @@ TEST(EXECUTION_TEST, RemoteCache) {
 
   // 模拟异步请求
   uint32_t prefix = 0;
-  auto AsyncUpdateDataFunc = [&prefix](uint32_t key, const std::function<void(std::optional<std::string> &&)>& callback) {
+  auto AsyncUpdateDataFunc = [&prefix](uint32_t key, const std::function<void(std::optional<std::string>&&)>& callback) {
     std::thread t([&prefix, key, callback]() {
       std::this_thread::sleep_for(std::chrono::milliseconds(10));
       callback(std::to_string(prefix + key));

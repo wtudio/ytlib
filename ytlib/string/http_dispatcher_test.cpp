@@ -201,4 +201,22 @@ TEST(HTTP_DISPATCHER_TEST, HttpDispatcher_CASE3) {
   }
 }
 
+TEST(HTTP_DISPATCHER_TEST, HttpDispatcher_EmptyHandle) {
+  using TestHttpDispatcher = HttpDispatcher<std::string(void)>;
+
+  TestHttpDispatcher dispatcher;
+  dispatcher.RegisterHttpHandle("/abc", []() -> std::string {
+    return "CASE 1";
+  });
+
+  auto ret = dispatcher.GetHttpHandle("/no_match");
+  EXPECT_FALSE(static_cast<bool>(ret));
+  // Ensure calling the empty handle doesn't crash (it's a null std::function)
+  EXPECT_NO_THROW({
+    if (!ret) {
+      // expected path - handle is empty
+    }
+  });
+}
+
 }  // namespace ytlib

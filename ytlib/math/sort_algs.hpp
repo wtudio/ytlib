@@ -11,8 +11,7 @@
 #include <algorithm>
 #include <cinttypes>
 #include <cstring>
-#include <map>
-#include <set>
+#include <type_traits>
 #include <vector>
 
 namespace ytlib {
@@ -68,6 +67,7 @@ void BubbleSort(T* arr, size_t len) {
  */
 template <typename T>
 void MergeSort(T* arr, size_t len) {
+  static_assert(std::is_trivially_copyable_v<T>);
   if (len < 2) return;
   if (len == 2) {
     using std::swap;
@@ -96,6 +96,7 @@ void MergeSort(T* arr, size_t len) {
  */
 template <typename T>
 void MergeSort2(T* arr, size_t len) {
+  static_assert(std::is_trivially_copyable_v<T>);
   if (len < 2) return;
   using std::swap;
   if (len == 2) {

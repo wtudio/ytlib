@@ -8,6 +8,7 @@
 #pragma once
 
 #include <algorithm>
+#include <charconv>
 #include <cstring>
 #include <map>
 #include <set>
@@ -25,16 +26,16 @@ namespace ytlib {
  */
 inline std::string& Trim(std::string& s) {
   if (s.empty()) return s;
-  s.erase(s.find_last_not_of(" ") + 1);
-  s.erase(0, s.find_first_not_of(" "));
+  s.erase(s.find_last_not_of(" \t\r\n\f\v") + 1);
+  s.erase(0, s.find_first_not_of(" \t\r\n\f\v"));
   return s;
 }
 
 inline std::string_view& Trim(std::string_view& s) {
   if (s.empty()) return s;
-  auto p = s.find_last_not_of(" ");
+  auto p = s.find_last_not_of(" \t\r\n\f\v");
   s = s.substr(0, (p != std::string_view::npos) ? (p + 1) : 0);
-  p = s.find_first_not_of(" ");
+  p = s.find_first_not_of(" \t\r\n\f\v");
   s = s.substr((p != std::string_view::npos) ? p : s.size());
   return s;
 }
@@ -124,8 +125,8 @@ template <class StringType = std::string_view>
   requires(
       std::is_same_v<StringType, std::string_view> ||
       std::is_same_v<StringType, std::string>)
-const StringType& GetMapItemWithDef(const std::map<StringType, StringType>& m,
-                                    const StringType& key, const StringType& defval = "") {
+StringType GetMapItemWithDef(const std::map<StringType, StringType>& m,
+                             const StringType& key, const StringType& defval = StringType{}) {
   auto finditr = m.find(key);
   return (finditr != m.end()) ? (finditr->second) : defval;
 }
@@ -373,11 +374,12 @@ inline int CmpVersion(std::string_view ver1, std::string_view ver2) {
 
   size_t idx = 0;
   for (idx = 0; idx < version1_detail.size() && idx < version2_detail.size(); ++idx) {
-    int ver1 = atoi(version1_detail[idx].data());
-    int ver2 = atoi(version2_detail[idx].data());
-    if (ver1 < ver2)
+    int v1 = 0, v2 = 0;
+    std::from_chars(version1_detail[idx].data(), version1_detail[idx].data() + version1_detail[idx].size(), v1);
+    std::from_chars(version2_detail[idx].data(), version2_detail[idx].data() + version2_detail[idx].size(), v2);
+    if (v1 < v2)
       return -1;
-    else if (ver1 > ver2)
+    else if (v1 > v2)
       return 1;
   }
   if (idx == version1_detail.size() && idx == version2_detail.size()) {
@@ -421,27 +423,27 @@ inline std::string& ReplaceString(std::string& str, std::string_view ov, std::st
   if (vec_len) {
     if (old_len == new_len) {
       for (size_t ii = 0; ii < vec_len; ++ii)
-        memcpy(const_cast<char*>(str.c_str() + vec_pos[ii]), nv.data(), new_len);
+        memcpy(str.data() + vec_pos[ii], nv.data(), new_len);
     } else if (old_len > new_len) {
-      char* p = const_cast<char*>(str.c_str()) + vec_pos[0];
+      char* p = str.data() + vec_pos[0];
       vec_pos.emplace_back(str.size());
       for (size_t ii = 0; ii < vec_len; ++ii) {
         memcpy(p, nv.data(), new_len);
         p += new_len;
         size_t cplen = vec_pos[ii + 1] - vec_pos[ii] - old_len;
-        memmove(p, str.c_str() + vec_pos[ii] + old_len, cplen);
+        memmove(p, str.data() + vec_pos[ii] + old_len, cplen);
         p += cplen;
       }
-      str.resize(p - str.c_str());
+      str.resize(p - str.data());
     } else {
       size_t diff = new_len - old_len;
       vec_pos.emplace_back(str.size());
       str.resize(str.size() + diff * vec_len);
-      char* p = const_cast<char*>(str.c_str()) + str.size();
+      char* p = str.data() + str.size();
       for (size_t ii = vec_len - 1; ii < vec_len; --ii) {
         size_t cplen = vec_pos[ii + 1] - vec_pos[ii] - old_len;
         p -= cplen;
-        memmove(p, str.c_str() + vec_pos[ii] + old_len, cplen);
+        memmove(p, str.data() + vec_pos[ii] + old_len, cplen);
         p -= new_len;
         memcpy(p, nv.data(), new_len);
       }
@@ -478,21 +480,6 @@ inline bool IsDigitStr(std::string_view str) {
     if (c > '9' || c < '0') return false;
   }
   return true;
-}
-
-/**
- * @brief 获取map中的key的集合
- *
- * @tparam KeyType map中key的类型
- * @tparam ValType map中val的类型
- * @param m 输入map
- * @return std::set<KeyType> key的集合
- */
-template <typename KeyType, typename ValType>
-std::set<KeyType> GetMapKeys(const std::map<KeyType, ValType>& m) {
-  std::set<KeyType> re;
-  for (const auto& it : m) re.emplace(it.first);
-  return re;
 }
 
 /**
@@ -540,6 +527,7 @@ inline std::string& StrToUpper(std::string& str) {
  * @return std::string& 标题形式字符串
  */
 inline std::string& StrToTitleCase(std::string& str) {
+  if (str.empty()) return str;
   std::string::iterator it = str.begin();
   *it = CharToUpper(*it);
   for (; it != str.end() - 1; ++it) {
@@ -583,10 +571,7 @@ inline bool StartsWith(std::string_view str, std::string_view pattern, bool igno
     }
     return true;
   } else {
-    for (size_t i = 0; i < pattern_len; ++i) {
-      if (pattern[i] != str[i]) return false;
-    }
-    return true;
+    return str.starts_with(pattern);
   }
 }
 
@@ -604,17 +589,14 @@ inline bool EndsWith(std::string_view str, std::string_view pattern, bool ignore
   const size_t pattern_len = pattern.length();
   if (str_len < pattern_len || pattern_len == 0) return false;
 
-  const size_t& begin_pos = str_len - pattern_len;
   if (ignore_case) {
+    const size_t begin_pos = str_len - pattern_len;
     for (size_t i = 0; i < pattern_len; ++i) {
       if (tolower(pattern[i]) != tolower(str[begin_pos + i])) return false;
     }
     return true;
   } else {
-    for (size_t i = 0; i < pattern_len; i++) {
-      if (pattern[i] != str[begin_pos + i]) return false;
-    }
-    return true;
+    return str.ends_with(pattern);
   }
 }
 
@@ -625,7 +607,7 @@ inline bool EndsWith(std::string_view str, std::string_view pattern, bool ignore
  * @param len
  * @return const uint64_t hash值
  */
-inline const uint64_t Hash64Fnv1a(const char* data, size_t len) {
+inline uint64_t Hash64Fnv1a(const char* data, size_t len) {
   const uint64_t prime = 0x100000001b3;
   uint64_t hash = 0xcbf29ce484222325;
   for (size_t i = 0; i < len; ++i) {
@@ -641,7 +623,7 @@ inline const uint64_t Hash64Fnv1a(const char* data, size_t len) {
  * @param len
  * @return const uint32_t hash值
  */
-inline const uint32_t Hash32Fnv1a(const char* data, size_t len) {
+inline uint32_t Hash32Fnv1a(const char* data, size_t len) {
   const uint32_t prime = 0x1000193;
   uint32_t hash = 0x811c9dc5;
   for (size_t i = 0; i < len; ++i) {

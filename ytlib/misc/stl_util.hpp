@@ -252,4 +252,19 @@ bool CheckMapEqual(const std::map<KeyType, ValType>& map1, const std::map<KeyTyp
   return true;
 }
 
+/**
+ * @brief 获取map中的key的集合
+ *
+ * @tparam KeyType map中key的类型
+ * @tparam ValType map中val的类型
+ * @param m 输入map
+ * @return std::set<KeyType> key的集合
+ */
+template <typename KeyType, typename ValType>
+std::set<KeyType> GetMapKeys(const std::map<KeyType, ValType>& m) {
+  std::set<KeyType> re;
+  for (const auto& it : m) re.emplace(it.first);
+  return re;
+}
+
 }  // namespace ytlib

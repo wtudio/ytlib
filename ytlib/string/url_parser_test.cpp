@@ -121,6 +121,15 @@ void TestParseUrl() {
           .host = "xxxxx",
           .path = "",
       }});
+  test_cases.emplace_back(TestCase{
+      .name = "case 8 - userinfo",
+      .url_str = "http://user:pass@host:8080/path",
+      .want_result = Url<StringType>{
+          .protocol = "http",
+          .host = "host",
+          .service = "8080",
+          .path = "/path",
+      }});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
     TestCase& cur_test_case = test_cases[ii];

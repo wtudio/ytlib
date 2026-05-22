@@ -14,28 +14,28 @@ class DetachHolder {
     InnerCounter() : n_(1) {}
     ~InnerCounter() {}
 
-    InnerCounter(const InnerCounter &) = delete;
-    InnerCounter &operator=(const InnerCounter &) = delete;
+    InnerCounter(const InnerCounter&) = delete;
+    InnerCounter& operator=(const InnerCounter&) = delete;
 
     std::atomic_uint32_t n_;
     std::function<void()> f_;
   };
 
-  InnerCounter *counter_ptr_;
+  InnerCounter* counter_ptr_;
 
  public:
   DetachHolder() : counter_ptr_(new InnerCounter()) {}
 
-  DetachHolder(const DetachHolder &rhs) : counter_ptr_(rhs.counter_ptr_) {
+  DetachHolder(const DetachHolder& rhs) : counter_ptr_(rhs.counter_ptr_) {
     ++(counter_ptr_->n_);
   }
 
-  DetachHolder(DetachHolder &&rhs) : counter_ptr_(rhs.counter_ptr_) {
+  DetachHolder(DetachHolder&& rhs) : counter_ptr_(rhs.counter_ptr_) {
     rhs.counter_ptr_ = nullptr;
   }
 
-  DetachHolder &operator=(const DetachHolder &rhs) = delete;
-  DetachHolder &operator=(const DetachHolder &&rhs) = delete;
+  DetachHolder& operator=(const DetachHolder& rhs) = delete;
+  DetachHolder& operator=(const DetachHolder&& rhs) = delete;
 
   ~DetachHolder() {
     if (counter_ptr_ != nullptr && --(counter_ptr_->n_) == 0) {
@@ -44,17 +44,17 @@ class DetachHolder {
     }
   }
 
-  void SetDeferFun(std::function<void()> &&defer_fun) {
+  void SetDeferFun(std::function<void()>&& defer_fun) {
     counter_ptr_->f_ = std::move(defer_fun);
   }
 };
 
 struct DetachReceiver {
-  explicit DetachReceiver(const DetachHolder &holder, unifex::inplace_stop_token stto)
+  explicit DetachReceiver(const DetachHolder& holder, unifex::inplace_stop_token stto)
       : holder_ptr(new DetachHolder(holder)), stto_(stto) {}
 
   template <typename... Values>
-  void set_value(Values &&...values) noexcept {
+  void set_value(Values&&... values) noexcept {
     delete holder_ptr;
   }
 
@@ -68,11 +68,11 @@ struct DetachReceiver {
   }
 
   friend unifex::inplace_stop_token
-  tag_invoke(unifex::tag_t<unifex::get_stop_token>, const DetachReceiver &r) noexcept {
+  tag_invoke(unifex::tag_t<unifex::get_stop_token>, const DetachReceiver& r) noexcept {
     return r.stto_;
   }
 
-  DetachHolder *holder_ptr;
+  DetachHolder* holder_ptr;
   unifex::inplace_stop_token stto_;
 };
 
@@ -84,13 +84,13 @@ struct DetachReceiver {
  */
 template <typename Sender>
   requires unifex::sender<Sender>
-auto StartDetached(Sender &&sender) -> std::shared_ptr<unifex::inplace_stop_source> {
+auto StartDetached(Sender&& sender) -> std::shared_ptr<unifex::inplace_stop_source> {
   std::shared_ptr<unifex::inplace_stop_source> stsr = std::make_shared<unifex::inplace_stop_source>();
   DetachHolder holder;
   DetachReceiver r(holder, stsr->get_token());
 
-  using OpType = decltype(unifex::connect((Sender &&) sender, std::move(r)));
-  OpType *op = new OpType(unifex::connect((Sender &&) sender, std::move(r)));
+  using OpType = decltype(unifex::connect((Sender&&)sender, std::move(r)));
+  OpType* op = new OpType(unifex::connect((Sender&&)sender, std::move(r)));
   unifex::start(*op);
 
   holder.SetDeferFun([op] {

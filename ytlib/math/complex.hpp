@@ -24,74 +24,74 @@ template <std::floating_point CFloat = double>
 class Complex {
  public:
   Complex() = default;
-  Complex(const CFloat &a, const CFloat &b) : real(a), imag(b) {}
-  Complex(const Complex &value) : real(value.real), imag(value.imag) {}
+  Complex(const CFloat& a, const CFloat& b) : real(a), imag(b) {}
+  Complex(const Complex& value) : real(value.real), imag(value.imag) {}
   ~Complex() = default;
 
-  bool operator==(const Complex &value) const {
+  bool operator==(const Complex& value) const {
     return (std::abs(this->real - value.real) < 1e-6 && std::abs(this->imag - value.imag) < 1e-6);
   }
-  bool operator!=(const Complex &value) const {
+  bool operator!=(const Complex& value) const {
     return !(*this == value);
   }
 
-  Complex operator+(const Complex &value) const {
+  Complex operator+(const Complex& value) const {
     return Complex(this->real + value.real, this->imag + value.imag);
   }
-  Complex &operator+=(const Complex &value) {
+  Complex& operator+=(const Complex& value) {
     this->real += value.real;
     this->imag += value.imag;
     return *this;
   }
 
-  Complex operator-(const Complex &value) const {
+  Complex operator-(const Complex& value) const {
     return Complex(this->real - value.real, this->imag - value.imag);
   }
-  Complex &operator-=(const Complex &value) {
+  Complex& operator-=(const Complex& value) {
     this->real -= value.real;
     this->imag -= value.imag;
     return *this;
   }
 
-  Complex operator*(const Complex &value) const {
+  Complex operator*(const Complex& value) const {
     return Complex(
         this->real * value.real - this->imag * value.imag,
         this->real * value.imag + this->imag * value.real);
   }
-  Complex &operator*=(const Complex &value) {
-    const CFloat &tmp = this->real * value.real - this->imag * value.imag;
+  Complex& operator*=(const Complex& value) {
+    const CFloat tmp = this->real * value.real - this->imag * value.imag;
     this->imag = this->real * value.imag + this->imag * value.real;
     this->real = tmp;
     return *this;
   }
 
-  Complex operator*(const CFloat &s) const {
+  Complex operator*(const CFloat& s) const {
     return Complex(this->real * s, this->imag * s);
   }
-  Complex &operator*=(const CFloat &s) {
+  Complex& operator*=(const CFloat& s) {
     this->real *= s;
     this->imag *= s;
     return *this;
   }
 
-  Complex operator/(const Complex &value) const {
-    const CFloat &tmp_value = value.real * value.real + value.imag * value.imag;
+  Complex operator/(const Complex& value) const {
+    const CFloat tmp_value = value.real * value.real + value.imag * value.imag;
     return Complex(
         (this->real * value.real + this->imag * value.imag) / tmp_value,
         (this->imag * value.real - this->real * value.imag) / tmp_value);
   }
-  Complex &operator/=(const Complex &value) {
-    const CFloat &tmp_value = value.real * value.real + value.imag * value.imag;
-    const CFloat &tmp = (this->real * value.real + this->imag * value.imag) / tmp_value;
+  Complex& operator/=(const Complex& value) {
+    const CFloat tmp_value = value.real * value.real + value.imag * value.imag;
+    const CFloat tmp = (this->real * value.real + this->imag * value.imag) / tmp_value;
     this->imag = (this->imag * value.real - this->real * value.imag) / tmp_value;
     this->real = tmp;
     return *this;
   }
 
-  Complex operator/(const CFloat &s) const {
+  Complex operator/(const CFloat& s) const {
     return Complex(this->real / s, this->imag / s);
   }
-  Complex &operator/=(const CFloat &s) {
+  Complex& operator/=(const CFloat& s) {
     this->real /= s;
     this->imag /= s;
     return *this;
@@ -101,7 +101,7 @@ class Complex {
     return Complex(-(this->real), -(this->imag));
   }
 
-  void AssignWithExpForm(const CFloat &r, const CFloat &theta) {
+  void AssignWithExpForm(const CFloat& r, const CFloat& theta) {
     real = r * std::cos(theta);
     imag = r * std::sin(theta);
   }
@@ -114,21 +114,21 @@ class Complex {
     return std::atan2(imag, real);
   }
 
-  static Complex GenWithExpForm(const CFloat &r, const CFloat &theta) {
+  static Complex GenWithExpForm(const CFloat& r, const CFloat& theta) {
     return Complex(r * std::cos(theta), r * std::sin(theta));
   }
 
-  static Complex Conj(const Complex &value) {
+  static Complex Conj(const Complex& value) {
     return Complex(value.real, -value.imag);
   }
 
-  static Complex Sqrt(const Complex &value) {
-    const CFloat &a = std::sqrt(value.Len());
-    const CFloat &t = value.Angle() / 2;
+  static Complex Sqrt(const Complex& value) {
+    const CFloat& a = std::sqrt(value.Len());
+    const CFloat& t = value.Angle() / 2;
     return Complex(a * std::cos(t), a * std::sin(t));
   }
 
-  static Complex Pow(const Complex &value, uint32_t n) {
+  static Complex Pow(const Complex& value, uint32_t n) {
     Complex re(1.0, 0.0), tmp = value;
     for (; n; n >>= 1) {
       if (n & 1)
@@ -138,9 +138,9 @@ class Complex {
     return re;
   }
 
-  friend std::ostream &operator<<(std::ostream &output, const Complex &rhs) {
+  friend std::ostream& operator<<(std::ostream& output, const Complex& rhs) {
     output << rhs.real;
-    const std::string &tmp = std::to_string(rhs.imag);
+    const std::string& tmp = std::to_string(rhs.imag);
     if (tmp[0] != '-') {
       output << "+";
     }
@@ -279,9 +279,9 @@ void FFTShift(uint32_t len, Complex<CFloat> data[]) {
 }
 
 template <std::floating_point CFloat = double>
-CFloat abs(const Complex<CFloat> &value) { return value.Len(); }
+CFloat abs(const Complex<CFloat>& value) { return value.Len(); }
 
 template <std::floating_point CFloat = double>
-Complex<CFloat> sqrt(const Complex<CFloat> &value) { return Complex<CFloat>::Sqrt(value); }
+Complex<CFloat> sqrt(const Complex<CFloat>& value) { return Complex<CFloat>::Sqrt(value); }
 
 }  // namespace ytlib

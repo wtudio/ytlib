@@ -19,8 +19,8 @@ const int redis_port = 56379;
 const char redis_auth[] = "abcabc";
 
 void SyncTest() {
-  redisContext *ctx = nullptr;
-  redisReply *reply = nullptr;
+  redisContext* ctx = nullptr;
+  redisReply* reply = nullptr;
 
   // connect
   ctx = redisConnect(redis_host, redis_port);
@@ -34,7 +34,7 @@ void SyncTest() {
   }
 
   // ping
-  reply = static_cast<redisReply *>(redisCommand(ctx, "PING"));
+  reply = static_cast<redisReply*>(redisCommand(ctx, "PING"));
   if (reply == nullptr) {
     printf("PING failed, no rsp\n");
   } else {
@@ -43,7 +43,7 @@ void SyncTest() {
   }
 
   // set
-  reply = static_cast<redisReply *>(redisCommand(ctx, "SET %s %s", "foo", "hello world"));
+  reply = static_cast<redisReply*>(redisCommand(ctx, "SET %s %s", "foo", "hello world"));
   if (reply == nullptr) {
     printf("SET failed, no rsp\n");
   } else {
@@ -52,7 +52,7 @@ void SyncTest() {
   }
 
   // get
-  reply = static_cast<redisReply *>(redisCommand(ctx, "GET foo"));
+  reply = static_cast<redisReply*>(redisCommand(ctx, "GET foo"));
   if (reply == nullptr) {
     printf("GET failed, no rsp\n");
   } else {
@@ -84,16 +84,16 @@ void AsyncTest() {
   unifex::sync_wait(work());
 }
 
-void OnConnect(const redisAsyncContext *ctx, int status) {
+void OnConnect(const redisAsyncContext* ctx, int status) {
   printf("OnConnect, status %d\n", status);
 }
 
-void OnDisconnect(const redisAsyncContext *ctx, int status) {
+void OnDisconnect(const redisAsyncContext* ctx, int status) {
   printf("OnDisconnect, status %d\n", status);
 }
 
-void RedisCallback(redisAsyncContext *ctx, void *r, void *privdata) {
-  redisReply *reply = static_cast<redisReply *>(r);
+void RedisCallback(redisAsyncContext* ctx, void* r, void* privdata) {
+  redisReply* reply = static_cast<redisReply*>(r);
   if (reply == nullptr) {
     if (ctx->errstr) {
       printf("get err: %s\n", ctx->errstr);
@@ -103,7 +103,7 @@ void RedisCallback(redisAsyncContext *ctx, void *r, void *privdata) {
   printf("%s\n", reply->str);
 }
 
-void Loop(event_base *events, uint32_t loop_times = 100) {
+void Loop(event_base* events, uint32_t loop_times = 100) {
   uint32_t ct = 0;
   for (; ct < loop_times; ++ct) {
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -119,9 +119,9 @@ void Loop(event_base *events, uint32_t loop_times = 100) {
 }
 
 void AsyncTest2() {
-  event_base *events = event_base_new();
+  event_base* events = event_base_new();
 
-  redisAsyncContext *ctx = nullptr;
+  redisAsyncContext* ctx = nullptr;
 
   // connect
   printf("start connect\n");
@@ -178,7 +178,7 @@ void AsyncTest2() {
   }
 }
 
-int32_t main(int32_t argc, char **argv) {
+int32_t main(int32_t argc, char** argv) {
   // SyncTest();
 
   // AsyncTest();

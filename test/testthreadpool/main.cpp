@@ -155,7 +155,7 @@ class TbbChannel {
     try {
       Stop();
       Join();
-    } catch (const std::exception &e) {
+    } catch (const std::exception& e) {
       DBG_PRINT("TbbChannel destruct get exception, %s", e.what());
     }
   };
@@ -193,7 +193,7 @@ class TbbChannel {
   }
 
   template <typename... Args>
-  void Execute(Args &&...args) {
+  void Execute(Args&&... args) {
     qu_.emplace(std::forward<Args>(args)...);
     sig_flag_.store(true);
     sig_flag_.notify_one();
@@ -243,7 +243,7 @@ void signalHandler(int signum) {
   exit(signum);
 }
 
-int32_t main(int32_t argc, char **argv) {
+int32_t main(int32_t argc, char** argv) {
   std::cout << "aaa " << std::this_thread::get_id() << std::endl;
 
   signal(SIGINT, signalHandler);

@@ -31,9 +31,9 @@ using namespace std::chrono_literals;
 auto dump_async_trace(std::string tag = {}) {
   return then(
       async_trace_sender{},
-      [tag = std::move(tag)](const std::vector<async_trace_entry> &entries) {
+      [tag = std::move(tag)](const std::vector<async_trace_entry>& entries) {
         std::cout << "Async Trace (" << tag << "):\n";
-        for (auto &entry : entries) {
+        for (auto& entry : entries) {
           std::cout << " " << entry.depth << " [-> " << entry.parentIndex
                     << "]: " << entry.continuation.type().name() << " @ 0x";
           std::cout.setf(std::ios::hex, std::ios::basefield);

@@ -63,4 +63,70 @@ TEST(VECTOR3_TEST, Distance_test) {
   }
 }
 
+TEST(VECTOR3_TEST, Add_test) {
+  Vector3<double> a(1.0, 2.0, 3.0);
+  Vector3<double> b(4.0, 5.0, 6.0);
+
+  auto c = a + b;
+  EXPECT_EQ(c, Vector3<double>(5.0, 7.0, 9.0));
+
+  a += b;
+  EXPECT_EQ(a, Vector3<double>(5.0, 7.0, 9.0));
+}
+
+TEST(VECTOR3_TEST, Sub_test) {
+  Vector3<double> a(4.0, 5.0, 6.0);
+  Vector3<double> b(1.0, 2.0, 3.0);
+
+  auto c = a - b;
+  EXPECT_EQ(c, Vector3<double>(3.0, 3.0, 3.0));
+
+  a -= b;
+  EXPECT_EQ(a, Vector3<double>(3.0, 3.0, 3.0));
+}
+
+TEST(VECTOR3_TEST, MultiplyScalar_test) {
+  Vector3<double> a(1.0, 2.0, 3.0);
+
+  auto c = a * 2.0;
+  EXPECT_EQ(c, Vector3<double>(2.0, 4.0, 6.0));
+
+  a *= 2.0;
+  EXPECT_EQ(a, Vector3<double>(2.0, 4.0, 6.0));
+}
+
+TEST(VECTOR3_TEST, DivideScalar_test) {
+  Vector3<double> a(2.0, 4.0, 6.0);
+
+  auto c = a / 2.0;
+  EXPECT_EQ(c, Vector3<double>(1.0, 2.0, 3.0));
+
+  a /= 2.0;
+  EXPECT_EQ(a, Vector3<double>(1.0, 2.0, 3.0));
+}
+
+TEST(VECTOR3_TEST, Negate_test) {
+  Vector3<double> a(1.0, -2.0, 3.0);
+  auto b = -a;
+  EXPECT_EQ(b, Vector3<double>(-1.0, 2.0, -3.0));
+}
+
+TEST(VECTOR3_TEST, Equality_test) {
+  Vector3<double> a(1.0, 2.0, 3.0);
+  Vector3<double> b(1.0, 2.0, 3.0);
+  Vector3<double> c(1.0, 2.0, 4.0);
+
+  EXPECT_TRUE(a == b);
+  EXPECT_FALSE(a != b);
+  EXPECT_TRUE(a != c);
+  EXPECT_FALSE(a == c);
+}
+
+TEST(VECTOR3_TEST, ostream_test) {
+  Vector3<double> a(1.5, 2.5, 3.5);
+  std::stringstream ss;
+  ss << a;
+  EXPECT_EQ(ss.str(), "(1.5, 2.5, 3.5)");
+}
+
 }  // namespace ytlib

@@ -34,8 +34,8 @@ TEST(BOOST_TOOLS_ASIO_TEST, UDP_base) {
     DBG_PRINT("svr_sys_ptr start");
     auto udp_svr_ptr = std::make_shared<AsioUdpServer>(svr_sys_ptr->IO(), AsioUdpServer::Cfg());
     udp_svr_ptr->RegisterMsgHandleFunc(
-        [&result_str](const boost::asio::ip::udp::endpoint &ep, const std::shared_ptr<boost::asio::streambuf> &msg_buf_ptr) {
-          result_str = std::string(static_cast<const char *>(msg_buf_ptr->data().data()), msg_buf_ptr->size());
+        [&result_str](const boost::asio::ip::udp::endpoint& ep, const std::shared_ptr<boost::asio::streambuf>& msg_buf_ptr) {
+          result_str = std::string(static_cast<const char*>(msg_buf_ptr->data().data()), msg_buf_ptr->size());
           DBG_PRINT("svr get a msg from %s, size: %llu, data: %s", UdpEp2Str(ep).c_str(), msg_buf_ptr->size(), result_str.c_str());
         });
 
@@ -51,11 +51,11 @@ TEST(BOOST_TOOLS_ASIO_TEST, UDP_base) {
   {
     std::shared_ptr<boost::asio::streambuf> msg_buf_ptr = std::make_shared<boost::asio::streambuf>();
     auto buf = msg_buf_ptr->prepare(20);
-    sprintf(static_cast<char *>(buf.data()), "1234567890123456789");
+    sprintf(static_cast<char*>(buf.data()), "1234567890123456789");
     msg_buf_ptr->commit(8);
 
     auto buf2 = msg_buf_ptr->prepare(20);
-    sprintf(static_cast<char *>(buf2.data()), "abcdefghijklmn");
+    sprintf(static_cast<char*>(buf2.data()), "abcdefghijklmn");
     msg_buf_ptr->commit(8);
     udp_cli_ptr->SendMsg(msg_buf_ptr);
   }

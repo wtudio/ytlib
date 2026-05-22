@@ -7,6 +7,7 @@
  */
 #pragma once
 
+#include <optional>
 #include <string>
 #include <string_view>
 
@@ -16,15 +17,14 @@ inline unsigned char ToHex(unsigned char x, bool up) {
   return x > 9 ? x + (up ? 55 : 87) : x + 48;
 }
 
-inline unsigned char FromHex(unsigned char x) {
-  unsigned char y = 0;
+inline std::optional<unsigned char> FromHex(unsigned char x) {
   if (x >= 'A' && x <= 'Z')
-    y = x - 55;
+    return x - 55;
   else if (x >= 'a' && x <= 'z')
-    y = x - 87;
+    return x - 87;
   else if (x >= '0' && x <= '9')
-    y = x - '0';
-  return y;
+    return x - '0';
+  return std::nullopt;
 }
 
 /**
@@ -67,10 +67,16 @@ inline std::string UrlDecode(std::string_view str) {
       ret_str += ' ';
     } else if (str[i] == '%') {
       if (i + 2 < len) {
-        unsigned char c = (FromHex((unsigned char)str[++i])) << 4;
-        ret_str += (c | FromHex((unsigned char)str[++i]));
+        auto high = FromHex((unsigned char)str[i + 1]);
+        auto low = FromHex((unsigned char)str[i + 2]);
+        if (high && low) {
+          ret_str += static_cast<char>((*high << 4) | *low);
+          i += 2;
+        } else {
+          ret_str += str[i];
+        }
       } else {
-        break;
+        ret_str += str[i];
       }
     } else {
       ret_str += str[i];

@@ -61,11 +61,11 @@ TEST(MATRIX_TEST, DATA_test) {
   EXPECT_EQ(m2, target_m);
 
   Matrix_i32 m3(kRow, kCol);
-  m3.Assgin(std::vector<int32_t>{1, 2, 3, 4, 5, 6});
+  m3.Assign(std::vector<int32_t>{1, 2, 3, 4, 5, 6});
   EXPECT_EQ(m3, target_m);
 
   Matrix_i32 m4(kRow, kCol);
-  m4.Assgin(std::vector<std::vector<int32_t> >{{1, 2, 3}, {4, 5, 6}});
+  m4.Assign(std::vector<std::vector<int32_t> >{{1, 2, 3}, {4, 5, 6}});
   EXPECT_EQ(m4, target_m);
 
   Matrix_i32 m5{kRow, kCol, {1, 2, 3, 4, 5, 6, 7}};

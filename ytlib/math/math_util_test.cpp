@@ -168,7 +168,12 @@ TEST(MATH_UTIL_TEST, Gcd_test) {
       .name = "bad case 4",
       .num1 = 0,
       .num2 = 0,
-      .want_result = 1});
+      .want_result = 0});
+  test_cases.emplace_back(TestCase{
+      .name = "bad case 5",
+      .num1 = 5,
+      .num2 = 0,
+      .want_result = 5});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
     TestCase& cur_test_case = test_cases[ii];

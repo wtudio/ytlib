@@ -40,7 +40,7 @@ class HttpDispatcher {
       if (std::regex_match(path.begin(), path.end(), itr.first) && itr.second) return itr.second;
     }
 
-    static HttpHandle empty_handle;
+    static const HttpHandle empty_handle;
     return empty_handle;
   }
 

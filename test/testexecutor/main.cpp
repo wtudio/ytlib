@@ -95,7 +95,7 @@ inline void Test3() {
   fiber_env->Join();
 }
 
-int32_t main(int32_t argc, char **argv) {
+int32_t main(int32_t argc, char** argv) {
   // 注意：只能有一个FiberExecutor
 
   // test1::Test1();

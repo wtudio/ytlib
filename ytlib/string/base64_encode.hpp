@@ -32,12 +32,12 @@ inline std::string Base64Encode(std::string_view data) {
   for (size_t ii = 0; ii < data_size; ++ii) {
     uint8_t num_val = static_cast<uint8_t>(data[ii]);
     offset = 16 - ii % 3 * 8;
-    bit_stream += num_val << offset;
+    bit_stream |= static_cast<uint32_t>(num_val) << offset;
     if (offset == 16) {
       ret_str += base64_chars[bit_stream >> 18 & 0x3f];
     } else if (offset == 8) {
       ret_str += base64_chars[bit_stream >> 12 & 0x3f];
-    } else if (offset == 0 && ii != 3) {
+    } else if (offset == 0) {
       ret_str += base64_chars[bit_stream >> 6 & 0x3f];
       ret_str += base64_chars[bit_stream & 0x3f];
       bit_stream = 0;
@@ -79,14 +79,14 @@ inline std::string Base64Decode(std::string_view data) {
     uint8_t num_val = find_bit_val_func(data[ii]);
     if (num_val < 64) {
       offset = 18 - ii % 4 * 6;
-      bit_stream += num_val << offset;
+      bit_stream |= static_cast<uint32_t>(num_val) << offset;
       if (offset == 12) {
         ret_str += static_cast<char>(bit_stream >> 16 & 0xff);
       }
       if (offset == 6) {
         ret_str += static_cast<char>(bit_stream >> 8 & 0xff);
       }
-      if (offset == 0 && ii != 4) {
+      if (offset == 0) {
         ret_str += static_cast<char>(bit_stream & 0xff);
         bit_stream = 0;
       }

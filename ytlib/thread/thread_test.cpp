@@ -53,20 +53,20 @@ class TestObj {
     id = gid++;
     DBG_PRINT("[%llu]create obj %d", ytlib::GetThreadId(), id);
   }
-  TestObj(const TestObj &obj) : data(obj.data) {
+  TestObj(const TestObj& obj) : data(obj.data) {
     id = gid++;
     DBG_PRINT("[%llu]create obj %d from %d by copy", ytlib::GetThreadId(), id, obj.id);
   }
-  TestObj &operator=(const TestObj &obj) {
+  TestObj& operator=(const TestObj& obj) {
     DBG_PRINT("[%llu]copy obj %d to %d", ytlib::GetThreadId(), obj.id, id);
     data = obj.data;
     return *this;
   }
-  TestObj(TestObj &&obj) : data(std::move(obj.data)) {
+  TestObj(TestObj&& obj) : data(std::move(obj.data)) {
     id = gid++;
     DBG_PRINT("[%llu]create obj %d from %d by move", ytlib::GetThreadId(), id, obj.id);
   }
-  TestObj &operator=(TestObj &&obj) {
+  TestObj& operator=(TestObj&& obj) {
     DBG_PRINT("[%llu]move obj %d to %d", ytlib::GetThreadId(), obj.id, id);
     data = std::move(obj.data);
     return *this;
@@ -87,7 +87,7 @@ TEST(THREAD_TEST, Channel_BASE) {
 
   std::atomic<uint32_t> ct = 0;
 
-  auto f = [&](TestObj &&obj) {
+  auto f = [&](TestObj&& obj) {
     DBG_PRINT("[%llu]handle obj %u", ytlib::GetThreadId(), obj.id);
     ++ct;
   };
@@ -151,7 +151,7 @@ TEST(THREAD_TEST, BlockQueue_ANYSC) {
 
   std::atomic<uint32_t> ct = 0;
 
-  auto f = [&](TestObj &&obj) {
+  auto f = [&](TestObj&& obj) {
     DBG_PRINT("handle obj %d", obj.id);
     ++ct;
   };
@@ -254,14 +254,14 @@ TEST(THREAD_TEST, ThreadIdTool_BASE) {
   }
 
   std::set<uint64_t> thread_id_set;
-  for (auto &itr : thread_id_map) {
+  for (auto& itr : thread_id_map) {
     ASSERT_EQ(thread_id_set.find(itr.second) == thread_id_set.end(), true);
     thread_id_set.insert(itr.second);
   }
 }
 
 // 模拟异步请求。TODO：在win下release版本大概率会出现bug，待查验
-void AsyncSendRecv(const TestObj &in_buf, std::function<void(TestObj &&)> &&callback) {
+void AsyncSendRecv(const TestObj& in_buf, std::function<void(TestObj&&)>&& callback) {
   std::thread t([&in_buf, callback{std::move(callback)}]() {
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
     TestObj out_buf;
@@ -280,12 +280,12 @@ TEST(THREAD_TEST, coroutine_BASE) {
   auto task_fun = [&buf]() -> CoroSched<TestObj> {
     // 调用co_await后，当前协程去执行Awaitable<TestObj>的await_suspend函数
     // await_suspend函数需要确保h.resume()在之后某个时间被调用，此时返回Awaitable<TestObj>的await_resume函数的返回值
-    TestObj ret_buf = co_await Awaitable<TestObj>([&buf](std::function<void(TestObj &&)> &&cb) {
+    TestObj ret_buf = co_await Awaitable<TestObj>([&buf](std::function<void(TestObj&&)>&& cb) {
       AsyncSendRecv(buf, std::move(cb));
     });
     co_yield ret_buf;  // (1)
 
-    TestObj ret_buf2 = co_await Awaitable<TestObj>([&ret_buf](std::function<void(TestObj &&)> &&cb) {
+    TestObj ret_buf2 = co_await Awaitable<TestObj>([&ret_buf](std::function<void(TestObj&&)>&& cb) {
       AsyncSendRecv(ret_buf, std::move(cb));
     });
 

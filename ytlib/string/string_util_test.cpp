@@ -1385,6 +1385,18 @@ TEST(STRING_UTIL_TEST, StartsWith_test) {
       .pattern = "",
       .ignore_case = true,
       .want_result = false});
+  test_cases.emplace_back(TestCase{
+      .name = "case 5 - str shorter than pattern",
+      .str = "ab",
+      .pattern = "abcdef",
+      .ignore_case = false,
+      .want_result = false});
+  test_cases.emplace_back(TestCase{
+      .name = "case 6 - str shorter than pattern ignore_case",
+      .str = "Ab",
+      .pattern = "ABCDEF",
+      .ignore_case = true,
+      .want_result = false});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
     TestCase& cur_test_case = test_cases[ii];
@@ -1429,6 +1441,18 @@ TEST(STRING_UTIL_TEST, EndsWith_test) {
       .pattern = "",
       .ignore_case = true,
       .want_result = false});
+  test_cases.emplace_back(TestCase{
+      .name = "case 5 - str shorter than pattern",
+      .str = "fg",
+      .pattern = "abcdefg",
+      .ignore_case = false,
+      .want_result = false});
+  test_cases.emplace_back(TestCase{
+      .name = "case 6 - str shorter than pattern ignore_case",
+      .str = "FG",
+      .pattern = "ABCDEFG",
+      .ignore_case = true,
+      .want_result = false});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
     TestCase& cur_test_case = test_cases[ii];
@@ -1454,7 +1478,7 @@ TEST(STRING_UTIL_TEST, Hash64Fnv1a_test) {
   test_cases.emplace_back(TestCase{
       .name = "case 2",
       .data = "",
-      .want_result = 14695981039346656037});
+      .want_result = 14695981039346656037ULL});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
     TestCase& cur_test_case = test_cases[ii];

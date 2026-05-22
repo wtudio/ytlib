@@ -12,7 +12,7 @@
 namespace thirdparty {
 
 struct complicated_structure {
-  friend void do_something(complicated_structure &t) noexcept {
+  friend void do_something(complicated_structure& t) noexcept {
     std::cout << "customized do something" << std::endl;
   }
 };
@@ -31,13 +31,13 @@ namespace standard {
 namespace detail {
 
 template <typename T>
-void do_something(T &t) noexcept {
+void do_something(T& t) noexcept {
   std::cout << "standard do something" << std::endl;
 }
 
 struct do_something_t {
   template <typename T>
-  void operator()(T &t) noexcept {
+  void operator()(T& t) noexcept {
     do_something(t);
   }
 };
@@ -74,31 +74,31 @@ void tag_invoke();
 
 struct tag_invoke_t {
   template <typename Tag, typename... Args>
-  constexpr auto operator()(Tag tag, Args &&...args) const
-      noexcept(noexcept(tag_invoke(static_cast<Tag &&>(tag), static_cast<Args &&>(args)...)))
-          -> decltype(tag_invoke(static_cast<Tag &&>(tag), static_cast<Args &&>(args)...)) {
-    return tag_invoke(static_cast<Tag &&>(tag), static_cast<Args &&>(args)...);
+  constexpr auto operator()(Tag tag, Args&&... args) const
+      noexcept(noexcept(tag_invoke(static_cast<Tag&&>(tag), static_cast<Args&&>(args)...)))
+          -> decltype(tag_invoke(static_cast<Tag&&>(tag), static_cast<Args&&>(args)...)) {
+    return tag_invoke(static_cast<Tag&&>(tag), static_cast<Args&&>(args)...);
   }
 };
 }  // namespace detail
 
 inline constexpr detail::tag_invoke_t tag_invoke{};
 
-template <auto &Tag>
+template <auto& Tag>
 using tag_t = std::decay_t<decltype(Tag)>;
 
 // -----------------声明do_something方法可以自定义，同时定义默认do_something方法-----------
 namespace detail {
 struct do_something_t {
   template <typename T>
-  std::string operator()(T &t, int n) noexcept {
+  std::string operator()(T& t, int n) noexcept {
     return tag_invoke(do_something_t{}, t, n);
   }
 };
 
 // 注意函数定义不再是do_something，而是tag_invoke，tag就是 detail::do_something_t
 template <typename T>
-std::string tag_invoke(do_something_t, T &t, int n) noexcept {
+std::string tag_invoke(do_something_t, T& t, int n) noexcept {
   std::cout << "standard do something " << n << std::endl;
   return "standard do something";
 }
@@ -114,7 +114,7 @@ namespace thirdparty2 {
 
 struct complicated_structure {
   // tag_t<do_something>就是standard::detail::do_something_t
-  friend std::string tag_invoke(standard2::tag_t<standard2::do_something>, complicated_structure &t, int n) noexcept {
+  friend std::string tag_invoke(standard2::tag_t<standard2::do_something>, complicated_structure& t, int n) noexcept {
     std::cout << "customized do something " << n << std::endl;
     return "customized do something";
   }
@@ -145,7 +145,7 @@ std::tuple<int, std::string> foo() {
   return {n, std::move(s)};
 }
 
-int32_t main(int32_t argc, char **argv) {
+int32_t main(int32_t argc, char** argv) {
   DBG_PRINT("hello world");
 
   {

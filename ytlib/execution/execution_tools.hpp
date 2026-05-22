@@ -19,15 +19,15 @@ namespace ytlib {
  */
 template <typename Sender>
   requires unifex::sender<Sender>
-void StartDetached(Sender &&sender) {
+void StartDetached(Sender&& sender) {
   struct AsyncScopeDeleter {
-    void operator()(unifex::async_scope *p) {
+    void operator()(unifex::async_scope* p) {
       unifex::sync_wait(p->cleanup());
       delete p;
     }
   };
   static std::unique_ptr<unifex::async_scope, AsyncScopeDeleter> scope_ptr{new unifex::async_scope()};
-  scope_ptr->spawn((Sender &&) sender);
+  scope_ptr->spawn((Sender&&)sender);
 }
 
 /**
@@ -40,29 +40,29 @@ void StartDetached(Sender &&sender) {
  */
 template <typename Sender, typename CallBack>
   requires unifex::sender<Sender>
-void StartDetached(Sender &&sender, CallBack &&cb) {
-  StartDetached(((Sender &&) sender) | unifex::then((CallBack &&) cb));
+void StartDetached(Sender&& sender, CallBack&& cb) {
+  StartDetached(((Sender&&)sender) | unifex::then((CallBack&&)cb));
 }
 
 template <typename Receiver, typename... Results>
   requires unifex::receiver<Receiver>
 struct AsyncWrapperOperationState {
-  using CallBack = std::function<void(Results &&...)>;
+  using CallBack = std::function<void(Results&&...)>;
   using AsyncFunc = std::function<void(CallBack)>;
 
   template <typename Receiver2>
     requires std::constructible_from<Receiver, Receiver2>
-  explicit AsyncWrapperOperationState(AsyncFunc &&async_func, Receiver2 &&r) noexcept(std::is_nothrow_constructible_v<Receiver, Receiver2>)
-      : async_func_(std::move(async_func)), receiver_(new Receiver((Receiver2 &&) r)) {}
+  explicit AsyncWrapperOperationState(AsyncFunc&& async_func, Receiver2&& r) noexcept(std::is_nothrow_constructible_v<Receiver, Receiver2>)
+      : async_func_(std::move(async_func)), receiver_(new Receiver((Receiver2&&)r)) {}
 
   void start() noexcept {
     try {
-      async_func_([receiver = receiver_](Results &&...values) {
+      async_func_([receiver = receiver_](Results&&... values) {
         try {
           if (unifex::get_stop_token(*receiver).stop_requested()) {
             unifex::set_done(std::move(*receiver));
           } else {
-            unifex::set_value(std::move(*receiver), (Results &&) values...);
+            unifex::set_value(std::move(*receiver), (Results&&)values...);
           }
         } catch (...) {
           unifex::set_error(std::move(*receiver), std::current_exception());
@@ -85,7 +85,7 @@ struct AsyncWrapperOperationState {
 template <typename... Results>
 class AsyncWrapper {
  public:
-  using CallBack = std::function<void(Results &&...)>;
+  using CallBack = std::function<void(Results&&...)>;
   using AsyncFunc = std::function<void(CallBack)>;
 
   template <template <typename...> class Variant, template <typename...> class Tuple>
@@ -97,11 +97,11 @@ class AsyncWrapper {
   static constexpr bool sends_done = true;
 
   template <typename F>
-  explicit AsyncWrapper(F &&f) : async_func_((F &&) f) {}
+  explicit AsyncWrapper(F&& f) : async_func_((F&&)f) {}
 
   template <typename Receiver>
-  AsyncWrapperOperationState<unifex::remove_cvref_t<Receiver>, Results...> connect(Receiver &&receiver) {
-    return AsyncWrapperOperationState<unifex::remove_cvref_t<Receiver>, Results...>((AsyncFunc &&) async_func_, (Receiver &&) receiver);
+  AsyncWrapperOperationState<unifex::remove_cvref_t<Receiver>, Results...> connect(Receiver&& receiver) {
+    return AsyncWrapperOperationState<unifex::remove_cvref_t<Receiver>, Results...>((AsyncFunc&&)async_func_, (Receiver&&)receiver);
   }
 
  private:

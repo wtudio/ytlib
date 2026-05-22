@@ -126,7 +126,7 @@ void InitTracer() {
   // set the global trace provider
   // trace_api::Provider::SetTracerProvider(provider);
 
-  const std::shared_ptr<trace_api::TracerProvider> &api_provider = provider;
+  const std::shared_ptr<trace_api::TracerProvider>& api_provider = provider;
   trace_api::Provider::SetTracerProvider(api_provider);
 }
 
@@ -158,7 +158,7 @@ void CleanupTracer() {
 template <typename T>
 class HttpTextMapCarrier : public opentelemetry::context::propagation::TextMapCarrier {
  public:
-  HttpTextMapCarrier(const T &headers) : headers_(headers) {}
+  HttpTextMapCarrier(const T& headers) : headers_(headers) {}
   HttpTextMapCarrier() = default;
   virtual opentelemetry::nostd::string_view Get(
       opentelemetry::nostd::string_view key) const noexcept override {
@@ -185,9 +185,9 @@ class HttpTextMapCarrier : public opentelemetry::context::propagation::TextMapCa
   T headers_;
 };
 
-void bar(const std::map<std::string, std::string> &headers) {
+void bar(const std::map<std::string, std::string>& headers) {
   DBG_PRINT("+++++++++++++++++ %lu", headers.size());
-  for (auto &itr : headers) {
+  for (auto& itr : headers) {
     DBG_PRINT("%s : %s", itr.first.c_str(), itr.second.c_str());
   }
   DBG_PRINT("-------------------");
@@ -245,7 +245,7 @@ void foo() {
   propagator->Inject(carrier, temp_ctx);
 
   DBG_PRINT("+++++++++++++++++ %lu", carrier.headers_.size());
-  for (auto &itr : carrier.headers_) {
+  for (auto& itr : carrier.headers_) {
     DBG_PRINT("%s : %s", itr.first.c_str(), itr.second.c_str());
   }
   DBG_PRINT("-------------------");
@@ -265,7 +265,7 @@ void foo() {
   span->End();
 }
 
-void InitMetrics(const std::string &name) {
+void InitMetrics(const std::string& name) {
   auto exporter = exportermetrics::OStreamMetricExporterFactory::Create();
 
   std::string version{"1.2.0"};
@@ -361,7 +361,7 @@ std::map<std::string, std::string> get_random_attr() {
 
 class MeasurementFetcher {
  public:
-  static void Fetcher(opentelemetry::metrics::ObserverResult observer_result, void * /* state */) {
+  static void Fetcher(opentelemetry::metrics::ObserverResult observer_result, void* /* state */) {
     if (opentelemetry::nostd::holds_alternative<
             opentelemetry::nostd::shared_ptr<opentelemetry::metrics::ObserverResultT<double>>>(
             observer_result)) {
@@ -379,7 +379,7 @@ class MeasurementFetcher {
 double MeasurementFetcher::value_ = 0.0;
 }  // namespace
 
-void counter_example(const std::string &name) {
+void counter_example(const std::string& name) {
   std::string counter_name = name + "_counter";
   auto provider = metrics_api::Provider::GetMeterProvider();
   opentelemetry::nostd::shared_ptr<metrics_api::Meter> meter = provider->GetMeter(name, "1.2.0");
@@ -392,7 +392,7 @@ void counter_example(const std::string &name) {
   }
 }
 
-void observable_counter_example(const std::string &name) {
+void observable_counter_example(const std::string& name) {
   std::string counter_name = name + "_observable_counter";
   auto provider = metrics_api::Provider::GetMeterProvider();
   opentelemetry::nostd::shared_ptr<metrics_api::Meter> meter = provider->GetMeter(name, "1.2.0");
@@ -403,7 +403,7 @@ void observable_counter_example(const std::string &name) {
   }
 }
 
-void histogram_example(const std::string &name) {
+void histogram_example(const std::string& name) {
   std::string histogram_name = name + "_histogram";
   auto provider = metrics_api::Provider::GetMeterProvider();
   opentelemetry::nostd::shared_ptr<metrics_api::Meter> meter = provider->GetMeter(name, "1.2.0");
@@ -428,7 +428,7 @@ void InitLogger() {
       opentelemetry::sdk::logs::LoggerProviderFactory::Create(std::move(processor)));
 
   // Set the global logger provider
-  const std::shared_ptr<logs_api::LoggerProvider> &api_provider = provider;
+  const std::shared_ptr<logs_api::LoggerProvider>& api_provider = provider;
   logs_api::Provider::SetLoggerProvider(api_provider);
 }
 
@@ -450,7 +450,7 @@ opentelemetry::nostd::shared_ptr<logs::Logger> get_logger() {
   return provider->GetLogger("foo_library_logger", "foo_library");
 }
 
-int32_t main(int32_t argc, char **argv) {
+int32_t main(int32_t argc, char** argv) {
   DBG_PRINT("hello world");
 
   // InitTracer();

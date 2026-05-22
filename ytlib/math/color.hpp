@@ -13,7 +13,7 @@
 
 namespace ytlib {
 
-inline std::vector<float> rgb2hsb(const std::vector<uint8_t> &rgb) {
+inline std::vector<float> rgb2hsb(const std::vector<uint8_t>& rgb) {
   if (rgb.size() != 3)
     throw std::logic_error("invalid rgb vector.");
 
@@ -25,7 +25,7 @@ inline std::vector<float> rgb2hsb(const std::vector<uint8_t> &rgb) {
   float &hsb_h = re[0], &hsb_s = re[1], &hsb_b = re[2];
 
   hsb_b = rgb_max / 255.0f;
-  hsb_s = (rgb_max == 0) ? 0.0 : ((rgb_max - rgb_min) / static_cast<float>(rgb_max));
+  hsb_s = (rgb_max == 0) ? 0.0f : ((rgb_max - rgb_min) / static_cast<float>(rgb_max));
 
   if (rgb_max == rgb_min) {
     hsb_h = 0.0;
@@ -42,7 +42,7 @@ inline std::vector<float> rgb2hsb(const std::vector<uint8_t> &rgb) {
   return re;
 }
 
-inline std::vector<uint8_t> hsb2rgb(const std::vector<float> &hsb) {
+inline std::vector<uint8_t> hsb2rgb(const std::vector<float>& hsb) {
   if (hsb.size() != 3 || hsb[0] < 0.0 || hsb[0] > 360.0 || hsb[1] < 0.0 || hsb[1] > 1.0 || hsb[2] < 0.0 || hsb[2] > 1.0)
     throw std::logic_error("invalid hsb vector.");
 

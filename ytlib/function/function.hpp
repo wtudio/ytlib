@@ -223,7 +223,7 @@ class Function<Ops> {
   }
 
   template <class T, class = std::enable_if_t<CheckImplicitlyConvertible<T>(Indices{})>>
-  Function& operator=(T&& action) {
+  Function& operator=(T && action) {
     this->~Function();
     new (this) Function(std::forward<T>(action));
     return *this;
@@ -304,7 +304,7 @@ struct FunctionTypeDeducer<R (Class::*)(Args...)> {
 };
 
 template <class R, class Class, class... Args>
-struct FunctionTypeDeducer<R (Class::*)(Args...)&> {
+struct FunctionTypeDeducer<R (Class::*)(Args...) &> {
   using Type = R(Args...);
 };
 

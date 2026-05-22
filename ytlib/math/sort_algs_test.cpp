@@ -30,20 +30,30 @@ TEST(SORT_ALGS_TEST, BubbleSort_test) {
   };
   std::vector<TestCase> test_cases;
   test_cases.emplace_back(TestCase{
-      .name = "case 1",
+      .name = "case 1: already sorted",
       .len = 10,
       .data_vec = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
       .want_result = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}});
   test_cases.emplace_back(TestCase{
-      .name = "case 2",
+      .name = "case 2: random",
       .len = 10,
       .data_vec = {7, 3, 9, 6, 1, 5, 0, 2, 8, 4},
       .want_result = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}});
   test_cases.emplace_back(TestCase{
-      .name = "case 3",
+      .name = "case 3: duplicates",
       .len = 10,
       .data_vec = {7, 3, 5, 6, 1, 5, 0, 2, 8, 4},
       .want_result = {0, 1, 2, 3, 4, 5, 5, 6, 7, 8}});
+  test_cases.emplace_back(TestCase{
+      .name = "case 4: single element",
+      .len = 1,
+      .data_vec = {42},
+      .want_result = {42}});
+  test_cases.emplace_back(TestCase{
+      .name = "case 5: reverse sorted",
+      .len = 5,
+      .data_vec = {5, 4, 3, 2, 1},
+      .want_result = {1, 2, 3, 4, 5}});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
     TestCase& cur_test_case = test_cases[ii];
@@ -64,20 +74,30 @@ TEST(SORT_ALGS_TEST, MergeSort_test) {
   };
   std::vector<TestCase> test_cases;
   test_cases.emplace_back(TestCase{
-      .name = "case 1",
+      .name = "case 1: already sorted",
       .len = 10,
       .data_vec = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
       .want_result = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}});
   test_cases.emplace_back(TestCase{
-      .name = "case 2",
+      .name = "case 2: random",
       .len = 10,
       .data_vec = {7, 3, 9, 6, 1, 5, 0, 2, 8, 4},
       .want_result = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}});
   test_cases.emplace_back(TestCase{
-      .name = "case 3",
+      .name = "case 3: duplicates",
       .len = 10,
       .data_vec = {7, 3, 5, 6, 1, 5, 0, 2, 8, 4},
       .want_result = {0, 1, 2, 3, 4, 5, 5, 6, 7, 8}});
+  test_cases.emplace_back(TestCase{
+      .name = "case 4: single element",
+      .len = 1,
+      .data_vec = {42},
+      .want_result = {42}});
+  test_cases.emplace_back(TestCase{
+      .name = "case 5: reverse sorted",
+      .len = 5,
+      .data_vec = {5, 4, 3, 2, 1},
+      .want_result = {1, 2, 3, 4, 5}});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
     TestCase& cur_test_case = test_cases[ii];
@@ -98,20 +118,30 @@ TEST(SORT_ALGS_TEST, MergeSort2_test) {
   };
   std::vector<TestCase> test_cases;
   test_cases.emplace_back(TestCase{
-      .name = "case 1",
+      .name = "case 1: already sorted",
       .len = 10,
       .data_vec = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
       .want_result = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}});
   test_cases.emplace_back(TestCase{
-      .name = "case 2",
+      .name = "case 2: random",
       .len = 10,
       .data_vec = {7, 3, 9, 6, 1, 5, 0, 2, 8, 4},
       .want_result = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}});
   test_cases.emplace_back(TestCase{
-      .name = "case 3",
+      .name = "case 3: duplicates",
       .len = 10,
       .data_vec = {7, 3, 5, 6, 1, 5, 0, 2, 8, 4},
       .want_result = {0, 1, 2, 3, 4, 5, 5, 6, 7, 8}});
+  test_cases.emplace_back(TestCase{
+      .name = "case 4: single element",
+      .len = 1,
+      .data_vec = {42},
+      .want_result = {42}});
+  test_cases.emplace_back(TestCase{
+      .name = "case 5: reverse sorted",
+      .len = 5,
+      .data_vec = {5, 4, 3, 2, 1},
+      .want_result = {1, 2, 3, 4, 5}});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
     TestCase& cur_test_case = test_cases[ii];
@@ -132,20 +162,30 @@ TEST(SORT_ALGS_TEST, QuickSort_test) {
   };
   std::vector<TestCase> test_cases;
   test_cases.emplace_back(TestCase{
-      .name = "case 1",
+      .name = "case 1: already sorted",
       .len = 10,
       .data_vec = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
       .want_result = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}});
   test_cases.emplace_back(TestCase{
-      .name = "case 2",
+      .name = "case 2: random",
       .len = 10,
       .data_vec = {7, 3, 9, 6, 1, 5, 0, 2, 8, 4},
       .want_result = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}});
   test_cases.emplace_back(TestCase{
-      .name = "case 3",
+      .name = "case 3: duplicates",
       .len = 10,
       .data_vec = {7, 3, 5, 6, 1, 5, 0, 2, 8, 4},
       .want_result = {0, 1, 2, 3, 4, 5, 5, 6, 7, 8}});
+  test_cases.emplace_back(TestCase{
+      .name = "case 4: single element",
+      .len = 1,
+      .data_vec = {42},
+      .want_result = {42}});
+  test_cases.emplace_back(TestCase{
+      .name = "case 5: reverse sorted",
+      .len = 5,
+      .data_vec = {5, 4, 3, 2, 1},
+      .want_result = {1, 2, 3, 4, 5}});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
     TestCase& cur_test_case = test_cases[ii];

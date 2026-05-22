@@ -84,13 +84,13 @@ TEST(BIG_NUM_TEST, Construct_test) {
   test_cases.emplace_back(TestCase{
       .name = "case 12",
       .num = BigNum("-", BigNum::BaseType::HEX, 0),
-      .want_symbol = false,
+      .want_symbol = true,
       .want_content = {0},
       .want_base = 16});
   test_cases.emplace_back(TestCase{
       .name = "case 13",
       .num = BigNum("-000kkk", BigNum::BaseType::HEX, 0),
-      .want_symbol = false,
+      .want_symbol = true,
       .want_content = {0},
       .want_base = 16});
   test_cases.emplace_back(TestCase{
@@ -112,11 +112,29 @@ TEST(BIG_NUM_TEST, Construct_test) {
       .want_content = {1, UINT32_MAX - 2},
       .want_base = UINT32_MAX});
   test_cases.emplace_back(TestCase{
+      .name = "case 16b: AssignU64(0) produces single-element {0}",
+      .num = BigNum::AssignU64(0),
+      .want_symbol = true,
+      .want_content = {0},
+      .want_base = UINT32_MAX});
+  test_cases.emplace_back(TestCase{
+      .name = "case 16c: AssignU64(0) with custom base",
+      .num = BigNum::AssignU64(0, false, 10, 0),
+      .want_symbol = true,
+      .want_content = {0},
+      .want_base = 10});
+  test_cases.emplace_back(TestCase{
       .name = "case 17",
       .num = BigNum("987"),
       .want_symbol = true,
       .want_content = {987},
       .want_base = UINT32_MAX});
+  test_cases.emplace_back(TestCase{
+      .name = "case 18",
+      .num = BigNum(INT64_MIN, 10),
+      .want_symbol = false,
+      .want_content = {8, 0, 8, 5, 7, 7, 4, 5, 8, 6, 3, 0, 2, 7, 3, 3, 2, 2, 9},
+      .want_base = 10});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
     TestCase& cur_test_case = test_cases[ii];
@@ -230,6 +248,12 @@ TEST(BIG_NUM_TEST, MISC_test) {
   std::swap(n3, n4);
   EXPECT_EQ(n3, BigNum(123));
   EXPECT_EQ(n4, BigNum(-123));
+
+  // -0 的 Symbol 应返回 true
+  BigNum n5(-0);
+  EXPECT_TRUE(n5.Symbol());
+  BigNum n6 = -BigNum(0);
+  EXPECT_TRUE(n6.Symbol());
 }
 
 TEST(BIG_NUM_TEST, EQUAL_test) {
@@ -417,6 +441,98 @@ TEST(BIG_NUM_TEST, Compare_test) {
   }
 }
 
+TEST(BIG_NUM_TEST, CompareShifted_test) {
+  struct TestCase {
+    std::string name;
+
+    BigNum a;
+    BigNum b;
+    size_t shift;
+
+    int32_t want_result;  // CompareShifted(a, b, shift): 1/0/-1
+  };
+  std::vector<TestCase> test_cases;
+  test_cases.emplace_back(TestCase{
+      .name = "case 1: 0 vs 0<<0",
+      .a = BigNum(0, 10),
+      .b = BigNum(0, 10),
+      .shift = 0,
+      .want_result = 0});
+  test_cases.emplace_back(TestCase{
+      .name = "case 2: 0 vs 0<<3",
+      .a = BigNum(0, 10),
+      .b = BigNum(0, 10),
+      .shift = 3,
+      .want_result = 0});
+  test_cases.emplace_back(TestCase{
+      .name = "case 3: 100 == 1<<2",
+      .a = BigNum(100, 10),
+      .b = BigNum(1, 10),
+      .shift = 2,
+      .want_result = 0});
+  test_cases.emplace_back(TestCase{
+      .name = "case 4: 1000 > 1<<2",
+      .a = BigNum(1000, 10),
+      .b = BigNum(1, 10),
+      .shift = 2,
+      .want_result = 1});
+  test_cases.emplace_back(TestCase{
+      .name = "case 5: 99 < 1<<2",
+      .a = BigNum(99, 10),
+      .b = BigNum(1, 10),
+      .shift = 2,
+      .want_result = -1});
+  test_cases.emplace_back(TestCase{
+      .name = "case 6: -100 < 1<<2 (different signs)",
+      .a = BigNum(-100, 10),
+      .b = BigNum(1, 10),
+      .shift = 2,
+      .want_result = -1});
+  test_cases.emplace_back(TestCase{
+      .name = "case 7: 100 > -1<<2 (different signs)",
+      .a = BigNum(100, 10),
+      .b = BigNum(-1, 10),
+      .shift = 2,
+      .want_result = 1});
+  test_cases.emplace_back(TestCase{
+      .name = "case 8: -100 == -1<<2",
+      .a = BigNum(-100, 10),
+      .b = BigNum(-1, 10),
+      .shift = 2,
+      .want_result = 0});
+  test_cases.emplace_back(TestCase{
+      .name = "case 9: -99 > -1<<2 (i.e. -99 > -100)",
+      .a = BigNum(-99, 10),
+      .b = BigNum(-1, 10),
+      .shift = 2,
+      .want_result = 1});
+  test_cases.emplace_back(TestCase{
+      .name = "case 10: -200 < -1<<2 (i.e. -200 < -100)",
+      .a = BigNum(-200, 10),
+      .b = BigNum(-1, 10),
+      .shift = 2,
+      .want_result = -1});
+  test_cases.emplace_back(TestCase{
+      .name = "case 11: 12300 == 123<<2",
+      .a = BigNum(12300, 10),
+      .b = BigNum(123, 10),
+      .shift = 2,
+      .want_result = 0});
+  test_cases.emplace_back(TestCase{
+      .name = "case 12: shift=0 same as Compare, cross-base",
+      .a = BigNum(255, 10),
+      .b = BigNum("FF", BigNum::BaseType::HEX),
+      .shift = 0,
+      .want_result = 0});
+
+  for (size_t ii = 0; ii < test_cases.size(); ++ii) {
+    TestCase& cur_test_case = test_cases[ii];
+    EXPECT_EQ(BigNum::CompareShifted(cur_test_case.a, cur_test_case.b, cur_test_case.shift),
+              cur_test_case.want_result)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
+  }
+}
+
 TEST(BIG_NUM_TEST, Add_test) {
   struct TestCase {
     std::string name;
@@ -487,6 +603,16 @@ TEST(BIG_NUM_TEST, Add_test) {
       .a = BigNum("1234"),
       .b = BigNum("-ABC", BigNum::BaseType::HEX),  // 2748
       .want_result = BigNum("-1514")});
+  test_cases.emplace_back(TestCase{
+      .name = "case 13",
+      .a = BigNum("12345678901234567890", BigNum::BaseType::DEC),
+      .b = BigNum("98765432109876543210", BigNum::BaseType::DEC),
+      .want_result = BigNum("111111111011111111100", BigNum::BaseType::DEC)});
+  test_cases.emplace_back(TestCase{
+      .name = "case 14",
+      .a = BigNum("99999999999999999999", BigNum::BaseType::DEC),
+      .b = BigNum("1", BigNum::BaseType::DEC),
+      .want_result = BigNum("100000000000000000000", BigNum::BaseType::DEC)});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
     TestCase& cur_test_case = test_cases[ii];
@@ -614,6 +740,17 @@ TEST(BIG_NUM_TEST, Multiply_test) {
       .a = BigNum(UINT32_MAX - 1),
       .b = BigNum(UINT32_MAX - 1),
       .want_result = BigNum((UINT32_MAX - 1) / 2) * BigNum((UINT32_MAX - 1) / 2) * BigNum(4)});
+  // 每位均为9，触发乘法 buffer 中 carry 跨多个位置连续传播
+  test_cases.emplace_back(TestCase{
+      .name = "case 8",
+      .a = BigNum("999", BigNum::BaseType::DEC),
+      .b = BigNum("999", BigNum::BaseType::DEC),
+      .want_result = BigNum("998001", BigNum::BaseType::DEC)});
+  test_cases.emplace_back(TestCase{
+      .name = "case 9",
+      .a = BigNum("99999999999999999999", BigNum::BaseType::DEC),
+      .b = BigNum("99999999999999999999", BigNum::BaseType::DEC),
+      .want_result = BigNum("9999999999999999999800000000000000000001", BigNum::BaseType::DEC)});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
     TestCase& cur_test_case = test_cases[ii];
@@ -791,7 +928,7 @@ TEST(BIG_NUM_TEST, RightShift_test) {
       .n = 4,
       .want_result = BigNum("0")});
   test_cases.emplace_back(TestCase{
-      .name = "case 4",
+      .name = "case 5",
       .num = BigNum("-123", BigNum::BaseType::DEC, 0),
       .n = 1,
       .want_result = BigNum("-12")});
@@ -873,6 +1010,7 @@ TEST(BIG_NUM_TEST, Pow_test) {
     BigNum want_result;
   };
   std::vector<TestCase> test_cases;
+  // 0^0 约定返回 1
   test_cases.emplace_back(TestCase{
       .name = "case 1",
       .value = BigNum("0"),
@@ -903,11 +1041,92 @@ TEST(BIG_NUM_TEST, Pow_test) {
       .value = BigNum("-2"),
       .n = 11,
       .want_result = BigNum("-2048")});
+  test_cases.emplace_back(TestCase{
+      .name = "case 7",
+      .value = BigNum("2", BigNum::BaseType::DEC),
+      .n = 64,
+      .want_result = BigNum("18446744073709551616", BigNum::BaseType::DEC)});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
     TestCase& cur_test_case = test_cases[ii];
     auto ret = BigNum::Pow(cur_test_case.value, cur_test_case.n);
     EXPECT_EQ(ret, cur_test_case.want_result)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
+  }
+}
+
+TEST(BIG_NUM_TEST, ReBase_RoundTrip_test) {
+  struct TestCase {
+    std::string name;
+
+    BigNum num;
+    uint32_t mid_base;
+  };
+  std::vector<TestCase> test_cases;
+  test_cases.emplace_back(TestCase{
+      .name = "case 1: DEC->HEX->DEC",
+      .num = BigNum(123456789, 10),
+      .mid_base = 16});
+  test_cases.emplace_back(TestCase{
+      .name = "case 2: DEC->BIN->DEC",
+      .num = BigNum(987654321, 10),
+      .mid_base = 2});
+  test_cases.emplace_back(TestCase{
+      .name = "case 3: DEC->OCT->DEC",
+      .num = BigNum(-123456, 10),
+      .mid_base = 8});
+  test_cases.emplace_back(TestCase{
+      .name = "case 4: DEC->UINT32_MAX->DEC",
+      .num = BigNum(static_cast<int64_t>(UINT32_MAX) * 12345 + 67890, 10),
+      .mid_base = UINT32_MAX});
+
+  for (size_t ii = 0; ii < test_cases.size(); ++ii) {
+    TestCase& cur_test_case = test_cases[ii];
+    BigNum original(cur_test_case.num);
+    cur_test_case.num.ReBase(cur_test_case.mid_base);
+    cur_test_case.num.ReBase(10);
+    EXPECT_EQ(cur_test_case.num, original)
+        << "Test " << cur_test_case.name << " failed, index " << ii;
+  }
+}
+
+TEST(BIG_NUM_TEST, DivInverse_test) {
+  struct TestCase {
+    std::string name;
+
+    BigNum a;
+    BigNum b;
+  };
+  std::vector<TestCase> test_cases;
+  test_cases.emplace_back(TestCase{
+      .name = "case 1",
+      .a = BigNum("12345678"),
+      .b = BigNum("1234")});
+  test_cases.emplace_back(TestCase{
+      .name = "case 2",
+      .a = BigNum("-12345678"),
+      .b = BigNum("1234")});
+  test_cases.emplace_back(TestCase{
+      .name = "case 3",
+      .a = BigNum("12345678"),
+      .b = BigNum("-1234")});
+  test_cases.emplace_back(TestCase{
+      .name = "case 4",
+      .a = BigNum("-12345678"),
+      .b = BigNum("-1234")});
+  test_cases.emplace_back(TestCase{
+      .name = "case 5",
+      .a = BigNum("1"),
+      .b = BigNum("99999999")});
+  test_cases.emplace_back(TestCase{
+      .name = "case 6",
+      .a = BigNum("99999999999999999999", BigNum::BaseType::DEC),
+      .b = BigNum("123456789")});
+
+  for (size_t ii = 0; ii < test_cases.size(); ++ii) {
+    TestCase& cur_test_case = test_cases[ii];
+    auto ret = cur_test_case.a.Div(cur_test_case.b);
+    EXPECT_EQ(ret.first * cur_test_case.b + ret.second, cur_test_case.a)
         << "Test " << cur_test_case.name << " failed, index " << ii;
   }
 }

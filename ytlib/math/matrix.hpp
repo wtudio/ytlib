@@ -10,7 +10,10 @@
 #include <cmath>
 #include <cstring>
 #include <iostream>
+#include <stdexcept>
 #include <string>
+#include <type_traits>
+#include <vector>
 
 namespace ytlib {
 /**
@@ -19,6 +22,8 @@ namespace ytlib {
  */
 template <typename T = double>
 class Basic_Matrix {
+  static_assert(std::is_trivially_copyable_v<T>);
+
  public:
   Basic_Matrix() = default;
   Basic_Matrix(const uint32_t input_max_row, const uint32_t input_max_col) {
@@ -36,12 +41,12 @@ class Basic_Matrix {
   Basic_Matrix(const uint32_t input_max_row, const uint32_t input_max_col,
                const std::vector<T>& input_data) {
     AllocateMemory(input_max_row, input_max_col);
-    Assgin(input_data);
+    Assign(input_data);
   }
   Basic_Matrix(const uint32_t input_max_row, const uint32_t input_max_col,
                const std::vector<std::vector<T> >& input_data) {
     AllocateMemory(input_max_row, input_max_col);
-    Assgin(input_data);
+    Assign(input_data);
   }
 
   ~Basic_Matrix() { ReleaseMemory(); }
@@ -70,13 +75,13 @@ class Basic_Matrix {
     return *this;
   }
 
-  void Assgin(const std::vector<T>& input_data) {
+  void Assign(const std::vector<T>& input_data) {
     if (val == nullptr) return;
     memcpy(val[0], input_data.data(),
            std::min(max_row * max_col, static_cast<uint32_t>(input_data.size())) * sizeof(T));
   }
 
-  void Assgin(const std::vector<std::vector<T> >& input_data) {
+  void Assign(const std::vector<std::vector<T> >& input_data) {
     uint32_t real_row = std::min(max_row, static_cast<uint32_t>(input_data.size()));
     for (uint32_t cur_row = 0; cur_row < real_row; ++cur_row) {
       uint32_t real_col = std::min(max_col, static_cast<uint32_t>(input_data[cur_row].size()));

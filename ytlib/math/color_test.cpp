@@ -25,6 +25,18 @@ TEST(COLOR_TEST, rgb2hsb_test) {
       .name = "case 3",
       .rgb = {204, 98, 106},
       .want_result = {355.47171, 0.519608, 0.8}});
+  test_cases.emplace_back(TestCase{
+      .name = "case 4: pure red",
+      .rgb = {255, 0, 0},
+      .want_result = {0.0, 1.0, 1.0}});
+  test_cases.emplace_back(TestCase{
+      .name = "case 5: pure green",
+      .rgb = {0, 255, 0},
+      .want_result = {120.0, 1.0, 1.0}});
+  test_cases.emplace_back(TestCase{
+      .name = "case 6: pure blue",
+      .rgb = {0, 0, 255},
+      .want_result = {240.0, 1.0, 1.0}});
 
   for (size_t ii = 0; ii < test_cases.size(); ++ii) {
     TestCase& cur_test_case = test_cases[ii];
@@ -69,4 +81,18 @@ TEST(COLOR_TEST, hsb2rgb_test) {
         << "Test " << cur_test_case.name << " failed, index " << ii;
   }
 }
+TEST(COLOR_TEST, rgb2hsb_exception_test) {
+  EXPECT_THROW(rgb2hsb({}), std::logic_error);
+  EXPECT_THROW(rgb2hsb({1, 2}), std::logic_error);
+  EXPECT_THROW(rgb2hsb({1, 2, 3, 4}), std::logic_error);
+}
+
+TEST(COLOR_TEST, hsb2rgb_exception_test) {
+  EXPECT_THROW(hsb2rgb({}), std::logic_error);
+  EXPECT_THROW(hsb2rgb({-1.0, 0.5, 0.5}), std::logic_error);
+  EXPECT_THROW(hsb2rgb({361.0, 0.5, 0.5}), std::logic_error);
+  EXPECT_THROW(hsb2rgb({180.0, -0.1, 0.5}), std::logic_error);
+  EXPECT_THROW(hsb2rgb({180.0, 0.5, 1.1}), std::logic_error);
+}
+
 }  // namespace ytlib
