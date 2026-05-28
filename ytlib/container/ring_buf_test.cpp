@@ -208,4 +208,3 @@ TEST(RING_BUF_TEST, WRAP_CONTIGUOUS_READ_TEST) {
   ASSERT_EQ(ring.TopArray(ps, 5), true);
   EXPECT_EQ(std::string(out, 5), s);
 }
-

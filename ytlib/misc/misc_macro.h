@@ -6,6 +6,8 @@
  */
 #pragma once
 
+#include <cstdio>
+
 #ifdef _DEBUG
   #define _DBG_PRINT_STRING(x) #x
   #define DBG_PRINT_STRING(x) _DBG_PRINT_STRING(x)

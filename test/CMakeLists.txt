@@ -1,49 +1,50 @@
-# ytlib开发测试专用
+# # ytlib开发测试专用
 
-add_subdirectory(log)
+# add_subdirectory(log)
 
-add_subdirectory(testlib)
-add_subdirectory(testlib2)
-add_subdirectory(testprj)
+# add_subdirectory(testlib)
+# add_subdirectory(testlib2)
+# add_subdirectory(testprj)
 
-# add_subdirectory(testytrpc)
+# # add_subdirectory(testytrpc)
 
-add_subdirectory(testexecutor)
-add_subdirectory(testboostfiber)
-add_subdirectory(testboostasio)
+# add_subdirectory(testexecutor)
+# add_subdirectory(testboostfiber)
+# add_subdirectory(testboostasio)
 
-add_subdirectory(testthreadpool)
+# add_subdirectory(testthreadpool)
 
-# ---------------------------------
+# # ---------------------------------
 
-include(GetHiRedis)
-include(GetLibevent)
+# include(GetHiRedis)
+# include(GetLibevent)
 
-add_subdirectory(testredis)
+# add_subdirectory(testredis)
 
-# ---------------------------------
+# # ---------------------------------
 
-include(GetGoogleBenchmark)
+# include(GetGoogleBenchmark)
 
-add_subdirectory(custom_bench)
+# add_subdirectory(custom_bench)
 
-# ---------------------------------
+# # ---------------------------------
 
-include(GetFreeglut)
+# include(GetFreeglut)
 
-add_subdirectory(testgame)
-add_subdirectory(testgl)
+# add_subdirectory(testgame)
+# add_subdirectory(testgl)
 
-include(GetEntt)
-include(GetRaylib)
+# include(GetEntt)
+# include(GetRaylib)
 
-add_subdirectory(testgame2)
+# add_subdirectory(testgame2)
+add_subdirectory(testgame3)
 
-# ---------------------------------
+# # ---------------------------------
 
-include(GetNlohmannJson)
-include(GetProtoBuf)
-include(GetOpenTelemetryProto)
-include(GetOpenTelemetryCpp)
+# include(GetNlohmannJson)
+# include(GetProtoBuf)
+# include(GetOpenTelemetryProto)
+# include(GetOpenTelemetryCpp)
 
-add_subdirectory(testot)
+# add_subdirectory(testot)
