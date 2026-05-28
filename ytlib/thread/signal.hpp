@@ -60,16 +60,13 @@ class LightSignal {
   /// 无限等待唤醒
   void wait() {
     std::unique_lock<std::mutex> lck(mutex_);
-    if (flag_) return;
-    cond_.wait(lck);
+    cond_.wait(lck, [this] { return flag_; });
   }
 
   /// 带超时的等待唤醒
   bool wait_for(uint32_t timeout_ms) {
     std::unique_lock<std::mutex> lck(mutex_);
-    if (flag_) return true;
-    if (cond_.wait_for(lck, std::chrono::milliseconds(timeout_ms)) == std::cv_status::timeout) return false;
-    return true;
+    return cond_.wait_for(lck, std::chrono::milliseconds(timeout_ms), [this] { return flag_; });
   }
 
   /// 重置信号量

@@ -10,6 +10,7 @@
 #pragma once
 
 #include <algorithm>
+#include <cassert>
 #include <list>
 #include <map>
 #include <vector>
@@ -296,6 +297,7 @@ inline std::vector<int32_t> floydPath(int32_t srcIdx, int32_t dstIdx, const Matr
 }
 
 // 最大流。边权值作为流量值
+// todo: 待实现
 template <typename T>
 g_sideType maxFlow(Graph<T>& beginNode, Graph<T>& endNode) {
   g_sideType re = 0;
@@ -304,13 +306,17 @@ g_sideType maxFlow(Graph<T>& beginNode, Graph<T>& endNode) {
 }
 
 // Kruskal算法：最小生成树，加边法。将在输入的vector上进行修改，返回根节点的指针
+// todo: 待实现，当前函数体为空，调用结果未定义
 template <typename T>
 Graph<T>* kruskal(std::vector<Graph<T>*>& vec) {
+  return nullptr;
 }
 
 // Prim算法：最小生成树，加点法。将在输入的vector上进行修改，返回根节点的指针
+// todo: 待实现，当前函数体为空，调用结果未定义
 template <typename T>
 Graph<T>* prim(std::vector<Graph<T>*>& vec) {
+  return nullptr;
 }
 
 // A*

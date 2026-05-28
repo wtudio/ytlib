@@ -58,7 +58,7 @@ class Heap {
 
   /// 调整为堆
   void Adjust() {
-    if (container_.empty()) return;
+    if (container_.size() <= 1) return;
     for (size_t ii = ((container_.size() - 2) >> 1); ii > 0; --ii) {
       AdjustDown(ii);
     }
@@ -102,6 +102,10 @@ class Heap {
 
   /// 堆排序。最小堆倒序排，最大堆正序排，排完序之后堆类型反转
   void Sort() {
+    if (container_.empty()) {
+      is_min_heap_ = !is_min_heap_;
+      return;
+    }
     using std::swap;
     for (size_t ii = container_.size() - 1; ii > 0; --ii) {
       swap(container_[0], container_[ii]);

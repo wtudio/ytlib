@@ -162,4 +162,32 @@ TEST(HEAP_TEST, Sort_test) {
   }
 }
 
+TEST(HEAP_TEST, Adjust_SmallSize_test) {
+  // size==0 / size==1 时 Adjust 不应下溢死循环
+  {
+    Heap<int> h;
+    h.Adjust();
+    EXPECT_TRUE(h.container_.empty());
+  }
+  {
+    Heap<int> h(std::vector<int>{42});
+    EXPECT_EQ(h.container_.size(), 1u);
+    EXPECT_EQ(h.container_[0], 42);
+  }
+  {
+    Heap<int> h(std::vector<int>{2, 1});
+    EXPECT_EQ(h.container_.size(), 2u);
+    EXPECT_EQ(h.container_[0], 1);
+    EXPECT_EQ(h.container_[1], 2);
+  }
+}
+
+TEST(HEAP_TEST, Sort_Empty_test) {
+  Heap<int> h;
+  ASSERT_TRUE(h.is_min_heap_);
+  h.Sort();
+  EXPECT_FALSE(h.is_min_heap_);
+  EXPECT_TRUE(h.container_.empty());
+}
+
 }  // namespace ytlib

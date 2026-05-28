@@ -35,8 +35,10 @@ class Channel : public BlockQueue<T> {
    * @brief 初始化
    * @param f 处理内容的函数。参数推荐使用（智能）指针
    * @param th_size 消费者线程数
+   * @note 必须在 StartProcess 之前调用，且只调用一次
    */
   void Init(const std::function<void(T&&)>& f, uint32_t th_size = 1) {
+    if (!threads_.empty()) throw std::logic_error("Init must be called before StartProcess.");
     f_ = f;
     th_size_ = th_size;
   }
@@ -63,7 +65,7 @@ class Channel : public BlockQueue<T> {
     }
   }
 
-  /// 清空队列并停止线程
+  /// 等待已入队元素全部处理完后停止线程
   void StopProcess() {
     BlockQueue<T>::Stop();
     for (auto itr = threads_.begin(); itr != threads_.end();) {

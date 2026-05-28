@@ -769,4 +769,130 @@ TEST(BINARY_TREE_TEST, BRTreeNode_test) {
   }
 }
 
+TEST(BINARY_TREE_TEST, BinSearchTreeNode_Erase_RightChild_test) {
+  typedef BinSearchTreeNode<int> Bst;
+
+  // case A: 待删除节点是父的右孩子，且只有左子树。
+  // 构造: root=5, root->pr=7, root->pr->pl=6
+  // 删除 7 后期望 root->pr == 6（非 root->pl）。
+  {
+    Bst::NodePtr root = std::make_shared<Bst>(5);
+    root->Insert(std::make_shared<Bst>(7));
+    root->Insert(std::make_shared<Bst>(6));
+
+    ASSERT_TRUE(CheckBinSearchTree(root));
+    ASSERT_EQ(root->pr->obj, 7);
+    ASSERT_EQ(root->pr->pl->obj, 6);
+
+    root->pr->Erase();
+
+    EXPECT_FALSE(static_cast<bool>(root->pl));
+    ASSERT_TRUE(static_cast<bool>(root->pr));
+    EXPECT_EQ(root->pr->obj, 6);
+    EXPECT_EQ(root->pr->pf.lock(), root);
+    EXPECT_TRUE(CheckBinSearchTree(root));
+  }
+
+  // case B: 待删除节点是父的右孩子，且只有右子树。
+  // 构造: root=5, root->pr=7, root->pr->pr=8
+  // 删除 7 后期望 root->pr == 8。
+  {
+    Bst::NodePtr root = std::make_shared<Bst>(5);
+    root->Insert(std::make_shared<Bst>(7));
+    root->Insert(std::make_shared<Bst>(8));
+
+    ASSERT_TRUE(CheckBinSearchTree(root));
+    ASSERT_EQ(root->pr->obj, 7);
+    ASSERT_EQ(root->pr->pr->obj, 8);
+
+    root->pr->Erase();
+
+    EXPECT_FALSE(static_cast<bool>(root->pl));
+    ASSERT_TRUE(static_cast<bool>(root->pr));
+    EXPECT_EQ(root->pr->obj, 8);
+    EXPECT_EQ(root->pr->pf.lock(), root);
+    EXPECT_TRUE(CheckBinSearchTree(root));
+  }
+
+  // case C: 待删除节点是父的左孩子，且只有左子树。
+  {
+    Bst::NodePtr root = std::make_shared<Bst>(5);
+    root->Insert(std::make_shared<Bst>(3));
+    root->Insert(std::make_shared<Bst>(2));
+
+    ASSERT_TRUE(CheckBinSearchTree(root));
+
+    root->pl->Erase();
+
+    ASSERT_TRUE(static_cast<bool>(root->pl));
+    EXPECT_FALSE(static_cast<bool>(root->pr));
+    EXPECT_EQ(root->pl->obj, 2);
+    EXPECT_EQ(root->pl->pf.lock(), root);
+    EXPECT_TRUE(CheckBinSearchTree(root));
+  }
+
+  // case D: 待删除节点是父的左孩子，且只有右子树。
+  {
+    Bst::NodePtr root = std::make_shared<Bst>(5);
+    root->Insert(std::make_shared<Bst>(3));
+    root->Insert(std::make_shared<Bst>(4));
+
+    ASSERT_TRUE(CheckBinSearchTree(root));
+
+    root->pl->Erase();
+
+    ASSERT_TRUE(static_cast<bool>(root->pl));
+    EXPECT_FALSE(static_cast<bool>(root->pr));
+    EXPECT_EQ(root->pl->obj, 4);
+    EXPECT_EQ(root->pl->pf.lock(), root);
+    EXPECT_TRUE(CheckBinSearchTree(root));
+  }
+}
+
+TEST(BINARY_TREE_TEST, AVLTreeNode_Erase_RightChild_test) {
+  typedef AVLTreeNode<int> Avlt;
+
+  // 构造一棵平衡的 AVL 树，使被删除节点是父的右孩子且单边子树
+  // 这里用 Erase(val) 接口。
+  // 插入序列设计：5, 3, 8, 9 → root=5, pr=8, pr->pr=9 (AVL 仍平衡 hgt 2/3)。
+  // 实际上 5 插入 3 后 8 后 9 时会触发旋转，需要小心选择。
+  // 改用 Erase(node) 直接构造：插入后 Erase 一个右孩子单子树节点。
+  {
+    Avlt::NodePtr root = std::make_shared<Avlt>(10);
+    root = root->Insert(std::make_shared<Avlt>(5));
+    root = root->Insert(std::make_shared<Avlt>(15));
+    root = root->Insert(std::make_shared<Avlt>(20));
+    // 树形：root=10, pl=5, pr=15, pr->pr=20
+
+    ASSERT_TRUE(CheckAVLTree(root));
+    ASSERT_EQ(root->obj, 10);
+    ASSERT_TRUE(static_cast<bool>(root->pr));
+
+    // 删除 20 (叶子) 后再删 15 (此时 15 是右孩子且无子节点，特殊路径)
+    root = root->Erase(20);
+    ASSERT_TRUE(CheckAVLTree(root));
+
+    // 重新构造 15 是右孩子且只有左子树的情形
+    Avlt::NodePtr root2 = std::make_shared<Avlt>(10);
+    root2 = root2->Insert(std::make_shared<Avlt>(5));
+    root2 = root2->Insert(std::make_shared<Avlt>(15));
+    root2 = root2->Insert(std::make_shared<Avlt>(13));
+    // root=10, pl=5, pr=15, pr->pl=13
+
+    ASSERT_TRUE(CheckAVLTree(root2));
+    root2 = root2->Erase(15);
+    EXPECT_TRUE(CheckAVLTree(root2));
+    EXPECT_TRUE(CheckBinSearchTree(root2));
+    // 删除后期望 13 顶替 15
+    ASSERT_TRUE(static_cast<bool>(root2->pr));
+    EXPECT_EQ(root2->pr->obj, 13);
+  }
+}
+
+TEST(BINARY_TREE_TEST, CheckBRTree_NullRoot_test) {
+  typedef BRTreeNode<int> Brt;
+  Brt::NodePtr empty;
+  EXPECT_TRUE(CheckBRTree(empty));
+}
+
 }  // namespace ytlib

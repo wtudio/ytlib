@@ -82,11 +82,8 @@ class BlockQueue {
   /// 阻塞式取出元素
   bool BlockDequeue(T& item) {
     std::unique_lock<std::mutex> lck(mutex_);
-    if (queue_.empty()) {
-      if (!running_flag_) return false;
-      cond_.wait(lck);
-      if (queue_.empty()) return false;
-    }
+    cond_.wait(lck, [this] { return !queue_.empty() || !running_flag_; });
+    if (queue_.empty()) return false;
 
     item = std::move(queue_.front());
     queue_.pop();
@@ -96,11 +93,8 @@ class BlockQueue {
   /// 阻塞式取出元素
   bool BlockDequeue(const std::function<void(T&&)>& f) {
     std::unique_lock<std::mutex> lck(mutex_);
-    if (queue_.empty()) {
-      if (!running_flag_) return false;
-      cond_.wait(lck);
-      if (queue_.empty()) return false;
-    }
+    cond_.wait(lck, [this] { return !queue_.empty() || !running_flag_; });
+    if (queue_.empty()) return false;
 
     T item(std::move(queue_.front()));
     queue_.pop();

@@ -30,7 +30,7 @@ class LocalCache {
    *
    */
   struct Cfg {
-    size_t capacity = 1000 * 1024;                                      ///< 容量上限
+    size_t capacity = 1000 * 1024;                                      ///< 容量上限，最小值为10，小于10的配置会被强制提升到10
     size_t clean_size = 900 * 1024;                                     ///< 超过容量上限进行清理的目标size
     std::chrono::steady_clock::duration ttl = std::chrono::seconds(5);  ///< 超时时间
 
@@ -38,6 +38,7 @@ class LocalCache {
     static Cfg Verify(const Cfg& verify_cfg) {
       Cfg cfg(verify_cfg);
 
+      if (cfg.capacity < 10) cfg.capacity = 10;
       if (cfg.clean_size >= cfg.capacity)
         cfg.clean_size = static_cast<size_t>(cfg.capacity * 0.9);
 
@@ -46,8 +47,8 @@ class LocalCache {
   };
 
   explicit LocalCache(const LocalCache::Cfg& cfg)
-      : cfg_(LocalCache::Cfg::Verify(cfg)),
-        data_map_(cfg_.capacity) {
+      : cfg_(LocalCache::Cfg::Verify(cfg)) {
+    data_map_.reserve(cfg_.capacity);
   }
 
   ~LocalCache() = default;
@@ -62,7 +63,7 @@ class LocalCache {
    * @return std::optional<ValType> 缓存数据
    */
   std::optional<ValType> Get(const KeyType& key) {
-    CleanExpireddata();
+    CleanExpiredData();
 
     auto finditr = data_map_.find(key);
     if (finditr == data_map_.end()) [[unlikely]]
@@ -83,22 +84,28 @@ class LocalCache {
   template <typename... Args>
     requires std::constructible_from<ValType, Args...>
   void Update(const KeyType& key, Args&&... args) {
-    const auto& emplace_ret = data_map_.emplace(key, std::forward<Args>(args)...);
-    ValContent& val_content = emplace_ret.first->second;
-    val_content.load_time = std::chrono::steady_clock::now();
-
-    if (emplace_ret.second) {
-      // 新增
-      val_content.lru_itr = lru_list_.emplace(lru_list_.end(), key);
-      val_content.ttl_itr = ttl_list_.emplace(ttl_list_.end(), key);
-      // 如果达到容量上限则需要清理
-      if (data_map_.size() >= cfg_.capacity) Clean();
-    } else {
+    auto finditr = data_map_.find(key);
+    if (finditr != data_map_.end()) {
       // 更新
+      ValContent& val_content = finditr->second;
       val_content.val = ValType(std::forward<Args>(args)...);
+      val_content.load_time = std::chrono::steady_clock::now();
       lru_list_.splice(lru_list_.end(), lru_list_, val_content.lru_itr);
       ttl_list_.splice(ttl_list_.end(), ttl_list_, val_content.ttl_itr);
+      return;
     }
+
+    // 新增
+    const auto& emplace_ret = data_map_.emplace(
+        std::piecewise_construct,
+        std::forward_as_tuple(key),
+        std::forward_as_tuple(std::forward<Args>(args)...));
+    ValContent& val_content = emplace_ret.first->second;
+    val_content.load_time = std::chrono::steady_clock::now();
+    val_content.lru_itr = lru_list_.emplace(lru_list_.end(), key);
+    val_content.ttl_itr = ttl_list_.emplace(ttl_list_.end(), key);
+    // 如果达到容量上限则需要清理
+    if (data_map_.size() >= cfg_.capacity) Clean();
   }
 
   /**
@@ -107,7 +114,7 @@ class LocalCache {
    * @param[in] key 待删除数据的key
    */
   void Del(const KeyType& key) {
-    CleanExpireddata();
+    CleanExpiredData();
 
     auto finditr = data_map_.find(key);
     if (finditr == data_map_.end()) [[unlikely]]
@@ -124,7 +131,7 @@ class LocalCache {
    * @brief 清理过期数据
    * @note 一般不需要手动调用此接口
    */
-  void CleanExpireddata() {
+  void CleanExpiredData() {
     std::chrono::steady_clock::time_point time_line = std::chrono::steady_clock::now() - cfg_.ttl;
 
     auto itr = ttl_list_.begin();
@@ -146,7 +153,7 @@ class LocalCache {
    * @note 一般不需要手动调用此接口
    */
   void Clean() {
-    CleanExpireddata();
+    CleanExpiredData();
     if (data_map_.size() <= cfg_.clean_size) return;
 
     size_t to_clean_size = data_map_.size() - cfg_.clean_size;
@@ -177,9 +184,9 @@ class LocalCache {
   /**
    * @brief 获取当前缓存数据量
    *
-   * @return const size_t 当前缓存数据量
+   * @return size_t 当前缓存数据量
    */
-  const size_t Size() const {
+  size_t Size() const {
     return data_map_.size();
   }
 

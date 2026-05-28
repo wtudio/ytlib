@@ -74,10 +74,11 @@ class RingBuf {
     if (wpos_ + len <= BUF_SIZE) {
       memcpy(content_ + wpos_, buf, len * sizeof(T));
       wpos_ += len;
+      if (wpos_ == BUF_SIZE) wpos_ = 0;
     } else {
       const uint32_t& tmp_size = BUF_SIZE - wpos_;
       memcpy(content_ + wpos_, buf, tmp_size * sizeof(T));
-      memcpy(content_, buf + tmp_size, len - tmp_size * sizeof(T));
+      memcpy(content_, buf + tmp_size, (len - tmp_size) * sizeof(T));
       wpos_ = len - tmp_size;
     }
     return true;
@@ -95,7 +96,7 @@ class RingBuf {
   bool TopArray(T*& buf, const uint32_t& len) {
     if (len > Size()) [[unlikely]]
       return false;
-    if (rpos_ + len <= wpos_) {
+    if (rpos_ + len <= BUF_SIZE) {
       buf = content_ + rpos_;
     } else {
       if (buf == nullptr) [[unlikely]]
@@ -103,7 +104,7 @@ class RingBuf {
 
       const uint32_t& tmp_size = BUF_SIZE - rpos_;
       memcpy(buf, content_ + rpos_, tmp_size * sizeof(T));
-      memcpy(buf + tmp_size, content_, len - tmp_size * sizeof(T));
+      memcpy(buf + tmp_size, content_, (len - tmp_size) * sizeof(T));
     }
     return true;
   }
@@ -115,7 +116,7 @@ class RingBuf {
     uint32_t cur_rpos = rpos_ + pos;
     if (cur_rpos >= BUF_SIZE) cur_rpos -= BUF_SIZE;
 
-    if (cur_rpos + len <= wpos_) {
+    if (cur_rpos + len <= BUF_SIZE) {
       buf = content_ + cur_rpos;
     } else {
       if (buf == nullptr) [[unlikely]]
@@ -123,7 +124,7 @@ class RingBuf {
 
       const uint32_t& tmp_size = BUF_SIZE - cur_rpos;
       memcpy(buf, content_ + cur_rpos, tmp_size * sizeof(T));
-      memcpy(buf + tmp_size, content_, len - tmp_size * sizeof(T));
+      memcpy(buf + tmp_size, content_, (len - tmp_size) * sizeof(T));
     }
     return true;
   }

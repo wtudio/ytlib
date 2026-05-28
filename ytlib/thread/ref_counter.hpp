@@ -1,3 +1,10 @@
+/**
+ * @file ref_counter.hpp
+ * @brief 引用计数指针
+ * @note 简易引用计数智能指针，仅支持强引用
+ * @author WT
+ * @date 2021-05-06
+ */
 #pragma once
 
 #include <atomic>
@@ -21,11 +28,11 @@ class RefCounter {
   InnerCounter* counter_ptr_;
 
   void AddRef() {
-    ++(counter_ptr_->n_);
+    counter_ptr_->n_.fetch_add(1, std::memory_order_relaxed);
   }
 
   void SubRef() {
-    if (--(counter_ptr_->n_) == 0) {
+    if (counter_ptr_->n_.fetch_sub(1, std::memory_order_acq_rel) == 1) {
       delete counter_ptr_->ptr_;
       delete counter_ptr_;
     }
@@ -37,11 +44,11 @@ class RefCounter {
 
   // 拷贝构造函数
   RefCounter(const RefCounter& rhs) : counter_ptr_(rhs.counter_ptr_) {
-    AddRef();
+    if (counter_ptr_ != nullptr) AddRef();
   }
 
   // 移动构造函数
-  RefCounter(RefCounter&& rhs) : counter_ptr_(rhs.counter_ptr_) {
+  RefCounter(RefCounter&& rhs) noexcept : counter_ptr_(rhs.counter_ptr_) {
     rhs.counter_ptr_ = nullptr;
   }
 
@@ -49,19 +56,19 @@ class RefCounter {
   RefCounter& operator=(const RefCounter& rhs) {
     if (this == &rhs) return *this;
 
-    SubRef();
+    if (counter_ptr_ != nullptr) SubRef();
 
     counter_ptr_ = rhs.counter_ptr_;
-    AddRef();
+    if (counter_ptr_ != nullptr) AddRef();
 
     return *this;
   }
 
   // 移动赋值函数
-  RefCounter& operator=(RefCounter&& rhs) {
+  RefCounter& operator=(RefCounter&& rhs) noexcept {
     if (this == &rhs) return *this;
 
-    SubRef();
+    if (counter_ptr_ != nullptr) SubRef();
 
     counter_ptr_ = rhs.counter_ptr_;
     rhs.counter_ptr_ = nullptr;
@@ -69,12 +76,15 @@ class RefCounter {
     return *this;
   }
 
+  // 当前引用数。仅作观察用途，并发下立刻可能过期
   uint32_t Counter() const {
-    return static_cast<uint32_t>(counter_ptr_->n_);
+    if (counter_ptr_ == nullptr) return 0;
+    return counter_ptr_->n_.load(std::memory_order_relaxed);
   }
 
+  // 获取裸指针。被 move 之后调用为 nullptr
   T* Get() const {
-    return counter_ptr_->ptr_;
+    return counter_ptr_ != nullptr ? counter_ptr_->ptr_ : nullptr;
   }
 
   // 析构函数，计数器减1，为0则析构Counter

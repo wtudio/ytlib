@@ -10,6 +10,7 @@
 #include <atomic>
 #include <coroutine>
 #include <functional>
+#include <optional>
 
 namespace ytlib {
 
@@ -29,20 +30,20 @@ class CoroSched {
     void unhandled_exception() { std::terminate(); }
 
     void return_value(T&& re) {
-      p_coro_sched->ret_ = std::move(re);
+      p_coro_sched->ret_.emplace(std::move(re));
       p_coro_sched->flag_.store(static_cast<uint8_t>(CoroState::END));
       p_coro_sched->flag_.notify_all();
     }
 
     std::suspend_always yield_value(const T& re) {
-      p_coro_sched->ret_ = re;
+      p_coro_sched->ret_.emplace(re);
       p_coro_sched->flag_.store(static_cast<uint8_t>(CoroState::YIELD));
       p_coro_sched->flag_.notify_all();
       return {};
     }
 
     std::suspend_always yield_value(T&& re) {
-      p_coro_sched->ret_ = std::move(re);
+      p_coro_sched->ret_.emplace(std::move(re));
       p_coro_sched->flag_.store(static_cast<uint8_t>(CoroState::YIELD));
       p_coro_sched->flag_.notify_all();
       return {};
@@ -60,13 +61,13 @@ class CoroSched {
   /// 等待协程下一次调用co_yield或co_return，并获取其返回的值
   const T& Get() {
     flag_.wait(static_cast<uint8_t>(CoroState::RUN));
-    return ret_;
+    return *ret_;
   }
 
   /// 继续运行co_yield挂起的协程
   void Resume() {
     if (flag_.load() != static_cast<uint8_t>(CoroState::END)) {
-      if (std::atomic_exchange(&flag_, static_cast<uint8_t>(CoroState::RUN)) == static_cast<uint8_t>(CoroState::YIELD)) {
+      if (flag_.exchange(static_cast<uint8_t>(CoroState::RUN)) == static_cast<uint8_t>(CoroState::YIELD)) {
         handle_.resume();
       }
     }
@@ -84,7 +85,7 @@ class CoroSched {
     p->p_coro_sched = this;
   }
 
-  T ret_;
+  std::optional<T> ret_;
   std::atomic_uint8_t flag_;
   std::coroutine_handle<promise_type> handle_;
 };
@@ -103,15 +104,15 @@ class Awaitable {
   bool await_ready() const noexcept { return false; }
   void await_suspend(std::coroutine_handle<> h) {
     anyscfun_([this, h](T&& re) {
-      re_ = std::move(re);
+      re_.emplace(std::move(re));
       h.resume();
     });
   }
-  T await_resume() noexcept { return std::move(re_); }
+  T await_resume() noexcept { return std::move(*re_); }
 
  private:
   std::function<void(RetCallback&&)> anyscfun_;
-  T re_;
+  std::optional<T> re_;
 };
 
 /**

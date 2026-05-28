@@ -13,6 +13,7 @@
 
 #include <cinttypes>
 #include <ctime>
+#include <stdexcept>
 
 namespace ytlib {
 
@@ -61,7 +62,7 @@ class GuidGener {
     if (mac_id >= GUID_MAC_NUM)
       throw std::invalid_argument("mac_id is invalid.");
 
-    guid_buf_ = new Guid[GUID_OBJ_NUM];
+    if (guid_buf_ == nullptr) guid_buf_ = new Guid[GUID_OBJ_NUM];
     for (uint32_t ii = 0; ii < GUID_OBJ_NUM; ++ii) {
       guid_buf_[ii].id = 0;
       guid_buf_[ii].mac = mac_id;
@@ -72,12 +73,12 @@ class GuidGener {
   // 根据obj_id获取guid，obj_id值不应超过GUID_OBJ_NUM，obj_id应能在当前线程下唯一标识一种实例
   const Guid& GetGuid(const uint32_t& obj_id) {
     Guid& guid = guid_buf_[obj_id];
-    const uint32_t& cur_t = static_cast<uint32_t>(time(0)) - GUID_TIME0;
+    const uint32_t cur_t = static_cast<uint32_t>(time(0)) - GUID_TIME0;
 
     if (cur_t > guid.t) {
       guid.t = cur_t;
       guid.ins = 0;
-    } else if (guid.ins < GUID_INST_NUM) {
+    } else if (guid.ins < GUID_INST_NUM - 1) {
       ++guid.ins;
     } else {
       ++guid.t;

@@ -2,10 +2,12 @@
 
 #include <atomic>
 #include <iostream>
+#include <list>
 #include <map>
 #include <set>
 #include <string>
 #include <thread>
+#include <vector>
 
 #include "block_queue.hpp"
 #include "channel.hpp"
@@ -41,10 +43,41 @@ TEST(THREAD_TEST, Guid) {
   // 用objgener生成guid
   for (int ii = 0; ii < 1000; ++ii) {
     Guid guid_cur = gener.GetGuid();
-    // printf("%llu\n", guid_cur.id);
-    ASSERT_GE(guid_cur.id, guid_last.id);
+    ASSERT_GT(guid_cur.id, guid_last.id);
     guid_last = guid_cur;
   }
+}
+
+// 测试 ins 溢出时单调性 —— 历史 bug：当 ins 达到 GUID_INST_NUM 时
+// 写回会被位域截断为 0，导致同秒内出现重复 guid
+TEST(THREAD_TEST, Guid_InsOverflow) {
+  GuidGener::Ins().Init(0);
+
+  ObjGuidGener gener;
+  gener.Init(0);
+
+  Guid guid_last = gener.GetGuid();
+  // 生成数量远大于 GUID_INST_NUM，覆盖溢出路径
+  const uint32_t n = GUID_INST_NUM * 4;
+  for (uint32_t ii = 0; ii < n; ++ii) {
+    Guid guid_cur = gener.GetGuid();
+    ASSERT_GT(guid_cur.id, guid_last.id);
+    guid_last = guid_cur;
+  }
+}
+
+// 测试 Init 可多次调用，且不会泄漏旧 buf
+TEST(THREAD_TEST, Guid_InitTwice) {
+  GuidGener::Ins().Init(1);
+  Guid g1 = GuidGener::Ins().GetGuid(0);
+  ASSERT_EQ(g1.mac, 1u);
+
+  GuidGener::Ins().Init(2);
+  Guid g2 = GuidGener::Ins().GetGuid(0);
+  ASSERT_EQ(g2.mac, 2u);
+
+  // 非法 mac_id 应抛
+  EXPECT_THROW(GuidGener::Ins().Init(GUID_MAC_NUM), std::invalid_argument);
 }
 
 class TestObj {
@@ -102,6 +135,40 @@ TEST(THREAD_TEST, Channel_BASE) {
   ch.StopProcess();
   ASSERT_EQ(ch.Count(), 0);
   ASSERT_EQ(ct, obj_num);
+}
+
+// 测试 Channel 多线程消费时所有入队元素都能被处理
+TEST(THREAD_TEST, Channel_DrainOnStop) {
+  using TestChannel = Channel<uint32_t>;
+  std::atomic<uint32_t> ct = 0;
+  TestChannel ch;
+  ch.Init([&](uint32_t&& v) { ct += v; }, 4);
+  ch.StartProcess();
+
+  const uint32_t n = 1000;
+  uint64_t expected = 0;
+  for (uint32_t ii = 0; ii < n; ++ii) {
+    ch.Enqueue(ii);
+    expected += ii;
+  }
+  ch.StopProcess();
+  ASSERT_EQ(ch.Count(), 0u);
+  ASSERT_EQ(ct.load(), expected);
+}
+
+// 测试 Channel Init 重复调用应抛
+TEST(THREAD_TEST, Channel_InitTwice) {
+  Channel<int> ch;
+  ch.Init([](int&&) {});
+  ch.StartProcess();
+  EXPECT_THROW(ch.Init([](int&&) {}), std::logic_error);
+  ch.StopProcess();
+}
+
+// StartProcess 前没有 Init 应抛
+TEST(THREAD_TEST, Channel_StartWithoutInit) {
+  Channel<int> ch;
+  EXPECT_THROW(ch.StartProcess(), std::logic_error);
 }
 
 // 测试BlockQueue基础同步操作
@@ -179,6 +246,53 @@ TEST(THREAD_TEST, BlockQueue_ANYSC) {
   ASSERT_EQ(ct, 1);
 }
 
+// 多生产者多消费者下不丢元素
+TEST(THREAD_TEST, BlockQueue_MPMC) {
+  BlockQueue<uint32_t> qu;
+  std::atomic<uint64_t> sum_consumed = 0;
+  std::atomic<uint32_t> consumed = 0;
+
+  constexpr uint32_t producer_num = 4;
+  constexpr uint32_t consumer_num = 4;
+  constexpr uint32_t per_producer = 5000;
+  constexpr uint32_t total = producer_num * per_producer;
+
+  std::vector<std::thread> consumers;
+  for (uint32_t ii = 0; ii < consumer_num; ++ii) {
+    consumers.emplace_back([&] {
+      uint32_t v;
+      while (qu.BlockDequeue(v)) {
+        sum_consumed += v;
+        ++consumed;
+      }
+    });
+  }
+
+  std::vector<std::thread> producers;
+  uint64_t expected_sum = 0;
+  for (uint32_t pi = 0; pi < producer_num; ++pi) {
+    for (uint32_t ii = 0; ii < per_producer; ++ii) {
+      expected_sum += pi * per_producer + ii;
+    }
+    producers.emplace_back([&, pi] {
+      for (uint32_t ii = 0; ii < per_producer; ++ii) {
+        qu.Enqueue(pi * per_producer + ii);
+      }
+    });
+  }
+
+  for (auto& t : producers) t.join();
+
+  // 等到队列被消费完再 Stop，避免 Stop 提前触发 BlockDequeue 返回 false 而漏元素
+  while (qu.Count() > 0) std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  qu.Stop();
+
+  for (auto& t : consumers) t.join();
+
+  EXPECT_EQ(consumed.load(), total);
+  EXPECT_EQ(sum_consumed.load(), expected_sum);
+}
+
 // 测试LightSignal
 TEST(THREAD_TEST, LightSignal_BASE) {
   LightSignal s;
@@ -201,6 +315,23 @@ TEST(THREAD_TEST, LightSignal_BASE) {
   t2.join();
 }
 
+// 测试LightSignal的wait_for超时与提前唤醒
+TEST(THREAD_TEST, LightSignal_WaitFor) {
+  LightSignal s;
+  ASSERT_EQ(s.wait_for(20), false);  // 超时
+
+  s.notify();
+  ASSERT_EQ(s.wait_for(20), true);  // 已 notify
+
+  s.reset();
+  std::thread t([&] {
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    s.notify();
+  });
+  ASSERT_EQ(s.wait_for(1000), true);  // 在超时前被唤醒
+  t.join();
+}
+
 // 测试LightSignalAtomic
 TEST(THREAD_TEST, LightSignalAtomic_BASE) {
   LightSignalAtomic s;
@@ -221,6 +352,25 @@ TEST(THREAD_TEST, LightSignalAtomic_BASE) {
 
   t1.join();
   t2.join();
+}
+
+// 测试LightSignalAtomic 的 reset
+TEST(THREAD_TEST, LightSignalAtomic_Reset) {
+  LightSignalAtomic s;
+  s.notify();
+  s.wait();  // 已 notify，立刻返回
+  s.reset();
+
+  std::atomic_bool finished = false;
+  std::thread t([&] {
+    s.wait();
+    finished = true;
+  });
+  std::this_thread::sleep_for(std::chrono::milliseconds(20));
+  ASSERT_FALSE(finished.load());  // reset 后 wait 应阻塞
+  s.notify();
+  t.join();
+  ASSERT_TRUE(finished.load());
 }
 
 // 测试ThreadIdTool

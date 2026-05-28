@@ -87,8 +87,13 @@ class BinSearchTreeNode : public std::enable_shared_from_this<BinSearchTreeNode<
       if (!real_pf) {
         BreakLChild(this->shared_from_this());
       } else {
+        bool is_l = GetLR(self);
         pl->pf = real_pf;
-        real_pf->pl = pl;
+        if (is_l) {
+          real_pf->pl = pl;
+        } else {
+          real_pf->pr = pl;
+        }
         pf.reset();
         pl.reset();
       }
@@ -100,8 +105,13 @@ class BinSearchTreeNode : public std::enable_shared_from_this<BinSearchTreeNode<
       if (!real_pf) {
         BreakRChild(self);
       } else {
+        bool is_l = GetLR(self);
         pr->pf = real_pf;
-        real_pf->pr = pr;
+        if (is_l) {
+          real_pf->pl = pr;
+        } else {
+          real_pf->pr = pr;
+        }
         pf.reset();
         pr.reset();
       }
@@ -277,8 +287,13 @@ class AVLTreeNode : public std::enable_shared_from_this<AVLTreeNode<T> > {
         root_node = node->pl;
         BreakLChild(node);
       } else {
+        bool is_l = GetLR(node);
         node->pl->pf = node_pf;
-        node_pf->pl = node->pl;
+        if (is_l) {
+          node_pf->pl = node->pl;
+        } else {
+          node_pf->pr = node->pl;
+        }
         node->pf.reset();
         node->pl.reset();
       }
@@ -288,8 +303,13 @@ class AVLTreeNode : public std::enable_shared_from_this<AVLTreeNode<T> > {
         root_node = node->pr;
         BreakRChild(node);
       } else {
+        bool is_l = GetLR(node);
         node->pr->pf = node_pf;
-        node_pf->pr = node->pr;
+        if (is_l) {
+          node_pf->pl = node->pr;
+        } else {
+          node_pf->pr = node->pr;
+        }
         node->pf.reset();
         node->pr.reset();
       }
@@ -1176,6 +1196,7 @@ bool CheckAVLTree(const std::shared_ptr<T>& root_node) {
  */
 template <typename T>
 bool CheckBRTree(const std::shared_ptr<T>& root_node) {
+  if (!root_node) return true;
   if (!CheckBinSearchTree(root_node)) return false;
   if (root_node->color != false) return false;  // 根节点要为黑
 

@@ -8,7 +8,6 @@
 #pragma once
 
 #include <functional>
-#include <map>
 #include <stack>
 #include <string>
 #include <vector>
@@ -77,16 +76,15 @@ class BoolExpCalculator {
           st.pop();
         }
         st.pop();
-      } else if (cur_smb == '!' | cur_smb == '&' | cur_smb == '|') {
-        if (Priority(cur_smb) > Priority(st.top())) {
-          st.push(cur_smb);
-        } else {
-          while (Priority(cur_smb) <= Priority(st.top())) {
-            qu.emplace_back(1, st.top());
-            st.pop();
-          }
-          st.push(cur_smb);
+      } else if (cur_smb == '!') {
+        // !为右结合一元前缀运算符，遇到栈顶同优先级的!时不应弹出
+        st.push(cur_smb);
+      } else if (cur_smb == '&' || cur_smb == '|') {
+        while (Priority(cur_smb) <= Priority(st.top())) {
+          qu.emplace_back(1, st.top());
+          st.pop();
         }
+        st.push(cur_smb);
       } else {
         size_t pos0 = ii;
         for (++ii; ii < expression.size(); ++ii) {
@@ -108,7 +106,10 @@ class BoolExpCalculator {
 
   /**
    * @brief 由bool表达式中间结果计算表达式值
-   * @note 如果表达式本身不合法会抛异常。如果表达式key计算函数内部抛异常也会抛出
+   * @note 如果表达式本身不合法会抛异常。如果表达式key计算函数内部抛异常也会抛出。
+   * 注意：本方法以字符串字面量"!"、"&"、"|"作为运算符标记。如果手工构造MidResultClass
+   * 时key恰好等于这些字符串，会被误判为运算符。通过PreCalc生成的MidResultClass不会出现
+   * 这种情况，因为CheckExp已将这些字符作为分隔符处理。
    * @param[in] expression bool表达式后缀表达式形式
    * @return true 表达式结果为true
    * @return false 表达式结果为false
@@ -134,30 +135,30 @@ class BoolExpCalculator {
         st.pop();
         st.push(Ret(!cur_ret));
       } else if (expression[pos] == "&") {
-        const auto& last_ret_1 = st.top();
-        const bool cur_ret_1 = last_ret_1.has_ret ? last_ret_1.ret : key_calc_fun_(last_ret_1.exp_key);
+        // 栈顶为右操作数，下面是左操作数; 按源码从左到右求值, 左为false时短路
+        Ret right = st.top();
         st.pop();
-        if (!cur_ret_1) {
-          st.pop();
+        Ret left = st.top();
+        st.pop();
+        const bool left_val = left.has_ret ? left.ret : key_calc_fun_(left.exp_key);
+        if (!left_val) {
           st.push(Ret(false));
         } else {
-          const auto& last_ret_2 = st.top();
-          const bool cur_ret_2 = last_ret_2.has_ret ? last_ret_2.ret : key_calc_fun_(last_ret_2.exp_key);
-          st.pop();
-          st.push(Ret(cur_ret_2));
+          const bool right_val = right.has_ret ? right.ret : key_calc_fun_(right.exp_key);
+          st.push(Ret(right_val));
         }
       } else if (expression[pos] == "|") {
-        const auto& last_ret_1 = st.top();
-        const bool cur_ret_1 = last_ret_1.has_ret ? last_ret_1.ret : key_calc_fun_(last_ret_1.exp_key);
+        // 栈顶为右操作数，下面是左操作数; 按源码从左到右求值, 左为true时短路
+        Ret right = st.top();
         st.pop();
-        if (cur_ret_1) {
-          st.pop();
+        Ret left = st.top();
+        st.pop();
+        const bool left_val = left.has_ret ? left.ret : key_calc_fun_(left.exp_key);
+        if (left_val) {
           st.push(Ret(true));
         } else {
-          const auto& last_ret_2 = st.top();
-          const bool cur_ret_2 = last_ret_2.has_ret ? last_ret_2.ret : key_calc_fun_(last_ret_2.exp_key);
-          st.pop();
-          st.push(Ret(cur_ret_2));
+          const bool right_val = right.has_ret ? right.ret : key_calc_fun_(right.exp_key);
+          st.push(Ret(right_val));
         }
       } else {
         st.push(Ret(expression[pos]));
@@ -259,8 +260,6 @@ class BoolExpCalculator {
         return 2;
       case '!':
         return 3;
-      case ')':
-        return 4;
       default:
         return 0;
     }
